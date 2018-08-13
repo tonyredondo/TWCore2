@@ -334,9 +334,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int WriteTo(Span<T> span)
         {
-            if (_offset == 130940923)
-                Debugger.Break();
-            var copyLength = Math.Min(span.Length, _count);
+            var copyLength = _count <= span.Length ? _count : span.Length;
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + copyLength - 1);
             int writeCount = 0;
@@ -403,6 +401,43 @@ namespace TWCore
             WriteTo(arr.AsSpan());
             return arr;
         }
+        /// <summary>
+        /// Return the MultiArray as Span
+        /// </summary>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<T> AsSpan()
+        {
+            return new Span<T>(ToArray());
+        }
+        /// <summary>
+        /// Return the MultiArray as ReadOnlySpan
+        /// </summary>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<T> AsReadOnlySpan()
+        {
+            return new ReadOnlySpan<T>(ToArray());
+        }
+        /// <summary>
+        /// Return the MultiArray as Memory
+        /// </summary>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Memory<T> AsMemory()
+        {
+            return new Memory<T>(ToArray());
+        }
+        /// <summary>
+        /// Return the MultiArray as ReadOnlyMemory
+        /// </summary>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlyMemory<T> AsReadOnlyMemory()
+        {
+            return new ReadOnlyMemory<T>(ToArray());
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -411,15 +446,6 @@ namespace TWCore
         public static implicit operator MultiArray<T>(List<T[]> listOfSegments) => new MultiArray<T>(listOfSegments);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator Span<T>(MultiArray<T> subArray) => new Span<T>(subArray.ToArray());
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator ReadOnlySpan<T>(MultiArray<T> subArray) => new ReadOnlySpan<T>(subArray.ToArray());
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator Memory<T>(MultiArray<T> subArray) => new Memory<T>(subArray.ToArray());
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator ReadOnlyMemory<T>(MultiArray<T> subArray) => new ReadOnlyMemory<T>(subArray.ToArray());
         #endregion
 
         #region Private Methods

@@ -311,7 +311,7 @@ namespace TWCore.Messaging.NATS
         internal static (MultiArray<byte>, Guid) GetFromMessageBody(byte[] message)
         {
             var body = new MultiArray<byte>(message);
-            var correlationId = new Guid(body.Slice(0, 16));
+            var correlationId = new Guid(body.Slice(0, 16).AsSpan());
             var messageBody = body.Slice(16);
             return (messageBody, correlationId);
         }

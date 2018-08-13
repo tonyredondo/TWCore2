@@ -34,14 +34,14 @@ namespace TWCore.Services
         /// <summary>
         /// Message object instance
         /// </summary>
-        public SubArray<byte> Message { get; }
+        public MultiArray<byte> Message { get; }
         /// <inheritdoc />
         /// <summary>
         /// Message event args
         /// </summary>
         /// <param name="message">Message object</param>
         /// <param name="correlationId">Correlation Id</param>
-        public RawMessageEventArgs(SubArray<byte> message, Guid correlationId)
+        public RawMessageEventArgs(MultiArray<byte> message, Guid correlationId)
         {
             CorrelationId = correlationId;
             Message = message;

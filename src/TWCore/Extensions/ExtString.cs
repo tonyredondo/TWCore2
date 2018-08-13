@@ -409,18 +409,6 @@ namespace TWCore
             return sb.ToString();
         }
         /// <summary>
-        /// Gets the Hexadecimal string from a byte array.
-        /// </summary>
-        /// <param name="obj">String array</param>
-        /// <returns>Hexadecimal string value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToHexString(this SubArray<byte> obj)
-        {
-            var sb = new StringBuilder(obj.Count * 2);
-            obj.ForEach((ref byte b, ref StringBuilder sbuilder) => sbuilder.AppendFormat("{0:x2}", b), ref sb);
-            return sb.ToString();
-        }
-        /// <summary>
         /// Gets a byte array from a Hexadecimal string
         /// </summary>
         /// <param name="hex">Hexadecimal string</param>

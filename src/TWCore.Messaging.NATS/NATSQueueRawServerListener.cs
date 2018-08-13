@@ -50,7 +50,7 @@ namespace TWCore.Messaging.NATS
         {
             public Guid CorrelationId;
             public string Name;
-            public SubArray<byte> Body;
+            public MultiArray<byte> Body;
         }
         private void MessageHandler(object sender, MsgHandlerEventArgs e)
         {

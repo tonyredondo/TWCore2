@@ -402,9 +402,9 @@ namespace TWCore
         /// <param name="value">Byte array to write to the stream</param>
         /// <param name="flush">true if a flush must be applied after write the string value. Default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBytes(this Stream stream, SubArray<byte> value, bool flush = true)
+        public static void WriteBytes(this Stream stream, MultiArray<byte> value, bool flush = true)
         {
-            stream.Write(value);
+            value.CopyTo(stream);
             if (flush)
                 stream.Flush();
         }
@@ -428,9 +428,9 @@ namespace TWCore
         /// <param name="value">Byte array to write to the stream</param>
         /// <param name="flush">true if a flush must be applied after write the string value. Default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task WriteBytesAsync(this Stream stream, SubArray<byte> value, bool flush = true)
+        public static async Task WriteBytesAsync(this Stream stream, MultiArray<byte> value, bool flush = true)
         {
-            await stream.WriteAsync(value).ConfigureAwait(false);
+            await value.CopyToAsync(stream).ConfigureAwait(false);
             if (flush)
                 await stream.FlushAsync().ConfigureAwait(false);
         }

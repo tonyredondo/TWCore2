@@ -247,18 +247,25 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(T item) => IndexOf(item) >= 0;
         /// <summary>
-        /// Gets the MultiArray HashCode
+        /// Returns a hash code for the specified object.
         /// </summary>
-        /// <returns>HashCode</returns>
+        /// <returns>Byte array hash value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => (_listOfArrays == null ? 0 : _listOfArrays.GetHashCode() ^_listOfArrays.Count) ^ _offset ^ _count ^ _segmentLength;
+        public override int GetHashCode()
+        {
+            var res = 0x2D2816FE;
+            var step = (_count / 64) + 1;
+            for (var i = 0; i < _count; i += step)
+                res = res * 31 + this[i].GetHashCode();
+            return res;
+        }
         /// <summary>
         /// Gets if the MultiArray is equal to another object
         /// </summary>
         /// <param name="obj">Object to compare</param>
         /// <returns>true if the object is equal; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object obj) => obj is SubArray<T> sobj && Equals(sobj);
+        public override bool Equals(object obj) => obj is MultiArray<T> sobj && Equals(sobj);
         /// <summary>
         /// Gets if the MultiArray is equal to another MultiArray
         /// </summary>
@@ -275,6 +282,7 @@ namespace TWCore
             if (obj._listOfArrays == null && _listOfArrays == null) return true;
             return obj._listOfArrays.SequenceEqual(_listOfArrays);
         }
+        
         /// <summary>
         /// Gets if the MultiArray is equal to another MultiArray
         /// </summary>

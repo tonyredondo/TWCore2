@@ -33,7 +33,7 @@ namespace TWCore.Serialization
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
         private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerCache = new ConcurrentDictionary<(string, string), ISerializer>();
-        private static TimeoutDictionary<SubArray<byte>, object> DesCache = new TimeoutDictionary<SubArray<byte>, object>(SubArrayBytesComparer.Instance);
+        private static TimeoutDictionary<MultiArray<byte>, object> DesCache = new TimeoutDictionary<MultiArray<byte>, object>(MultiArrayBytesComparer.Instance);
         private static TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
         /// <summary>
@@ -308,10 +308,10 @@ namespace TWCore.Serialization
         /// <param name="byteArray">SubArray instance</param>
         /// <returns>SerializedObject instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedObject FromSubArray(SubArray<byte> byteArray)
+        public static SerializedObject FromSubArray(MultiArray<byte> byteArray)
         {
             if (byteArray.Count == 0) return null;
-            return FromSpan(byteArray.AsReadOnlySpan());
+            return FromStream(byteArray.AsReadOnlyStream());
         }
         /// <summary>
         /// Get SerializedObject instance from the Memory representation.

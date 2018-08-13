@@ -34,7 +34,7 @@ namespace TWCore.Serialization.RawSerializer
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly Dictionary<Type, MethodInfo> ReadValuesFromType = new Dictionary<Type, MethodInfo>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
-        internal static readonly ConcurrentDictionary<SubArray<byte>, DeserializerMetadataOfTypeRuntime> SubArrayMetadata = new ConcurrentDictionary<SubArray<byte>, DeserializerMetadataOfTypeRuntime>(SubArrayBytesComparer.Instance);
+        internal static readonly ConcurrentDictionary<MultiArray<byte>, DeserializerMetadataOfTypeRuntime> SubArrayMetadata = new ConcurrentDictionary<MultiArray<byte>, DeserializerMetadataOfTypeRuntime>(MultiArrayBytesComparer.Instance);
         internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
         private readonly object[] _parameters = new object[1];
@@ -116,7 +116,7 @@ namespace TWCore.Serialization.RawSerializer
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
                 Stream.Read(typeBytes, 0, length);
-                var subTypeBytes = new SubArray<byte>(typeBytes, 0, length);
+                var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
                 if (!SubArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
                     var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
@@ -134,9 +134,8 @@ namespace TWCore.Serialization.RawSerializer
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                     metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-                    SubArrayMetadata.TryAdd(new SubArray<byte>(subTypeBytes.ToArray()), metadata);
+                    SubArrayMetadata.TryAdd(new MultiArray<byte>(subTypeBytes.ToArray()), metadata);
                 }
-                subTypeBytes = null;
                 ArrayPool<byte>.Shared.Return(typeBytes);
                 _typeCache.Set(metadata);
             }
@@ -172,7 +171,7 @@ namespace TWCore.Serialization.RawSerializer
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
                 Stream.Read(typeBytes, 0, length);
-                var subTypeBytes = new SubArray<byte>(typeBytes, 0, length);
+                var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
                 if (!SubArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
                     var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
@@ -190,9 +189,8 @@ namespace TWCore.Serialization.RawSerializer
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                     metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-                    SubArrayMetadata.TryAdd(new SubArray<byte>(subTypeBytes.ToArray()), metadata);
+                    SubArrayMetadata.TryAdd(new MultiArray<byte>(subTypeBytes.ToArray()), metadata);
                 }
-                subTypeBytes = null;
                 ArrayPool<byte>.Shared.Return(typeBytes);
                 _typeCache.Set(metadata);
             }

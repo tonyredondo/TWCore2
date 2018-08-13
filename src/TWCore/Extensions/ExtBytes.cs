@@ -126,10 +126,10 @@ namespace TWCore
         /// </summary>
         /// <param name="path">The file to write to.</param>
         /// <param name="value">The bytes to write to the file.</param>
-        public static void WriteToFile(this SubArray<byte> value, string path)
+        public static void WriteToFile(this MultiArray<byte> value, string path)
         {
             using (var fs = File.OpenWrite(path))
-                fs.Write(value);
+                value.CopyTo(fs);
         }
 
         /// <summary>

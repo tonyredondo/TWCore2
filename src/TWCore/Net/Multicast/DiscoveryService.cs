@@ -344,7 +344,7 @@ namespace TWCore.Net.Multicast
         {
             while (!_token.IsCancellationRequested)
             {
-                var servicesBytes = new List<SubArray<byte>>();
+                var servicesBytes = new List<MultiArray<byte>>();
                 lock (LocalServices)
                 {
                     foreach (var srv in LocalServices)

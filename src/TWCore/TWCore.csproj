@@ -8,4 +8,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NonBlocking" Version="1.0.2" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="SubArray.cs" />
+    <Compile Remove="SubArrayBytesComparer.cs" />
+  </ItemGroup>
 </Project>

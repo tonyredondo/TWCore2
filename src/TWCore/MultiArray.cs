@@ -64,6 +64,10 @@ namespace TWCore
         /// Arrays count
         /// </summary>
         public int ArrayCount => _listOfArrays.Count;
+        /// <summary>
+        /// Get if the MultiArray is empty
+        /// </summary>
+        public bool IsEmpty => _count == 0;
         #endregion
         
         #region .ctors

@@ -100,7 +100,7 @@ namespace TWCore.Serialization.PWSerializer.Types
             else
             {
                 writer.Write(DataType.SerializedObject);
-                value.WriteTo(writer.BaseStream);
+                value.CopyTo(writer.BaseStream);
             }
         }
         /// <inheritdoc />

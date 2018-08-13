@@ -92,7 +92,7 @@ namespace TWCore.Serialization.WSerializer.Types
             else
             {
                 writer.Write(DataType.SerializedObject);
-                value.WriteTo(writer.BaseStream);
+                value.CopyTo(writer.BaseStream);
             }
         }
         /// <inheritdoc />

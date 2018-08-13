@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -173,7 +172,7 @@ namespace TWCore.Net.Multicast
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
                     var sObj = new SerializedObject(service, Serializer);
-                    var sObjArr = sObj.ToArray();
+                    var sObjArr = sObj.ToMultiArray();
                     LocalServices.Add(new RegisteredServiceContainer(service, Serializer, sObjArr));
                 }
             }
@@ -207,7 +206,7 @@ namespace TWCore.Net.Multicast
             {
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
-                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, null));
+                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, MultiArray<byte>.Empty));
                 }
             }
             return service.ServiceId;
@@ -349,11 +348,11 @@ namespace TWCore.Net.Multicast
                 {
                     foreach (var srv in LocalServices)
                     {
-                        if (srv.DataToSend != null)
+                        if (srv.DataToSend.IsEmpty)
                         {
                             if (srv.Serializer != Serializer)
                             {
-                                srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToArray();
+                                srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToMultiArray();
                                 srv.Serializer = Serializer;
                             }
                             servicesBytes.Add(srv.DataToSend);
@@ -361,7 +360,7 @@ namespace TWCore.Net.Multicast
                         else if (srv.Service.GetDataFunc != null)
                         {
                             srv.Service.Data = srv.Service.GetDataFunc();
-                            servicesBytes.Add(new SerializedObject(srv.Service, Serializer).ToArray());
+                            servicesBytes.Add(new SerializedObject(srv.Service, Serializer).ToMultiArray());
                         }
                     }
                 }
@@ -377,9 +376,9 @@ namespace TWCore.Net.Multicast
         {
             public RegisteredService Service;
             public ISerializer Serializer;
-            public byte[] DataToSend;
+            public MultiArray<byte> DataToSend;
 
-            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, byte[] dataToSend)
+            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, MultiArray<byte> dataToSend)
             {
                 Service = service;
                 Serializer = serializer;

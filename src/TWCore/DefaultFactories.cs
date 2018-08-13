@@ -491,6 +491,8 @@ namespace TWCore
                     Core.Log.InfoBasic("Setting the Compaction on the Large Object Heap and forcing the garbage collector collect...");
                     GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                     GC.Collect();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
                 }, null, time, time);
             }
             _lastValue = Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes;

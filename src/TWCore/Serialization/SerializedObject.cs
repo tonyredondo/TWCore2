@@ -312,7 +312,7 @@ namespace TWCore.Serialization
             Span<byte> intBuffer = stackalloc byte[4];
             string dataType = null;
             string serializerMimeType = null;
-            byte[] data = null;
+            MultiArray<byte> data = MultiArray<byte>.Empty;
 
             stream.Fill(intBuffer);
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
@@ -336,8 +336,20 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                data = new byte[dataLength];
-                stream.ReadExact(data, 0, dataLength);
+                const int segmentLength = 1024;
+                var rows = dataLength / segmentLength;
+                var pos = dataLength % segmentLength;
+                if (pos > 0)
+                    rows++;
+
+                var bytes = new byte[rows][];
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = new byte[segmentLength];
+                    stream.ReadExact(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength);
+                }
+
+                data = new MultiArray<byte>(bytes, 0, dataLength);
             }
 
             return new SerializedObject(data, dataType, serializerMimeType);
@@ -353,7 +365,7 @@ namespace TWCore.Serialization
             var intBuffer = new byte[4];
             string dataType = null;
             string serializerMimeType = null;
-            byte[] data = null;
+            MultiArray<byte> data = MultiArray<byte>.Empty;
 
             stream.Fill(intBuffer);
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
@@ -377,8 +389,19 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                data = new byte[dataLength];
-                await stream.ReadExactAsync(data, 0, dataLength).ConfigureAwait(false);
+                const int segmentLength = 1024;
+                var rows = dataLength / segmentLength;
+                var pos = dataLength % segmentLength;
+                if (pos > 0)
+                    rows++;
+
+                var bytes = new byte[rows][];
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = new byte[segmentLength];
+                    await stream.ReadExactAsync(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength).ConfigureAwait(false);
+                }
+                data = new MultiArray<byte>(bytes, 0, dataLength);
             }
 
             return new SerializedObject(data, dataType, serializerMimeType);

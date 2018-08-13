@@ -96,9 +96,8 @@ namespace TWCore.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                var val = ((double)value / MaxLength);
-                _rowIndex = (int)val;
-                _position = (int)((val - _rowIndex) * MaxLength);
+                _rowIndex = (int)value / MaxLength;
+                _position = (int)value % MaxLength;
                 _currentBuffer = _buffer[_rowIndex];
             }
         }

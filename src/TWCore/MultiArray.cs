@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -29,20 +28,6 @@ using System.Threading.Tasks;
 
 namespace TWCore
 {
-    /// <summary>
-    /// MultiArray for each delegate
-    /// </summary>
-    public delegate void MultiArrayForEach<T>(ref T value);
-    /// <summary>
-    /// MultiArray for each delegate
-    /// </summary>
-    public delegate void MultiArrayForEach<T, TA1>(ref T value, ref TA1 arg1);
-    /// <summary>
-	/// MultiArray for each delegate
-	/// </summary>
-	public delegate void MultiArrayForEach<T, TA1, TA2>(ref T value, ref TA1 arg1, ref TA2 arg2);
-
-
     /// <summary>
     /// Provides a MultiArray implementation without copying buffer.
     /// </summary>
@@ -65,6 +50,13 @@ namespace TWCore
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly int _segmentLength;
 
+        #region Properties
+        /// <summary>
+        /// MultiArray items count
+        /// </summary>
+        public int Count => _count;
+        #endregion
+        
         #region .ctors
         /// <summary>
         /// Provides a MultiArray implementation without copying buffer.
@@ -275,93 +267,6 @@ namespace TWCore
             return "[MultiArray: " + typeof(T).Name + " - Offset: " + _offset + " - Count: " + _count + "]";
         }
         /// <summary>
-        /// For each method in the inner array by reference
-        /// </summary>
-        /// <param name="delegate">ForEach delegate</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ForEach(MultiArrayForEach<T> @delegate)
-        {
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
-            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
-            {
-                if (rowIndex == fromRowIndex)
-                {
-                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : toPosition); index++)
-                        @delegate(ref _listOfArrays[rowIndex][index]);
-                }
-                else if (rowIndex == toRowIndex)
-                {
-                    for (var index = 0; index < toPosition; index++)
-                        @delegate(ref _listOfArrays[rowIndex][index]);
-                }
-                else
-                {
-                    for (var index = 0; index < _segmentLength; index++)
-                        @delegate(ref _listOfArrays[rowIndex][index]);
-                }
-            }
-        }
-        /// <summary>
-        /// For each method in the inner array by reference
-        /// </summary>
-        /// <param name="delegate">ForEach delegate</param>
-        /// <param name="arg1">Argument 1</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ForEach<TA1>(MultiArrayForEach<T, TA1> @delegate, ref TA1 arg1)
-        {
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
-            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
-            {
-                if (rowIndex == fromRowIndex)
-                {
-                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : toPosition); index++)
-                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
-                }
-                else if (rowIndex == toRowIndex)
-                {
-                    for (var index = 0; index < toPosition; index++)
-                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
-                }
-                else
-                {
-                    for (var index = 0; index < _segmentLength; index++)
-                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
-                }
-            }
-        }
-        /// <summary>
-        /// For each method in the inner array by reference
-        /// </summary>
-        /// <param name="delegate">ForEach delegate</param>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ForEach<TA1, TA2>(MultiArrayForEach<T, TA1, TA2> @delegate, ref TA1 arg1, ref TA2 arg2)
-        {
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
-            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
-            {
-                if (rowIndex == fromRowIndex)
-                {
-                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : toPosition); index++)
-                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
-                }
-                else if (rowIndex == toRowIndex)
-                {
-                    for (var index = 0; index < toPosition; index++)
-                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
-                }
-                else
-                {
-                    for (var index = 0; index < _segmentLength; index++)
-                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
-                }
-            }
-        }
-        /// <summary>
         /// Copy data to the stream
         /// </summary>
         /// <param name="stream">Stream instance</param>
@@ -371,12 +276,12 @@ namespace TWCore
                 throw new NotSupportedException("The type of MultiArray is not bytes");
 
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
                 Span<byte> span;
                 if (rowIndex == fromRowIndex)
-                    span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
+                    span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength - fromPosition : (toPosition - fromPosition) + 1);
                 else if (rowIndex == toRowIndex)
                     span = arrays[rowIndex].AsSpan(0, toPosition);
                 else
@@ -394,12 +299,12 @@ namespace TWCore
                 throw new NotSupportedException("The type of MultiArray is not bytes");
             
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
                 Memory<byte> memory;
                 if (rowIndex == fromRowIndex)
-                    memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
+                    memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength - fromPosition : (toPosition - fromPosition) + 1);
                 else if (rowIndex == toRowIndex)
                     memory = arrays[rowIndex].AsMemory(0, toPosition);
                 else
@@ -408,21 +313,38 @@ namespace TWCore
             }
         }
         /// <summary>
+        /// Copy the MultiArray content to an Array 
+        /// </summary>
+        /// <param name="array">Array object</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyTo(T[] array) => WriteTo(array.AsSpan());
+        /// <summary>
+        /// Copy the MultiArray content to an Array 
+        /// </summary>
+        /// <param name="array">Array object</param>
+        /// <param name="arrayIndex">Starting offset in the destination array</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyTo(T[] array, int arrayIndex) => WriteTo(array.AsSpan(arrayIndex));
+
+        /// <summary>
         /// Write data to a span
         /// </summary>
         /// <param name="span">Destination span</param>
         /// <return>Number of copied items</return>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int WriteTo(Span<T> span)
         {
+            if (_offset == 130940923)
+                Debugger.Break();
             var copyLength = Math.Min(span.Length, _count);
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + copyLength);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + copyLength - 1);
             int writeCount = 0;
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
                 Span<T> sourceSpan;
                 if (rowIndex == fromRowIndex)
-                    sourceSpan = _listOfArrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
+                    sourceSpan = _listOfArrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength - fromPosition : (toPosition - fromPosition) + 1);
                 else if (rowIndex == toRowIndex)
                     sourceSpan = _listOfArrays[rowIndex].AsSpan(0, toPosition);
                 else
@@ -437,6 +359,7 @@ namespace TWCore
         /// Get a Readonly stream from this MultiArray instance.
         /// </summary>
         /// <returns>Readonly stream</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Stream AsReadOnlyStream()
         {
             if (this is MultiArray<byte> mBytes)
@@ -447,6 +370,7 @@ namespace TWCore
         /// Get a ReadOnlySequence from this MultiArray instance
         /// </summary>
         /// <returns>ReadOnlySequence instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySequence<T> AsReadOnlySequence()
         {
             if (_listOfArrays == null) return ReadOnlySequence<T>.Empty;
@@ -468,6 +392,17 @@ namespace TWCore
             }
             return sequence;
         }
+        /// <summary>
+        /// Convert the MultiArray to a single array
+        /// </summary>
+        /// <returns>Array instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] ToArray()
+        {
+            var arr = new T[_count];
+            WriteTo(arr.AsSpan());
+            return arr;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -476,15 +411,23 @@ namespace TWCore
         public static implicit operator MultiArray<T>(List<T[]> listOfSegments) => new MultiArray<T>(listOfSegments);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Span<T>(MultiArray<T> subArray) => new Span<T>(subArray.ToArray());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator ReadOnlySpan<T>(MultiArray<T> subArray) => new ReadOnlySpan<T>(subArray.ToArray());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Memory<T>(MultiArray<T> subArray) => new Memory<T>(subArray.ToArray());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator ReadOnlyMemory<T>(MultiArray<T> subArray) => new ReadOnlyMemory<T>(subArray.ToArray());
         #endregion
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private (int ArrayIndex, int Position) FromGlobalIndex(int globalIndex)
         {
-            var val = (double)globalIndex / _segmentLength;
-            var arrayIndex = (int)val;
-            var position = (int)((val - arrayIndex) * _segmentLength);
+            var arrayIndex = globalIndex / _segmentLength;
+            var position = globalIndex % _segmentLength;
             return (arrayIndex, position);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -501,13 +444,18 @@ namespace TWCore
         public class MultiArrayReadOnlyStream : Stream
         {
             private MultiArray<byte> _source;
-
+            private int _position;
+            
             #region Properties
             public override bool CanRead => true;
             public override bool CanSeek => true;
             public override bool CanWrite => false;
             public override long Length => _source._count;
-            public override long Position { get; set; }
+            public override long Position
+            {
+                get => _position;
+                set => _position = (int) value;
+            }
             #endregion
 
             #region .ctor
@@ -523,11 +471,25 @@ namespace TWCore
             
             public override int Read(byte[] buffer, int offset, int count)
             {
-                if (Position == _source._count)
+                if (_position == _source._count)
                     return 0;
                 var writeSpan = buffer.AsSpan(offset, count);
-                var bytes = _source.Slice((int)Position).WriteTo(writeSpan);
-                Position += bytes;
+                var bytes = _source.Slice(_position).WriteTo(writeSpan);
+                _position += bytes;
+                return bytes;
+            }
+            public override int ReadByte()
+            {
+                if (_position == _source._count)
+                    return -1;
+                return _source[_position++];
+            }
+            public override int Read(Span<byte> buffer)
+            {
+                if (_position == _source._count)
+                    return 0;
+                var bytes = _source.Slice(_position).WriteTo(buffer);
+                _position += bytes;
                 return bytes;
             }
 

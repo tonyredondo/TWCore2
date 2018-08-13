@@ -373,21 +373,14 @@ namespace TWCore
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
+                Span<byte> span;
                 if (rowIndex == fromRowIndex)
-                {
-                    var span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
-                    stream.Write(span);
-                }
+                    span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
                 else if (rowIndex == toRowIndex)
-                {
-                    var span = arrays[rowIndex].AsSpan(0, toPosition);
-                    stream.Write(span);
-                }
+                    span = arrays[rowIndex].AsSpan(0, toPosition);
                 else
-                {
-                    var span = arrays[rowIndex].AsSpan(0, _segmentLength);
-                    stream.Write(span);
-                }
+                    span = arrays[rowIndex].AsSpan(0, _segmentLength);
+                stream.Write(span);
             }
         }
         /// <summary>
@@ -403,22 +396,41 @@ namespace TWCore
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
+                Memory<byte> memory;
                 if (rowIndex == fromRowIndex)
-                {
-                    var memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
-                    await stream.WriteAsync(memory).ConfigureAwait(false);
-                }
+                    memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
                 else if (rowIndex == toRowIndex)
-                {
-                    var memory = arrays[rowIndex].AsMemory(0, toPosition);
-                    await stream.WriteAsync(memory).ConfigureAwait(false);
-                }
+                    memory = arrays[rowIndex].AsMemory(0, toPosition);
                 else
-                {
-                    var memory = arrays[rowIndex].AsMemory(0, _segmentLength);
-                    await stream.WriteAsync(memory).ConfigureAwait(false);
-                }
+                    memory = arrays[rowIndex].AsMemory(0, _segmentLength);
+                await stream.WriteAsync(memory).ConfigureAwait(false);
             }
+        }
+        /// <summary>
+        /// Write data to a span
+        /// </summary>
+        /// <param name="span">Destination span</param>
+        /// <return>Number of copied items</return>
+        public int WriteTo(Span<T> span)
+        {
+            var copyLength = Math.Min(span.Length, _count);
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + copyLength);
+            int writeCount = 0;
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            {
+                Span<T> sourceSpan;
+                if (rowIndex == fromRowIndex)
+                    sourceSpan = _listOfArrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
+                else if (rowIndex == toRowIndex)
+                    sourceSpan = _listOfArrays[rowIndex].AsSpan(0, toPosition);
+                else
+                    sourceSpan = _listOfArrays[rowIndex].AsSpan(0, _segmentLength);
+                sourceSpan.CopyTo(span);
+                span = span.Slice(sourceSpan.Length);
+                writeCount += sourceSpan.Length;
+            }
+            return writeCount;
         }
         /// <summary>
         /// Get a Readonly stream from this MultiArray instance.
@@ -485,15 +497,36 @@ namespace TWCore
             
             public override int Read(byte[] buffer, int offset, int count)
             {
-                throw new NotImplementedException();
+                if (Position == _source._count)
+                    return 0;
+                var writeSpan = buffer.AsSpan(offset, count);
+                var bytes = _source.Slice((int)Position).WriteTo(writeSpan);
+                Position += bytes;
+                return bytes;
             }
 
             public override long Seek(long offset, SeekOrigin origin)
             {
-                throw new NotImplementedException();
+                long res;
+                if (origin == SeekOrigin.Begin)
+                {
+                    res = offset;
+                }
+                else if (origin == SeekOrigin.Current)
+                {
+                    res = Position + offset;
+                }
+                else
+                {
+                    res = _source._count + offset;
+                }
+                if (res < 0 || res > _source._count)
+                    throw new ArgumentOutOfRangeException();
+                Position = res;
+                return Position;
             }
-
             
+
             public override void Flush()
             {
                 throw new IOException("The stream is read only.");

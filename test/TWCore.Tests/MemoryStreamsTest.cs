@@ -51,6 +51,7 @@ namespace TWCore.Tests
                             for (int i = 0; i < 10000; i++)
                                 rms.Write(xbuffer, 0, xbuffer.Length);
                         }
+                        
                         rms.Position = 0;
                         for (var x = 0; x < 10; x++)
                         {

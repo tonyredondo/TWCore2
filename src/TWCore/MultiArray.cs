@@ -325,7 +325,7 @@ namespace TWCore
                 if (rowIndex == fromRowIndex)
                     span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength - fromPosition : (toPosition - fromPosition) + 1);
                 else if (rowIndex == toRowIndex)
-                    span = arrays[rowIndex].AsSpan(0, toPosition);
+                    span = arrays[rowIndex].AsSpan(0, toPosition + 1);
                 else
                     span = arrays[rowIndex].AsSpan(0, _segmentLength);
                 stream.Write(span);
@@ -348,7 +348,7 @@ namespace TWCore
                 if (rowIndex == fromRowIndex)
                     memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength - fromPosition : (toPosition - fromPosition) + 1);
                 else if (rowIndex == toRowIndex)
-                    memory = arrays[rowIndex].AsMemory(0, toPosition);
+                    memory = arrays[rowIndex].AsMemory(0, toPosition + 1);
                 else
                     memory = arrays[rowIndex].AsMemory(0, _segmentLength);
                 await stream.WriteAsync(memory).ConfigureAwait(false);
@@ -386,7 +386,7 @@ namespace TWCore
                 if (rowIndex == fromRowIndex)
                     sourceSpan = _listOfArrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength - fromPosition : (toPosition - fromPosition) + 1);
                 else if (rowIndex == toRowIndex)
-                    sourceSpan = _listOfArrays[rowIndex].AsSpan(0, toPosition);
+                    sourceSpan = _listOfArrays[rowIndex].AsSpan(0, toPosition + 1);
                 else
                     sourceSpan = _listOfArrays[rowIndex].AsSpan(0, _segmentLength);
                 sourceSpan.CopyTo(span);

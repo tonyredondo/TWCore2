@@ -42,7 +42,7 @@ namespace TWCore
         /// </summary>
         public static MultiArray<T> Empty = new MultiArray<T>();
 
-        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IList<T[]> _listOfArrays;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly int _offset;
@@ -53,9 +53,17 @@ namespace TWCore
 
         #region Properties
         /// <summary>
-        /// MultiArray items count
+        /// Items count
         /// </summary>
         public int Count => _count;
+        /// <summary>
+        /// Offset
+        /// </summary>
+        public int Offset => _offset;
+        /// <summary>
+        /// Arrays count
+        /// </summary>
+        public int ArrayCount => _listOfArrays.Count;
         #endregion
         
         #region .ctors
@@ -188,6 +196,13 @@ namespace TWCore
         public MultiArray<T> Slice(int index)
             => Slice(index, _count - index);
         /// <summary>
+        /// Slice the MultiArray and Reduce it
+        /// </summary>
+        /// <param name="index">Index from the slice begins</param>
+        /// <returns>New MultiArray instance</returns>
+        public MultiArray<T> SliceAndReduce(int index)
+            => SliceAndReduce(index, _count - index);
+        /// <summary>
         /// Slice the MultiArray
         /// </summary>
         /// <param name="index">Index from the slice begins</param>
@@ -202,6 +217,27 @@ namespace TWCore
             if (_count - index < count)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid");
             return new MultiArray<T>(_listOfArrays, _offset + index, count);
+        }
+        /// <summary>
+        /// Slice the MultiArray and Reduce it
+        /// </summary>
+        /// <param name="index">Index from the slice begins</param>
+        /// <param name="count">Number of element of the slice</param>
+        /// <returns>New MultiArray instance</returns>
+        public MultiArray<T> SliceAndReduce(int index, int count)
+        {
+            Ensure.GreaterEqualThan(index, 0, "Index should be a positive number.");
+            Ensure.GreaterEqualThan(count, 0, "Count should be a positive number.");
+            if (index > _count)
+                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
+            if (_count - index < count)
+                throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid");
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(index);
+            var (toRowIndex, toPosition) = FromGlobalIndex(index + count - 1);
+            var lst = new List<T[]>();
+            for(var row = fromRowIndex; row <= toRowIndex; row++)
+                lst.Add(_listOfArrays[row]);
+            return new MultiArray<T>(lst, fromPosition, count);
         }
         /// <summary>
         /// Gets if the MultiArray contains the item
@@ -262,7 +298,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString()
         {
-            return "[MultiArray: " + typeof(T).Name + " - Offset: " + _offset + " - Count: " + _count + "]";
+            return "[MultiArray<" + typeof(T).Name + "> - Arrays: " + _listOfArrays.Count + " - Offset: " + _offset + " - Count: " + _count + "]";
         }
         /// <summary>
         /// Copy data to the stream
@@ -434,6 +470,20 @@ namespace TWCore
         public ReadOnlyMemory<T> AsReadOnlyMemory()
         {
             return new ReadOnlyMemory<T>(ToArray());
+        }
+        /// <summary>
+        /// Get a MultiArray instance with only the necessary arrays
+        /// </summary>
+        /// <returns>MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public MultiArray<T> Reduce()
+        {
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var lst = new List<T[]>();
+            for(var row = fromRowIndex; row <= toRowIndex; row++)
+                lst.Add(_listOfArrays[row]);
+            return new MultiArray<T>(lst, fromPosition, _count);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

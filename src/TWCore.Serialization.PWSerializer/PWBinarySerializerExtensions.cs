@@ -39,7 +39,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>PWBinary serialized object</returns>
-        public static SubArray<byte> SerializeToPWBinary<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToPWBinary<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize an object using the PWBinary serializer
         /// </summary>
@@ -53,7 +53,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">PWBinary serialized object</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromPWBinary<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromPWBinary<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
         /// <summary>
         /// Deserialize an object using the PWBinary serializer
         /// </summary>
@@ -67,7 +67,7 @@ namespace TWCore.Serialization
         /// <param name="value">PWBinary serialized object</param>
         /// <param name="type">Object type</param>
         /// <returns>Object instance</returns>
-        public static object DeserializeFromPWBinary(this SubArray<byte> value, Type type) => Serializer.Deserialize(value, type);
+        public static object DeserializeFromPWBinary(this MultiArray<byte> value, Type type) => Serializer.Deserialize(value, type);
         /// <summary>
         /// Serialize object using PWBinary and write it into the stream
         /// </summary>

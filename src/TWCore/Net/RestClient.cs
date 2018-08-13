@@ -340,7 +340,7 @@ namespace TWCore.Net
         public async Task<RestClientResponse> PutAsync(string requestUri, object data, Dictionary<string, string> headers = null)
         {
             PrepareHeaders(headers);
-            var bytes = data != null ? (byte[])Serializer.Serialize(data, data.GetType()) : Array.Empty<byte>();
+            var bytes = data != null ? Serializer.Serialize(data, data.GetType()).ToArray() : Array.Empty<byte>();
             var buffer = new ByteArrayContent(bytes);
             buffer.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
             Core.Log.LibVerbose("Sending PUT request to {0} with a data length of {1} bytes", requestUri, bytes?.Length);
@@ -421,7 +421,7 @@ namespace TWCore.Net
         public async Task<RestClientResponse> PostAsync(string requestUri, object data, Dictionary<string, string> headers = null)
         {
             PrepareHeaders(headers);
-            var bytes = data != null ? (byte[])Serializer.Serialize(data, data.GetType()) : Array.Empty<byte>();
+            var bytes = data != null ? Serializer.Serialize(data, data.GetType()).ToArray() : Array.Empty<byte>();
             var buffer = new ByteArrayContent(bytes);
             buffer.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
             Core.Log.LibVerbose("Sending POST request to {0} with a data length of {1} bytes", requestUri, bytes?.Length);

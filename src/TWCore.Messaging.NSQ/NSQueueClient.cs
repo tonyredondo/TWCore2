@@ -65,7 +65,7 @@ namespace TWCore.Messaging.NSQ
         private class NSQueueMessage
         {
             public Guid CorrelationId;
-            public SubArray<byte> Body;
+            public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
             public Consumer Consumer;
             public string Route;
@@ -271,7 +271,7 @@ namespace TWCore.Messaging.NSQ
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
-                if (message.Body == null)
+                if (message.Body == MultiArray<byte>.Empty)
                     throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
@@ -284,7 +284,7 @@ namespace TWCore.Messaging.NSQ
             if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
                 throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
-            if (message.Body == null)
+            if (message.Body == MultiArray<byte>.Empty)
                 throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
@@ -298,7 +298,7 @@ namespace TWCore.Messaging.NSQ
 
         #region Static Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static byte[] CreateMessageBody(SubArray<byte> message, Guid correlationId)
+        internal static byte[] CreateMessageBody(MultiArray<byte> message, Guid correlationId)
         {
             var body = new byte[16 + message.Count];
             correlationId.TryWriteBytes(body.AsSpan(0, 16));
@@ -306,9 +306,9 @@ namespace TWCore.Messaging.NSQ
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (SubArray<byte>, Guid) GetFromMessageBody(byte[] message)
+        internal static (MultiArray<byte>, Guid) GetFromMessageBody(byte[] message)
         {
-            var body = new SubArray<byte>(message);
+            var body = new MultiArray<byte>(message);
             var correlationId = new Guid(body.Slice(0, 16));
             var messageBody = body.Slice(16);
             return (messageBody, correlationId);

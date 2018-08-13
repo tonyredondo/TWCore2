@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;
 // ReSharper disable AccessToModifiedClosure
@@ -143,14 +142,14 @@ namespace TWCore.Serialization
         /// <param name="itemType">Object type</param>
         /// <returns>Serialized byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SubArray<byte> Serialize(object item, Type itemType)
+        public MultiArray<byte> Serialize(object item, Type itemType)
         {
             using (var stream = new RecycleMemoryStream())
             {
                 if (Compressor == null)
                 {
                     OnSerialize(stream, item, itemType);
-                    return stream.ToArray();
+                    return stream.GetMultiArray();
                 }
                 using (var ms = new RecycleMemoryStream())
                 {
@@ -158,7 +157,7 @@ namespace TWCore.Serialization
                     ms.Position = 0;
                     Compressor.Compress(ms, stream);
                 }
-                return stream.ToArray();
+                return stream.GetMultiArray();
             }
         }
         /// <inheritdoc />
@@ -169,9 +168,9 @@ namespace TWCore.Serialization
         /// <param name="valueType">Value type</param>
         /// <returns>Deserialized object</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object Deserialize(SubArray<byte> value, Type valueType)
+        public object Deserialize(MultiArray<byte> value, Type valueType)
         {
-            using (var stream = value.ToMemoryStream())
+            using (var stream = value.AsReadOnlyStream())
             {
                 if (Compressor == null)
                 {
@@ -343,7 +342,7 @@ namespace TWCore.Serialization
         /// <param name="item">Object to serialize</param>
         /// <returns>Serialized byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SubArray<byte> Serialize<T>(T item) => Serialize(item, item?.GetType() ?? typeof(T));
+        public MultiArray<byte> Serialize<T>(T item) => Serialize(item, item?.GetType() ?? typeof(T));
         /// <inheritdoc />
         /// <summary>
         /// Deserialize a byte array value to an item type
@@ -352,7 +351,7 @@ namespace TWCore.Serialization
         /// <param name="value">Byte array to deserialize</param>
         /// <returns>Deserialized object</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Deserialize<T>(SubArray<byte> value) => (T)Deserialize(value, typeof(T));
+        public T Deserialize<T>(MultiArray<byte> value) => (T)Deserialize(value, typeof(T));
 
         /// <inheritdoc />
         /// <summary>

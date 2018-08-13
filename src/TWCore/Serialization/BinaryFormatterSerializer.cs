@@ -110,14 +110,14 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>Serialized binary formatter value</returns>
-        public static SubArray<byte> SerializeToBinFormatter<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToBinFormatter<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize a binary formatter value to an object instance
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">Serialized binary formatter value</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromBinFormatter<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromBinFormatter<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
         /// <summary>
         /// Deserialize a binary formatter value to an object instance
         /// </summary>

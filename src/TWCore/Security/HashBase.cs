@@ -117,7 +117,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] GetBytes(object obj) => GetBytes((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public byte[] GetBytes(object obj) => GetBytes(GetSerializer().Serialize(obj, obj.GetType()).ToArray());
         /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from an object
@@ -125,7 +125,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string Get(object obj) => Get((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public string Get(object obj) => Get(GetSerializer().Serialize(obj, obj.GetType()).ToArray());
         /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from an object
@@ -133,7 +133,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Guid GetGuid(object obj) => GetGuid((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public Guid GetGuid(object obj) => GetGuid(GetSerializer().Serialize(obj, obj.GetType()).ToArray());
 
         /// <inheritdoc />
         /// <summary>

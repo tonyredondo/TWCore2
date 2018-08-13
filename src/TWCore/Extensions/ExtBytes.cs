@@ -33,7 +33,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>GZipped byte array</returns>
-        public static SubArray<byte> ToGzip(this byte[] value)
+        public static MultiArray<byte> ToGzip(this byte[] value)
         {
             if (value.IsGzip())
                 return value;
@@ -45,7 +45,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>GZipped byte array</returns>
-        public static SubArray<byte> ToGzip(this SubArray<byte> value)
+        public static MultiArray<byte> ToGzip(this MultiArray<byte> value)
         {
             if (value.IsGzip())
                 return value;
@@ -58,7 +58,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">GZipped byte array</param>
         /// <returns>Decompressed array</returns>
-        public static SubArray<byte> FromGzip(this byte[] value)
+        public static MultiArray<byte> FromGzip(this byte[] value)
         {
             if (!value.IsGzip())
                 return value;
@@ -70,7 +70,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">GZipped byte array</param>
         /// <returns>Decompressed array</returns>
-        public static SubArray<byte> FromGzip(this SubArray<byte> value)
+        public static MultiArray<byte> FromGzip(this MultiArray<byte> value)
         {
             if (!value.IsGzip())
                 return value;
@@ -83,14 +83,14 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>Deflated byte array</returns>
-        public static SubArray<byte> ToDeflate(this byte[] value)
-            => ToDeflate((SubArray<byte>)value);
+        public static MultiArray<byte> ToDeflate(this byte[] value)
+            => ToDeflate(value);
         /// <summary>
         /// Gets a Deflated byte array from the source byte array
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>Deflated byte array</returns>
-        public static SubArray<byte> ToDeflate(this SubArray<byte> value)
+        public static MultiArray<byte> ToDeflate(this MultiArray<byte> value)
         {
             var deflateCompressor = CompressorManager.Get<DeflateCompressor>() ?? new DeflateCompressor();
             return deflateCompressor.Compress(value);
@@ -101,14 +101,14 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Deflated byte array</param>
         /// <returns>Decompressed array</returns>
-        public static SubArray<byte> FromDeflate(this byte[] value)
-            => FromDeflate((SubArray<byte>)value);
+        public static MultiArray<byte> FromDeflate(this byte[] value)
+            => FromDeflate(value);
         /// <summary>
         /// Gets a Deflate decompressed byte array from a Deflated byte array
         /// </summary>
         /// <param name="value">Deflated byte array</param>
         /// <returns>Decompressed array</returns>
-        public static SubArray<byte> FromDeflate(this SubArray<byte> value)
+        public static MultiArray<byte> FromDeflate(this MultiArray<byte> value)
         {
             var deflateCompressor = CompressorManager.Get<DeflateCompressor>() ?? new DeflateCompressor();
             return deflateCompressor.Decompress(value);
@@ -148,7 +148,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Byte array</param>
         /// <returns>true if have the gzip magic number; otherwise, false.</returns>
-        public static bool IsGzip(this SubArray<byte> value)
+        public static bool IsGzip(this MultiArray<byte> value)
         {
             if (value.Count > 2)
                 return (value[0] == 0x1f && value[1] == 0x8b);

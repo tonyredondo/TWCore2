@@ -48,7 +48,7 @@ namespace TWCore.Messaging.NSQ
 		private struct NSQMessage
 		{
 			public Guid CorrelationId;
-			public SubArray<byte> Body;
+			public MultiArray<byte> Body;
 		}
 		private class NSQMessageHandler : IHandler
         {
@@ -203,7 +203,7 @@ namespace TWCore.Messaging.NSQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task ProcessingTaskAsync(NSQMessage message)
 		{
-            if (message.Body == null) return;
+            if (message.Body == MultiArray<byte>.Empty) return;
 			try
 			{
 				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);

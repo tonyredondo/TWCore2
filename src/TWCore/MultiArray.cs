@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -64,7 +65,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(T[] array)
         {
-            _listOfArrays = new T[][] { array };
+            _listOfArrays = new[] { array };
             _offset = 0;
             _count = array?.Length ?? 0;
             _segmentLength = _count;
@@ -75,11 +76,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(T[] array, int offset, int count)
         {
-            _listOfArrays = new T[][] { array ?? throw new ArgumentNullException("array") };
+            _listOfArrays = new[] { array ?? throw new ArgumentNullException(nameof(array)) };
             Ensure.GreaterEqualThan(offset, 0, "The offset should be a positive number.");
             Ensure.GreaterEqualThan(count, 0, "The count should be a positive number.");
             if (array.Length - offset < count)
-                throw new ArgumentOutOfRangeException("The count is invalid.");
+                throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid.");
             _offset = offset;
             _count = count;
             _segmentLength = _count;
@@ -90,7 +91,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(ArraySegment<T> array)
         {
-            _listOfArrays = new T[][] { array.Array };
+            _listOfArrays = new[] { array.Array };
             _offset = array.Offset;
             _count = array.Count;
             _segmentLength = _count;
@@ -107,7 +108,7 @@ namespace TWCore
             _segmentLength = sCount > 0 ? segments[0].Length : 0;
             for (var i = 1; i < sCount; i++)
                 if (segments[i].Length != _segmentLength)
-                    throw new ArgumentOutOfRangeException("All segments must has the same length");
+                    throw new ArgumentOutOfRangeException(nameof(segments), "All segments must has the same length");
             _count = _segmentLength * sCount;
         }
         /// <summary>
@@ -123,10 +124,10 @@ namespace TWCore
             _segmentLength = sCount > 0 ? segments[0].Length : 0;
             for (var i = 1; i < sCount; i++)
                 if (segments[i].Length != _segmentLength)
-                    throw new ArgumentOutOfRangeException("All segments must has the same length");
+                    throw new ArgumentOutOfRangeException(nameof(segments), "All segments must has the same length");
             var maxCount = _segmentLength * sCount;
             if (maxCount - offset < count)
-                throw new ArgumentOutOfRangeException("The count is invalid.");
+                throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid.");
             _offset = offset;
             _count = count;
         }
@@ -163,22 +164,19 @@ namespace TWCore
                 int index;
                 if (rowIndex == fromRowIndex)
                 {
-                    index = Array.IndexOf(_listOfArrays[rowIndex], fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    index = Array.IndexOf(_listOfArrays[rowIndex], item, fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    index = Array.IndexOf(_listOfArrays[rowIndex], 0, toPosition + 1);                    
+                    index = Array.IndexOf(_listOfArrays[rowIndex], item, 0, toPosition + 1);                    
                 }
                 else
                 {
-                    index = Array.IndexOf(_listOfArrays[rowIndex], 0, _segmentLength);                                        
+                    index = Array.IndexOf(_listOfArrays[rowIndex], item, 0, _segmentLength);                                        
                 }
-
-                if (index > -1)
-                {
-                    var globalIndex = ToGlobalIndex(rowIndex, index);
-                    return globalIndex - _offset;
-                }
+                if (index == -1) continue;
+                var globalIndex = ToGlobalIndex(rowIndex, index);
+                return globalIndex - _offset;
             }
             return -1;
         }
@@ -197,8 +195,8 @@ namespace TWCore
         /// <returns>New MultiArray instance</returns>
         public MultiArray<T> Slice(int index, int count)
         {
-            Ensure.GreaterEqualThan(index, 0, "Index should be a possitive number.");
-            Ensure.GreaterEqualThan(count, 0, "Count should be a possitive number.");
+            Ensure.GreaterEqualThan(index, 0, "Index should be a positive number.");
+            Ensure.GreaterEqualThan(count, 0, "Count should be a positive number.");
             if (index > _count)
                 throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
             if (_count - index < count)
@@ -382,7 +380,7 @@ namespace TWCore
             {
                 var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
                 var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
-                var firstSegment = new SequenceSegment<T>(_listOfArrays[fromRowIndex]);
+                var firstSegment = new SequenceSegment(_listOfArrays[fromRowIndex]);
                 var lastSegment = firstSegment;
                 for (var rowIndex = fromRowIndex + 1; rowIndex <= toRowIndex; rowIndex++)
                     lastSegment = lastSegment.Add(_listOfArrays[rowIndex]);
@@ -452,9 +450,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private (int ArrayIndex, int Position) FromGlobalIndex(int globalIndex)
         {
-            var arrayIndex = globalIndex / _segmentLength;
-            var position = globalIndex % _segmentLength;
-            return (arrayIndex, position);
+            return (globalIndex / _segmentLength, globalIndex % _segmentLength);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int ToGlobalIndex(int arrayIndex, int position)
@@ -464,12 +460,13 @@ namespace TWCore
         #endregion
         
         #region Nested Types
+        /// <inheritdoc />
         /// <summary>
         /// MultiArray Readonly Stream
         /// </summary>
         public class MultiArrayReadOnlyStream : Stream
         {
-            private MultiArray<byte> _source;
+            private readonly MultiArray<byte> _source;
             private int _position;
             
             #region Properties
@@ -555,14 +552,14 @@ namespace TWCore
             }
         }
 
-        private class SequenceSegment<T> : ReadOnlySequenceSegment<T>
+        private class SequenceSegment : ReadOnlySequenceSegment<T>
         {
             public SequenceSegment(T[] segmentItem)
                 => Memory = new ReadOnlyMemory<T>(segmentItem);
             
-            public SequenceSegment<T> Add(T[] segmentItem)
+            public SequenceSegment Add(T[] segmentItem)
             {
-                var segment = new SequenceSegment<T>(segmentItem);
+                var segment = new SequenceSegment(segmentItem);
                 segment.RunningIndex = RunningIndex + Memory.Length;
                 Next = segment;
                 return segment;

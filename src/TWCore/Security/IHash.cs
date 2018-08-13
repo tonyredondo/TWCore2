@@ -32,25 +32,25 @@ namespace TWCore.Security
         /// </summary>
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Hash bytes array.</returns>
-        byte[] GetBytes(byte[] bytes);
+        MultiArray<byte> GetBytes(MultiArray<byte> bytes);
         /// <summary>
         /// Gets the string hash value from a bytes array
         /// </summary>
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>String value with the hash.</returns>
-        string Get(byte[] bytes);
+        string Get(MultiArray<byte> bytes);
         /// <summary>
         /// Gets the guid hash value from a bytes array
         /// </summary>
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Guid value with the hash.</returns>
-        Guid GetGuid(byte[] bytes);
+        Guid GetGuid(MultiArray<byte> bytes);
         /// <summary>
         /// Gets the hash bytes from an object
         /// </summary>
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
-        byte[] GetBytes(object obj);
+        MultiArray<byte> GetBytes(object obj);
         /// <summary>
         /// Gets the hash string value from an object
         /// </summary>
@@ -69,7 +69,7 @@ namespace TWCore.Security
         /// </summary>
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
-        byte[] GetBytes(string obj);
+        MultiArray<byte> GetBytes(string obj);
         /// <summary>
         /// Gets the hash string value from a string value
         /// </summary>

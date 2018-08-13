@@ -39,8 +39,8 @@ namespace TWCore.Serialization.WSerializer
     {
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, byte[]>();
-        private static readonly NonBlocking.ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<byte[], Type>(ByteArrayComparer.Instance);
+        private static readonly NonBlocking.ConcurrentDictionary<Type, MultiArray<byte>> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, MultiArray<byte>>();
+        private static readonly NonBlocking.ConcurrentDictionary<MultiArray<byte>, Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<MultiArray<byte>, Type>(MultiArrayBytesComparer.Instance);
         private static readonly IHash Hash = HashManager.Get("SHA1");
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         
@@ -330,7 +330,7 @@ namespace TWCore.Serialization.WSerializer
                                     if (_knownTypes.Contains(tStartItem.Type))
                                     {
                                         bw.Write(DataType.KnownType);
-                                        bw.Write(GlobalKnownTypes[tStartItem.Type]);
+                                        GlobalKnownTypes[tStartItem.Type].CopyTo(bw.BaseStream);
                                     }
                                     else
                                     {

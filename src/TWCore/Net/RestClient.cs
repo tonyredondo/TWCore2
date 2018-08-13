@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -340,11 +341,11 @@ namespace TWCore.Net
         public async Task<RestClientResponse> PutAsync(string requestUri, object data, Dictionary<string, string> headers = null)
         {
             PrepareHeaders(headers);
-            var bytes = data != null ? Serializer.Serialize(data, data.GetType()).ToArray() : Array.Empty<byte>();
-            var buffer = new ByteArrayContent(bytes);
-            buffer.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
-            Core.Log.LibVerbose("Sending PUT request to {0} with a data length of {1} bytes", requestUri, bytes?.Length);
-            var response = await _client.PutAsync(requestUri, buffer).ConfigureAwait(false);
+            var stream = data != null ? Serializer.Serialize(data, data.GetType()).AsReadOnlyStream() : Stream.Null;
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
+            Core.Log.LibVerbose("Sending PUT request to {0} with a data length of {1} bytes", requestUri, stream.Length);
+            var response = await _client.PutAsync(requestUri, streamContent).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>
@@ -421,11 +422,11 @@ namespace TWCore.Net
         public async Task<RestClientResponse> PostAsync(string requestUri, object data, Dictionary<string, string> headers = null)
         {
             PrepareHeaders(headers);
-            var bytes = data != null ? Serializer.Serialize(data, data.GetType()).ToArray() : Array.Empty<byte>();
-            var buffer = new ByteArrayContent(bytes);
-            buffer.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
-            Core.Log.LibVerbose("Sending POST request to {0} with a data length of {1} bytes", requestUri, bytes?.Length);
-            var response = await _client.PostAsync(requestUri, buffer).ConfigureAwait(false);
+            var stream = data != null ? Serializer.Serialize(data, data.GetType()).AsReadOnlyStream() : Stream.Null;
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
+            Core.Log.LibVerbose("Sending POST request to {0} with a data length of {1} bytes", requestUri, stream.Length);
+            var response = await _client.PutAsync(requestUri, streamContent).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>

@@ -450,6 +450,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> AsSpan()
         {
+            if (_listOfArrays.Count == 1)
+                return new Span<T>(_listOfArrays[0], _offset, _count);
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            if (fromRowIndex == toRowIndex)
+                return new Span<T>(_listOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new Span<T>(ToArray());
         }
         /// <summary>
@@ -459,6 +465,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<T> AsReadOnlySpan()
         {
+            if (_listOfArrays.Count == 1)
+                return new ReadOnlySpan<T>(_listOfArrays[0], _offset, _count);
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            if (fromRowIndex == toRowIndex)
+                return new ReadOnlySpan<T>(_listOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new ReadOnlySpan<T>(ToArray());
         }
         /// <summary>
@@ -468,6 +480,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Memory<T> AsMemory()
         {
+            if (_listOfArrays.Count == 1)
+                return new Memory<T>(_listOfArrays[0], _offset, _count);
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            if (fromRowIndex == toRowIndex)
+                return new Memory<T>(_listOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new Memory<T>(ToArray());
         }
         /// <summary>
@@ -477,6 +495,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlyMemory<T> AsReadOnlyMemory()
         {
+            if (_listOfArrays.Count == 1)
+                return new ReadOnlyMemory<T>(_listOfArrays[0], _offset, _count);
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            if (fromRowIndex == toRowIndex)
+                return new ReadOnlyMemory<T>(_listOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new ReadOnlyMemory<T>(ToArray());
         }
         /// <summary>

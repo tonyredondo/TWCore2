@@ -95,14 +95,12 @@ namespace TWCore.Threading
             if (_mTcs.Task.IsCompleted) return true;
             if (_mTcs.Task.IsCanceled) return false;
             if (_mTcs.Task.IsFaulted) return false;
-            using (var delayCancellation = new CancellationTokenSource())
-            using (var delayTask = Task.Delay(milliseconds, delayCancellation.Token))
-            {
-                var resTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
-                if (resTask == delayTask)
-                    return false;
-                delayCancellation.Cancel();
-            }
+            var delayCancellation = new CancellationTokenSource();
+            var delayTask = Task.Delay(milliseconds, delayCancellation.Token);
+            var resTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
+            if (resTask == delayTask)
+                return false;
+            delayCancellation.Cancel();
             return true;
         }
         /// <summary>
@@ -127,18 +125,16 @@ namespace TWCore.Threading
             if (_mTcs.Task.IsCompleted) return true;
             if (_mTcs.Task.IsCanceled) return false;
             if (_mTcs.Task.IsFaulted) return false;
-            using (var delayCancellation = new CancellationTokenSource())
-            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(delayCancellation.Token, cancellationToken))
-            using (var delayTask = Task.Delay(milliseconds, linkedCancellation.Token))
-            {
-                var resTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
-                if (resTask == delayTask)
-                    return false;
-                delayCancellation.Cancel();
-                if (cancellationToken.IsCancellationRequested)
-                    return false;
-                return true;
-            }
+            var delayCancellation = new CancellationTokenSource();
+            var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(delayCancellation.Token, cancellationToken);
+            var delayTask = Task.Delay(milliseconds, linkedCancellation.Token);
+            var resTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
+            if (resTask == delayTask)
+                return false;
+            delayCancellation.Cancel();
+            if (cancellationToken.IsCancellationRequested)
+                return false;
+            return true;
         }
         /// <summary>
         /// Wait Async for the set event

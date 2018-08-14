@@ -407,7 +407,7 @@ namespace TWCore
         public Stream AsReadOnlyStream()
         {
             if (this is MultiArray<byte> mBytes)
-                return new MultiArrayReadOnlyStream(mBytes);
+                return MultiArrayReadOnlyStream.New(mBytes);
             throw new NotSupportedException("The type of MultiArray is not bytes");
         }
         /// <summary>
@@ -563,8 +563,11 @@ namespace TWCore
         /// </summary>
         public class MultiArrayReadOnlyStream : Stream
         {
-            private readonly MultiArray<byte> _source;
+            private static ObjectPool<MultiArrayReadOnlyStream> StreamPool = new ObjectPool<MultiArrayReadOnlyStream>(i => new MultiArrayReadOnlyStream());
+
+            private MultiArray<byte> _source;
             private int _position;
+            private bool _disposed;
             
             #region Properties
             public override bool CanRead => true;
@@ -578,17 +581,38 @@ namespace TWCore
             }
             #endregion
 
-            #region .ctor
+            #region Internals
             /// <summary>
             /// MultiArray Readonly Stream
             /// </summary>
-            /// <param name="source">MultiArray source</param>
-            internal MultiArrayReadOnlyStream(MultiArray<byte> source)
+            private MultiArrayReadOnlyStream()
             {
-                _source = source;
+            }
+            ~MultiArrayReadOnlyStream()
+            {
+                if (_disposed) return;
+                _source = MultiArray<byte>.Empty;
+                _position = 0;
+                _disposed = true;
+                StreamPool.Store(this);
+            }
+            public static MultiArrayReadOnlyStream New(MultiArray<byte> source)
+            {
+                var stream = StreamPool.New();
+                stream._source = source;
+                stream._disposed = false;
+                return stream;
+            }
+            protected override void Dispose(bool disposing)
+            {
+                if (_disposed) return;
+                _source = MultiArray<byte>.Empty;
+                _position = 0;
+                _disposed = true;
+                StreamPool.Store(this);
             }
             #endregion
-            
+
             public override int Read(byte[] buffer, int offset, int count)
             {
                 if (_position == _source._count)

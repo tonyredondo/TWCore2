@@ -35,6 +35,7 @@ namespace TWCore
     {
         private readonly ConcurrentStack<T> _objectStack;
         private readonly PoolResetMode _resetMode;
+        private readonly Timer _dropTimer;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
@@ -61,19 +62,13 @@ namespace TWCore
                 Preallocate(initialBufferSize);
             if (dropTimeFrequencyInSeconds > 0)
             {
-                var cancellationTokenSource = new CancellationTokenSource();
-                dropTimeFrequencyInSeconds = dropTimeFrequencyInSeconds * 1000;
-                var token = cancellationTokenSource.Token;
-                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                var frequency = TimeSpan.FromSeconds(dropTimeFrequencyInSeconds);
+                _dropTimer = new Timer(sender => 
                 {
-                    while (!token.IsCancellationRequested)
-                    {
-                        var count = _objectStack.Count;
-                        if (count > 2 && _objectStack.TryPop(out var item))
-                            dropAction?.Invoke(item);
-                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
-                    }
-                }, token);
+                    var count = _objectStack.Count;
+                    if (count > 2 && _objectStack.TryPop(out var item))
+                        dropAction?.Invoke(item);
+                }, null, frequency, frequency);
             }
         }
         /// <inheritdoc />
@@ -140,6 +135,8 @@ namespace TWCore
     public sealed class ObjectPool<T, TPoolObjectLifecycle> : IPool<T>
         where TPoolObjectLifecycle : struct, IPoolObjectLifecycle<T>
     {
+        private readonly Timer _dropTimer;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private TPoolObjectLifecycle _allocator;
 
@@ -153,19 +150,13 @@ namespace TWCore
                 _objectStack.Push(_allocator.New());
             if (_allocator.DropTimeFrequencyInSeconds > 0)
             {
-                var cancellationTokenSource = new CancellationTokenSource();
-                var dropTimeFrequencyInSeconds = _allocator.DropTimeFrequencyInSeconds * 1000;
-                var token = cancellationTokenSource.Token;
-                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                var frequency = TimeSpan.FromSeconds(_allocator.DropTimeFrequencyInSeconds);
+                _dropTimer = new Timer(sender =>
                 {
-                    while (!token.IsCancellationRequested)
-                    {
-                        var count = _objectStack.Count;
-                        if (count > 2 && _objectStack.TryPop(out var item))
-                            _allocator.DropAction(item);
-                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
-                    }
-                }, token);
+                    var count = _objectStack.Count;
+                    if (count > 2 && _objectStack.TryPop(out var item))
+                        _allocator.DropAction(item);
+                }, null, frequency, frequency);
             }
         }
         /// <inheritdoc />

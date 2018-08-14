@@ -41,6 +41,7 @@ namespace TWCore
         #endregion
 
         private readonly ConcurrentStack<T> _objectStack;
+        private readonly Timer _dropTimer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _onetimeInitAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly PoolResetMode _resetMode;
@@ -71,19 +72,13 @@ namespace TWCore
                 Preallocate(initialBufferSize);
             if (dropTimeFrequencyInSeconds > 0)
             {
-                var cancellationTokenSource = new CancellationTokenSource();
-                dropTimeFrequencyInSeconds = dropTimeFrequencyInSeconds * 1000;
-                var token = cancellationTokenSource.Token;
-                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                var frequency = TimeSpan.FromSeconds(dropTimeFrequencyInSeconds);
+                _dropTimer = new Timer(sender =>
                 {
-                    while (!token.IsCancellationRequested)
-                    {
-                        var count = _objectStack.Count;
-                        if (count > 2 && _objectStack.TryPop(out var item))
-                            dropAction?.Invoke(item);
-                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
-                    }
-                }, token);
+                    var count = _objectStack.Count;
+                    if (count > 2 && _objectStack.TryPop(out var item))
+                        dropAction?.Invoke(item);
+                }, null, frequency, frequency);
             }
         }
 

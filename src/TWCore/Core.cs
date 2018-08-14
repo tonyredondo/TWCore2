@@ -65,6 +65,7 @@ namespace TWCore
         private static AsyncLocal<Dictionary<object, object>> _taskObjectData;
         private static volatile bool _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
+        private static Timer UpdateLocalUtcTimer;
         internal static Dictionary<string, string> DefaultEnvironmentVariables = null;
         internal static string EncryptionKey = null;
 
@@ -184,7 +185,7 @@ namespace TWCore
         {
             if (_initialized) return;
             _initialized = true;
-            UpdateLocalUtc();
+            UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
             Factory.SetFactories(factories);
             Status = Factory.CreateStatusEngine();
             Log = Factory.CreateLogEngine();
@@ -545,10 +546,9 @@ namespace TWCore
 
         #region Time Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void UpdateLocalUtc(Task tsk = null)
+        private static void UpdateLocalUtc(object state)
         {
             LocalUtcOffset = TimeSpan.FromMinutes(Math.Round((DateTime.Now - DateTime.UtcNow).TotalMinutes));
-            Task.Delay(5000).ContinueWith(UpdateLocalUtc);
         }
         #endregion
 
@@ -924,6 +924,7 @@ namespace TWCore
             Data?.Clear();
             Settings?.Clear();
             Injector?.Dispose();
+            UpdateLocalUtcTimer?.Dispose();
         }
         #endregion
     }

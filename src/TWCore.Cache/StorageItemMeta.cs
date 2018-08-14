@@ -152,10 +152,10 @@ namespace TWCore.Cache
 
         #region Events
         /// <summary>
-        /// Event fired when the storage item has expired.
+        /// Event handler when the storage item has expired.
         /// </summary>
 		[field: NonSerialized]
-        public event EventHandler OnExpire;
+        public EventHandler OnExpire;
         #endregion
 
         #region .ctor

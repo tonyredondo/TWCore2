@@ -538,12 +538,12 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token instance</param>
         /// <returns>Task to await the cancellation</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task WhenCanceledAsync(this CancellationToken cancellationToken)
+        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested) return Task.CompletedTask;
+            if (cancellationToken.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>();
-            var registration = cancellationToken.Register(state => ((TaskCompletionSource<object>)state).TrySetResult(null), tcs, false);
-            return tcs.Task.ContinueWith((_, obj) => ((CancellationTokenRegistration)obj).Dispose(), registration);
+            using (cancellationToken.Register(state => ((TaskCompletionSource<object>)state).TrySetResult(null), tcs, false))
+                await tcs.Task.ConfigureAwait(false);
         }
         /// <summary>
         /// Create a Task to await the cancellation of the token

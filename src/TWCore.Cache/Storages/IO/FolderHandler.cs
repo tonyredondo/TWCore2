@@ -239,7 +239,7 @@ namespace TWCore.Cache.Storages.IO
                 foreach (var metaItem in _metas)
                 {
                     if (metaItem.Value == null) continue;
-                    metaItem.Value.OnExpire += Meta_OnExpire;
+                    metaItem.Value.OnExpire = Meta_OnExpire;
                 }
 
                 var metasCount = _metas.Count;
@@ -346,7 +346,7 @@ namespace TWCore.Cache.Storages.IO
 
             _globalMetas.TryAdd(meta.Key, meta);
             Interlocked.Increment(ref _metasCount);
-            meta.OnExpire += Meta_OnExpire;
+            meta.OnExpire = Meta_OnExpire;
 
             if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
             {

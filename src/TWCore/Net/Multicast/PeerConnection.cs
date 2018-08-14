@@ -338,14 +338,17 @@ namespace TWCore.Net.Multicast
                     if (!receivedDatagrams.Complete)
                         continue;
 
-                    try
+                    if (OnReceive != null)
                     {
-                        var bufferMessage = receivedDatagrams.GetMessage();
-                        OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage));
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
+                        try
+                        {
+                            var bufferMessage = receivedDatagrams.GetMessage();
+                            OnReceive.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage));
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
                     }
 
                     _receivedMessagesDatagram.TryRemove(key, out _);

@@ -320,8 +320,7 @@ namespace TWCore.Net.Multicast
                     {
                         exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
                         if (exist)
-                            received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct()
-                                .ToArray();
+                            received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
                         ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
                     }
 

@@ -30,7 +30,7 @@ namespace TWCore.Object.Api
         public static void SetSessionData(this ISession session, SessionData data)
         {
             var dataBytes = SerializerManager.DefaultBinarySerializer.Serialize(data);
-            session.Set("$SESSIONDATA$", dataBytes.ToArray());
+            session.Set("$SESSIONDATA$", dataBytes.AsArray());
         }
     }
 }

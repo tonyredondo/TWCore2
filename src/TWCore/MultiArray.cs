@@ -444,7 +444,7 @@ namespace TWCore
         public T[] ToArray()
         {
             var arr = new T[_count];
-            CopyTo(arr);
+            CopyTo(arr.AsSpan());
             return arr;
         }
         /// <summary>
@@ -456,7 +456,7 @@ namespace TWCore
         {
             if (_offset == 0 && _count == _segmentLength)
                 return _listOfArrays[0];
-            throw new RankException();
+            return ToArray();
         }
         /// <summary>
         /// Return the MultiArray as Span

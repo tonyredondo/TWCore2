@@ -262,7 +262,7 @@ namespace TWCore.Messaging.NATS
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                return message.Body.ToArray();
+                return message.Body.AsArray();
             }
 
             if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
@@ -272,7 +272,7 @@ namespace TWCore.Messaging.NATS
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
-            return message.Body.ToArray();
+            return message.Body.AsArray();
         }
         #endregion
 

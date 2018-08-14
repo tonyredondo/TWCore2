@@ -198,7 +198,12 @@ namespace TWCore
         /// <param name="index">Index from the slice begins</param>
         /// <returns>New MultiArray instance</returns>
         public MultiArray<T> Slice(int index)
-            => Slice(index, _count - index);
+        {
+            Ensure.GreaterEqualThan(index, 0, "Index should be a positive number.");
+            if (index > _count)
+                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
+            return new MultiArray<T>(_listOfArrays, _offset + index, _count - index);
+        }
         /// <summary>
         /// Slice the MultiArray and Reduce it
         /// </summary>

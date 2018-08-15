@@ -15,13 +15,12 @@ limitations under the License.
  */
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Security;
@@ -41,9 +40,7 @@ namespace TWCore.Net.Multicast
         private static readonly List<RegisteredServiceContainer> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
         private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(70);
-        private static Task _sendThread;
-        private static CancellationTokenSource _tokenSource;
-        private static CancellationToken _token;
+        private static Timer _sendTimer;
         private static bool _connected;
 
         #region Consts
@@ -100,8 +97,6 @@ namespace TWCore.Net.Multicast
             ReceivedServices.OnItemTimeout += (s, e) => Try.Do(vTuple => OnServiceExpired?.Invoke(vTuple.s, new EventArgs<ReceivedService>(vTuple.e.Value)), (s, e), false);
             PeerConnection = new PeerConnection();
             PeerConnection.OnReceive += PeerConnection_OnReceive;
-            _tokenSource = new CancellationTokenSource();
-            _token = _tokenSource.Token;
             _connected = false;
         }
         #endregion
@@ -127,7 +122,7 @@ namespace TWCore.Net.Multicast
             MulticastIp = multicastIp;
             Port = port;
             PeerConnection.Connect(multicastIp, port, enableReceive);
-            _sendThread = SendThreadAsync();
+            _sendTimer = new Timer(SendTimerCallback, null, 0, 30000);
         }
         /// <summary>
         /// Disconnect from the multicast group
@@ -135,11 +130,9 @@ namespace TWCore.Net.Multicast
         public static void Disconnect()
         {
             if (!_connected) return;
-            _tokenSource?.Cancel();
-            _sendThread?.WaitAsync();
+            _sendTimer.Dispose();
+            _sendTimer = null;
             PeerConnection.Disconnect();
-            _tokenSource = new CancellationTokenSource();
-            _token = _tokenSource.Token;
             _connected = false;
         }
 
@@ -339,34 +332,35 @@ namespace TWCore.Net.Multicast
                 //
             }
         }
-        private static async Task SendThreadAsync()
+
+        private static List<SubArray<byte>> ServicesBytesList = new List<SubArray<byte>>();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SendTimerCallback(object state)
         {
-            while (!_token.IsCancellationRequested)
+            lock (LocalServices)
             {
-                var servicesBytes = new List<SubArray<byte>>();
-                lock (LocalServices)
+                foreach (var srv in LocalServices)
                 {
-                    foreach (var srv in LocalServices)
+                    if (srv.DataToSend != null)
                     {
-                        if (srv.DataToSend != null)
+                        if (srv.Serializer != Serializer)
                         {
-                            if (srv.Serializer != Serializer)
-                            {
-                                srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToArray();
-                                srv.Serializer = Serializer;
-                            }
-                            servicesBytes.Add(srv.DataToSend);
+                            srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToArray();
+                            srv.Serializer = Serializer;
                         }
-                        else if (srv.Service.GetDataFunc != null)
-                        {
-                            srv.Service.Data = srv.Service.GetDataFunc();
-                            servicesBytes.Add(new SerializedObject(srv.Service, Serializer).ToArray());
-                        }
+                        ServicesBytesList.Add(srv.DataToSend);
+                    }
+                    else if (srv.Service.GetDataFunc != null)
+                    {
+                        srv.Service.Data = srv.Service.GetDataFunc();
+                        ServicesBytesList.Add(new SerializedObject(srv.Service, Serializer).ToArray());
                     }
                 }
-                foreach(var bytes in servicesBytes)
-                    await PeerConnection.SendAsync(bytes).ConfigureAwait(false);
-                await Task.Delay(30000, _token).ConfigureAwait(false);
+                
+                foreach(var bytes in ServicesBytesList)
+                    PeerConnection.SendAsync(bytes).WaitAsync();
+                
+                ServicesBytesList.Clear();
             }
         }
         #endregion

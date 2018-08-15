@@ -178,7 +178,7 @@ namespace TWCore.Messaging.NATS
                         Core.Log.Warning("The listener has been resumed.");
                     }
 
-                    await Task.Delay(100, _token).ConfigureAwait(false);
+                    await Task.Delay(1000, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 catch (Exception ex)

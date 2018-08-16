@@ -194,7 +194,7 @@ namespace TWCore.Net.Multicast
             {
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
-                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, null));
+                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, MultiArray<byte>.Empty));
                     HasRegisteredLocalService = true;
                 }
             }

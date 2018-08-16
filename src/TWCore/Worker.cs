@@ -293,7 +293,11 @@ namespace TWCore
                         if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
                         lock (_locker)
+                        {
+                            if (Exceptions.Count >= 100)
+                                throw new Exception("Too many exceptions");
                             Exceptions.Add((ex, item));
+                        }
                     }
                     finally
                     {
@@ -338,7 +342,11 @@ namespace TWCore
                         if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
                         lock (_locker)
+                        {
+                            if (Exceptions.Count >= 100)
+                                throw new Exception("Too many exceptions");
                             Exceptions.Add((ex, item));
+                        }
                     }
                     finally
                     {

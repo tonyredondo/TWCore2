@@ -88,11 +88,15 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(T[] array, int offset, int count)
         {
-            _listOfArrays = new[] { array ?? throw new ArgumentNullException(nameof(array)) };
-            Ensure.GreaterEqualThan(offset, 0, "The offset should be a positive number.");
-            Ensure.GreaterEqualThan(count, 0, "The count should be a positive number.");
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset should be a positive number.");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The count should be a positive number.");
             if (array.Length - offset < count)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid.");
+            _listOfArrays = new[] { array };
             _offset = offset;
             _count = count;
             _segmentLength = _count;
@@ -130,8 +134,10 @@ namespace TWCore
         public MultiArray(IList<T[]> segments, int offset, int count)
         {
             _listOfArrays = segments;
-            Ensure.GreaterEqualThan(offset, 0, "The offset should be a positive number.");
-            Ensure.GreaterEqualThan(count, 0, "The count should be a positive number.");
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset should be a positive number.");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The count should be a positive number.");
             var sCount = segments.Count;
             _segmentLength = sCount > 0 ? segments[0].Length : 0;
             for (var i = 1; i < sCount; i++)
@@ -157,7 +163,9 @@ namespace TWCore
             get
             {
                 if (index >= _count) throw new IndexOutOfRangeException();
-                var (arrayIndex, position) = FromGlobalIndex(index + _offset);
+                var globalIndex = index + _offset;
+                var arrayIndex = globalIndex / _segmentLength;
+                var position = globalIndex % _segmentLength;
                 return ref _listOfArrays[arrayIndex][position];
             }
         }
@@ -199,9 +207,10 @@ namespace TWCore
         /// <returns>New MultiArray instance</returns>
         public MultiArray<T> Slice(int index)
         {
-            Ensure.GreaterEqualThan(index, 0, "Index should be a positive number.");
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
             if (index > _count)
-                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
+                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count.");
             return new MultiArray<T>(_listOfArrays, _offset + index, _count - index);
         }
         /// <summary>
@@ -219,8 +228,10 @@ namespace TWCore
         /// <returns>New MultiArray instance</returns>
         public MultiArray<T> Slice(int index, int count)
         {
-            Ensure.GreaterEqualThan(index, 0, "Index should be a positive number.");
-            Ensure.GreaterEqualThan(count, 0, "Count should be a positive number.");
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
+            if (_count < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Count should be a positive number.");
             if (index > _count)
                 throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
             if (_count - index < count)
@@ -235,8 +246,10 @@ namespace TWCore
         /// <returns>New MultiArray instance</returns>
         public MultiArray<T> SliceAndReduce(int index, int count)
         {
-            Ensure.GreaterEqualThan(index, 0, "Index should be a positive number.");
-            Ensure.GreaterEqualThan(count, 0, "Count should be a positive number.");
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
+            if (_count < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Count should be a positive number.");
             if (index > _count)
                 throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
             if (_count - index < count)

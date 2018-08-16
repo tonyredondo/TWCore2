@@ -20,7 +20,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -541,8 +540,9 @@ namespace TWCore
             Predicate<T> separatorPredicate)
         {
             if (enumerable == null) return (new T[0], new T[0]);
-            var firstList = ReferencePool<List<T>>.Shared.New();
-            var secondList = ReferencePool<List<T>>.Shared.New();
+            var pool = ReferencePool<List<T>>.Shared;
+            var firstList = pool.New();
+            var secondList = pool.New();
             foreach (var item in enumerable)
             {
                 if (separatorPredicate(item))
@@ -553,8 +553,8 @@ namespace TWCore
             var value = (firstList.ToArray(), secondList.ToArray());
             firstList.Clear();
             secondList.Clear();
-            ReferencePool<List<T>>.Shared.Store(firstList);
-            ReferencePool<List<T>>.Shared.Store(secondList);
+            pool.Store(firstList);
+            pool.Store(secondList);
             return value;
         }
 
@@ -919,7 +919,8 @@ namespace TWCore
         public static void RemoveCollection<T>(this ICollection<T> collection, Predicate<T> predicate)
         {
             if (collection == null) return;
-            var lstWithPredicate = ReferencePool<List<T>>.Shared.New();
+            var pool = ReferencePool<List<T>>.Shared;
+            var lstWithPredicate = pool.New();
             foreach (var item in collection)
             {
                 if (predicate(item))
@@ -928,7 +929,7 @@ namespace TWCore
             foreach (var item in lstWithPredicate)
                 collection.Remove(item);
             lstWithPredicate.Clear();
-            ReferencePool<List<T>>.Shared.Store(lstWithPredicate);
+            pool.Store(lstWithPredicate);
         }
         /// <summary>
         /// Remove items from the collection using the predicate.
@@ -1659,7 +1660,8 @@ namespace TWCore
         {
             if (predicates == null) return default;
             var comparer = EqualityComparer<T>.Default;
-            var foundArray = ReferencePool<List<T>>.Shared.New();
+            var pool = ReferencePool<List<T>>.Shared;
+            var foundArray = pool.New();
             for (var i = 0; i < predicates.Length - 1; i++)
                 foundArray.Add(default);
             foreach (var item in source)
@@ -1683,7 +1685,7 @@ namespace TWCore
                 }
             }
             foundArray.Clear();
-            ReferencePool<List<T>>.Shared.Store(foundArray);
+            pool.Store(foundArray);
             return value;
         }
         /// <summary>
@@ -1700,7 +1702,8 @@ namespace TWCore
         {
             if (predicates == null) return default;
             var comparer = EqualityComparer<T>.Default;
-            var foundArray = ReferencePool<List<T>>.Shared.New();
+            var pool = ReferencePool<List<T>>.Shared;
+            var foundArray = pool.New();
             for (var i = 0; i < predicates.Length - 1; i++)
                 foundArray.Add(default);
             foreach (var item in source)
@@ -1724,7 +1727,7 @@ namespace TWCore
                 }
             }
             foundArray.Clear();
-            ReferencePool<List<T>>.Shared.Store(foundArray);
+            pool.Store(foundArray);
             return value;
         }
 

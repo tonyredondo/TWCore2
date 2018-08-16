@@ -31,7 +31,8 @@ namespace TWCore.Serialization.WSerializer
     {
         private static readonly string[] SExtensions = { ".wbin" };
         private static readonly string[] SMimeTypes = { SerializerMimeTypes.WBinary };
-        private static readonly ReferencePool<WSerializerCore> Pool = ReferencePool<WSerializerCore>.Shared;
+        [ThreadStatic]
+        private static WSerializerCore _serializer;
         private SerializerMode _mode = SerializerMode.Cached2048;
 
         #region Properties
@@ -62,7 +63,12 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var ser = Pool.New();
+            var ser = _serializer;
+            if (ser == null)
+            {
+                ser = new WSerializerCore();
+                _serializer = ser;
+            }
             ser.Mode = _mode;
             foreach (var type in SerializerManager.DefaultKnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
@@ -70,14 +76,18 @@ namespace TWCore.Serialization.WSerializer
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             var obj = ser.Deserialize(stream, itemType);
             ser.ClearKnownTypes();
-            Pool.Store(ser);
             return obj;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = Pool.New();
+            var ser = _serializer;
+            if (ser == null)
+            {
+                ser = new WSerializerCore();
+                _serializer = ser;
+            }
             ser.Mode = _mode;
             foreach (var type in SerializerManager.DefaultKnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
@@ -85,7 +95,6 @@ namespace TWCore.Serialization.WSerializer
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             ser.Serialize(stream, item, itemType);
             ser.ClearKnownTypes();
-            Pool.Store(ser);
         }
 
         /// <inheritdoc />

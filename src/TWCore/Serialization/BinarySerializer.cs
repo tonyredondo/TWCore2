@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;
 // ReSharper disable AccessToModifiedClosure
@@ -34,7 +33,6 @@ namespace TWCore.Serialization
     public abstract class BinarySerializer : ISerializer, ICoreStart
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
-        private static readonly ReferencePool<CopyStream> PoolStream = new ReferencePool<CopyStream>();
 
         #region Properties
         /// <inheritdoc />

@@ -75,14 +75,7 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Has a registered local service
         /// </summary>
-        public static bool HasRegisteredLocalService
-        {
-            get
-            {
-                lock (LocalServices)
-                    return LocalServices.Count > 0;
-            }
-        }
+        public static bool HasRegisteredLocalService { get; private set; }
         /// <summary>
         /// Serializer used to send the data
         /// </summary>
@@ -168,6 +161,7 @@ namespace TWCore.Net.Multicast
                     var sObj = new SerializedObject(service, Serializer);
                     var sObjArr = sObj.ToMultiArray();
                     LocalServices.Add(new RegisteredServiceContainer(service, Serializer, sObjArr));
+                    HasRegisteredLocalService = true;
                 }
             }
             return service.ServiceId;
@@ -200,7 +194,8 @@ namespace TWCore.Net.Multicast
             {
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
-                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, MultiArray<byte>.Empty));
+                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, null));
+                    HasRegisteredLocalService = true;
                 }
             }
             return service.ServiceId;

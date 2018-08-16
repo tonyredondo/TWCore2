@@ -33,7 +33,6 @@ namespace TWCore.Serialization
     public abstract class BinarySerializer : ISerializer, ICoreStart
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
-        private static readonly ReferencePool<CopyStream> PoolStream = new ReferencePool<CopyStream>();
 
         #region Properties
         /// <inheritdoc />

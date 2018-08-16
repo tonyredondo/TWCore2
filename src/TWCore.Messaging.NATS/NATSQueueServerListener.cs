@@ -36,14 +36,13 @@ namespace TWCore.Messaging.NATS
     {
         #region Fields
         private readonly ConnectionFactory _factory;
-        private readonly object _lock = new object();
         private readonly Type _messageType;
         private readonly string _name;
         private IConnection _connection;
         private IAsyncSubscription _receiver;
         private CancellationToken _token;
         private Task _monitorTask;
-        private bool _exceptionSleep;
+        private int _exceptionSleep;
         #endregion
 
         #region Nested Type
@@ -146,16 +145,11 @@ namespace TWCore.Messaging.NATS
             {
                 try
                 {
-                    bool exSleep;
-                    lock (_lock)
-                        exSleep = _exceptionSleep;
-                    if (exSleep)
+                    if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
                     {
                         OnDispose();
-                        Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+                        Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
                         await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-                        lock (_lock)
-                            _exceptionSleep = false;
                         _connection.Close();
                         _receiver.Unsubscribe();
                         _connection = _factory.CreateConnection(Connection.Route);
@@ -225,8 +219,7 @@ namespace TWCore.Messaging.NATS
             {
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
-                lock (_lock)
-                    _exceptionSleep = true;
+                Interlocked.Exchange(ref _exceptionSleep, 1);
             }
         }
         #endregion

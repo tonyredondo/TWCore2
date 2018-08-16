@@ -21,7 +21,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;
 // ReSharper disable MemberCanBeProtected.Global
@@ -37,7 +36,6 @@ namespace TWCore.Serialization
     public abstract class TextSerializer : ITextSerializer, ICoreStart
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
-        private static readonly ReferencePool<CopyStream> PoolStream = new ReferencePool<CopyStream>();
 
         #region Properties
         /// <inheritdoc />

@@ -31,7 +31,8 @@ namespace TWCore.Serialization.PWSerializer
     {
         private static readonly string[] sExtensions = { ".pwbin" };
         private static readonly string[] sMimeTypes = { SerializerMimeTypes.PWBinary };
-        private static readonly ReferencePool<PWSerializerCore> _pool = ReferencePool<PWSerializerCore>.Shared;
+        [ThreadStatic]
+        private static PWSerializerCore _serializer;
 
         #region Properties
         /// <inheritdoc />
@@ -49,17 +50,25 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var ser = _pool.New();
+            var ser = _serializer;
+            if (ser == null)
+            {
+                ser = new PWSerializerCore();
+                _serializer = ser;
+            }
             var obj = ser.Deserialize(stream, itemType);
-            _pool.Store(ser);
             return obj;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = _pool.New();
+            var ser = _serializer;
+            if (ser == null)
+            {
+                ser = new PWSerializerCore();
+                _serializer = ser;
+            }
             ser.Serialize(stream, item);
-            _pool.Store(ser);
         }
 
         /// <inheritdoc />

@@ -113,6 +113,25 @@ namespace TWCore.Test.Core
                 new int[] { 1, 2, 3 }.SerializeToNBinary();
 
                 testValue.SerializeToNBinary();
+//
+//                var testBytes = new byte[1024];
+//                var testBytes2 = new byte[1024];
+//                new Random().NextBytes(testBytes);
+//                new Random().NextBytes(testBytes2);
+//
+//                var multiTest1 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
+//                var multiTest2 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes, testBytes }).Slice(666, 3100);
+//
+//                bool res = true;
+//                using (Watch.Create("MultiArray Comparisor"))
+//                {
+//                    for (var i = 0; i < 100000; i++)
+//                    {
+//                        res &= MultiArrayBytesComparer.Instance.Equals(multiTest1, multiTest2);
+//                    }
+//                }
+//                TWCore.Core.Log.InfoBasic("Result of comparison: {0}", res);
+
 
                 //AssemblyResolverManager.RegisterDomain(new[] { "C:\\AGSW_GIT\\dlls" });
 

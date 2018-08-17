@@ -153,6 +153,14 @@ namespace TWCore
             _offset = offset;
             _count = count;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private MultiArray(IList<T[]> segments, int offset, int count, int segmentsLength)
+        {
+            ListOfArrays = segments;
+            _offset = offset;
+            _count = count;
+            _segmentsLength = segmentsLength;
+        }
         #endregion
 
         #region Methods
@@ -215,7 +223,7 @@ namespace TWCore
                 throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
             if (index > _count)
                 throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count.");
-            return new MultiArray<T>(ListOfArrays, _offset + index, _count - index);
+            return new MultiArray<T>(ListOfArrays, _offset + index, _count - index, _segmentsLength);
         }
         /// <summary>
         /// Slice the MultiArray and Reduce it
@@ -226,7 +234,7 @@ namespace TWCore
             => SliceAndReduce(index, _count - index);
         /// <summary>
         /// Slice the MultiArray
-        /// </summary>
+        /// </summary>s
         /// <param name="index">Index from the slice begins</param>
         /// <param name="count">Number of element of the slice</param>
         /// <returns>New MultiArray instance</returns>
@@ -240,7 +248,7 @@ namespace TWCore
                 throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
             if (_count - index < count)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid");
-            return new MultiArray<T>(ListOfArrays, _offset + index, count);
+            return new MultiArray<T>(ListOfArrays, _offset + index, count, _segmentsLength);
         }
         /// <summary>
         /// Slice the MultiArray and Reduce it
@@ -279,6 +287,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
+            if (ListOfArrays is IList<byte[]> arrays)
+                return MultiArrayBytesComparer.Instance.GetHashCode(new MultiArray<byte>(arrays, _offset, _count, _segmentsLength));
             var res = 0x2D2816FE;
             var step = (_count / 64) + 1;
             for (var i = 0; i < _count; i += step)

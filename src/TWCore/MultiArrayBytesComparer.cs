@@ -165,9 +165,44 @@ namespace TWCore
         public int GetHashCode(MultiArray<byte> data)
         {
             var res = 0x2D2816FE;
-            var step = (data.Count / 64) + 1;
-            for (var i = 0; i < data.Count; i += step)
-                res = res * 31 + data[i];
+            var count = data.Count;
+            var offset = data.Offset;
+            var segmentsLength = data.SegmentsLength;
+            var start = data.FromGlobalIndex(offset);
+            var end = data.FromGlobalIndex(offset + count - 1);
+            var list = data.ListOfArrays;
+
+            #region Single List Hash
+            if (start.ArrayIndex == end.ArrayIndex)
+            {
+                var length = end.Position - start.Position + 1;
+                var row = list[start.ArrayIndex].AsSpan(start.Position, length);
+                var cRow = MemoryMarshal.Cast<byte, long>(row);
+                var step = (cRow.Length / 16) + 1;
+                for (var i = 0; i < cRow.Length; i += step)
+                    res ^= (int)cRow[i];
+                return res;
+            }
+            #endregion
+
+            #region List Comparison
+            for (var row = start.ArrayIndex; row <= end.ArrayIndex; row++)
+            {
+                Span<byte> lRow;
+                if (row == start.ArrayIndex)
+                    lRow = list[row].AsSpan(start.Position, segmentsLength - start.Position);
+                else if (row == end.ArrayIndex)
+                    lRow = list[row].AsSpan(0, end.Position + 1);
+                else
+                    lRow = list[row].AsSpan(0, segmentsLength);
+
+                var cRow = MemoryMarshal.Cast<byte, long>(lRow);
+                var step = (cRow.Length / 16) + 1;
+                for (var i = 0; i < cRow.Length; i += step)
+                    res ^= (int)cRow[i];
+            }
+            #endregion
+            
             return res;
         }
     }

@@ -38,6 +38,7 @@ namespace TWCore.Threading
         private AsyncEvent()
         {
             _invocationList = new List<Func<object, TEventArgs, Task>>();
+            _dirty = true;
             _locker = new object();
         }
         #endregion
@@ -51,11 +52,11 @@ namespace TWCore.Threading
         /// <returns>Task instance</returns>
         public async Task InvokeAsync(object sender, TEventArgs eventArgs)
         {
-			if (_dirty || _callArray == null)
+			if (_dirty)
 			{
 				lock (_locker)
 				{
-					if (_dirty || _callArray == null)
+					if (_dirty)
 					{
 						_callArray = _invocationList.ToArray();
 						_dirty = false;

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable CheckNamespace
@@ -34,6 +35,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -45,6 +47,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -54,6 +57,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -64,16 +68,19 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(object message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -92,6 +99,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -103,6 +111,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             return ProcessAsync((T)message, cancellationToken);
@@ -114,6 +123,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -123,6 +133,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -133,16 +144,19 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -162,6 +176,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -173,6 +188,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             if (message is T1 mt1)
@@ -186,6 +202,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -198,6 +215,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -207,6 +225,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -217,22 +236,26 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -253,6 +276,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -264,6 +288,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -282,6 +307,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -294,6 +320,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -306,6 +333,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -315,6 +343,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -325,28 +354,33 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T3 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -368,6 +402,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -379,6 +414,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -399,6 +435,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -411,6 +448,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -423,6 +461,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -435,6 +474,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -444,6 +484,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -454,34 +495,40 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T3 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T4 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -504,6 +551,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -515,6 +563,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -537,6 +586,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -549,6 +599,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -561,6 +612,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -573,6 +625,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -585,6 +638,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -594,6 +648,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -604,40 +659,47 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T3 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T4 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T5 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -661,6 +723,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -672,6 +735,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -696,6 +760,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -708,6 +773,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -720,6 +786,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -732,6 +799,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -744,6 +812,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -756,6 +825,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T6 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -765,6 +835,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -775,46 +846,54 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T3 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T4 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T5 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T6 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -839,6 +918,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -850,6 +930,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -876,6 +957,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -888,6 +970,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -900,6 +983,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -912,6 +996,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -924,6 +1009,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -936,6 +1022,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T6 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -948,6 +1035,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T7 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -957,6 +1045,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -967,52 +1056,61 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T3 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T4 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T5 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T6 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T7 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }
@@ -1038,6 +1136,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Initialize business instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             OnInit();
@@ -1049,6 +1148,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -1077,6 +1177,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1089,6 +1190,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1101,6 +1203,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1113,6 +1216,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1125,6 +1229,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1137,6 +1242,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T6 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1149,6 +1255,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T7 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1161,6 +1268,7 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<object> ProcessAsync(T8 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
@@ -1170,6 +1278,7 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -1180,58 +1289,68 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// On Init business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInit() { }
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T1 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T2 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T3 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T4 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T5 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T6 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T7 message);
         /// <summary>
         /// On Process Async message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Task<object> OnProcessAsync(T8 message);
         /// <summary>
         /// On Dispose business
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnDispose() { }
         #endregion
     }

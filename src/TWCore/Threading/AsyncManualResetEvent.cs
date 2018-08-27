@@ -79,6 +79,7 @@ namespace TWCore.Threading
         {
             if (_mTcs == null) return DisposedExceptionTask;
             if (_mTcs.Task.IsCompleted) return Task.CompletedTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
             var cTask = CTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
             if (cTask.IsCompleted) return Task.CompletedTask;
             return Task.WhenAny(_mTcs.Task, cTask);

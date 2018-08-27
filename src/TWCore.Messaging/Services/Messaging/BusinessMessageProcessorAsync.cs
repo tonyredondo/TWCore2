@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
@@ -108,6 +109,7 @@ namespace TWCore.Services.Messaging
             BusinessInitialCount = businessInitialCount;
             AttachStatus();
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AttachStatus()
         {
             Core.Status.Attach(collection =>
@@ -121,11 +123,22 @@ namespace TWCore.Services.Messaging
         }
         #endregion
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private IBusinessAsync BusinessCreate(ObjectPool<IBusinessAsync> pool)
+        {
+            var item = _creationFunction();
+            if (item == null)
+                throw new NullReferenceException("The business creation function returns a null IBusiness value. Please check the creation function.");
+            item.Init();
+            return item;
+        }
+
         #region IMessageProcessorAsync Methods
         /// <inheritdoc />
         /// <summary>
         /// Initialize message processor
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
             Core.Log.LibDebug("Initializing message processor...");
@@ -134,14 +147,7 @@ namespace TWCore.Services.Messaging
             Core.Log.LibDebug("Maximum businesses = {0}", _maxMessages);
             Core.Log.LibDebug("Business Initial Count = {0}", BusinessInitialCount);
             Dispose();
-            _businessPool = new ObjectPool<IBusinessAsync>(pool =>
-            {
-                var item = _creationFunction();
-                if (item == null)
-                    throw new NullReferenceException("The business creation function returns a null IBusiness value. Please check the creation function.");
-                item.Init();
-                return item;
-            }, null, BusinessInitialCount);
+            _businessPool = new ObjectPool<IBusinessAsync>(BusinessCreate, null, BusinessInitialCount);
             Core.Log.LibDebug("Message processor initialized");
         }
         /// <inheritdoc />
@@ -151,9 +157,9 @@ namespace TWCore.Services.Messaging
         /// <param name="message">Message to process</param>
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
-            Core.Log.LibDebug("Processing message...");
             var item = _businessPool.New();
             var response = ResponseMessage.NoResponse;
             try
@@ -165,13 +171,13 @@ namespace TWCore.Services.Messaging
                 Core.Log.Write(ex);
             }
             _businessPool.Store(item);
-            Core.Log.LibDebug("Message processed.");
             return response;
         }
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             if (_businessPool == null) return;

@@ -468,7 +468,7 @@ namespace TWCore.Services
                 if (_discovery) return;
                 if (!Core.GlobalSettings.EnableDiscovery) return;
 
-                Core.Log.LibDebug("Registering Discovery services.");
+                Core.Log.InfoDetail("Registering Discovery services. (ReceiveThread={0})", !Core.GlobalSettings.DiscoveryDisableReceive);
                 _discovery = true;
 
                 var serializer = SerializerManager.DefaultBinarySerializer;
@@ -484,7 +484,7 @@ namespace TWCore.Services
                 try
                 {
                     DiscoveryService.Serializer = serializer;
-                    DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
+                    DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort, !Core.GlobalSettings.DiscoveryDisableReceive);
                     DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "FOLDERS", "Folders for the services.", new SerializedObject(new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() }));
                 }
                 catch (Exception ex)

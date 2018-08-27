@@ -15,9 +15,7 @@ limitations under the License.
  */
 
 using System;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace TWCore.Serialization.NSerializer
 {
@@ -32,14 +30,7 @@ namespace TWCore.Serialization.NSerializer
                 return;
             }
             WriteByte(DataBytesDefinition.SerializedObject);
-            var dataTypeByte = !string.IsNullOrEmpty(value.DataType) ? Encoding.UTF8.GetBytes(value.DataType) : null;
-            var serializerMimeTypeByte = !string.IsNullOrEmpty(value.SerializerMimeType) ? Encoding.UTF8.GetBytes(value.SerializerMimeType) : null;
-            WriteInt(dataTypeByte?.Length ?? -1);
-            if (dataTypeByte != null) Stream.Write(dataTypeByte, 0, dataTypeByte.Length);
-            WriteInt(serializerMimeTypeByte?.Length ?? -1);
-            if (serializerMimeTypeByte != null) Stream.Write(serializerMimeTypeByte, 0, serializerMimeTypeByte.Length);
-            WriteInt(value.Data?.Length ?? -1);
-            if (value.Data != null) Stream.Write(value.Data, 0, value.Data.Length);
+            value.CopyTo(Stream);
         }
     }
 
@@ -53,22 +44,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type == DataBytesDefinition.SerializedObjectNull) return null;
             if (type != DataBytesDefinition.SerializedObject) throw new InvalidOperationException("Invalid type value.");
-
-            var dataTypeByteLength = Reader.ReadInt32();
-            if (dataTypeByteLength < -1) return null;
-            var dataTypeByte = dataTypeByteLength != -1 ? Reader.ReadBytes(dataTypeByteLength) : null;
-
-            var serializerMimeTypeByteLength = Reader.ReadInt32();
-            if (serializerMimeTypeByteLength < -1) return null;
-            var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? Reader.ReadBytes(serializerMimeTypeByteLength) : null;
-
-            var dataLength = Reader.ReadInt32();
-            if (dataLength < -1) return null;
-            var data = dataLength != -1 ? Reader.ReadBytes(dataLength) : null;
-
-            return new SerializedObject(data,
-                dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
+            return SerializedObject.FromStream(Stream);
         }
     }
 }

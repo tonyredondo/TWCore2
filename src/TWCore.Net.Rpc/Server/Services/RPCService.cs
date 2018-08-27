@@ -61,7 +61,6 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected RPCService()
         {
-            Core.Status.Attach(collection => Core.Status.AttachChild(Server, this));
         }
         #endregion
 
@@ -131,6 +130,7 @@ namespace TWCore.Services
                 Server = await GetRPCServerAsync().ConfigureAwait(false);
                 if (Server == null)
                     throw new NullReferenceException("The RPCServer can't be null, nothing to start. Check your GetRPCServer method implementation.");
+                Core.Status.AttachChild(Server, this);
                 await Server.StartAsync().ConfigureAwait(false);
                 Core.Log.InfoBasic("RPC service has started.");
             }

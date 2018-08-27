@@ -45,7 +45,7 @@ namespace TWCore.Compression
         /// </summary>
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
-        SubArray<byte> Compress(SubArray<byte> source);
+        MultiArray<byte> Compress(MultiArray<byte> source);
         /// <summary>
         /// Compress a stream into another stream
         /// </summary>
@@ -58,7 +58,7 @@ namespace TWCore.Compression
         /// </summary>
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
-        Task<SubArray<byte>> CompressAsync(SubArray<byte> source);
+        Task<MultiArray<byte>> CompressAsync(MultiArray<byte> source);
         #endregion
 
         #region Decompress methods
@@ -73,7 +73,7 @@ namespace TWCore.Compression
         /// </summary>
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
-        SubArray<byte> Decompress(SubArray<byte> source);
+        MultiArray<byte> Decompress(MultiArray<byte> source);
         /// <summary>
         /// Decompress a stream into another stream
         /// </summary>
@@ -86,7 +86,7 @@ namespace TWCore.Compression
         /// </summary>
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
-        Task<SubArray<byte>> DecompressAsync(SubArray<byte> source);
+        Task<MultiArray<byte>> DecompressAsync(MultiArray<byte> source);
         #endregion
     }
 }

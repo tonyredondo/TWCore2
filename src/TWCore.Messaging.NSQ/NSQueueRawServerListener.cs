@@ -34,12 +34,11 @@ namespace TWCore.Messaging.NSQ
 	public class NSQueueRawServerListener : MQueueRawServerListenerBase
 	{
 		#region Fields
-		private readonly object _lock = new object();
 		private readonly string _name;
 		private Consumer _receiver;
 		private CancellationToken _token;
 		private Task _monitorTask;
-		private bool _exceptionSleep;
+		private int _exceptionSleep;
 		#endregion
 
 		#region Nested Type
@@ -48,7 +47,7 @@ namespace TWCore.Messaging.NSQ
 		{
 			public Guid CorrelationId;
             public string Name;
-			public SubArray<byte> Body;
+			public MultiArray<byte> Body;
 		}
 
 	    private class NSQMessageHandler : IHandler
@@ -152,16 +151,11 @@ namespace TWCore.Messaging.NSQ
 			{
 				try
 				{
-					bool exSleep;
-					lock (_lock)
-						exSleep = _exceptionSleep;
-					if (exSleep)
+					if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
 					{
 						OnDispose();
-						Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+						Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
 						await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-						lock (_lock)
-							_exceptionSleep = false;
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
@@ -182,7 +176,7 @@ namespace TWCore.Messaging.NSQ
 					    Core.Log.Warning("The listener has been resumed.");
                     }
 
-					await Task.Delay(100, _token).ConfigureAwait(false);
+					await Task.Delay(1000, _token).ConfigureAwait(false);
 				}
 				catch (TaskCanceledException) { }
 				catch (Exception ex)
@@ -235,8 +229,7 @@ namespace TWCore.Messaging.NSQ
 			{
 				Counters.IncrementTotalExceptions();
 				Core.Log.Write(ex);
-				lock (_lock)
-					_exceptionSleep = true;
+			    Interlocked.Exchange(ref _exceptionSleep, 1);
 			}
 		}
 		#endregion

@@ -75,11 +75,6 @@ namespace TWCore.Messaging.RawServer
 		/// Date and time of the last received message
 		/// </summary>
 		public DateTime LastMessageDateTime { get; private set; }
-		/// <summary>
-		/// Date and time of the last process of a message
-		/// </summary>
-		public DateTime LastProcessingDateTime { get; private set; }
-
         /// <summary>
         /// Number of received messages
         /// </summary>
@@ -126,11 +121,9 @@ namespace TWCore.Messaging.RawServer
 					new StatusItemValueItem("Quantity", LastThirtyMinutesMessages, true),
 					new StatusItemValueItem("Peak Quantity", PeakLastThirtyMinutesMessages, true),
 					new StatusItemValueItem("Peak DateTime", PeakLastThirtyMinutesMessagesLastDate));
-				#endregion
+                #endregion
 
-				collection.Add("Last DateTime",
-					new StatusItemValueItem("Message Received", LastMessageDateTime),
-					new StatusItemValueItem("Message Processed", LastProcessingDateTime));
+                collection.Add("Last Message Received DateTime", LastMessageDateTime);
 
 				collection.Add("Totals",
 					new StatusItemValueItem("Message Received", TotalMessagesReceived, true),

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Messaging.Configuration;
+using TWCore.Serialization;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -30,6 +31,8 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public class RequestReceivedEventArgs : EventArgs
     {
+        private ISerializer _senderSerializer;
+
         /// <summary>
         /// Client name
         /// </summary>
@@ -81,8 +84,9 @@ namespace TWCore.Messaging.Server
 		/// <param name="request">Request message</param>
 		/// <param name="messageLength">Message length</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request, int messageLength)
+		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request, int messageLength, ISerializer senderSerializer)
         {
+            _senderSerializer = senderSerializer;
             Name = name;
             Request = request;
             Sender = sender;
@@ -98,6 +102,16 @@ namespace TWCore.Messaging.Server
             }
             else
                 ProcessResponseTimeoutCancellationToken = CancellationToken.None;
+        }
+
+        /// <summary>
+        /// Set response body
+        /// </summary>
+        /// <param name="obj">Response body</param>
+        public void SetResponseBody(object obj)
+        {
+            if (obj != null)
+                Response.Body = _senderSerializer?.GetSerializedObject(obj) ?? ResponseMessage.NoResponseSerialized;
         }
     }
 }

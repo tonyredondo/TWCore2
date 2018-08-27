@@ -58,7 +58,7 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override async Task<int> OnSendAsync(SubArray<byte> message, RawRequestReceivedEventArgs e)
+        protected override async Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
             queues.Add(new MQConnection

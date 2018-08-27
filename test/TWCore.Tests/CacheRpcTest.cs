@@ -88,6 +88,9 @@ namespace TWCore.Tests
                 var tagValue3 = await cachePool.GetByTagAsync(new[] { "test" }).ConfigureAwait(false);
 
                 await Task.Delay(600).ConfigureAwait(false);
+                var tagValue4 = await cachePool.SetMultiAsync(new[] { "testa", "testb" }, "Hola mundo", TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+
+                await Task.Delay(600).ConfigureAwait(false);
                 var response = await cachePool.ExecuteExtensionAsync("SampleExtension", "Echo", new object[] { "value1", "value2" });
                 Core.Log.Warning("Extension Response: {0}", response);
                 Console.ReadLine();

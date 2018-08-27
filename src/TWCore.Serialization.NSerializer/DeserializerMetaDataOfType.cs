@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
@@ -72,8 +73,11 @@ namespace TWCore.Serialization.NSerializer
             hash = (hash * 7) + IsList.GetHashCode();
             hash = (hash * 7) + IsDictionary.GetHashCode();
             if (Properties != null)
-                for (var i = 0; i < Properties.Length; i++)
+            {
+                var length = Properties.Length;
+                for (var i = 0; i < length; i++)
                     hash = (hash * 7) + Properties[i].GetHashCode();
+            }
             return hash;
         }
         #endregion

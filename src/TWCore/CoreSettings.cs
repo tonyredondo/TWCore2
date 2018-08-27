@@ -64,6 +64,11 @@ namespace TWCore
         /// </summary>
         [SettingsKey("Discovery.SerializerMimeType")]
         public string DiscoverySerializerMimeType { get; private set; }
+        /// <summary>
+        /// Discovery Disable Receive thread
+        /// </summary>
+        [SettingsKey("Discovery.DisableReceive")]
+        public bool DiscoveryDisableReceive { get; private set; } = false;
 
 
         //Worker Settings

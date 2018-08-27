@@ -25,8 +25,6 @@ using TWCore.Net.RPC.Server.Transports;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization;
 using TWCore.Serialization.NSerializer;
-using TWCore.Serialization.PWSerializer;
-using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
@@ -57,17 +55,20 @@ namespace TWCore.Tests
 
                 var res = await cachePool.GetMetaAsync("metaValue").ConfigureAwait(false);
 
-                await cachePool.GetKeysAsync().ConfigureAwait(false);
+                var keys = await cachePool.GetKeysAsync().ConfigureAwait(false);
 
                 using (var watch = Watch.Create("GetKeysAsync"))
                 {
                     for (var i = 0; i < 1000; i++)
                         await cachePool.GetKeysAsync().ConfigureAwait(false);
                     Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 1000);
+                    Core.Log.InfoBasic("Total keys: {0}", keys.Length);
                 }
 
                 Console.ReadLine();
 
+                await cachePool.GetAsync("-TEST").ConfigureAwait(false);
+                await cachePool.SetAsync("-TEST", "bla bla bla bla bla").ConfigureAwait(false);
                 using (var watch = Watch.Create("Get And Sets"))
                 {
                     for (var i = 0; i < 5000; i++)
@@ -75,6 +76,19 @@ namespace TWCore.Tests
                         var key = "test-" + (i % 500);
                         await cachePool.GetAsync(key).ConfigureAwait(false);
                         await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
+                    }
+                    Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000);
+                }
+
+                Console.ReadLine();
+
+                await cachePool.SetMultiAsync(new[] { "test-", "test-copy" }, new object[] { "bla bla bla bla bla bla ggsfdg fsd gfd sg fdsg fd sgf sdg fds", 543, 534, "fd", 4M, 2D }).ConfigureAwait(false);
+                using (var watch = Watch.Create("Multi Set"))
+                {
+                    for (var i = 0; i < 5000; i++)
+                    {
+                        var key = "test-" + (i % 500);
+                        await cachePool.SetMultiAsync(new[] { "test-" + (i % 500), "test-" + (i + 500) }, new object[] { "bla bla bla bla bla bla ggsfdg fsd gfd sg fdsg fd sgf sdg fds", 543, 534, "fd", 4M, 2D }).ConfigureAwait(false);
                     }
                     Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000);
                 }
@@ -91,7 +105,7 @@ namespace TWCore.Tests
             {
 				var fileSto = new FileStorage("./cache_data")
 				{
-					NumberOfSubFolders = 10,
+					NumberOfSubFolders = 25,
                     IndexSerializer = GlobalSerializer
                 };
 				var lruSto = new LRU2QStorage(10000);

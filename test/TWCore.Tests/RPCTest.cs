@@ -215,7 +215,7 @@ namespace TWCore.Tests
             => SimplePersonas.FirstOrDefault((p, pId) => p.PersonId == pId, simplePersonaId);
 
         public SimplePerson GetSimplePersona(string name, string apellido)
-            => SimplePersonas.FirstOrDefault((p, vTuple) => p.Firstname == vTuple.name && p.Lastname == vTuple.apellido, (name, apellido));
+            => SimplePersonas.FirstOrDefault((p, mName, mApellido) => p.Firstname == mName && p.Lastname == mApellido, name, apellido);
 
         public string SayHi(string name)
             => $"Hi {name}!";

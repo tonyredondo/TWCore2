@@ -67,23 +67,6 @@ namespace TWCore.Diagnostics.Api.Controllers
             return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironmentAsync(environment, application, level, fromDate, toDate, page, pageSize);
         }
         /// <summary>
-        /// Gets the Logs from a search term in message or group
-        /// </summary>
-        /// <param name="environment">Environment name</param>
-        /// <param name="searchTerm">Term to search in the database</param>
-        /// <param name="fromDate">From date and time</param>
-        /// <param name="toDate">To date and time</param>
-        /// <returns>Logs search results</returns>
-        [HttpGet("{environment}/logs/search/{searchTerm}")]
-        public Task<List<NodeLogItem>> GetLogsBySearch(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
-        {
-            searchTerm = searchTerm?.Trim();
-            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
-            fromDate = fromDate.Date;
-            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsBySearch(environment, searchTerm, fromDate, toDate);
-        }
-        /// <summary>
         /// Gets the traces objects by environment and dates
         /// </summary>
         /// <param name="environment">Environment name</param>
@@ -130,9 +113,9 @@ namespace TWCore.Diagnostics.Api.Controllers
                 var value = serObject?.GetValue();
                 if (value == null) return null;
                 if (value is ResponseMessage rsMessage)
-                    return rsMessage.Body?.SerializeToXml();
+                    return rsMessage.Body?.GetValue()?.SerializeToXml();
                 if (value is RequestMessage rqMessage)
-                    return rqMessage.Body?.SerializeToXml();
+                    return rqMessage.Body?.GetValue()?.SerializeToXml();
                 if (value is string strValue)
                     return strValue;
                 return value.SerializeToXml();
@@ -155,9 +138,15 @@ namespace TWCore.Diagnostics.Api.Controllers
                 var value = serObject?.GetValue();
                 if (value == null) return null;
                 if (value is ResponseMessage rsMessage)
-                    return rsMessage.Body != null ? JsonSerializer.SerializeToString(rsMessage.Body, rsMessage.Body.GetType()) : null;
+                {
+                    var rsBody = rsMessage.Body?.GetValue();
+                    return rsBody != null ? JsonSerializer.SerializeToString(rsBody, rsBody.GetType()) : null;
+                }
                 if (value is RequestMessage rqMessage)
-                    return rqMessage.Body != null ? JsonSerializer.SerializeToString(rqMessage.Body, rqMessage.Body.GetType()) : null;
+                {
+                    var rqBody = rqMessage.Body?.GetValue();
+                    return rqBody != null ? JsonSerializer.SerializeToString(rqBody, rqBody.GetType()) : null;
+                }
                 if (value is string strValue)
                     return strValue;
                 return JsonSerializer.SerializeToString(value, value.GetType());

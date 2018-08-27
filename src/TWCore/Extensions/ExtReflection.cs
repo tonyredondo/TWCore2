@@ -26,18 +26,18 @@ namespace TWCore
     /// </summary>
     public static partial class Extensions
     {
-        /// <summary>
-        /// Gets if a type is Assignable
-        /// </summary>
-        /// <param name="item">Current Type</param>
-        /// <param name="from">Type from</param>
-        /// <returns>True if is assignable, otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsAssignableFrom(this Type item, Type from)
-        {
-            if (item != null && from != null)
-                return item.GetTypeInfo().IsAssignableFrom(from.GetTypeInfo());
-            return false;
-        }
+        ///// <summary>
+        ///// Gets if a type is Assignable
+        ///// </summary>
+        ///// <param name="item">Current Type</param>
+        ///// <param name="from">Type from</param>
+        ///// <returns>True if is assignable, otherwise, false.</returns>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static bool IsAssignableFrom(this Type item, Type from)
+        //{
+        //    if (item != null && from != null)
+        //        return item.GetTypeInfo().IsAssignableFrom(from.GetTypeInfo());
+        //    return false;
+        //}
     }
 }

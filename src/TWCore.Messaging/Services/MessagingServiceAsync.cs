@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging;
 using TWCore.Messaging.Server;
+using TWCore.Serialization;
 using TWCore.Services.Messaging;
 using TWCore.Threading;
 // ReSharper disable CheckNamespace
@@ -107,56 +108,72 @@ namespace TWCore.Services
                 {
                     QueueServer.ResponseReceived += async (s, e) =>
                     {
-                        if (MessageReceived != null)
-                            await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
-                        if (e.Message?.Body == null) return;
-
-                        ReceivedMessagesCache.TryAdd(e.Message.Body, e.Message);
-                        Status.IncrementCurrentMessagesBeingProcessed();
-                        var sw = Stopwatch.StartNew();
                         try
                         {
-                            await Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token).ConfigureAwait(false);
+                            var sw = Stopwatch.StartNew();
+                            if (MessageReceived != null)
+                                await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
+                            if (e.Message?.Body == null) return;
+                            var body = e.Message.Body.GetValue();
+                            ReceivedMessagesCache.TryAdd(body, e.Message);
+                            Status.IncrementCurrentMessagesBeingProcessed();
+                            try
+                            {
+                                await Processor.ProcessAsync(body, _cTokenSource.Token).ConfigureAwait(false);
+                            }
+                            catch(Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                                Status.IncrementTotalExceptions();
+                            }
+                            sw.Stop();
+                            Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
+                            Status.DecrementCurrentMessagesBeingProcessed();
+                            Status.IncrementTotalMessagesProccesed();
+                            ReceivedMessagesCache.TryRemove(body, out object _);
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             Core.Log.Write(ex);
                             Status.IncrementTotalExceptions();
                         }
-                        sw.Stop();
-                        Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
-                        Status.DecrementCurrentMessagesBeingProcessed();
-                        Status.IncrementTotalMessagesProccesed();
-                        ReceivedMessagesCache.TryRemove(e.Message.Body, out object _);
                     };
                 }
                 else
                 {
                     QueueServer.RequestReceived += async (s, e) =>
                     {
-                        if (MessageReceived != null)
-                            await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Request)).ConfigureAwait(false);
-                        if (e.Request?.Body == null) return;
-
-                        ReceivedMessagesCache.TryAdd(e.Request.Body, e.Request);
-                        object result = null;
-                        Status.IncrementCurrentMessagesBeingProcessed();
-                        var sw = Stopwatch.StartNew();
                         try
                         {
-                            result = await Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken).ConfigureAwait(false);
+                            var sw = Stopwatch.StartNew();
+                            if (MessageReceived != null)
+                                await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Request)).ConfigureAwait(false);
+                            if (e.Request?.Body == null) return;
+                            var body = e.Request.Body.GetValue();
+                            ReceivedMessagesCache.TryAdd(body, e.Request);
+                            object result = null;
+                            Status.IncrementCurrentMessagesBeingProcessed();
+                            try
+                            {
+                                result = await Processor.ProcessAsync(body, e.ProcessResponseTimeoutCancellationToken).ConfigureAwait(false);
+                                e.SetResponseBody(result);
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                                Status.IncrementTotalExceptions();
+                            }
+                            sw.Stop();
+                            Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
+                            Status.DecrementCurrentMessagesBeingProcessed();
+                            Status.IncrementTotalMessagesProccesed();
+                            ReceivedMessagesCache.TryRemove(body, out object _);
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             Core.Log.Write(ex);
                             Status.IncrementTotalExceptions();
                         }
-                        sw.Stop();
-                        Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
-                        Status.DecrementCurrentMessagesBeingProcessed();
-                        Status.IncrementTotalMessagesProccesed();
-                        e.Response.Body = result;
-                        ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
                     };
                     QueueServer.BeforeSendResponse += async (s, e) =>
                     {
@@ -174,7 +191,7 @@ namespace TWCore.Services
                 QueueServer.StartListeners();
                 Core.Log.InfoBasic("Messaging service started.");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
                 throw;
@@ -258,24 +275,20 @@ namespace TWCore.Services
         /// On Service Init
         /// </summary>
         /// <param name="args">Service arguments</param>
-        protected virtual void OnInit(string[] args) 
+        protected virtual void OnInit(string[] args)
         {
             MessageReceived += (sender, e) =>
             {
                 if (!EnableMessagesTrace) return Task.CompletedTask;
-
-                if (e.Message is IMessage msg)
-                    Core.Trace.Write(GetType().FullName, OnGetReceivedMessageTraceName(msg), msg, msg.CorrelationId.ToString());
-
+                var msg = e.Message;
+                Core.Trace.Write(GetType().FullName, OnGetReceivedMessageTraceName(msg), msg, msg.CorrelationId.ToString());
                 return Task.CompletedTask;
             };
             MessageSent += (sender, e) =>
             {
                 if (!EnableMessagesTrace) return Task.CompletedTask;
-
-                if (e.Message is IMessage msg)
-                    Core.Trace.Write(GetType().FullName, OnGetSentMessageTraceName(msg), msg, msg.CorrelationId.ToString());
-
+                var msg = e.Message;
+                Core.Trace.Write(GetType().FullName, OnGetSentMessageTraceName(msg), msg, msg.CorrelationId.ToString());
                 return Task.CompletedTask;
             };
         }

@@ -152,7 +152,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Guid> SendAsync<T>(T obj, Guid correlationId)
         {
-			var rqMsg = obj as RequestMessage ?? new RequestMessage(obj)
+			var rqMsg = obj as RequestMessage ?? new RequestMessage(SenderSerializer.GetSerializedObject(obj))
 			{
 			    Header =
 			    {
@@ -231,7 +231,7 @@ namespace TWCore.Messaging.Client
             var res = default(T);
             try
             {
-                res = (T)rsMsg.Body;
+                res = (T)rsMsg.Body.GetValue();
             }
             catch (Exception ex)
             {

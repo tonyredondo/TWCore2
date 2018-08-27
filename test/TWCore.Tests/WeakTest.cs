@@ -1,16 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Security;
 using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
 using TWCore.Services;
+using System.Threading;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
-    public class WeakTest: ContainerParameterService
+    public class WeakTest : ContainerParameterService
     {
         public WeakTest() : base("weaktest", "Weak Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
@@ -58,68 +64,5 @@ namespace TWCore.Tests
             }
         }
 
-        private class WStatusEngine : IStatusEngine
-        {
-            private WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
-
-            public ObservableCollection<IStatusTransport> Transports { get; }
-            
-            
-            public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AttachObject(object objectToAttach)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AttachChild(object objectToAttach, object parent)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeAttachObject(object objectToDetach)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool Enabled { get; set; }
-            
-            public void Dispose()
-            {
-                throw new NotImplementedException();
-            }
-
-            
-            private class WeakChildren
-            {
-                public List<WeakReference> Children { get; set; }
-
-                public WeakChildren()
-                {
-                    Children = new List<WeakReference>();
-                }
-            }
-            private class WeakValue
-            {
-                public List<WeakDelegate> FuncDelegates;
-                public List<WeakDelegate> ActionDelegates;
-                public WeakReference ObjectAttached;
-
-                public WeakValue(object objectToAttach)
-                {
-                    FuncDelegates = new List<WeakDelegate>();
-                    ActionDelegates = new List<WeakDelegate>();
-                    ObjectAttached = new WeakReference(objectToAttach);
-                }
-            }
-        }
     }
 }

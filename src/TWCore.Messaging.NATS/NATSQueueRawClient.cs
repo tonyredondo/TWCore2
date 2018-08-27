@@ -67,7 +67,7 @@ namespace TWCore.Messaging.NATS
         private class NATSQueueMessage
         {
             public Guid CorrelationId;
-            public SubArray<byte> Body;
+            public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
             public IConnection Connection;
             public IAsyncSubscription Consumer;
@@ -262,7 +262,7 @@ namespace TWCore.Messaging.NATS
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                return (byte[])message.Body;
+                return message.Body.AsArray();
             }
 
             if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
@@ -272,28 +272,28 @@ namespace TWCore.Messaging.NATS
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
-            return (byte[])message.Body;
+            return message.Body.AsArray();
         }
         #endregion
 
         #region Static Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static byte[] CreateRawMessageBody(SubArray<byte> message, Guid correlationId, string name)
+        internal static byte[] CreateRawMessageBody(MultiArray<byte> message, Guid correlationId, string name)
         {
-            var nameBytes = Encoding.GetBytes(name);
-            var nameLength = nameBytes.Length;
+            var nameLength = Encoding.GetByteCount(name);
             var body = new byte[16 + 4 + nameLength + message.Count];
-            Buffer.BlockCopy(correlationId.ToByteArray(), 0, body, 0, 16);
-            Buffer.BlockCopy(BitConverter.GetBytes(nameLength), 0, body, 16, 4);
-            nameBytes.CopyTo(body, 20);
+            var bodySpan = body.AsSpan();
+            correlationId.TryWriteBytes(bodySpan.Slice(0, 16));
+            BitConverter.TryWriteBytes(bodySpan.Slice(16, 4), nameLength);
+            Encoding.GetBytes(name, bodySpan.Slice(20, nameLength));
             message.CopyTo(body, 20 + nameLength);
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (SubArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
+        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
         {
-            var body = new SubArray<byte>(message);
-            var correlationId = new Guid((byte[])body.Slice(0, 16));
+            var body = new MultiArray<byte>(message);
+            var correlationId = new Guid(body.Slice(0, 16).AsSpan());
             var nameLength = BitConverter.ToInt32(message, 16);
             var name = Encoding.GetString(message, 20, nameLength);
             var messageBody = body.Slice(20 + nameLength);

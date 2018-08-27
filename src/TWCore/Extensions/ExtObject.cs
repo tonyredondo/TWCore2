@@ -186,7 +186,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CopyValuesFrom<T>(this T target, object source)
         {
-            if (source?.GetType().GetInterfaces().Any(i => (i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)))) == true)
+            if (source?.GetType().GetInterfaces().Any(i => (i == typeof(IList) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)))) == true)
             {
                 var iTarget = target as IList;
                 var iSource = (IList)source;
@@ -203,7 +203,7 @@ namespace TWCore
                         innerType = gargs[0];
                     else
                     {
-                        var iListType = iTarget.GetType().GetTypeInfo().ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                        var iListType = iTarget.GetType().GetTypeInfo().ImplementedInterfaces.FirstOrDefault(m => (m.IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
                         if (iListType?.GenericTypeArguments.Any() == true)
                             innerType = iListType.GenericTypeArguments[0];
                     }
@@ -229,8 +229,8 @@ namespace TWCore
                     if (tProp == null || tProp.IsSpecialName || !tProp.CanWrite) continue;
                     var tFastProp = tProp.GetFastPropertyInfo();
                     var sPropValue = sFastProp.GetValue(source);
-                    var sPropTypeInfo = sFastProp.PropertyType.GetTypeInfo();
-                    var tPropTypeInfo = tFastProp.PropertyType.GetTypeInfo();
+                    var sPropTypeInfo = sFastProp.PropertyType;
+                    var tPropTypeInfo = tFastProp.PropertyType;
 
                     if (tPropTypeInfo.IsEnum)
                         tFastProp.SetValue(target, Enum.ToObject(tFastProp.PropertyType, sPropValue));
@@ -255,8 +255,8 @@ namespace TWCore
                     var tField = targetType.GetRuntimeField(sField.Name);
                     if (tField == null) continue;
                     var sFieldValue = sField.GetValue(source);
-                    var sFieldTypeInfo = sField.FieldType.GetTypeInfo();
-                    var tFieldTypeInfo = tField.FieldType.GetTypeInfo();
+                    var sFieldTypeInfo = sField.FieldType;
+                    var tFieldTypeInfo = tField.FieldType;
 
                     if (tFieldTypeInfo.IsEnum)
                         tField.SetValue(target, Enum.ToObject(tField.FieldType, sFieldValue));

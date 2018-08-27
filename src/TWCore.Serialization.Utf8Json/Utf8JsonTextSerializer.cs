@@ -158,7 +158,7 @@ namespace TWCore.Serialization.Utf8Json
                 UseFileExtensions = UseFileExtensions,
                 Encoding = Encoding,
                 Indent = Indent,
-                UseCamelCase = UseCamelCase,
+                UseCamelCase = UseCamelCase
             };
             nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;

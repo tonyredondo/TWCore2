@@ -41,8 +41,8 @@ namespace TWCore.Serialization.NSerializer
         {
             Type = type;
             var ifaces = type.GetInterfaces();
-            var iListType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-            var iDictionaryType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
             var isIList = iListType != null;
             var isIDictionary = iDictionaryType != null;
             var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
@@ -72,9 +72,6 @@ namespace TWCore.Serialization.NSerializer
             Metadata = new DeserializerMetaDataOfType(type, isArray, isIList, isIDictionary, propNames);
 
             //*** Expressions
-            var ctors = type.GetConstructors();
-            var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ?? ctors[0];
-
             var serExpressions = new List<Expression>();
             var varExpressions = new List<ParameterExpression>();
             //
@@ -90,11 +87,12 @@ namespace TWCore.Serialization.NSerializer
 
             if (isArray)
             {
+                var elementType = type.GetElementType();
+
                 serExpressions.Add(Expression.Assign(capacity, Expression.Call(table, DeserializersTable.StreamReadIntMethod)));
-                serExpressions.Add(Expression.Assign(value, Expression.New(ctor, capacity)));
+                serExpressions.Add(Expression.Assign(value, Expression.NewArrayBounds(elementType, capacity)));
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
-                var elementType = type.GetElementType();
                 var methodName = "InnerReadValue";
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(elementType, out var propMethod))
                     methodName = propMethod.Name;
@@ -194,13 +192,13 @@ namespace TWCore.Serialization.NSerializer
             }
             foreach (var prop in runtimeProperties)
             {
-                var setMethod = prop.SetMethod;
+                var setExp = Expression.Property(value, prop);
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(prop.PropertyType, out var propMethod))
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Call(table, propMethod, Expression.Call(table, "StreamReadByte", Type.EmptyTypes))));
+                    serExpressions.Add(Expression.Assign(setExp, Expression.Call(table, propMethod, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)))); 
                 else if (prop.PropertyType.IsEnum)
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
+                    serExpressions.Add(Expression.Assign(setExp, Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
                 else
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
+                    serExpressions.Add(Expression.Assign(setExp, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
             }
 
             serExpressions.Add(Expression.Call(table, "StreamReadByte", Type.EmptyTypes));

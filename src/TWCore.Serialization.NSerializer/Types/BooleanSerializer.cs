@@ -15,41 +15,42 @@ limitations under the License.
  */
 
 using System;
-using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private static readonly MethodInfo ValueProperty = typeof(bool?).GetProperty("Value", BindingFlags.Instance | BindingFlags.Public)?.GetMethod;
+        #region Expressions
+        private static readonly MethodInfo BoolValueProperty = typeof(bool?).GetProperty("Value", BindingFlags.Instance | BindingFlags.Public)?.GetMethod;
 
         internal static Expression WriteBooleanExpression(Expression value, ParameterExpression serTable)
         {
-            var ifExp = Expression.IfThenElse(
-                Expression.Equal(value, Expression.Constant(true)),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolTrue)),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolFalse)));
-            var block = ifExp.Reduce();
-            return block;
+            var boolParam = Expression.Parameter(typeof(bool));
+            var block = Expression.Block(new[] { boolParam },
+                Expression.Assign(boolParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(boolParam, Expression.Constant(true)),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolTrue)),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolFalse))));
+            return block.Reduce();
         }
         internal static Expression WriteNulleableBooleanExpression(Expression value, ParameterExpression serTable)
         {
-            var boolParam = Expression.Parameter(typeof(bool));
-            var ifExp = Expression.IfThenElse(
-                Expression.Equal(value, Expression.Constant(null, typeof(bool?))),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
-                Expression.Block(new[] { boolParam },
-                    Expression.Assign(boolParam, Expression.Call(value, ValueProperty)),
-                    WriteBooleanExpression(boolParam, serTable)));
-            var block = ifExp.Reduce();
-            return block;
+            var boolParam = Expression.Parameter(typeof(bool?));
+            var block = Expression.Block(new[] { boolParam },
+                Expression.Assign(boolParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(boolParam, Expression.Constant(null, typeof(bool?))),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                    WriteBooleanExpression(Expression.Call(boolParam, BoolValueProperty), serTable))
+                );
+            return block.Reduce();
         }
-        
-        
+        #endregion
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool value)
         {
@@ -91,8 +92,13 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool? ReadBoolNullable(byte value)
         {
-            if (value == DataBytesDefinition.ValueNull) return null;
-            return ReadBool(value);
+            if (value == DataBytesDefinition.ValueNull)
+                return null;
+            if (value == DataBytesDefinition.BoolTrue)
+                return true;
+            if (value == DataBytesDefinition.BoolFalse)
+                return false;
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

@@ -89,8 +89,8 @@ namespace TWCore.Cache.Storages
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override string[] OnGetKeys()
-            => _storage.Keys.ToArray();
+        protected override IEnumerable<string> OnGetKeys()
+            => _storage.Keys;
         /// <inheritdoc />
         /// <summary>
         /// Tries to set the data to the storage

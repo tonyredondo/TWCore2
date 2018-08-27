@@ -413,7 +413,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             };
             lock (_locker)
             {
-                _sessions.Where((s, vTuple) => s.OnSession && s.Hub == vTuple.hub && s.SessionId != vTuple.exceptSessionId, (hub, exceptSessionId))
+                _sessions.Where((s, iHub, iExceptSessionId) => s.OnSession && s.Hub == iHub && s.SessionId != iExceptSessionId, hub, exceptSessionId)
                     .Select((s, aMsg) => s.SendRpcMessageAsync(aMsg), msg).ToArray();
             }
         }

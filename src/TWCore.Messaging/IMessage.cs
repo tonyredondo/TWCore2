@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using TWCore.Serialization;
 
 namespace TWCore.Messaging
 {
@@ -30,6 +31,6 @@ namespace TWCore.Messaging
         /// <summary>
         /// Message Body
         /// </summary>
-        object Body { get; }
+        SerializedObject Body { get; }
     }
 }

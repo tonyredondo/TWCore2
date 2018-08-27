@@ -18,7 +18,6 @@ using NonBlocking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,6 +32,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo InternalSimpleWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalSimpleWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteIntMethodInfo = typeof(SerializersTable).GetMethod("WriteInt", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -47,7 +47,6 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
         internal static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
 
-        private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
         private readonly SerializerCache<DateTimeOffset> _dateTimeOffsetCache = new SerializerCache<DateTimeOffset>();
@@ -66,7 +65,6 @@ namespace TWCore.Serialization.NSerializer
 
         private readonly object[] _paramObj = new object[1];
         protected Stream Stream;
-        protected BinaryWriter Writer;
 
         #region Statics
         static SerializersTable()
@@ -409,6 +407,24 @@ namespace TWCore.Serialization.NSerializer
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(object[] value)
+        {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
+            WriteDefInt(DataBytesDefinition.ObjectArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                InternalWriteObjectValue(value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<bool> value)
         {
             if (value == null)
@@ -732,6 +748,24 @@ namespace TWCore.Serialization.NSerializer
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<object> value)
+        {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
+            WriteDefInt(DataBytesDefinition.ObjectList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                InternalWriteObjectValue(value[i]);
+        }
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -740,7 +774,6 @@ namespace TWCore.Serialization.NSerializer
             try
             {
                 Stream = stream;
-                Writer = new BinaryWriter(stream, Encoding.UTF8, true);
                 Stream.WriteByte(DataBytesDefinition.Start);
 
                 if (value == null)
@@ -774,9 +807,10 @@ namespace TWCore.Serialization.NSerializer
                 else
                     descriptor.SerializeAction(value, this);
 
-                _buffer[0] = DataBytesDefinition.TypeEnd;
-                _buffer[1] = DataBytesDefinition.End;
-                Stream.Write(_buffer, 0, 2);
+                Span<byte> buffer = stackalloc byte[2];
+                buffer[0] = DataBytesDefinition.TypeEnd;
+                buffer[1] = DataBytesDefinition.End;
+                Stream.Write(buffer);
             }
             catch (Exception ex)
             {
@@ -801,13 +835,12 @@ namespace TWCore.Serialization.NSerializer
                 _typeCache.Clear();
                 _objectCache.Clear();
                 Stream = null;
-                Writer = null;
             }
         }
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void InternalWriteObjectValue(object value)
+        private void InternalWriteObjectValue(object value)
         {
             if (value == null)
             {
@@ -832,24 +865,20 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
-                _buffer[0] = DataBytesDefinition.RefObject;
-                _buffer[1] = (byte)oIdx;
-                _buffer[2] = (byte)(oIdx >> 8);
-                _buffer[3] = (byte)(oIdx >> 16);
-                _buffer[4] = (byte)(oIdx >> 24);
-                Stream.Write(_buffer, 0, 5);
+                Span<byte> buffer = stackalloc byte[5];
+                buffer[0] = DataBytesDefinition.RefObject;
+                BitConverter.TryWriteBytes(buffer.Slice(1), oIdx);
+                Stream.Write(buffer);
                 return;
             }
             _objectCache.Set(value);
             var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-                _buffer[0] = DataBytesDefinition.RefType;
-                _buffer[1] = (byte)tIdx;
-                _buffer[2] = (byte)(tIdx >> 8);
-                _buffer[3] = (byte)(tIdx >> 16);
-                _buffer[4] = (byte)(tIdx >> 24);
-                Stream.Write(_buffer, 0, 5);
+                Span<byte> buffer = stackalloc byte[5];
+                buffer[0] = DataBytesDefinition.RefType;
+                BitConverter.TryWriteBytes(buffer.Slice(1), tIdx);
+                Stream.Write(buffer);
             }
             else
             {
@@ -863,219 +892,220 @@ namespace TWCore.Serialization.NSerializer
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InternalSimpleWriteObjectValue(object value)
+        {
+            if (value == null)
+            {
+                Stream.WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
+            var vType = value.GetType();
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                Span<byte> buffer = stackalloc byte[5];
+                buffer[0] = DataBytesDefinition.RefObject;
+                BitConverter.TryWriteBytes(buffer.Slice(1), oIdx);
+                Stream.Write(buffer);
+                return;
+            }
+            _objectCache.Set(value);
+            var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
+            if (_typeCache.TryGetValue(vType, out var tIdx))
+            {
+                Span<byte> buffer = stackalloc byte[5];
+                buffer[0] = DataBytesDefinition.RefType;
+                BitConverter.TryWriteBytes(buffer.Slice(1), tIdx);
+                Stream.Write(buffer);
+            }
+            else
+            {
+                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                _typeCache.Set(vType);
+            }
+            if (descriptor.IsNSerializable)
+                ((INSerializable)value).Serialize(this);
+            else
+                descriptor.SerializeAction(value, this);
+            Stream.WriteByte(DataBytesDefinition.TypeEnd);
+        }
         #endregion
 
         #region Private Write Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefByte(byte type, byte value)
         {
-            _buffer[0] = type;
-            _buffer[1] = value;
-            Stream.Write(_buffer, 0, 2);
+            Span<byte> buffer = stackalloc byte[2];
+            buffer[0] = type;
+            buffer[1] = value;
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefUshort(byte type, ushort value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            Stream.Write(_buffer, 0, 3);
+            Span<byte> buffer = stackalloc byte[3];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefInt(byte type, int value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            _buffer[3] = (byte)(value >> 16);
-            _buffer[4] = (byte)(value >> 24);
-            Stream.Write(_buffer, 0, 5);
+            Span<byte> buffer = stackalloc byte[5];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDefDouble(byte type, double value)
+        protected void WriteDefDouble(byte type, double value)
         {
-            var tmpValue = *(ulong*)&value;
-            _buffer[0] = type;
-            _buffer[1] = (byte)tmpValue;
-            _buffer[2] = (byte)(tmpValue >> 8);
-            _buffer[3] = (byte)(tmpValue >> 16);
-            _buffer[4] = (byte)(tmpValue >> 24);
-            _buffer[5] = (byte)(tmpValue >> 32);
-            _buffer[6] = (byte)(tmpValue >> 40);
-            _buffer[7] = (byte)(tmpValue >> 48);
-            _buffer[8] = (byte)(tmpValue >> 56);
-            Stream.Write(_buffer, 0, 9);
+            Span<byte> buffer = stackalloc byte[9];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDefFloat(byte type, float value)
+        protected void WriteDefFloat(byte type, float value)
         {
-            var tmpValue = *(uint*)&value;
-            _buffer[0] = type;
-            _buffer[1] = (byte)tmpValue;
-            _buffer[2] = (byte)(tmpValue >> 8);
-            _buffer[3] = (byte)(tmpValue >> 16);
-            _buffer[4] = (byte)(tmpValue >> 24);
-            Stream.Write(_buffer, 0, 5);
+            Span<byte> buffer = stackalloc byte[5];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefLong(byte type, long value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            _buffer[3] = (byte)(value >> 16);
-            _buffer[4] = (byte)(value >> 24);
-            _buffer[5] = (byte)(value >> 32);
-            _buffer[6] = (byte)(value >> 40);
-            _buffer[7] = (byte)(value >> 48);
-            _buffer[8] = (byte)(value >> 56);
-            Stream.Write(_buffer, 0, 9);
+            Span<byte> buffer = stackalloc byte[9];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefULong(byte type, ulong value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            _buffer[3] = (byte)(value >> 16);
-            _buffer[4] = (byte)(value >> 24);
-            _buffer[5] = (byte)(value >> 32);
-            _buffer[6] = (byte)(value >> 40);
-            _buffer[7] = (byte)(value >> 48);
-            _buffer[8] = (byte)(value >> 56);
-            Stream.Write(_buffer, 0, 9);
+            Span<byte> buffer = stackalloc byte[9];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefUInt(byte type, uint value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            _buffer[3] = (byte)(value >> 16);
-            _buffer[4] = (byte)(value >> 24);
-            Stream.Write(_buffer, 0, 5);
+            Span<byte> buffer = stackalloc byte[5];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefShort(byte type, short value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            Stream.Write(_buffer, 0, 3);
+            Span<byte> buffer = stackalloc byte[3];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefChar(byte type, char value)
         {
-            _buffer[0] = type;
-            _buffer[1] = (byte)value;
-            _buffer[2] = (byte)(value >> 8);
-            Stream.Write(_buffer, 0, 3);
+            Span<byte> buffer = stackalloc byte[3];
+            buffer[0] = type;
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
+            Stream.Write(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteDefDecimal(byte type, decimal value)
+        {
+            Span<byte> buffer = stackalloc byte[17];
+            buffer[0] = type;
+            var bits = decimal.GetBits(value);
+            var decBuffer = buffer.Slice(1);
+            for (var i = 0; i < 4; i++)
+                BitConverter.TryWriteBytes(decBuffer.Slice(i * 4, 4), bits[i]);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteByte(byte value)
         {
-            _buffer[0] = value;
-            Stream.Write(_buffer, 0, 1);
+            Stream.WriteByte(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteUshort(ushort value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            Stream.Write(_buffer, 0, 2);
+            Span<byte> buffer = stackalloc byte[2];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteInt(int value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            _buffer[2] = (byte)(value >> 16);
-            _buffer[3] = (byte)(value >> 24);
-            Stream.Write(_buffer, 0, 4);
+            Span<byte> buffer = stackalloc byte[4];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDouble(double value)
+        protected void WriteDouble(double value)
         {
-            var tmpValue = *(ulong*)&value;
-            _buffer[0] = (byte)tmpValue;
-            _buffer[1] = (byte)(tmpValue >> 8);
-            _buffer[2] = (byte)(tmpValue >> 16);
-            _buffer[3] = (byte)(tmpValue >> 24);
-            _buffer[4] = (byte)(tmpValue >> 32);
-            _buffer[5] = (byte)(tmpValue >> 40);
-            _buffer[6] = (byte)(tmpValue >> 48);
-            _buffer[7] = (byte)(tmpValue >> 56);
-            Stream.Write(_buffer, 0, 8);
+            Span<byte> buffer = stackalloc byte[8];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteFloat(float value)
+        protected void WriteFloat(float value)
         {
-            var tmpValue = *(uint*)&value;
-            _buffer[0] = (byte)tmpValue;
-            _buffer[1] = (byte)(tmpValue >> 8);
-            _buffer[2] = (byte)(tmpValue >> 16);
-            _buffer[3] = (byte)(tmpValue >> 24);
-            Stream.Write(_buffer, 0, 4);
+            Span<byte> buffer = stackalloc byte[4];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteLong(long value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            _buffer[2] = (byte)(value >> 16);
-            _buffer[3] = (byte)(value >> 24);
-            _buffer[4] = (byte)(value >> 32);
-            _buffer[5] = (byte)(value >> 40);
-            _buffer[6] = (byte)(value >> 48);
-            _buffer[7] = (byte)(value >> 56);
-            Stream.Write(_buffer, 0, 8);
+            Span<byte> buffer = stackalloc byte[8];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteULong(ulong value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            _buffer[2] = (byte)(value >> 16);
-            _buffer[3] = (byte)(value >> 24);
-            _buffer[4] = (byte)(value >> 32);
-            _buffer[5] = (byte)(value >> 40);
-            _buffer[6] = (byte)(value >> 48);
-            _buffer[7] = (byte)(value >> 56);
-            Stream.Write(_buffer, 0, 8);
+            Span<byte> buffer = stackalloc byte[8];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteUInt(uint value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            _buffer[2] = (byte)(value >> 16);
-            _buffer[3] = (byte)(value >> 24);
-            Stream.Write(_buffer, 0, 4);
+            Span<byte> buffer = stackalloc byte[4];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteShort(short value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            Stream.Write(_buffer, 0, 2);
+            Span<byte> buffer = stackalloc byte[2];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteChar(char value)
         {
-            _buffer[0] = (byte)value;
-            _buffer[1] = (byte)(value >> 8);
-            Stream.Write(_buffer, 0, 2);
+            Span<byte> buffer = stackalloc byte[2];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDecimal(decimal value)
         {
-            Writer.Write(value);
+            var bits = decimal.GetBits(value);
+            Span<byte> buffer = stackalloc byte[16];
+            for (var i = 0; i < 4; i++)
+                BitConverter.TryWriteBytes(buffer.Slice(i * 4, 4), bits[i]);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteSByte(sbyte value)
         {
-            var bytes = BitConverter.GetBytes(value);
-            Stream.Write(bytes, 0, bytes.Length);
+            Span<byte> buffer = stackalloc byte[1];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         #endregion
     }

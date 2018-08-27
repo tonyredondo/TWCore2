@@ -92,7 +92,7 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void CloseContext()
         {
-            Response.EventStream.Write(new byte[0], 0, 0);
+            Response.EventStream.Write(Array.Empty<byte>(), 0, 0);
             Response.EventStream.Flush();
             Response.EventStream.Dispose();
         }

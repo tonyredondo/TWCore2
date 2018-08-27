@@ -243,7 +243,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>Serialized json value</returns>
-        public static SubArray<byte> SerializeToJsonBytes<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToJsonBytes<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize json value to an object instance
         /// </summary>
@@ -257,7 +257,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">Serialized json value</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromJsonBytes<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromJsonBytes<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
 
 
         /// <summary>

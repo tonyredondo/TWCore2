@@ -277,11 +277,11 @@ namespace TWCore.Messaging.Server
                 Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, iMessages);
                 if (RequestReceived != null)
                     await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-                e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
+                e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
                 if (MQueueServerEvents.RequestReceived != null)
                     await MQueueServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
-                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
+                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponseSerialized)
                 {
                     e.Response.Header.Response.ApplicationSentDate = Core.Now;
 

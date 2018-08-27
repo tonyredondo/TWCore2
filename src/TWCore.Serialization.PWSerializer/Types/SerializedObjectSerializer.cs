@@ -100,7 +100,7 @@ namespace TWCore.Serialization.PWSerializer.Types
             else
             {
                 writer.Write(DataType.SerializedObject);
-                value.WriteTo(writer);
+                value.CopyTo(writer.BaseStream);
             }
         }
         /// <inheritdoc />
@@ -113,7 +113,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject ReadValue(BinaryReader reader, byte type)
         {
-            return type == DataType.SerializedObjectNull ? null : SerializedObject.FromStream(reader);
+            return type == DataType.SerializedObjectNull ? null : SerializedObject.FromStream(reader.BaseStream);
         }
         /// <inheritdoc />
         /// <summary>

@@ -35,20 +35,19 @@ namespace TWCore.Messaging.NSQ
 	public class NSQueueServerListener : MQueueServerListenerBase
 	{
 		#region Fields
-		private readonly object _lock = new object();
 		private readonly Type _messageType;
 		private readonly string _name;
 		private Consumer _receiver;
 		private CancellationToken _token;
 		private Task _monitorTask;
-		private bool _exceptionSleep;
+		private int _exceptionSleep;
 		#endregion
 
 		#region Nested Type
 		private struct NSQMessage
 		{
 			public Guid CorrelationId;
-			public SubArray<byte> Body;
+			public MultiArray<byte> Body;
 		}
 		private class NSQMessageHandler : IHandler
         {
@@ -155,16 +154,11 @@ namespace TWCore.Messaging.NSQ
 			{
 				try
 				{
-					bool exSleep;
-					lock (_lock)
-						exSleep = _exceptionSleep;
-					if (exSleep)
+					if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
 					{
 						OnDispose();
-						Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+						Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
 						await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-						lock (_lock)
-							_exceptionSleep = false;
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
@@ -185,7 +179,7 @@ namespace TWCore.Messaging.NSQ
 					    Core.Log.Warning("The listener has been resumed.");
                     }
 
-					await Task.Delay(100, _token).ConfigureAwait(false);
+					await Task.Delay(1000, _token).ConfigureAwait(false);
 				}
 				catch (TaskCanceledException) { }
 				catch (Exception ex)
@@ -203,7 +197,7 @@ namespace TWCore.Messaging.NSQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task ProcessingTaskAsync(NSQMessage message)
 		{
-            if (message.Body == null) return;
+            if (message.Body == MultiArray<byte>.Empty) return;
 			try
 			{
 				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
@@ -215,7 +209,7 @@ namespace TWCore.Messaging.NSQ
 						Counters.IncrementReceivingTime(request.Header.TotalTime);
 						if (request.Header.ClientName != Config.Name)
 							Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-						var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count);
+						var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count, SenderSerializer);
 						if (request.Header.ResponseQueue != null)
 							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
 						await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
@@ -233,8 +227,7 @@ namespace TWCore.Messaging.NSQ
 			{
 				Counters.IncrementTotalExceptions();
 				Core.Log.Write(ex);
-				lock (_lock)
-					_exceptionSleep = true;
+			    Interlocked.Exchange(ref _exceptionSleep, 1);
 			}
 		}
 		#endregion

@@ -39,8 +39,8 @@ namespace TWCore.Serialization.WSerializer
     {
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, byte[]>();
-        private static readonly NonBlocking.ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<byte[], Type>(ByteArrayComparer.Instance);
+        private static readonly NonBlocking.ConcurrentDictionary<Type, MultiArray<byte>> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, MultiArray<byte>>();
+        private static readonly NonBlocking.ConcurrentDictionary<MultiArray<byte>, Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<MultiArray<byte>, Type>(MultiArrayBytesComparer.Instance);
         private static readonly IHash Hash = HashManager.Get("SHA1");
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         
@@ -330,7 +330,7 @@ namespace TWCore.Serialization.WSerializer
                                     if (_knownTypes.Contains(tStartItem.Type))
                                     {
                                         bw.Write(DataType.KnownType);
-                                        bw.Write(GlobalKnownTypes[tStartItem.Type]);
+                                        GlobalKnownTypes[tStartItem.Type].CopyTo(bw.BaseStream);
                                     }
                                     else
                                     {
@@ -1350,7 +1350,7 @@ namespace TWCore.Serialization.WSerializer
                                     else
                                     {
                                         fprop.SetValue(typeItem.Value, 
-                                            fprop.PropertyType.GetTypeInfo().IsEnum
+                                            fprop.PropertyType.IsEnum
                                                 ? Enum.ToObject(fprop.PropertyType, value)
                                                 : DataTypeHelper.Change(value, fprop.PropertyType.GetUnderlyingType()));
                                     }
@@ -1514,7 +1514,7 @@ namespace TWCore.Serialization.WSerializer
                 var ifaces = typeInfo.ImplementedInterfaces.ToArray();
 
 
-                var ilist = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+                var ilist = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
                 if (ilist != null)
                 {
                     Type innerType = null;
@@ -1529,7 +1529,7 @@ namespace TWCore.Serialization.WSerializer
                             innerType = gargs[0];
                         else
                         {
-                            var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                            var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
                             if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                 innerType = iListType.GenericTypeArguments[0];
                         }
@@ -1538,7 +1538,7 @@ namespace TWCore.Serialization.WSerializer
                     tinfo.InnerTypes = new[] { innerType };
                 }
 
-                var idictio = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                var idictio = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                 if (idictio != null)
                 {
                     tinfo.IsIDictionary = true;
@@ -1556,7 +1556,7 @@ namespace TWCore.Serialization.WSerializer
         {
             if (type == null) return null;
             var typeInfo = type.GetTypeInfo();
-            var isIList = typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var isIList = typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
 
             var properties = type.GetRuntimeProperties().OrderBy(n => n.Name).ToArray();
             var propNames = new List<string>();

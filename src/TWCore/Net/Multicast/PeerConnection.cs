@@ -15,7 +15,9 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -66,14 +68,14 @@ namespace TWCore.Net.Multicast
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] New() => new byte[PacketSize];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(byte[] value) => Array.Clear(value, 0, PacketSize);
+            public void Reset(byte[] value) {}
             public int DropTimeFrequencyInSeconds => 60;
             public void DropAction(byte[] value)
             {
             }
         }
         #endregion
-        
+
         #region Properties
         /// <summary>
         /// Port number
@@ -127,16 +129,17 @@ namespace TWCore.Net.Multicast
                 if (nicPropv4 == null) continue;
                 var addresses = nicProp.UnicastAddresses
                     .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
-                    .Select(a => a.Address);
+                    .Select(a => a.Address)
+                    .Distinct();
 
                 foreach (var ipAddress in addresses)
                 {
                     var client = new UdpClient();
+                    client.Client.ReceiveBufferSize = 4096;
+                    client.Client.SendBufferSize = 4096;
                     client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(nicPropv4.Index));
-                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 4096);
-                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 4096);
                     client.Client.Bind(new IPEndPoint(ipAddress, Port));
                     client.MulticastLoopback = true;
                     client.JoinMulticastGroup(_multicastIp, ipAddress);
@@ -151,6 +154,8 @@ namespace TWCore.Net.Multicast
                 try
                 {
                     var basicReceiver = new UdpClient();
+                    basicReceiver.Client.ReceiveBufferSize = 4096;
+                    basicReceiver.Client.SendBufferSize = 4096;
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 4096);
@@ -214,18 +219,19 @@ namespace TWCore.Net.Multicast
             const int dtsize = PacketSize - 16 - 2 - 2 - 2;
             var numMsgs = (int)Math.Ceiling((double)count / dtsize);
             if (numMsgs > ushort.MaxValue) throw new ArgumentOutOfRangeException($"The buffer must be less than {ushort.MaxValue} bytes");
-            var guidBytes = Guid.NewGuid().ToByteArray();
-            var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
+            var guid = Guid.NewGuid();
             var remain = count;
             var datagram = DatagramPool.New();
             for (var i = 0; i < numMsgs; i++)
             {
                 var csize = remain >= dtsize ? dtsize : remain;
-                Buffer.BlockCopy(guidBytes, 0, datagram, 0, 16);
-                Buffer.BlockCopy(numMsgsBytes, 0, datagram, 16, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes((ushort)i), 0, datagram, 18, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes((ushort)csize), 0, datagram, 20, 2);
-                Buffer.BlockCopy(buffer, offset, datagram, 22, csize);
+                var dGram = new Memory<byte>(datagram);
+                guid.TryWriteBytes(dGram.Span.Slice(0, 16));
+                BitConverter.TryWriteBytes(dGram.Span.Slice(16, 2), (ushort)numMsgs);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(18, 2), (ushort)i);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(20, 2), (ushort)csize);
+                buffer.AsSpan(offset, csize).CopyTo(dGram.Span.Slice(22));
+                dGram.Span.Slice(csize + 22).Clear();
 
                 foreach (var c in _sendClients)
                 {
@@ -234,7 +240,6 @@ namespace TWCore.Net.Multicast
                     try
                     {
                         await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
-                        //Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.Client.LocalEndPoint);
                     }
                     catch (Exception)
                     {
@@ -245,18 +250,54 @@ namespace TWCore.Net.Multicast
 
                 remain -= dtsize;
                 offset += csize;
-
-                Array.Clear(datagram, 0, PacketSize);
             }
             DatagramPool.Store(datagram);
         }
         /// <summary>
         /// Send buffer
         /// </summary>
-        /// <param name="buffer">Buffer subarray</param>
+        /// <param name="buffer">MultiArray Buffer</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task SendAsync(SubArray<byte> buffer)
-            => SendAsync(buffer.Array, buffer.Offset, buffer.Count);
+        public async Task SendAsync(MultiArray<byte> buffer)
+        {
+            const int dtsize = PacketSize - 16 - 2 - 2 - 2;
+            var numMsgs = (int)Math.Ceiling((double)buffer.Count / dtsize);
+            if (numMsgs > ushort.MaxValue) throw new ArgumentOutOfRangeException($"The buffer must be less than {ushort.MaxValue} bytes");
+            var guid = Guid.NewGuid();
+            var offset = buffer.Offset;
+            var remain = buffer.Count;
+            var datagram = DatagramPool.New();
+            for (var i = 0; i < numMsgs; i++)
+            {
+                var csize = remain >= dtsize ? dtsize : remain;
+                var dGram = new Memory<byte>(datagram);
+                guid.TryWriteBytes(dGram.Span.Slice(0, 16));
+                BitConverter.TryWriteBytes(dGram.Span.Slice(16, 2), (ushort)numMsgs);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(18, 2), (ushort)i);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(20, 2), (ushort)csize);
+                buffer.Slice(offset, csize).CopyTo(dGram.Span.Slice(22));
+                dGram.Span.Slice(csize + 22).Clear();
+
+                foreach (var c in _sendClients)
+                {
+                    if (_token.IsCancellationRequested) break;
+                    if (_endpointErrors.Contains(c.Client.LocalEndPoint)) continue;
+                    try
+                    {
+                        await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        if (_endpointErrors.Add(c.Client.LocalEndPoint))
+                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
+                    }
+                }
+
+                remain -= dtsize;
+                offset += csize;
+            }
+            DatagramPool.Store(datagram);
+        }
         /// <summary>
         /// Send buffer
         /// </summary>
@@ -271,7 +312,6 @@ namespace TWCore.Net.Multicast
 
         private async Task ReceiveSocketThreadAsync(UdpClient client)
         {
-            var guidBytes = new byte[16];
             while (!_token.IsCancellationRequested)
             {
                 try
@@ -282,32 +322,37 @@ namespace TWCore.Net.Multicast
                         return;
                     var udpReceiveResult = clientTask.Result;
                     var rcvEndpoint = udpReceiveResult.RemoteEndPoint;
-                    if (rcvEndpoint == null) continue;
+                    if (rcvEndpoint == null)
+                        continue;
                     var datagram = udpReceiveResult.Buffer;
                     if (datagram.Length < 22)
                         continue;
-                    Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
-                    var guid = new Guid(guidBytes);
+
+                    var guid = new Guid(datagram.AsSpan(0, 16));
                     var numMsgs = BitConverter.ToUInt16(datagram, 16);
                     var currentMsg = BitConverter.ToUInt16(datagram, 18);
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
-                    var buffer = new byte[dataSize];
-                    Buffer.BlockCopy(datagram, 22, buffer, 0, dataSize);
+                    var buffer = datagram.AsMemory(22, dataSize);
                     var key = (guid, numMsgs);
 
                     var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), TimeoutTime));
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
-                    try
+
+                    if (OnReceive != null)
                     {
-                        buffer = receivedDatagrams.GetMessage();
-                        OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, buffer));
+                        try
+                        {
+                            var bufferMessage = receivedDatagrams.GetMessage();
+                            OnReceive.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage));
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
+
                     _receivedMessagesDatagram.TryRemove(key, out _);
                 }
                 catch (InvalidCastException)
@@ -330,19 +375,47 @@ namespace TWCore.Net.Multicast
         #region Nested Types
         private struct ReceivedDatagrams
         {
-            public byte[][] Datagrams { get; private set; }
-            public bool Complete => Datagrams.All(i => i != null);
-            public ReceivedDatagrams(int numMessages)
-            {
-                Datagrams = new byte[numMessages][];
-            }
+            public Memory<byte>[] Datagrams { get; private set; }
+            public bool Complete => !Datagrams?.Any(i => i.IsEmpty) ?? false;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public byte[] GetMessage()
+            public ReadOnlySequence<byte> GetMessage()
             {
-                var buffer = Datagrams?.SelectMany(i => i).ToArray();
-                Datagrams = null;
-                return buffer;
+                if (Datagrams == null) return ReadOnlySequence<byte>.Empty;
+                if (Datagrams.Length == 0) return ReadOnlySequence<byte>.Empty;
+                ReadOnlySequence<byte> sequence;
+                if (Datagrams.Length == 1)
+                {
+                    sequence = new ReadOnlySequence<byte>(Datagrams[0]);
+                }
+                else
+                {
+                    var firstSegment = new Segment<byte>(Datagrams[0]);
+                    var lastSegment = firstSegment;
+                    for (var i = 1; i < Datagrams.Length; i++)
+                        lastSegment = lastSegment.Add(Datagrams[i]);
+                    sequence = new ReadOnlySequence<byte>(firstSegment, 0, lastSegment, lastSegment.Memory.Length);
+                }
+                return sequence;
+            }
+
+            public ReceivedDatagrams(int numMessages)
+            {
+                Datagrams = new Memory<byte>[numMessages];
+            }
+        }
+
+        private class Segment<T> : ReadOnlySequenceSegment<T>
+        {
+            public Segment(ReadOnlyMemory<T> memory)
+                => Memory = memory;
+
+            public Segment<T> Add(ReadOnlyMemory<T> mem)
+            {
+                var segment = new Segment<T>(mem);
+                segment.RunningIndex = RunningIndex + Memory.Length;
+                Next = segment;
+                return segment;
             }
         }
         #endregion

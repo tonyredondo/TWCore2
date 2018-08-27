@@ -46,7 +46,7 @@ namespace TWCore.Security
         /// <param name="value">Bytes array to calculate the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] GetHashValue(byte[] value) => _hashAlgo.ComputeHash(value);
+        public override MultiArray<byte> GetHashValue(MultiArray<byte> value) => _hashAlgo.ComputeHash(value.AsReadOnlyStream());
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ namespace TWCore.Security
         /// <param name="bytes">Byte array</param>
         /// <returns>String hash</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetHashSHA512(this byte[] bytes) => Hash.Get(bytes);
+        public static string GetHashSHA512(this MultiArray<byte> bytes) => Hash.Get(bytes);
         /// <summary>
         /// Get the string hash for the object
         /// </summary>
@@ -87,21 +87,21 @@ namespace TWCore.Security
         /// <param name="bytes">Byte array</param>
         /// <returns>Byte array hash</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] GetHashSHA512Bytes(this byte[] bytes) => Hash.GetBytes(bytes);
+        public static MultiArray<byte> GetHashSHA512Bytes(this MultiArray<byte> bytes) => Hash.GetBytes(bytes);
         /// <summary>
         /// Get the byte array hash for the object
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <returns>Byte array hash</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] GetHashSHA512Bytes(this object obj) => Hash.GetBytes(obj);
+        public static MultiArray<byte> GetHashSHA512Bytes(this object obj) => Hash.GetBytes(obj);
         /// <summary>
         /// Get the byte array hash for the string
         /// </summary>
         /// <param name="text">String value</param>
         /// <returns>Byte array hash</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] GetHashSHA512Bytes(this string text) => Hash.GetBytes(text);
+        public static MultiArray<byte> GetHashSHA512Bytes(this string text) => Hash.GetBytes(text);
 
         /// <summary>
         /// Get the Guid hash for the byte array
@@ -109,7 +109,7 @@ namespace TWCore.Security
         /// <param name="bytes">Byte array</param>
         /// <returns>Guid hash</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Guid GetHashSHA512Guid(this byte[] bytes) => Hash.GetGuid(bytes);
+        public static Guid GetHashSHA512Guid(this MultiArray<byte> bytes) => Hash.GetGuid(bytes);
         /// <summary>
         /// Get the Guid hash for the object
         /// </summary>

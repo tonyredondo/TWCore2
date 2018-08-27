@@ -25,13 +25,13 @@ using TWCore.Diagnostics.Status;
 
 namespace TWCore.Messaging.Server
 {
-	/// <summary>
-	/// Message queue server counters
-	/// </summary>
-	[StatusName("Counters")]
-	public class MQServerCounters
-	{
-		private Timer _timerThirtyMinutes;
+    /// <summary>
+    /// Message queue server counters
+    /// </summary>
+    [StatusName("Counters")]
+    public class MQServerCounters
+    {
+        private Timer _timerThirtyMinutes;
         private long _currentMessages;
         private long _peakCurrentMessages;
         private long _lastThirtyMinutesMessages;
@@ -50,10 +50,10 @@ namespace TWCore.Messaging.Server
         /// Peak value of number of messages on process
         /// </summary>
         public long PeakCurrentMessages => _peakCurrentMessages;
-		/// <summary>
-		/// Date and time of the peak value of number of message on process
-		/// </summary>
-		public DateTime PeakCurrentMessagesLastDate { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of message on process
+        /// </summary>
+        public DateTime PeakCurrentMessagesLastDate { get; private set; }
 
         /// <summary>
         /// Number of messages processed on the last thirty minutes
@@ -69,15 +69,11 @@ namespace TWCore.Messaging.Server
         public DateTime PeakLastThirtyMinutesMessagesLastDate { get; private set; }
         #endregion
 
-		#region Properties
-		/// <summary>
-		/// Date and time of the last received message
-		/// </summary>
-		public DateTime LastMessageDateTime { get; private set; }
-		/// <summary>
-		/// Date and time of the last process of a message
-		/// </summary>
-		public DateTime LastProcessingDateTime { get; private set; }
+        #region Properties
+        /// <summary>
+        /// Date and time of the last received message
+        /// </summary>
+        public DateTime LastMessageDateTime { get; private set; }
 
         /// <summary>
         /// Number of received messages
@@ -102,85 +98,83 @@ namespace TWCore.Messaging.Server
         /// Message queue server counters
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQServerCounters()
-		{
-			_timerThirtyMinutes = new Timer(state =>
-			{
+        public MQServerCounters()
+        {
+            _timerThirtyMinutes = new Timer(state =>
+            {
                 Interlocked.Exchange(ref _lastThirtyMinutesMessages, Interlocked.Read(ref _currentMessages));
                 Interlocked.Exchange(ref _peakLastThirtyMinutesMessages, Interlocked.Read(ref _currentMessages));
-				PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
-			}, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
+                PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
+            }, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
 
 
-			Core.Status.Attach(collection =>
-			{
-				collection.SortValues = false;
+            Core.Status.Attach(collection =>
+            {
+                collection.SortValues = false;
 
-				#region Messages On Process
-				collection.Add("Current messages on process",
-					new StatusItemValueItem("Quantity", CurrentMessages, StatusItemValueStatus.Ok, true),
-					new StatusItemValueItem("Peak Quantity", PeakCurrentMessages, true),
-					new StatusItemValueItem("Peak DateTime", PeakCurrentMessagesLastDate));
+                #region Messages On Process
+                collection.Add("Current messages on process",
+                    new StatusItemValueItem("Quantity", CurrentMessages, StatusItemValueStatus.Ok, true),
+                    new StatusItemValueItem("Peak Quantity", PeakCurrentMessages, true),
+                    new StatusItemValueItem("Peak DateTime", PeakCurrentMessagesLastDate));
 
-				collection.Add("Last thirty minutes processed messages",
-					new StatusItemValueItem("Quantity", LastThirtyMinutesMessages, true),
-					new StatusItemValueItem("Peak Quantity", PeakLastThirtyMinutesMessages, true),
-					new StatusItemValueItem("Peak DateTime", PeakLastThirtyMinutesMessagesLastDate));
-				#endregion
+                collection.Add("Last thirty minutes processed messages",
+                    new StatusItemValueItem("Quantity", LastThirtyMinutesMessages, true),
+                    new StatusItemValueItem("Peak Quantity", PeakLastThirtyMinutesMessages, true),
+                    new StatusItemValueItem("Peak DateTime", PeakLastThirtyMinutesMessagesLastDate));
+                #endregion
 
-				collection.Add("Last DateTime",
-					new StatusItemValueItem("Message Received", LastMessageDateTime),
-					new StatusItemValueItem("Message Processed", LastProcessingDateTime));
+                collection.Add("Last Message Received DateTime", LastMessageDateTime);
 
-				collection.Add("Totals",
-					new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
-					new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
-					new StatusItemValueItem("Exceptions", TotalExceptions, true),
-					new StatusItemValueItem("Receiving Time (ms)", TimeSpan.FromMilliseconds(TotalReceivingTime), true));
-			});
-		}
-		#endregion
+                collection.Add("Totals",
+                    new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
+                    new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
+                    new StatusItemValueItem("Exceptions", TotalExceptions, true),
+                    new StatusItemValueItem("Receiving Time (ms)", TimeSpan.FromMilliseconds(TotalReceivingTime), true));
+            });
+        }
+        #endregion
 
-		#region Public Methods
-		/// <summary>
-		/// Increments the receiving time
-		/// </summary>
-		/// <param name="increment">Increment value</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public long IncrementReceivingTime(TimeSpan increment)
-		    => Interlocked.Add(ref _totalReceivingTime, (long)increment.TotalMilliseconds);
+        #region Public Methods
+        /// <summary>
+        /// Increments the receiving time
+        /// </summary>
+        /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public long IncrementReceivingTime(TimeSpan increment)
+            => Interlocked.Add(ref _totalReceivingTime, (long)increment.TotalMilliseconds);
         /// <summary>
         /// Increments the total exceptions number
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public long IncrementTotalExceptions()
-		    => Interlocked.Increment(ref _totalExceptions);
+        public long IncrementTotalExceptions()
+            => Interlocked.Increment(ref _totalExceptions);
         /// <summary>
         /// Increments the total exceptions number
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalMessagesProccesed()
+        public void IncrementTotalMessagesProccesed()
             => Interlocked.Increment(ref _totalMessagesProccesed);
-		/// <summary>
-		/// Increments the messages
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public long IncrementMessages()
-		{
+        /// <summary>
+        /// Increments the messages
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public long IncrementMessages()
+        {
             var cMsg = Interlocked.Increment(ref _currentMessages);
             var ltM = Interlocked.Increment(ref _lastThirtyMinutesMessages);
             Interlocked.Increment(ref _totalMessagesReceived);
-			LastMessageDateTime = Core.Now;
-			if (cMsg >= Interlocked.Read(ref _peakCurrentMessages))
-			{
+            LastMessageDateTime = Core.Now;
+            if (cMsg >= Interlocked.Read(ref _peakCurrentMessages))
+            {
                 Interlocked.Exchange(ref _peakCurrentMessages, cMsg);
-				PeakCurrentMessagesLastDate = LastMessageDateTime;
-			}
-			if (ltM >= Interlocked.Read(ref _peakLastThirtyMinutesMessages))
-			{
+                PeakCurrentMessagesLastDate = LastMessageDateTime;
+            }
+            if (ltM >= Interlocked.Read(ref _peakLastThirtyMinutesMessages))
+            {
                 Interlocked.Exchange(ref _peakLastThirtyMinutesMessages, ltM);
-				PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
-			}
+                PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
+            }
             return cMsg;
         }
         /// <summary>
@@ -189,6 +183,6 @@ namespace TWCore.Messaging.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long DecrementMessages()
             => Interlocked.Decrement(ref _currentMessages);
-		#endregion
-	}
+        #endregion
+    }
 }

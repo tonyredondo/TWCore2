@@ -65,8 +65,7 @@ namespace TWCore.Messaging
         /// Aditional metadata
         /// </summary>
         [XmlArray("MetaData"), XmlArrayItem("Meta"), DataMember]
-        public KeyValueCollection MetaData { get; set; } = new KeyValueCollection();
-        
+        public KeyValueCollection MetaData { get; set; }
         /// <summary>
         /// Message Total Time
         /// </summary>

@@ -55,11 +55,7 @@ namespace TWCore.Net.RPC.Client
             _serviceName = serviceName;
             _client = client;
             _client.OnEventReceived += Client_OnEventReceived;
-
-            Core.Status.Attach(collection =>
-            {
-                Core.Status.AttachChild(_client, this);
-            });
+            Core.Status.AttachChild(_client, this);
         }
 
         #region Private Methods

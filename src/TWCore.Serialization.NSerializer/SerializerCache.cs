@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
 {
-    internal class SerializerCache<T>
+    internal sealed class SerializerCache<T>
     {
         private readonly Dictionary<T, int> _serializationCache;
         private int _serCurrentIndex;
@@ -51,45 +51,43 @@ namespace TWCore.Serialization.NSerializer
                 _serializationCache.Add(value, _serCurrentIndex++);
         }
     }
-    internal class DeserializerCache<T>
+    internal sealed class DeserializerCache<T>
     {
-        private readonly Dictionary<int, T> _deserializationCache;
+        private readonly T[] _cacheArray;
         private int _desCurrentIndex;
-
         public int Count => _desCurrentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DeserializerCache(IEqualityComparer<int> descomparer = null)
+        public DeserializerCache()
         {
-            _deserializationCache = new Dictionary<int, T>(descomparer);
+            _cacheArray = new T[2048];
         }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_desCurrentIndex == 0) return;
+            Array.Clear(_cacheArray, 0, _desCurrentIndex);
             _desCurrentIndex = 0;
-            _deserializationCache.Clear();
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get(int index)
-            => _deserializationCache[index];
-
+            => index < _desCurrentIndex ? _cacheArray[index] : throw new IndexOutOfRangeException();
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(T value)
         {
             if (_desCurrentIndex < 2047)
-                _deserializationCache.Add(_desCurrentIndex++, value);
+                _cacheArray[_desCurrentIndex++] = value;
         }
     }
 
 
-    internal class SerializerStringCache
+    internal sealed class SerializerStringCache
     {
         private readonly Dictionary<string, int> _serializationCache;
         private int _serCurrentIndex;
-
-        public int Count => _serCurrentIndex;
+        private bool _full;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerStringCache()
@@ -99,25 +97,26 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_serCurrentIndex == 0) return;
             _serCurrentIndex = 0;
+            _full = false;
             _serializationCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetValue(string value, out int index)
-            => _serializationCache.TryGetValue(value, out index);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set(string value)
+        public bool TryGetOrSetValue(string value, out int index)
         {
-            if (_serCurrentIndex < 2047)
+            if (_serializationCache.TryGetValue(value, out index)) return true;
+            if (!_full)
+            {
                 _serializationCache.Add(value, _serCurrentIndex++);
+                if (_serCurrentIndex >= 2047) _full = true;
+            }
+            return false;
         }
     }
-    internal class DeserializerStringCache
+    internal sealed class DeserializerStringCache
     {
-        private readonly Dictionary<int, string> _deserializationCache;
+        private readonly string[] _cacheArray;
         private int _desCurrentIndex;
 
         public int Count => _desCurrentIndex;
@@ -125,25 +124,24 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerStringCache()
         {
-            _deserializationCache = new Dictionary<int, string>();
+            _cacheArray = new string[2048];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_desCurrentIndex == 0) return;
+            Array.Clear(_cacheArray, 0, _desCurrentIndex);
             _desCurrentIndex = 0;
-            _deserializationCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string Get(int index)
-            => _deserializationCache[index];
+            => index < _desCurrentIndex ? _cacheArray[index] : throw new IndexOutOfRangeException();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(string value)
         {
             if (_desCurrentIndex < 2047)
-                _deserializationCache.Add(_desCurrentIndex++, value);
+                _cacheArray[_desCurrentIndex++] = value;
         }
     }
 }

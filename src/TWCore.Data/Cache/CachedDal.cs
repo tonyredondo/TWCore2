@@ -19,21 +19,63 @@ using System.Threading.Tasks;
 
 namespace TWCore.Data.Cache
 {
-    public abstract class CachedDal<TEntity, TDal> : ICachedDal
+    public abstract class CachedDal<TKey, TEntity, TDal> : ICachedDal
     {
-        protected NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>>();
+        protected IEnumerable<TEntity> All { get; set; }
+        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
-        public virtual void Clear() => Cache.Clear();
+        public virtual void Clear()
+        {
+            Cache.Clear();
+            All = null;
+        }
         public abstract void Load();
     }
 
-    public abstract class CachedDalAsync<TEntity, TDal> : ICachedDalAsync
+    public abstract class CachedDalAsync<TKey, TEntity, TDal> : ICachedDalAsync
     {
-        protected NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>>();
+        protected IEnumerable<TEntity> All { get; set; }
+        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
-        public virtual void Clear() => Cache.Clear();
+        public virtual void Clear()
+        {
+            Cache.Clear();
+            All = null;
+        }
+        public abstract Task LoadAsync();
+    }
+
+    public abstract class CachedDal<TKey, TKey2, TEntity, TDal> : ICachedDal
+    {
+        protected IEnumerable<TEntity> All { get; set; }
+        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        protected NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
+        protected TDal Dal { get; } = Core.Injector.New<TDal>();
+
+        public virtual void Clear()
+        {
+            Cache.Clear();
+            Cache2.Clear();
+            All = null;
+        }
+        public abstract void Load();
+    }
+
+    public abstract class CachedDalAsync<TKey, TKey2, TEntity, TDal> : ICachedDalAsync
+    {
+        protected IEnumerable<TEntity> All { get; set; }
+        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        protected NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
+        protected TDal Dal { get; } = Core.Injector.New<TDal>();
+
+        public virtual void Clear()
+        {
+            Cache.Clear();
+            Cache2.Clear();
+            All = null;
+        }
         public abstract Task LoadAsync();
     }
 }

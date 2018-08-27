@@ -105,12 +105,12 @@ namespace TWCore.Object.Descriptor
                     return ValueType.Type;
                 if (valueType == typeof(Type))
                     return ValueType.Type;
-                if (valueType.GetTypeInfo().IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                if (valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
                     valueType = Nullable.GetUnderlyingType(valueType);
                     continue;
                 }
-                if (valueType.GetInterfaces().Any(i => i == typeof(IEnumerable) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+                if (valueType.GetInterfaces().Any(i => i == typeof(IEnumerable) || i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
                     return ValueType.Enumerable;
                 return ValueType.Complex;
             }

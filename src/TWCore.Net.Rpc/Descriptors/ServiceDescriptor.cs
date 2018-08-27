@@ -70,7 +70,7 @@ namespace TWCore.Net.RPC.Descriptors
             {
                 Name = serviceType.FullName
             };
-            var isInterface = serviceType.GetTypeInfo().IsInterface;
+            var isInterface = serviceType.IsInterface;
             var methodsInfo = serviceType.AllMethods().OrderBy(i => i.Name + "[" + i.GetParameters()?.Select(p => p.Name).Join(", ") + "]");
             foreach (var mInfo in methodsInfo)
             {
@@ -173,7 +173,7 @@ namespace TWCore.Net.RPC.Descriptors
             }
             else
             {
-                if (typeInfo.GenericTypeArguments.Any(t => t.GetTypeInfo().Assembly.GetName().Name != "mscorlib" && t.GetTypeInfo().Assembly.GetName().Name != "System.Private.CoreLib"))
+                if (typeInfo.GenericTypeArguments.Any(t => t.Assembly.GetName().Name != "mscorlib" && t.Assembly.GetName().Name != "System.Private.CoreLib"))
                 {
                     var name = GetTypeName(type);
                     if (descriptor.Types.ContainsKey(name)) return;

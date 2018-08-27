@@ -30,49 +30,49 @@ namespace TWCore.Serialization
         public static NBinarySerializer Serializer { get; } = new NBinarySerializer();
 
         /// <summary>
-        /// Serialize object using WBinary serializer
+        /// Serialize object using NBinary serializer
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>WBinary serialized object</returns>
-        public static SubArray<byte> SerializeToNBinary<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToNBinary<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
-        /// Deserialize an object using the WBinary serializer
+        /// Deserialize an object using the NBinary serializer
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
-        /// <param name="value">TBinary serialized object</param>
+        /// <param name="value">NBinary serialized object</param>
         /// <returns>Object instance</returns>
         public static T DeserializeFromNBinary<T>(this byte[] value) => Serializer.Deserialize<T>(value);
         /// <summary>
-        /// Deserialize an object using the WBinary serializer
+        /// Deserialize an object using the NBinary serializer
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
-        /// <param name="value">WBinary serialized object</param>
+        /// <param name="value">NBinary serialized object</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromNBinary<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromNBinary<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
         /// <summary>
-        /// Serialize object using WBinary and write it into the stream
+        /// Serialize object using NBinary and write it into the stream
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <param name="stream">Destination stream</param>
         public static void SerializeToNBinary<T>(this T item, Stream stream) => Serializer.Serialize(item, stream);
         /// <summary>
-        /// Deserialize a stream content using WBinary and returns an object instance
+        /// Deserialize a stream content using NBinary and returns an object instance
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="stream">Stream source with the serialized data</param>
         /// <returns>Object instance</returns>
         public static T DeserializeFromNBinary<T>(this Stream stream) => Serializer.Deserialize<T>(stream);
         /// <summary>
-        /// Serialize object using WBinary and write it into a file
+        /// Serialize object using NBinary and write it into a file
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <param name="filePath">Destination File path</param>
         public static void SerializeToNBinaryFile<T>(this T item, string filePath) => Serializer.SerializeToFile(item, filePath);
         /// <summary>
-        /// Deserialize a file content using WBinary and returns an object instance
+        /// Deserialize a file content using NBinary and returns an object instance
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="filePath">File source with the serialized data</param>

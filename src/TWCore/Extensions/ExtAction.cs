@@ -42,8 +42,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateDelay(this Action action, int milliseconds)
         {
-            return () => Task.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
+            return () => Task.Delay(milliseconds).ContinueWith((t, state) => ((Action)state)(), action,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                 TaskScheduler.Default);
         }
         /// <summary>
@@ -55,7 +55,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateDelay<T>(this Action<T> action, int milliseconds)
         {
-            return obj => Task.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
+            return obj => Task.Delay(milliseconds).ContinueWith((t, s) => 
+                {
+                    var tpl = (Tuple<Action<T>, T>)s;
+                    tpl.Item1(tpl.Item2);
+                }, Tuple.Create(action, obj), CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                 TaskScheduler.Default);
         }
@@ -72,6 +76,7 @@ namespace TWCore
         public static Action CreateBufferedAction(this Action action, int milliseconds)
         {
             Timer timer = null;
+            int running = 0;
             return () =>
             {
                 if (timer != null)
@@ -80,8 +85,14 @@ namespace TWCore
                 {
                     timer = new Timer(obj =>
                     {
-                        action();
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            action();
+                        }
+                        catch { }
                         timer = null;
+                        Interlocked.Exchange(ref running, 0);
                     }, null, milliseconds, Timeout.Infinite);
                 }
             };
@@ -96,6 +107,7 @@ namespace TWCore
         public static Action<T> CreateBufferedAction<T>(this Action<T> action, int milliseconds)
         {
             Timer timer = null;
+            int running = 0;
             return obj =>
             {
                 if (timer != null)
@@ -104,8 +116,85 @@ namespace TWCore
                 {
                     timer = new Timer(ot =>
                     {
-                        action((T)ot);
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            action((T)ot);
+                        }
+                        catch { }
                         timer = null;
+                        Interlocked.Exchange(ref running, 0);
+                    }, obj, milliseconds, Timeout.Infinite);
+                }
+            };
+        }
+        #endregion
+
+        #region Buffered Task
+        /// <summary>
+        ///  Creates a buffered Func wrapper from a Task action base.
+        /// </summary>
+        /// <param name="func">Original Task action</param>
+        /// <param name="milliseconds">Delay time to start the action</param>
+        /// <returns>Buffered action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Action CreateBufferedTask(this Func<Task> func, int milliseconds)
+        {
+            Timer timer = null;
+            int running = 0;
+            return () =>
+            {
+                if (timer != null)
+                    timer.Change(milliseconds, Timeout.Infinite);
+                else
+                {
+                    timer = new Timer(obj =>
+                    {
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            func().WaitAsync();
+                        }
+                        catch(Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                        timer = null;
+                        Interlocked.Exchange(ref running, 0);
+                    }, null, milliseconds, Timeout.Infinite);
+                }
+            };
+        }
+        /// <summary>
+        ///  Creates a buffered Func wrapper from a Task action base.
+        /// </summary>
+        /// <param name="func">Original Task action</param>
+        /// <param name="milliseconds">Delay time to start the action</param>
+        /// <returns>Buffered action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Action<T> CreateBufferedTask<T>(this Func<T, Task> func, int milliseconds)
+        {
+            Timer timer = null;
+            int running = 0;
+            return obj =>
+            {
+                if (timer != null)
+                    timer.Change(milliseconds, Timeout.Infinite);
+                else
+                {
+                    timer = new Timer(ot =>
+                    {
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            func((T)ot).WaitAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                        timer = null;
+                        Interlocked.Exchange(ref running, 0);
                     }, obj, milliseconds, Timeout.Infinite);
                 }
             };
@@ -151,19 +240,19 @@ namespace TWCore
 
         #region Throttled Task
         /// <summary>
-        /// Creates a Throttled task wrapper form an action base.
+        /// Creates a Throttled task wrapper form an Task base.
         /// </summary>
         /// <param name="task">Original task</param>
         /// <param name="milliseconds">Delay time to start the action</param>
         /// <returns>Throttled task instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Task> CreateThrottledTaskAsync(this Task task, int milliseconds)
+        public static Func<Task> CreateThrottledAction<T>(this Func<Task> task, int milliseconds)
         {
             var date = DateTime.MinValue;
             return () =>
             {
                 if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return Task.CompletedTask;
-                return task.ContinueWith(_ => date = DateTime.UtcNow, CancellationToken.None,
+                return task().ContinueWith(_ => date = DateTime.UtcNow, CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             };
         }
@@ -513,7 +602,7 @@ namespace TWCore
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => obj => Try.Do(o => action(o), obj, onException);
+        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => obj => Try.Do(action, obj, onException);
         /// <summary>
         /// Invoke the action inside a try/catch sentence
         /// </summary>
@@ -530,7 +619,7 @@ namespace TWCore
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>true if the execution finished sucessfully, otherwise false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryInvoke<T>(this Action<T> action, T obj, Action<Exception> onException = null) => Try.Do(o => action(o), obj, onException);
+        public static bool TryInvoke<T>(this Action<T> action, T obj, Action<Exception> onException = null) => Try.Do(action, obj, onException);
         #endregion
 
         #region Watch
@@ -834,8 +923,9 @@ namespace TWCore
                     action();
                     return true;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Core.Log.Write(ex);
                     return false;
                 }
             });
@@ -850,11 +940,24 @@ namespace TWCore
         /// <param name="milliseconds">Timeout in milliseconds</param>
         /// <returns>True if run successfully</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task<bool> CallAndWaitFor(this Task task, int milliseconds)
+        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds)
         {
-            if (task.IsCompleted) return TaskHelper.CompleteTrue;
-            return Task.WhenAny(Task.Delay(milliseconds), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
-                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            if (task.IsCompleted) return true;
+            var delayCancellation = new CancellationTokenSource();
+            var delayTask = Task.Delay(milliseconds, delayCancellation.Token);
+            var resTask = await Task.WhenAny(delayTask, task).ConfigureAwait(false);
+            if (resTask != delayTask)
+            {
+                delayCancellation.Cancel();
+                return true;
+            }
+            SetContinuation(task);
+            return false;
+
+            void SetContinuation(Task pTask)
+            {
+                pTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            }
         }
         /// <summary>
         /// Wait for action with timeout
@@ -864,12 +967,27 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token instance</param>
         /// <returns>True if run successfully</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
+        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
         {
-            if (task.IsCompleted) return TaskHelper.CompleteTrue;
-            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
-            return Task.WhenAny(Task.Delay(milliseconds, cancellationToken), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
-                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            if (task.IsCompleted) return true;
+            if (cancellationToken.IsCancellationRequested) return false;
+
+            var delayCancellation = new CancellationTokenSource();
+            var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(delayCancellation.Token, cancellationToken);
+            var delayTask = Task.Delay(milliseconds, linkedCancellation.Token);
+            var resTask = await Task.WhenAny(delayTask, task).ConfigureAwait(false);
+            if (resTask != delayTask)
+            {
+                delayCancellation.Cancel();
+                return true;
+            }
+            SetContinuation(task);
+            return false;
+
+            void SetContinuation(Task pTask)
+            {
+                pTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            }
         }
         #endregion
     }

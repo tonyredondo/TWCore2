@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Net;
 
 namespace TWCore.Net.Multicast
@@ -30,15 +31,15 @@ namespace TWCore.Net.Multicast
         /// </summary>
         public IPAddress Address { get; set; }
         /// <summary>
-        /// Data byte array
+        /// Data byte sequence
         /// </summary>
-        public byte[] Data { get; set; }
+        public ReadOnlySequence<byte> Data { get; set; }
 
         /// <inheritdoc />
         /// <summary>
         /// PeerConnection Message Received EventArgs
         /// </summary>
-        public PeerConnectionMessageReceivedEventArgs(IPAddress address, byte[] data)
+        public PeerConnectionMessageReceivedEventArgs(IPAddress address, ReadOnlySequence<byte> data)
         {
             Address = address;
             Data = data;

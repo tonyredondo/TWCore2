@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Buffers;
+using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,12 +34,9 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly Dictionary<Type, MethodInfo> ReadValuesFromType = new Dictionary<Type, MethodInfo>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
-        internal static readonly ConcurrentDictionary<SubArray<byte>, DeserializerMetadataOfTypeRuntime> SubArrayMetadata = new ConcurrentDictionary<SubArray<byte>, DeserializerMetadataOfTypeRuntime>(SubArrayBytesComparer.Instance);
-
+        internal static readonly ConcurrentDictionary<MultiArray<byte>, DeserializerMetadataOfTypeRuntime> MultiArrayMetadata = new ConcurrentDictionary<MultiArray<byte>, DeserializerMetadataOfTypeRuntime>(MultiArrayBytesComparer.Instance);
         internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly byte[] EmptyBytes = new byte[0];
-        private readonly byte[] _buffer = new byte[16];
         private readonly object[] _parameters = new object[1];
         internal readonly DeserializerCache<object> ObjectCache = new DeserializerCache<object>();
         private readonly DeserializerCache<DeserializerMetadataOfTypeRuntime> _typeCache = new DeserializerCache<DeserializerMetadataOfTypeRuntime>();
@@ -55,9 +53,8 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerStringCache _stringCache32 = new DeserializerStringCache();
         private readonly DeserializerStringCache _stringCache = new DeserializerStringCache();
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
-        //private readonly Dictionary<Type, DeserializerMetadataOfTypeRuntime> _metadataInTypes = new Dictionary<Type, DeserializerMetadataOfTypeRuntime>();
         protected Stream Stream;
-        protected BinaryReader Reader;
+
 
         #region Attributes
         public class DeserializerMethodAttribute : Attribute
@@ -93,21 +90,13 @@ namespace TWCore.Serialization.NSerializer
             try
             {
                 Stream = stream;
-                Reader = new BinaryReader(stream, Encoding.UTF8, true);
-                if (stream.ReadByte() != DataBytesDefinition.Start)
+                var firstByte = stream.ReadByte();
+                if (firstByte == -1)
+                    throw new IOException("The stream has been closed.");
+                if (firstByte != DataBytesDefinition.Start)
                     throw new FormatException("The stream is not in NSerializer format.");
                 value = ReadValue(StreamReadByte());
-                while (StreamReadByte() != DataBytesDefinition.End)
-                {
-                }
-            }
-            catch(IOException)
-            {
-                return value;
-            }
-            catch (Exception)
-            {
-                throw;
+                while (StreamReadByte() != DataBytesDefinition.End) {}
             }
             finally
             {
@@ -127,7 +116,6 @@ namespace TWCore.Serialization.NSerializer
                 ObjectCache.Clear();
                 _typeCache.Clear();
                 Stream = null;
-                Reader = null;
             }
             return value;
         }
@@ -154,8 +142,8 @@ namespace TWCore.Serialization.NSerializer
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
                 Stream.Read(typeBytes, 0, length);
-                var subTypeBytes = new SubArray<byte>(typeBytes, 0, length);
-                if (!SubArrayMetadata.TryGetValue(subTypeBytes, out metadata))
+                var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
+                if (!MultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
                     var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
                     var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
@@ -163,23 +151,17 @@ namespace TWCore.Serialization.NSerializer
                     var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
                     var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
                     var vTypeString = typeData.Substring(0, fsCol1);
-                    var isArrayString = typeData.Substring(fsCol1 + 1, 1);
-                    var isListString = typeData.Substring(fsCol2 + 1, 1);
-                    var isDictionaryString = typeData.Substring(fsCol3 + 1, 1);
+                    var isArray = typeData[fsCol1 + 1] == '1';
+                    var isList = typeData[fsCol2 + 1] == '1';
+                    var isDictionary = typeData[fsCol3 + 1] == '1';
                     var propertiesString = typeData.Substring(fsCol4 + 1);
-
                     var valueType = Core.GetType(vTypeString);
-                    var isArray = isArrayString == "1";
-                    var isList = isListString == "1";
-                    var isDictionary = isDictionaryString == "1";
                     var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                     metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-
-                    SubArrayMetadata.TryAdd(new SubArray<byte>(subTypeBytes.ToArray()), metadata);
+                    MultiArrayMetadata.TryAdd(new MultiArray<byte>(subTypeBytes.ToArray()), metadata);
                 }
-                subTypeBytes = null;
                 ArrayPool<byte>.Shared.Return(typeBytes);
                 _typeCache.Set(metadata);
             }
@@ -197,7 +179,7 @@ namespace TWCore.Serialization.NSerializer
                 return metadata.Descriptor.DeserializeFunc(this);
             return FillObject(metadata.Descriptor, metadata.MetaDataOfType);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object InnerReadValue(byte type)
         {
@@ -215,8 +197,8 @@ namespace TWCore.Serialization.NSerializer
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
                 Stream.Read(typeBytes, 0, length);
-                var subTypeBytes = new SubArray<byte>(typeBytes, 0, length);
-                if (!SubArrayMetadata.TryGetValue(subTypeBytes, out metadata))
+                var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
+                if (!MultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
                     var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
                     var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
@@ -224,23 +206,17 @@ namespace TWCore.Serialization.NSerializer
                     var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
                     var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
                     var vTypeString = typeData.Substring(0, fsCol1);
-                    var isArrayString = typeData.Substring(fsCol1 + 1, 1);
-                    var isListString = typeData.Substring(fsCol2 + 1, 1);
-                    var isDictionaryString = typeData.Substring(fsCol3 + 1, 1);
+                    var isArray = typeData[fsCol1 + 1] == '1';
+                    var isList = typeData[fsCol2 + 1] == '1';
+                    var isDictionary = typeData[fsCol3 + 1] == '1';
                     var propertiesString = typeData.Substring(fsCol4 + 1);
-
                     var valueType = Core.GetType(vTypeString);
-                    var isArray = isArrayString == "1";
-                    var isList = isListString == "1";
-                    var isDictionary = isDictionaryString == "1";
                     var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                     metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-
-                    SubArrayMetadata.TryAdd(new SubArray<byte>(subTypeBytes.ToArray()), metadata);
+                    MultiArrayMetadata.TryAdd(new MultiArray<byte>(subTypeBytes.ToArray()), metadata);
                 }
-                subTypeBytes = null;
                 ArrayPool<byte>.Shared.Return(typeBytes);
                 _typeCache.Set(metadata);
             }
@@ -262,70 +238,81 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object FillObject(DeserializerTypeDescriptor descriptor, DeserializerMetaDataOfType metadata)
         {
-            object value;
-            if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)
+            try
             {
-                var capacity = StreamReadInt();
-                value = descriptor.Activator(capacity);
-                ObjectCache.Set(value);
+                object value;
+                if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)
+                {
+                    var capacity = StreamReadInt();
+                    value = descriptor.Activator(capacity);
+                    ObjectCache.Set(value);
 
-                if (descriptor.Metadata.IsArray)
-                {
-                    var aValue = (Array)value;
-                    for (var i = 0; i < capacity; i++)
+                    if (descriptor.Metadata.IsArray)
                     {
-                        var item = ReadValue(StreamReadByte());
-                        aValue.SetValue(item, i);
+                        var aValue = (Array)value;
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var item = ReadValue(StreamReadByte());
+                            aValue.SetValue(item, i);
+                        }
                     }
-                }
-                else if (descriptor.Metadata.IsList)
-                {
-                    var iValue = (IList)value;
-                    for (var i = 0; i < capacity; i++)
+                    else if (descriptor.Metadata.IsList)
                     {
-                        var item = ReadValue(StreamReadByte());
-                        iValue.Add(item);
+                        var iValue = (IList)value;
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var item = ReadValue(StreamReadByte());
+                            iValue.Add(item);
+                        }
                     }
-                }
-                else if (descriptor.Metadata.IsDictionary)
-                {
-                    var dictio = (IDictionary)value;
-                    for (var i = 0; i < capacity; i++)
+                    else if (descriptor.Metadata.IsDictionary)
                     {
-                        var dKey = ReadValue(StreamReadByte());
-                        var dValue = ReadValue(StreamReadByte());
-                        dictio[dKey] = dValue;
-                    }
-                }
-            }
-            else
-            {
-                value = descriptor.Activator();
-                ObjectCache.Set(value);
-            }
-
-            for (var i = 0; i < metadata.Properties.Length; i++)
-            {
-                var name = metadata.Properties[i];
-                var propValue = ReadValue(StreamReadByte());
-
-                if (descriptor.Properties.TryGetValue(name, out var fProp))
-                {
-                    try
-                    {
-                        fProp.SetValue(value, propValue);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
+                        var dictio = (IDictionary)value;
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var dKey = ReadValue(StreamReadByte());
+                            var dValue = ReadValue(StreamReadByte());
+                            dictio[dKey] = dValue;
+                        }
                     }
                 }
                 else
-                    Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type.FullName);
-            }
+                {
+                    value = descriptor.Activator();
+                    ObjectCache.Set(value);
+                }
 
-            StreamReadByte();
-            return value;
+                for (var i = 0; i < metadata.Properties.Length; i++)
+                {
+                    var name = metadata.Properties[i];
+                    var propValue = ReadValue(StreamReadByte());
+
+                    if (descriptor.Properties.TryGetValue(name, out var fProp))
+                    {
+                        try
+                        {
+                            fProp.SetValue(value, propValue);
+                        }
+                        catch (Exception ex)
+                        {
+                            var metaProperties = metadata.Properties?.Join(", ");
+                            var typeProperties = descriptor.Metadata.Properties?.Join(", ");
+                            Core.Log.Error(ex, $"Error trying to fill the property '{name}' of the object type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}].");
+                        }
+                    }
+                    else
+                        Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type.FullName);
+                }
+
+                StreamReadByte();
+                return value;
+            }
+            catch(Exception ex)
+            {
+                var metaProperties = metadata.Properties?.Join(", ");
+                var typeProperties = descriptor.Metadata.Properties?.Join(", ");
+                throw new Exception($"Error trying to fill an object of type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
+            }
         }
 
         #region Read Values
@@ -567,6 +554,20 @@ namespace TWCore.Serialization.NSerializer
                 value[i] = ReadTimeSpan(StreamReadByte());
             return value;
         }
+        [DeserializerMethod(DataBytesDefinition.ObjectArray, ReturnType = typeof(object[]))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object[] ReadObjectArray(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.RefObject)
+                return (object[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
+            var value = new object[length];
+            ObjectCache.Set(value);
+            for (var i = 0; i < length; i++)
+                value[i] = ReadValue(StreamReadByte());
+            return value;
+        }
 
         [DeserializerMethod(DataBytesDefinition.BoolList, ReturnType = typeof(List<bool>))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -806,38 +807,115 @@ namespace TWCore.Serialization.NSerializer
                 value.Add(ReadTimeSpan(StreamReadByte()));
             return value;
         }
+        [DeserializerMethod(DataBytesDefinition.ObjectList, ReturnType = typeof(List<object>))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public List<object> ReadObjectList(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.RefObject)
+                return (List<object>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
+            var value = new List<object>(length);
+            ObjectCache.Set(value);
+            for (var i = 0; i < length; i++)
+                value[i] = ReadValue(StreamReadByte());
+            return value;
+        }
         #endregion
 
         #region Private Read Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected byte StreamReadByte() => Reader.ReadByte();
+        protected byte StreamReadByte()
+        {
+            var res = Stream.ReadByte();
+            if (res == -1)
+                throw new IOException("The stream has been closed.");
+            return (byte)res;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ushort StreamReadUShort() => Reader.ReadUInt16();
+        protected ushort StreamReadUShort()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return BitConverter.ToUInt16(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected int StreamReadInt() => Reader.ReadInt32();
+        protected int StreamReadInt()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return BitConverter.ToInt32(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected double StreamReadDouble() => Reader.ReadDouble();
+        protected double StreamReadDouble()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return BitConverter.ToDouble(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected float StreamReadFloat() => Reader.ReadSingle();
+        protected float StreamReadFloat()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return BitConverter.ToSingle(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected long StreamReadLong() => Reader.ReadInt64();
+        protected long StreamReadLong()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return BitConverter.ToInt64(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ulong StreamReadULong() => Reader.ReadUInt64();
+        protected ulong StreamReadULong()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return BitConverter.ToUInt64(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected uint StreamReadUInt() => Reader.ReadUInt32();
+        protected uint StreamReadUInt()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return BitConverter.ToUInt32(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected short StreamReadShort() => Reader.ReadInt16();
+        protected short StreamReadShort()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return BitConverter.ToInt16(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected char StreamReadChar() => Reader.ReadChar();
+        protected char StreamReadChar()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return BitConverter.ToChar(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected decimal StreamReadDecimal() => Reader.ReadDecimal();
+        protected decimal StreamReadDecimal()
+        {
+            Span<byte> buffer = stackalloc byte[16];
+            Stream.Fill(buffer);
+            var bits = new int[4];
+            for(var i = 0; i < 4; i++)
+                bits[i] = BitConverter.ToInt32(buffer.Slice(i * 4, 4));
+            return new decimal(bits);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected sbyte StreamReadSByte() => Reader.ReadSByte();
+        protected sbyte StreamReadSByte()
+        {
+            return (sbyte)Stream.ReadByte();
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Guid StreamReadGuid()
         {
-            Stream.Read(_buffer, 0, 16);
-            return new Guid(_buffer);
+            Span<byte> buffer = stackalloc byte[16];
+            Stream.Fill(buffer);
+            return new Guid(buffer);
         }
         #endregion
     }

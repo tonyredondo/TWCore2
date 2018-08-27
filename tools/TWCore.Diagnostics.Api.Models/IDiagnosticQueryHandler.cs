@@ -55,16 +55,7 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="page">Page number</param>
         /// <param name="pageSize">Page size</param>
         /// <returns>Logs</returns>
-        Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-        /// <summary>
-        /// Gets the Logs from a search term in message or group
-        /// </summary>
-        /// <param name="environment">Environment name</param>
-		/// <param name="searchTerm">Term to search in the database</param>
-        /// <param name="fromDate">From date and time</param>
-        /// <param name="toDate">To date and time</param>
-		/// <returns>Logs search results</returns>
-        Task<List<NodeLogItem>> GetLogsBySearch(string environment, string searchTerm, DateTime fromDate, DateTime toDate);
+        Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel? level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
         /// <summary>
         /// Gets the traces objects by environment and dates
         /// </summary>

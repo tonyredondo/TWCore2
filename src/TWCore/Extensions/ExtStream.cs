@@ -14,12 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.IO;
 // ReSharper disable CheckNamespace
 
 namespace TWCore
@@ -58,14 +60,42 @@ namespace TWCore
         /// Reads the data from a stream a returns the bytes array
         /// </summary>
         /// <param name="stream">Stream source</param>
-        /// <returns>Bytes array</returns>
+        /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SubArray<byte> ReadAllBytes(this Stream stream)
+        public static MultiArray<byte> ReadAllBytes(this Stream stream)
+        {
+            using (var ms = new RecycleMemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.GetMultiArray();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> ReadAllBytesAsSpan(this Stream stream)
         {
             using (var ms = new MemoryStream())
             {
                 stream.CopyTo(ms);
-                return ms.ToSubArray();
+                return ms.AsSpan();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Memory<byte> ReadAllBytesAsMemory(this Stream stream)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.AsMemory();
             }
         }
         /// <summary>
@@ -73,14 +103,44 @@ namespace TWCore
         /// </summary>
         /// <param name="stream">Stream source</param>
         /// <param name="bufferSize">Buffer size</param>
-        /// <returns>Bytes array</returns>
+        /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SubArray<byte> ReadAllBytes(this Stream stream, int bufferSize)
+        public static MultiArray<byte> ReadAllBytes(this Stream stream, int bufferSize)
+        {
+            using (var ms = new RecycleMemoryStream())
+            {
+                stream.CopyTo(ms, bufferSize);
+                return ms.GetMultiArray();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="bufferSize">Buffer size</param>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> ReadAllBytesAsSpan(this Stream stream, int bufferSize)
         {
             using (var ms = new MemoryStream())
             {
                 stream.CopyTo(ms, bufferSize);
-                return ms.ToSubArray();
+                return ms.AsSpan();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="bufferSize">Buffer size</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Memory<byte> ReadAllBytesAsMemory(this Stream stream, int bufferSize)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms, bufferSize);
+                return ms.AsMemory();
             }
         }
         /// <summary>
@@ -89,12 +149,26 @@ namespace TWCore
         /// <param name="stream">Stream source</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream)
+        {
+            using (var ms = new RecycleMemoryStream())
+            {
+                await stream.CopyToAsync(ms).ConfigureAwait(false);
+                return ms.GetMultiArray();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<Memory<byte>> ReadAllBytesAsMemoryAsync(this Stream stream)
         {
             using (var ms = new MemoryStream())
             {
                 await stream.CopyToAsync(ms).ConfigureAwait(false);
-                return ms.ToSubArray();
+                return ms.AsMemory();
             }
         }
         /// <summary>
@@ -104,12 +178,27 @@ namespace TWCore
         /// <param name="bufferSize">Buffer size</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize)
+        {
+            using (var ms = new RecycleMemoryStream())
+            {
+                await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
+                return ms.GetMultiArray();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="bufferSize">Buffer size</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<Memory<byte>> ReadAllBytesAsMemoryAsync(this Stream stream, int bufferSize)
         {
             using (var ms = new MemoryStream())
             {
                 await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
-                return ms.ToArray();
+                return ms.AsMemory();
             }
         }
         /// <summary>
@@ -120,14 +209,14 @@ namespace TWCore
         /// <param name="timeout">Timeout</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, int timeout)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, int timeout)
         {
             var cts = new CancellationTokenSource();
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 cts.CancelAfter(timeout);
                 await stream.CopyToAsync(ms, bufferSize, cts.Token).ConfigureAwait(false);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -138,12 +227,12 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 await stream.CopyToAsync(ms, bufferSize, cancellationToken).ConfigureAwait(false);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -169,6 +258,76 @@ namespace TWCore
         {
             using (var sr = new StreamReader(stream, encoding ?? Encoding.UTF8))
                 return await sr.ReadLineAsync().ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Read exactly a number of bytes
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="buffer">Buffer to store the data</param>
+        /// <param name="offset">Offset</param>
+        /// <param name="count">Count</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ReadExact(this Stream stream, byte[] buffer, int offset, int count)
+        {
+            while(count > 0)
+            {
+                var consumed = stream.Read(buffer, offset, count);
+                if (consumed < 0 || consumed == count) break;
+                offset += consumed;
+                count -= consumed;
+            }
+        }
+        /// <summary>
+        /// Read exactly a number of bytes
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="buffer">Buffer to store the data</param>
+        /// <param name="offset">Offset</param>
+        /// <param name="count">Count</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task ReadExactAsync(this Stream stream, byte[] buffer, int offset, int count)
+        {
+            while (count > 0)
+            {
+                var consumed = await stream.ReadAsync(buffer, offset, count).ConfigureAwait(false);
+                if (consumed < 0 || consumed == count) break;
+                offset += consumed;
+                count -= consumed;
+            }
+        }
+
+
+        /// <summary>
+        /// Fill the span with data
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="span">Span to fill</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Fill(this Stream stream, Span<byte> span)
+        {
+            while (span.Length > 0)
+            {
+                var consumed = stream.Read(span);
+                if (consumed < 0 || consumed == span.Length) break;
+                span = span.Slice(consumed);
+            }
+        }
+
+        /// <summary>
+        /// Fill the memory with data
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="memory">Memory to fill</param>
+        /// <param name="cancellation">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task FillAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken = default)
+        {
+            while (memory.Length > 0)
+            {
+                var consumed = await stream.ReadAsync(memory, cancellationToken).ConfigureAwait(false);
+                if (consumed < 0 || consumed == memory.Length) break;
+                memory = memory.Slice(consumed);
+            }
         }
         #endregion
 
@@ -243,9 +402,9 @@ namespace TWCore
         /// <param name="value">Byte array to write to the stream</param>
         /// <param name="flush">true if a flush must be applied after write the string value. Default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBytes(this Stream stream, SubArray<byte> value, bool flush = true)
+        public static void WriteBytes(this Stream stream, MultiArray<byte> value, bool flush = true)
         {
-            stream.Write(value.Array, value.Offset, value.Count);
+            value.CopyTo(stream);
             if (flush)
                 stream.Flush();
         }
@@ -269,9 +428,9 @@ namespace TWCore
         /// <param name="value">Byte array to write to the stream</param>
         /// <param name="flush">true if a flush must be applied after write the string value. Default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task WriteBytesAsync(this Stream stream, SubArray<byte> value, bool flush = true)
+        public static async Task WriteBytesAsync(this Stream stream, MultiArray<byte> value, bool flush = true)
         {
-            await stream.WriteAsync(value.Array, value.Offset, value.Count).ConfigureAwait(false);
+            await value.CopyToAsync(stream).ConfigureAwait(false);
             if (flush)
                 await stream.FlushAsync().ConfigureAwait(false);
         }

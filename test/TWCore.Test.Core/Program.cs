@@ -18,9 +18,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Compression;
 using TWCore.Diagnostics.Status.Transports;
+using TWCore.Messaging;
 using TWCore.Net.Multicast;
 using TWCore.Reflection;
 using TWCore.Serialization;
@@ -35,6 +38,11 @@ namespace TWCore.Test.Core
 {
     internal class Program
     {
+        private static readonly ICompressor Compressor = new GZipCompressor();
+        private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
+        {
+            Compressor = Compressor
+        };
 
         public enum VarEnum
         {
@@ -45,11 +53,23 @@ namespace TWCore.Test.Core
         public class TestClass
         {
             public bool? Enabled { get; set; }
+            public int[] Values { get; set; }
+            public decimal DecimalValue { get; set; }
+        }
+
+        public class ProviderCacheClone<T1, T2, T3, T4, T5>
+        {
+            public T1 Item1 { get; set; }
+            public T2 Item2 { get; set; }
+            public T3 Item3 { get; set; }
+            public T4 Item4 { get; set; }
+            public T5 Item5 { get; set; }
         }
 
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
+
             SerializerManager.DefaultBinarySerializer = new NBinarySerializer();
 
             TWCore.Core.DebugMode = true;
@@ -67,51 +87,85 @@ namespace TWCore.Test.Core
                 var matchTest = "value value value {Env:CONFIG_CACHESERVERIP} value value \r\n{Env:CONFIG_CACHESERVERIP} values";
                 matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);
 
-                var sKeyProvider = new TWCore.Security.SymmetricKeyProvider();
-                var guid = Guid.NewGuid().ToString();
-                var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
+                var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
 
-                var testValue = new TestClass {Enabled = true};
+                var request = new TWCore.Net.RPC.RPCRequestMessage
+                {
+                    MessageId = Guid.NewGuid(),
+                    MethodId = Guid.NewGuid(),
+                    Parameters = new object[]
+                    {
+                        new string[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+                        new SerializedObject(new ProviderCacheClone<TestClass, TestClass, TestClass, TestClass, TestClass> { Item1 = testValue, Item2 = testValue, Item3 = testValue, Item4 = testValue, Item5 = testValue } ),
+                        TimeSpan.FromMinutes(5)
+                    }
+                };
+
+                var rqSer = request.SerializeToNBinary();
+
+                var rqDes = rqSer.DeserializeFromNBinary<TWCore.Net.RPC.RPCMessage>();
+
+                var testValueSer = new SerializedObject(testValue);
+
+                testValueSer.SerializeToNBinary();
+
+                var desTestValueSer = (TestClass)testValueSer.GetValue();
+
+                new int[] { 1, 2, 3 }.SerializeToNBinary();
 
                 testValue.SerializeToNBinary();
 
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
+//                var testBytes = new byte[1024];
+//                var testBytes2 = new byte[1024];
+//                new Random().NextBytes(testBytes);
+//                new Random().NextBytes(testBytes2);
+//
+//                var multiTest1 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
+//                var multiTest2 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
+//
+//                for (var i = 0; i < 100000; i++)
+//                {
+//                    MultiArrayBytesComparer.Instance.GetHashCode(multiTest1);
+//                }
+//                
+//                using (Watch.Create("MultiArray Hash"))
+//                {
+//                    for (var i = 0; i < 100000; i++)
+//                    {
+//                        MultiArrayBytesComparer.Instance.GetHashCode(multiTest1);
+//                    }
+//                }
 
-                using (var wc = Watch.Create("Inicio", "Fin"))
-                {
-                    wc.Tap("Tap 1");
-                    using (var wc2 = Watch.Create("Inicio 2", "Fin 2"))
-                    {
-                        wc2.Tap("Tap 1");
-                        using (var wc3 = Watch.Create("Inicio 2", "Fin 2"))
-                        {
-                            wc3.Tap("Tap 1");
-                            wc3.Tap("Tap 2");
-                        }
-                        wc2.Tap("Tap 2");
-                    }
-                    wc.Tap("Tap 2");
-                }
-                Console.ReadLine();
+
+                //AssemblyResolverManager.RegisterDomain(new[] { "C:\\AGSW_GIT\\dlls" });
+
+                //var serObj = NBinarySerializer.DeserializeFromFile<ResponseMessage>("C:\\Temp\\trace.data");
+
+                //Task.Run(async () =>
+                //{
+                //    var value = serObj;
+                //    NBinarySerializerExtensions.Serializer.Compressor = CompressorManager.GetByEncodingType("deflate");
+                //    var valueByte = value.SerializeToNBinary();
+
+                //    TWCore.Core.Log.InfoBasic("Testing object trace - {0}", valueByte.Count);
+                //    GC.Collect();
+                //    await Task.Delay(2000).ConfigureAwait(false);
+                //    using (Watch.Create("Serialize"))
+                //    {
+                //        for (var i = 0; i < 10000; i++)
+                //            value.SerializeToNBinary();
+                //    }
+
+                //    GC.Collect();
+                //    await Task.Delay(2000).ConfigureAwait(false);
+                //    using (Watch.Create("Deserialize"))
+                //    {
+                //        for (var i = 0; i < 10000; i++)
+                //            valueByte.DeserializeFromNBinary<object>();
+                //    }
+
+                //});
+
 
                 /*Task.Run(async () =>
                 {
@@ -135,7 +189,6 @@ namespace TWCore.Test.Core
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
             });
-
             TWCore.Core.RunService<TestService>(args);
         }
 

@@ -156,10 +156,6 @@ namespace TWCore.Messaging
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             var response = message.Value as ResponseMessage;
-
-            if (response?.Body != null && _cloneObject)
-                response.Body = response.Body.DeepClone();
-
             return response;
         }
         #endregion

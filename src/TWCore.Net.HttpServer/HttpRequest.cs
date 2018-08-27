@@ -130,6 +130,7 @@ namespace TWCore.Net.HttpServer
             var newIndex = request.IndexOf(' ', 2);
             if (newIndex < 0)
                 throw new Exception("Invalid http request line");
+
             var strMethod = request.Substring(0, newIndex);
             var lastIndex = newIndex + 1;
             newIndex = request.IndexOf(' ', lastIndex);

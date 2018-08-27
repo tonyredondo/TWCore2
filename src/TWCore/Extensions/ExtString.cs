@@ -40,9 +40,9 @@ namespace TWCore
         private static readonly char[] Space = { ' ' };
         private static readonly Lazy<LevenshteinStringDistance> LevenshteinStringDistance = new Lazy<LevenshteinStringDistance>();
         private static readonly Lazy<DamerauLevenshteinStringDistance> DamerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
-        private static readonly Regex ShrinkRegex = new Regex(@"[ ]{2,}", RegexOptions.Compiled);
-        private static readonly Regex InvalidXmlChars = new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled);
-        private static readonly Encoding DefaultEncoding = new UTF8Encoding(false);
+        private static readonly Lazy<Regex> ShrinkRegex = new Lazy<Regex>(new Regex(@"[ ]{2,}", RegexOptions.Compiled));
+        private static readonly Lazy<Regex> InvalidXmlChars = new Lazy<Regex>(new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled));
+        private static readonly Lazy<Encoding> DefaultEncoding = new Lazy<Encoding>(new UTF8Encoding(false));
 
         #region Is? conditionals
         /// <summary>
@@ -268,7 +268,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string RemoveInvalidXmlChars(this string text)
         {
-            return string.IsNullOrEmpty(text) ? "" : InvalidXmlChars.Replace(text, "");
+            return string.IsNullOrEmpty(text) ? string.Empty : InvalidXmlChars.Value.Replace(text, string.Empty);
         }
         /// <summary>
         /// Remove spaces from a string
@@ -292,7 +292,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ShrinkSpaces(this string value)
         {
-            return !string.IsNullOrEmpty(value) ? ShrinkRegex.Replace(value, @" ") : value;
+            return !string.IsNullOrEmpty(value) ? ShrinkRegex.Value.Replace(value, " ") : value;
         }
         /// <summary>
         /// Split a string in to an array.
@@ -406,18 +406,6 @@ namespace TWCore
             var sb = new StringBuilder(obj.Length * 2);
             foreach (var b in obj)
                 sb.AppendFormat("{0:x2}", b);
-            return sb.ToString();
-        }
-        /// <summary>
-        /// Gets the Hexadecimal string from a byte array.
-        /// </summary>
-        /// <param name="obj">String array</param>
-        /// <returns>Hexadecimal string value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToHexString(this SubArray<byte> obj)
-        {
-            var sb = new StringBuilder(obj.Count * 2);
-			obj.ForEach((ref byte b, ref StringBuilder sbuilder) => sbuilder.AppendFormat("{0:x2}", b), ref sb);
             return sb.ToString();
         }
         /// <summary>
@@ -570,7 +558,7 @@ namespace TWCore
         /// <returns>A string containing all lines of the file.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadTextFromFile(this string path, Encoding encoding = null)
-            => File.ReadAllText(path, encoding ?? DefaultEncoding);
+            => File.ReadAllText(path, encoding ?? DefaultEncoding.Value);
         /// <summary>
         /// Faster Index Of method
         /// </summary>
@@ -622,27 +610,174 @@ namespace TWCore
             }
             return -1;
         }
-		/// <summary>
-		/// Gets the jenkins hash.
-		/// </summary>
-		/// <returns>The jenkins hash.</returns>
-		/// <param name="value">String Value</param>
-		public static uint GetJenkinsHash(this string value)
-		{
-			if (string.IsNullOrWhiteSpace(value)) return 0;
-			var length = value.Length;
-			var i = 0;
-			uint hash = 0;
-			while(i != length)
-			{
-				hash += value[i++];
-				hash += hash << 10;
-				hash ^= hash >> 6;
-			}
-			hash += hash << 3;
-			hash ^= hash >> 11;
-			hash += hash << 15;
-			return hash;
-		}
+        /// <summary>
+        /// Gets the superfast hash
+        /// </summary>
+        /// <param name="value">String value</param>
+        /// <returns>Superfast hash</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetSuperFastHash(this string value)
+        {
+            var len = value.Length;
+            if (len == 0) return 0;
+            var valueIdx = 0;
+            uint hash = (uint)len;
+            uint tmp;
+
+            var rem = len & 3;
+            len >>= 2;
+
+            //Main Loop
+            for (; len > 0; len--)
+            {
+                hash += value[valueIdx];
+                tmp = ((uint)(value[valueIdx + 2] << 11)) ^ hash;
+                hash = (hash << 16) ^ tmp;
+                valueIdx += 2;
+            }
+
+            //Handle end cases
+            switch (rem)
+            {
+                case 3:
+                    hash += value[valueIdx];
+                    hash ^= hash << 16;
+                    hash ^= (uint)value[valueIdx + 2] << 18;
+                    hash += hash >> 11;
+                    break;
+                case 2:
+                    hash += value[valueIdx];
+                    hash ^= hash << 11;
+                    hash += hash >> 17;
+                    break;
+                case 1:
+                    hash += (byte)value[valueIdx];
+                    hash ^= hash << 10;
+                    hash += hash >> 1;
+                    break;
+            }
+
+            //Force "avalanching" of final 127 bits
+            hash ^= hash << 3;
+            hash += hash >> 5;
+            hash ^= hash << 4;
+            hash += hash >> 17;
+            hash ^= hash << 25;
+            hash += hash >> 6;
+
+            return hash;
+        }
+
+        /// <summary>
+        /// Gets the MurMurHash 2
+        /// </summary>
+        /// <param name="value">String value</param>
+        /// <returns>MurMurHash 2</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe uint GetMurmurHash2(this string value)
+        {
+            var length = value.Length;
+            if (length == 0) return 0;
+            var h = 0xc58f1a7b ^ (uint)length;
+            var remainingChars = length & 3;
+            var numberOfLoops = length >> 2;
+            fixed (char* firstChar = value)
+            {
+                uint* realData = (uint*)firstChar;
+                while (numberOfLoops != 0)
+                {
+                    uint k = *realData;
+                    k *= 0x5bd1e995;
+                    k ^= k >> 24;
+                    k *= 0x5bd1e995;
+
+                    h *= 0x5bd1e995;
+                    h ^= k;
+                    numberOfLoops--;
+                    realData++;
+                }
+                switch (remainingChars)
+                {
+                    case 3:
+                        h ^= (ushort)(*realData);
+                        h ^= ((uint)(*(((byte*)(realData)) + 2))) << 16;
+                        h *= 0x5bd1e995;
+                        break;
+                    case 2:
+                        h ^= (ushort)(*realData);
+                        h *= 0x5bd1e995;
+                        break;
+                    case 1:
+                        h ^= *((byte*)realData);
+                        h *= 0x5bd1e995;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            // Do a few final mixes of the hash to ensure the last few
+            // bytes are well-incorporated.
+            h ^= h >> 13;
+            h *= 0x5bd1e995;
+            h ^= h >> 15;
+            return h;
+        }
+
+        /// <summary>
+        /// Gets the MurMurHash 3
+        /// </summary>
+        /// <param name="value">String value</param>
+        /// <returns>MurMurHash 3</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe uint GetMurmurHash3(this string value)
+        {
+            var len = value.Length;
+            if (len == 0) return 0;
+            int i;
+            var h = 0xc58f1a7b;
+            fixed (char* firstChar = value)
+            {
+                var key = firstChar;
+                if (len > 3)
+                {
+                    uint* key_x4 = (uint*)firstChar;
+                    i = len >> 2;
+                    do
+                    {
+                        var k = *key_x4++;
+                        k *= 0xcc9e2d51;
+                        k = (k << 15) | (k >> 17);
+                        k *= 0x1b873593;
+                        h ^= k;
+                        h = (h << 13) | (h >> 19);
+                        h = (h * 5) + 0xe6546b64;
+                    } while (--i > 0);
+                    key = (char*)key_x4;
+                }
+                i = len & 3;
+                if (i != 0)
+                {
+                    uint k = 0;
+                    key = &key[i - 1];
+                    do
+                    {
+                        k <<= 8;
+                        k |= *key--;
+                    } while (--i > 0);
+                    k *= 0xcc9e2d51;
+                    k = (k << 15) | (k >> 17);
+                    k *= 0x1b873593;
+                    h ^= k;
+                }
+            }
+            h ^= (uint)len;
+            h ^= h >> 16;
+            h *= 0x85ebca6b;
+            h ^= h >> 13;
+            h *= 0xc2b2ae35;
+            h ^= h >> 16;
+            return h;
+        }
+
     }
 }

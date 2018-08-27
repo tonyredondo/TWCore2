@@ -263,6 +263,14 @@ namespace TWCore.Injector
                 Type = type;
                 Loaded = loaded;
             }
+            public override int GetHashCode()
+            {
+                return Type?.GetHashCode() ?? 0 + Loaded.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                return obj is TypeLoadResult tRes && Type == tRes.Type && Loaded == tRes.Loaded;
+            }
         }
         #endregion
     }

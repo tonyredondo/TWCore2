@@ -75,7 +75,7 @@ namespace TWCore.Web
         /// <summary>
         /// Sets the default TWCoreValues
         /// </summary>
-        public static void SetDefaultTWCoreValues(this IServiceCollection services, CoreWebSettings settings = null)
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_1, CoreWebSettings settings = null)
         {
             settings = settings ?? new CoreWebSettings();
             services.AddMvc(options =>
@@ -90,9 +90,10 @@ namespace TWCore.Web
                     }
                     else
                     {
-                        options.InputFormatters.Add(new XmlSerializerInputFormatter());
+                        options.InputFormatters.Add(new XmlSerializerInputFormatter(options));
                         options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
                     }
+
                     if (settings.EnableFormatMapping)
                     {
                         options.FormatterMappings.SetMediaTypeMappingForFormat
@@ -120,7 +121,7 @@ namespace TWCore.Web
                 {
                     Core.Log.Write(ex);
                 }
-            })
+            }).SetCompatibilityVersion(compatibilityVersion)
             .AddJsonOptions(options =>
             {
                 if (settings.EnableJsonStringEnum)
@@ -138,7 +139,7 @@ namespace TWCore.Web
                 if (settings.EnableTWCoreSerializers)
                 {
                     var serializers = SerializerManager.GetBinarySerializers();
-
+                    
                     services.Configure<ResponseCompressionOptions>(options =>
                     {
                         options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(serializers.SelectMany(i => i.MimeTypes));

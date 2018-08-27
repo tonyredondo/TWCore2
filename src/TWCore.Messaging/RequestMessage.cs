@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TWCore.Serialization;
 
 namespace TWCore.Messaging
 {
@@ -47,7 +48,7 @@ namespace TWCore.Messaging
         /// Request body
         /// </summary>
         [XmlElement, DataMember]
-        public object Body { get; set; }
+        public SerializedObject Body { get; set; }
 
         #region .ctor
         /// <summary>
@@ -58,7 +59,7 @@ namespace TWCore.Messaging
         /// Defines a new Request Message for messaging
         /// </summary>
         /// <param name="body">Request body</param>
-        public RequestMessage(object body)
+        public RequestMessage(SerializedObject body)
         {
             Body = body;
         }

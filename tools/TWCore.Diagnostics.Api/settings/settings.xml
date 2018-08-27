@@ -15,16 +15,16 @@
       <!--Trace Settings-->
       <Item Key="Core.Trace.UseAbsolutePath" Value="false" />
       <Item Key="Core.Trace.Serializer" Value="TWCore.Serialization.NSerializer.NBinarySerializer, TWCore.Serialization.NSerializer" />
-      <Item Key="Core.Trace.Compressor" Value="TWCore.Compression.GZipCompressor, TWCore" />
+      <Item Key="Core.Trace.Compressor" Value="TWCore.Compression.DeflateCompressor, TWCore" />
       <Item Key="Core.Trace.Storage.File.Enabled" Value="true" />
       <Item Key="Core.Trace.Storage.Messages.Enabled" Value="true" />
 
       <!--Status Settings-->
       <Item Key="Core.Status.Transport.Http.Enabled" Value="true" />
-      <Item Key="Core.Status.Transport.File.Enabled" Value="true" />
-      <Item Key="Core.Status.Transport.File.Triggers.Periodic.Enabled" Value="true" />
+      <Item Key="Core.Status.Transport.File.Enabled" Value="false" />
+      <Item Key="Core.Status.Transport.File.Triggers.Periodic.Enabled" Value="false" />
       <Item Key="Core.Status.Transport.File.Triggers.Periodic.TimeInMinutes" Value="60" />
-      <Item Key="Core.Status.Transport.Messages.Enabled" Value="true" />
+      <Item Key="Core.Status.Transport.Messages.Enabled" Value="false" />
     </Items>
   </Global>
   

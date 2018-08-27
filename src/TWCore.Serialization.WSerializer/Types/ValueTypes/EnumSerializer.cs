@@ -50,7 +50,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type) 
-            => type.GetTypeInfo().IsEnum;
+            => type.IsEnum;
         /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
@@ -289,7 +289,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
                     intValue = reader.ReadInt32();
                     break;
             }
-            //return declaredType.GetTypeInfo().IsEnum ? Enum.ToObject(declaredType, intValue) : intValue;
+            //return declaredType.IsEnum ? Enum.ToObject(declaredType, intValue) : intValue;
             return intValue;
         }
         /// <inheritdoc />

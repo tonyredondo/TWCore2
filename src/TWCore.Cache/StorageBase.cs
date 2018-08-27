@@ -135,7 +135,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void CheckItemExpiration(bool initial = false)
         {
-            if (_expirationRunning == true) return;
+            if (_expirationRunning) return;
             _expirationRunning = true;
             try
             {
@@ -149,7 +149,7 @@ namespace TWCore.Cache
                     Core.Log.LibVerbose("Remove: {0}, on: {1}", key, _name);
                     if (!OnRemove(key, out var meta) || initial) continue;
                     if (meta != null)
-                        meta.OnExpire -= OnItemExpire;
+                        meta.OnExpire = null;
                     ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key, meta?.Tags));
                     meta?.Dispose();
                 }
@@ -170,7 +170,7 @@ namespace TWCore.Cache
         {
             var meta = (StorageItemMeta)sender;
             Core.Log.LibVerbose("Item Expired: {0}, on: {1}", meta.Key, GetType().Name);
-            meta.OnExpire -= OnItemExpire;
+            meta.OnExpire = null;
             Remove(meta.Key);
         }
         /// <summary>
@@ -244,7 +244,7 @@ namespace TWCore.Cache
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract string[] OnGetKeys();
+        protected abstract IEnumerable<string> OnGetKeys();
 		/// <summary>
 		/// Init this storage
 		/// </summary>
@@ -327,7 +327,10 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetKeys()
         {
-            return !Ready ? null : OnGetKeys();
+            if (!Ready)
+                return null;
+            var keys = OnGetKeys();
+            return keys as string[] ?? keys.ToArray();
         }
         #endregion
 
@@ -553,9 +556,9 @@ namespace TWCore.Cache
         public bool Set(StorageItem item)
         {
             if (!Ready || item == null) return false;
-            item.Meta.OnExpire -= OnItemExpire;
+            item.Meta.OnExpire = null;
             if (!OnSet(item.Meta, item.Data)) return false;
-            item.Meta.OnExpire += OnItemExpire;
+            item.Meta.OnExpire = OnItemExpire;
             return true;
         }
         /// <inheritdoc />
@@ -569,9 +572,9 @@ namespace TWCore.Cache
         public bool Set(StorageItemMeta meta, SerializedObject data)
         {
             if (!Ready || meta == null) return false;
-            meta.OnExpire -= OnItemExpire;
+            meta.OnExpire = null;
             if (!OnSet(meta, data)) return false;
-            meta.OnExpire += OnItemExpire;
+            meta.OnExpire = OnItemExpire;
             return true;
         }
         /// <inheritdoc />
@@ -656,7 +659,7 @@ namespace TWCore.Cache
 
             var sMeta = StorageItemMeta.Create(key, expDate, tags);
             if (!OnSet(sMeta, data)) return false;
-            sMeta.OnExpire += OnItemExpire;
+            sMeta.OnExpire = OnItemExpire;
             return true;
         }
         #endregion
@@ -786,7 +789,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return false;
             if (!OnRemove(key, out var meta)) return false;
             if (meta != null)
-                meta.OnExpire -= OnItemExpire;
+                meta.OnExpire = null;
             ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key, meta?.Tags));
             meta?.Dispose();
             return true;
@@ -817,7 +820,7 @@ namespace TWCore.Cache
             {
                 if (!OnRemove(s.Key, out var meta)) return null;
                 if (meta != null)
-                    meta.OnExpire -= OnItemExpire;
+                    meta.OnExpire = null;
                 ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(s.Key, meta?.Tags));
                 meta?.Dispose();
                 return s.Key;

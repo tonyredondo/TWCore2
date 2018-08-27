@@ -37,7 +37,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>TBinary serialized object</returns>
-        public static SubArray<byte> SerializeToMsgPack<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToMsgPack<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize an object using the MsgPack serializer
         /// </summary>
@@ -51,7 +51,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">TBinary serialized object</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromMsgPack<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromMsgPack<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
         /// <summary>
         /// Deserialize an object using the MsgPack serializer
         /// </summary>
@@ -65,7 +65,7 @@ namespace TWCore.Serialization
         /// <param name="value">TBinary serialized object</param>
         /// <param name="type">Object type</param>
         /// <returns>Object instance</returns>
-        public static object DeserializeFromMsgPack(this SubArray<byte> value, Type type) => Serializer.Deserialize(value, type);
+        public static object DeserializeFromMsgPack(this MultiArray<byte> value, Type type) => Serializer.Deserialize(value, type);
         /// <summary>
         /// Serialize object using MsgPack and write it into the stream
         /// </summary>

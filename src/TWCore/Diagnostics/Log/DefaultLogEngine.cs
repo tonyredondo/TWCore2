@@ -977,8 +977,20 @@ namespace TWCore.Diagnostics.Log
                 WriteUnsafe(LogLevel.Verbose, groupName, message, args);
         }
         #endregion
-        
+
         #region ErrorGroup Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a error item into the log storages
+        /// </summary>
+        /// <param name="ex">Exception</param>
+        /// <param name="groupName">Group name</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ErrorGroup(Exception ex, string groupName)
+        {
+            if (IsLogLevelValid(LogLevel.Error))
+                WriteUnsafe(LogLevel.Error, groupName, ex?.Message, ex);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Write a error item into the log storages
@@ -1399,9 +1411,79 @@ namespace TWCore.Diagnostics.Log
                 WriteUnsafe(LogLevel.InfoDetail, groupName, message, args);
         }
         #endregion
-        
+
+        #region StatsGroup Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StatsGroup(string groupName, string message)
+        {
+            if (IsLogLevelValid(LogLevel.Stats))
+                WriteUnsafe(LogLevel.Stats, groupName, message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StatsGroup(string groupName, string message, object arg1)
+        {
+            if (IsLogLevelValid(LogLevel.Stats))
+                WriteUnsafe(LogLevel.Stats, groupName, message, arg1);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StatsGroup(string groupName, string message, object arg1, object arg2)
+        {
+            if (IsLogLevelValid(LogLevel.Stats))
+                WriteUnsafe(LogLevel.Stats, groupName, message, arg1, arg2);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StatsGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        {
+            if (IsLogLevelValid(LogLevel.Stats))
+                WriteUnsafe(LogLevel.Stats, groupName, message, arg1, arg2, arg3);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StatsGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.Stats))
+                WriteUnsafe(LogLevel.Stats, groupName, message, args);
+        }
         #endregion
-        
+
+        #endregion
+
         #region LibDebug Methods
         /// <inheritdoc />
         /// <summary>

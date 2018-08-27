@@ -2,7 +2,7 @@
   "profiles": {
     "TWCore.Test.Core": {
       "commandName": "Project",
-      "commandLineArgs": "/memtest"
+      "commandLineArgs": "/rabbitmqtest"
     }
   }
 }

@@ -11,6 +11,7 @@ using TWCore.Serialization.MsgPack;
 using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.PWSerializer.Deserializer;
+using TWCore.Serialization.RawSerializer;
 using TWCore.Serialization.Utf8Json;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -45,11 +46,12 @@ namespace TWCore.Tests
             {
                 FirstName = "Daniel",
                 LastName = "Redondo",
-                Age = 33
+                Age = 33,
+                value = 166
             };
 
             var collection = new List<List<STest>>();
-            for (var i = 0; i <= 10000; i++)
+            for (var i = 0; i <= 10; i++)
             {
                 var colSTest = new List<STest>
                 {
@@ -98,14 +100,10 @@ namespace TWCore.Tests
                 ["Value3"] = 3,
             };
 
-            var valSer = collection.Where((item, i) => i % 2 == 0).SelectMany(i => i).OrderBy(i => i.FirstName);
-            var valSerData = valSer.SerializeToNBinary();
-            var valSer2 = valSerData.DeserializeFromNBinary<object>();
-
-            var valSerData2 = valSer.SerializeToWBinary();
-            var valSer3 = valSerData2.DeserializeFromWBinary<object>();
-
-            RunTest(collection[0], 100_000, false);
+            var colClone = collection[0].DeepClone();
+            var clone = collection.DeepClone();
+            
+            RunTest(collection[0], 200_000, false);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -116,26 +114,26 @@ namespace TWCore.Tests
             var memStream = new MemoryStream();
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
             var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
-            //var binaryformatterSerializer = new BinaryFormatterSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
+            var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
             var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
-            
+
             Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
             Core.Log.InfoBasic("\tUtf8Json Bytes Count: {0}", SerializerSizeProcess(value, vType, ut8JsonSerializer));
-            //Core.Log.InfoBasic("\tBinaryFormatter Bytes Count: {0}", SerializerSizeProcess(value, vType, binaryformatterSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
+            Core.Log.InfoBasic("\tRawBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, rawBinarySerializer));
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By Times: {0}", times);
             SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
             SerializerProcess("Utf8Json", value, vType, times, ut8JsonSerializer, memStream);
-            //SerializerProcess("BinaryFormatter", value, vType, times, binaryformatterSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
+            SerializerProcess("RawBinary", value, vType, times, rawBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
             Console.ReadLine();
@@ -189,6 +187,7 @@ namespace TWCore.Tests
     [Serializable]
     public class STest //: INSerializable
     {
+        public int value;
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Age { get; set; }

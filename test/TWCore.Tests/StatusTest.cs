@@ -22,11 +22,13 @@ namespace TWCore.Tests
             var lst = new List<Node>();
             var lst2 = new List<Node>();
             var dct = new Dictionary<string, Node>();
-            Core.Status.AttachChild(nodeOne, this);
+            //Core.Status.AttachChild(nodeOne, this);
             Core.Status.AttachChild(nodeTwo, this);
             Core.Status.AttachChild(lst, this);
             Core.Status.AttachChild(lst2, this);
             Core.Status.AttachObject(dct);
+            Core.Status.AttachChild(rootNodeOne, this);
+            Core.Status.AttachChild(nodeOne, rootNodeOne);
 
             Console.ReadLine();
         }

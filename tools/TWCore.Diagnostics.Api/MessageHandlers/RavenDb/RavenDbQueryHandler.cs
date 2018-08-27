@@ -17,102 +17,84 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
+using TWCore.Compression;
+using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
-using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbQueryHandler : IDiagnosticQueryHandler
     {
+        private static readonly ICompressor Compressor = new GZipCompressor();
+        private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
+        {
+            Compressor = Compressor
+        };
+
+        // Environments
         public Task<List<string>> GetEnvironmentsAsync()
         {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            return RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var logsEnvQuery = session.Query<NodeLogItem>()
-                    .Select(x => x.Environment)
-                    .Distinct();
-                var logsEnvTask = session.Query<NodeLogItem>()
-                    .Select(x => x.Environment)
-                    .Distinct()
-                    .LazilyAsync();
-                var tracesEnvTask = session.Query<NodeTraceItem>()
-                    .Select(x => x.Environment)
-                    .Distinct()
-                    .LazilyAsync();
-                var statusEnvTask = session.Query<NodeStatusItem>()
-                    .Select(x => x.Environment)
-                    .Distinct()
-                    .LazilyAsync();
-
-                await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
-                var logsEnv = await logsEnvTask.Value.ConfigureAwait(false);
-                var tracesEnv = await tracesEnvTask.Value.ConfigureAwait(false);
-                var statusEnv = await statusEnvTask.Value.ConfigureAwait(false);
-
-                return logsEnv.Concat(tracesEnv).Concat(statusEnv).Distinct().RemoveNulls().ToList();
+                return session.Query<Environments_Availables.Result, Environments_Availables>().Select(x => x.Environment).ToListAsync();
             });
         }
 
         // Logs
         public async Task<LogSummary> GetLogsApplicationsLevelsByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
         {
-            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
+            var values = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                return session.Query<NodeLogItem>()
-                    .Where(x => x.Environment == environment)
-                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
-                    .OrderBy(x => x.Application)
-                    .GroupBy(x => new
-                    {
-                        x.Environment,
-                        x.Application,
-                        x.Level,
-                        x.Timestamp
-                    })
-                    .Select(x => new
-                    {
-                        x.Key.Application,
-                        x.Key.Level,
-                        x.Key.Timestamp
-                    })
-                    .Distinct()
-                    .ToListAsync();
+                return session.Query<Logs_Summary.Result, Logs_Summary>()
+                              .Where(x => x.Environment == environment)
+                              .Where(x => x.Date >= fromDate && x.Date <= toDate)
+                              .OrderBy(x => x.Application)
+                              .ToListAsync();
             }).ConfigureAwait(false);
 
-            var summary = new LogSummary
+            var apps = values.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
             {
-                Applications = value.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
+                Application = x.Key,
+                Levels = x.SelectMany(y => y.Levels).GroupBy(y => y.Name).Select(ix => new LogLevelQuantity
                 {
-                    Application = x.Key,
-                    Levels = x.GroupBy(i => i.Level).Select(ix => new LogLevelQuantity
-                    {
-                        Name = ix.Key,
-                        Count = ix.Count()
-                    }).OrderBy(i => i.Name).ToArray()
-                }).ToArray(),
-                Levels = value.GroupBy(x => x.Level).Select(x => new LogLevelTimes
+                    Name = ix.Key,
+                    Count = ix.Sum(i => i.Count)
+                }).OrderBy(y => y.Name).ToArray()
+            }).ToArray();
+
+            var levels = values.SelectMany(col => col.Levels, (result, level) => new
+            {
+                Name = level.Name,
+                Count = level.Count,
+                Date = result.Date
+            }).GroupBy(x => x.Name).Select(x => new LogLevelTimes
+            {
+                Name = x.Key,
+                Count = x.Sum(i => i.Count),
+                Series = x.GroupBy(i => i.Date).Select(i => new TimeCount
                 {
-                    Name = x.Key,
-                    Count = x.Count(),
-                    Series = x.GroupBy(i => i.Timestamp.Date).Select(i => new TimeCount
-                    {
-                        Date = i.Key,
-                        Count = i.Count()
-                    }).ToArray()
-                }).OrderBy(x => x.Name).ToArray()
+                    Date = i.Key,
+                    Count = i.Sum(k => k.Count)
+                }).ToArray()
+            }).OrderBy(x => x.Name).ToArray();
+
+            return new LogSummary
+            {
+                Applications = apps,
+                Levels = levels
             };
-            return summary;
         }
-        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel? level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
@@ -123,13 +105,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         .WhereEquals(x => x.Application, application)
                         .WhereBetween(x => x.Timestamp, fromDate, toDate);
 
-                if (
-                    level == LogLevel.Error || level == LogLevel.Warning || level == LogLevel.Debug ||
-                    level == LogLevel.InfoBasic || level == LogLevel.InfoDetail || level == LogLevel.InfoMedium ||
-                    level == LogLevel.LibDebug || level == LogLevel.LibVerbose ||
-                    level == LogLevel.Stats || level == LogLevel.Verbose
-                    )
-                    query = query.WhereEquals(x => x.Level, level);
+                if (level.HasValue)
+                    query = query.WhereEquals(x => x.Level, level.Value);
 
                 query = query.OrderByDescending(x => x.Timestamp);
                 query = query.Skip(page * pageSize).Take(pageSize);
@@ -145,60 +122,36 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 };
             });
         }
-        public Task<List<NodeLogItem>> GetLogsBySearch(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
-        {
-            return RavenHelper.ExecuteAndReturnAsync(session =>
-            {
-                return session.Advanced.AsyncDocumentQuery<NodeLogItem>()
-                    .WhereEquals(x => x.Environment, environment)
-                    .WhereBetween(x => x.Timestamp, fromDate, toDate)
-                    .OpenSubclause()
-                    .Search(x => x.Message, "*" + searchTerm + "*")
-                    .Search(x => x.Group, "*" + searchTerm + "*")
-                    .CloseSubclause()
-                    .OrderBy(x => x.Timestamp)
-                    .Take(150)
-                    .ToListAsync();
-            });
-        }
+
 
         // Traces
-        public async Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
-            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var res = session.Advanced.AsyncRawQuery<TraceTempResult>(@"
-                    from NodeTraceItems as trace
-                    group by trace.Group, trace.Environment, trace.Timestamp, trace.Tags 
-                    where (trace.Environment = $environment) and (trace.Timestamp between $fromDate and $toDate) 
-                    order by Timestamp desc 
-                    select trace.Group, trace.Timestamp, trace.Tags");
-                res.AddParameter("environment", environment);
-                res.AddParameter("fromDate", fromDate);
-                res.AddParameter("toDate", toDate);
+                var res = await session.Advanced.AsyncDocumentQuery<Traces_List.Result, Traces_List>()
+                        .Statistics(out var stats)
+                        .WhereEquals(x => x.Environment, environment)
+                        .WhereBetween(x => x.Start, fromDate, toDate)
+                        .OrderByDescending(x => x.Start)
+                        .Skip(page * pageSize).Take(pageSize)
+                        .ToListAsync().ConfigureAwait(false);
 
-                return res.ToListAsync();
-            }).ConfigureAwait(false);
-
-            var valGroup = value.GroupBy(i => i.Group);
-            var totalResult = valGroup.Count();
-
-            var val = valGroup.Select(i => new TraceResult
-            {
-                Group = i.Key,
-                Count = i.Count(),
-                Start = i.Min(x => x.Timestamp),
-                End = i.Max(x => x.Timestamp),
-                HasErrors = i.Any(x => x.Tags.Contains("Status: Error"))
-            }).Skip(page * pageSize).Take(pageSize).ToList();
-
-            return new PagedList<TraceResult>
-            {
-                PageNumber = page,
-                PageSize = pageSize,
-                TotalResults = totalResult,
-                Data = val
-            };
+                return new PagedList<TraceResult>
+                {
+                    PageNumber = page,
+                    PageSize = pageSize,
+                    TotalResults = stats.TotalResults,
+                    Data = res.Select(x => new TraceResult
+                    {
+                        Group = x.Group,
+                        Count = x.Count,
+                        Start = x.Start,
+                        End = x.End,
+                        HasErrors = x.HasError
+                    }).ToList()
+                };
+            });
         }
         public async Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName)
         {
@@ -211,7 +164,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .OrderBy(x => x.Timestamp);
                 return query.ToListAsync();
             });
-
             return value;
         }
         public Task<SerializedObject> GetTraceObjectAsync(string id)
@@ -219,8 +171,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
-                var traceObject = attachment?.Stream?.DeserializeFromNBinary<object>();
-                return (SerializedObject) traceObject;
+                if (attachment?.Stream == null) return null;
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                    return NBinarySerializer.Deserialize<SerializedObject>(bytes);
+                else
+                    return bytes.DeserializeFromNBinary<SerializedObject>();
             });
         }
         public Task<string> GetTraceXmlAsync(string id)
@@ -229,7 +185,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceXml").ConfigureAwait(false);
                 if (attachment?.Stream == null) return null;
-                return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                {
+                    var desBytes = Compressor.Decompress(bytes);
+                    return Encoding.UTF8.GetString(desBytes.AsSpan());
+                }
+                else
+                {
+                    return Encoding.UTF8.GetString(bytes.AsSpan());
+                }
             });
         }
         public Task<string> GetTraceJsonAsync(string id)
@@ -238,10 +203,19 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceJson").ConfigureAwait(false);
                 if (attachment?.Stream == null) return null;
-                return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                {
+                    var desBytes = Compressor.Decompress(bytes);
+                    return Encoding.UTF8.GetString(desBytes.AsSpan());
+                }
+                else
+                {
+                    return Encoding.UTF8.GetString(bytes.AsSpan());
+                }
             });
         }
-        
+
         private class TraceTempResult
         {
             public string Group { get; set; }
@@ -255,49 +229,61 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>()
+                var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem, Logs_Search>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
                     .OpenSubclause()
-                    .Search(x => x.Message, "*" + searchTerm + "*")
-                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Group, searchTerm)
                     .Search(x => x.Level, searchTerm)
                     .Search(x => x.Code, searchTerm)
                     .Search(x => x.Type, searchTerm)
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Message, "*" + searchTerm + "*")
                     .CloseSubclause()
-                    .OrderBy(x => x.Timestamp)
-                    .Take(200)
-                    .LazilyAsync();
+                    .OrderBy(x => x.Timestamp);
 
-                var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>()
+                var logQueryLazy = logQuery
+                                        .Take(200)
+                                        .LazilyAsync();
+
+                var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem, Traces_Search>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
                     .OpenSubclause()
-                    .Search(x => x.Group, "*" + searchTerm + "*")
-                    .Search(x => x.Name, "*" + searchTerm + "*")
-                    .Search(x => x.Tags, "*" + searchTerm + "*")
+                    .Search(x => x.Group, searchTerm)
+                    .Search(x => x.Tags, searchTerm)
+                    .Search(x => x.Name, searchTerm)
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Tags, "*" + searchTerm + "*")
+                    .Search(x => x.Name, "*" + searchTerm + "*")
                     .CloseSubclause()
-                    .OrderBy(x => x.Timestamp)
-                    .Take(200)
-                    .LazilyAsync();
+                    .OrderBy(x => x.Timestamp);
+
+                var traceQueryLazy = traceQuery
+                                        .Take(200)
+                                        .LazilyAsync();
 
                 await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
-                var logResults = await logQuery.Value.ConfigureAwait(false);
-                var traceResults = await traceQuery.Value.ConfigureAwait(false);
-                    
-                return new SearchResults { Logs = logResults.ToList(), Traces = traceResults.ToList() };
+                var logResults = await logQueryLazy.Value.ConfigureAwait(false);
+                var traceResults = await traceQueryLazy.Value.ConfigureAwait(false);
+
+                return new SearchResults
+                {
+                    Logs = new List<NodeLogItem>(logResults),
+                    Traces = new List<NodeTraceItem>(traceResults)
+                };
             });
         }
 
-        
-        
-        
-        
-        
+
+
+
+
+
         //Others
         public async Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {

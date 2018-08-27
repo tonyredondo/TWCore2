@@ -67,7 +67,7 @@ namespace TWCore.Messaging.RabbitMQ
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		/// <param name="e">RawRequest received event args</param>
-		protected override Task<int> OnSendAsync(SubArray<byte> message, RawRequestReceivedEventArgs e)
+		protected override Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e)
 		{
 			var queues = e.ResponseQueues;
 			queues.Add(new MQConnection
@@ -105,18 +105,18 @@ namespace TWCore.Messaging.RabbitMQ
 						if (string.IsNullOrEmpty(queue.Name))
 						{
 							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + replyTo, crId);
-							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, replyTo, props, (byte[])message);
+							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, replyTo, props, message.AsArray());
 						}
 						else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
 						{
 							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + queue.Name + "_" + replyTo, crId);
-							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name + "_" + replyTo, props, (byte[])message);
+							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name + "_" + replyTo, props, message.AsArray());
 						}
 					}
 					else
 					{
 						Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + queue.Name, crId);
-						rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, (byte[])message);
+						rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, message.AsArray());
 					}
 				}
 				catch (Exception ex)

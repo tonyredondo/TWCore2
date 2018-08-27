@@ -75,7 +75,7 @@ namespace TWCore.Settings
                     var settingValueObject = Try.Do(vTuple => StringParser.Parse(vTuple.settingValue, vTuple.p.PropertyType, vTuple.p.GetValue(vTuple.instance), vTuple.dataFormat, vTuple.provider), (settingValue, p, instance, dataFormat, provider), false);
                     p.SetValue(instance, settingValueObject);
                 }
-                else if (dictionaryAttribute?.ItemSeparator != null && p.PropertyType.GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))))
+                else if (dictionaryAttribute?.ItemSeparator != null && p.PropertyType.GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDictionary) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))))
                 {
                     var settingsValueItems = settingValue?.SplitAndTrim(dictionaryAttribute.ItemSeparator);
 
@@ -96,8 +96,8 @@ namespace TWCore.Settings
                             var kvArray = item.SplitAndTrim(dictionaryAttribute.KeyValueSeparator).ToArray();
                             if (kvArray.Length != 2)
                                 continue;
-                            var key = Try.Do(() => StringParser.Parse(kvArray[0], innerKeyType, innerKeyType.GetTypeInfo().IsValueType ? Activator.CreateInstance(innerKeyType) : null, null, provider), false);
-                            var value = Try.Do(() => StringParser.Parse(kvArray[1], innerValueType, innerValueType.GetTypeInfo().IsValueType ? Activator.CreateInstance(innerValueType) : null, null, provider), false);
+                            var key = Try.Do(() => StringParser.Parse(kvArray[0], innerKeyType, innerKeyType.IsValueType ? Activator.CreateInstance(innerKeyType) : null, null, provider), false);
+                            var value = Try.Do(() => StringParser.Parse(kvArray[1], innerValueType, innerValueType.IsValueType ? Activator.CreateInstance(innerValueType) : null, null, provider), false);
                             mDictionary.Add(key, value);
                         }
                         p.SetValue(instance, mDictionary);
@@ -110,7 +110,7 @@ namespace TWCore.Settings
                     //Array
                     var settingsValueArray = settingValue?.SplitAndTrim(arrayAttribute.Separators);
                     var eType = p.PropertyType.GetElementType();
-                    var defaultValue = eType.GetTypeInfo().IsValueType ? Activator.CreateInstance(eType) : null;
+                    var defaultValue = eType.IsValueType ? Activator.CreateInstance(eType) : null;
                     var isDefaultValue = true;
 
 

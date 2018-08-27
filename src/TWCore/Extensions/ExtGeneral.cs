@@ -43,12 +43,12 @@ namespace TWCore
         /// <typeparam name="T">Attribute type</typeparam>
         /// <param name="obj">Object to get the attribute from</param>
         /// <returns>Attribute</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetAttribute<T>(this object obj) where T : class
         {
             var objType = obj as Type ?? obj.GetType();
-            var objTypeInfo = objType.GetTypeInfo();
             object[] attrs;
-            if (objTypeInfo.IsEnum)
+            if (objType.IsEnum)
                 attrs = objType.GetRuntimeField(obj.ToString()).GetCustomAttributes(true);
             else if (obj is PropertyInfo pinfo)
                 attrs = pinfo.GetCustomAttributes(true);
@@ -57,7 +57,7 @@ namespace TWCore
             else if (obj is MethodInfo minfo)
                 attrs = minfo.GetCustomAttributes(true);
             else
-                attrs = objTypeInfo.GetCustomAttributes(true);
+                attrs = objType.GetCustomAttributes(true);
             foreach (var item in attrs)
                 if (item is T titem)
                     return titem;
@@ -71,12 +71,12 @@ namespace TWCore
         /// </summary>
         /// <param name="source">Source object</param>
         /// <returns>IDictionary instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IDictionary<string, object> ToDictionary(this object source)
         {
             if (source == null) return null;
             var sType = source.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return null;
+            if (sType.IsValueType) return null;
             var dct = new Dictionary<string, object>();
             var props = sType.GetRuntimeProperties();
             foreach (var prop in props)
@@ -93,12 +93,12 @@ namespace TWCore
         /// </summary>
         /// <param name="source">Source dictionary with values</param>
         /// <param name="target">Target object</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FromDictionary(this object target, IDictionary<string, object> source)
         {
             if (source == null || target == null) return;
             var sType = target.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return;
+            if (sType.IsValueType) return;
             foreach (var item in source)
             {
                 var prop = sType.GetRuntimeProperty(item.Key);
@@ -115,12 +115,12 @@ namespace TWCore
         /// <param name="source">Object source</param>
         /// <param name="objectToStringFunction">Function to convert an object property to string</param>
         /// <returns>Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dictionary<string, string> ToStringDictionary(this object source, Func<object, Type, string> objectToStringFunction)
         {
             if (source == null) return null;
             var sType = source.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return null;
+            if (sType.IsValueType) return null;
             var dct = new Dictionary<string, string>();
             var props = sType.GetRuntimeProperties();
             foreach (var prop in props)
@@ -138,12 +138,12 @@ namespace TWCore
         /// <param name="source">Source Dictionary</param>
         /// <param name="target">Object Target</param>
         /// <param name="stringToObjectFunction">Function to convert a string value to an object value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FromStringDictionary(this object target, Dictionary<string, string> source, Func<string, Type, object> stringToObjectFunction)
         {
             if (source == null || target == null) return;
             var sType = target.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return;
+            if (sType.IsValueType) return;
             foreach (var item in source)
             {
                 var prop = sType.GetRuntimeProperty(item.Key);
@@ -157,12 +157,12 @@ namespace TWCore
         /// </summary>
         /// <param name="source">Source Dictionary</param>
         /// <param name="target">Object Target</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FromStringDictionary(this object target, Dictionary<string, string> source)
         {
             FromStringDictionary(target, source, (strValue, type) =>
             {
-                var typeInfo = type.GetTypeInfo();
-                return strValue.ParseTo(type, typeInfo.IsValueType ? Activator.CreateInstance(type) : null);
+                return strValue.ParseTo(type, type.IsValueType ? Activator.CreateInstance(type) : null);
             });
         }
         #endregion
@@ -175,10 +175,476 @@ namespace TWCore
         /// <typeparam name="T">Type of task response</typeparam>
         /// <param name="task">Task source object</param>
         /// <returns>Response of the task completation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T WaitAndResults<T>(this Task<T> task)
         {
             if (task == null)
-                return default(T);
+                return default;
+            try
+            {
+                if (task.IsCompleted)
+                    return task.Result;
+                return task.GetAwaiter().GetResult();
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                Core.Log.Write(ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+        }
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <param name="millisecondsTimeout">Milliseconds for waiting the task to complete</param>
+        /// <returns>Response of the task completation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this Task<T> task, int millisecondsTimeout)
+        {
+            if (task == null)
+                return default;
+            try
+            {
+                if (task.IsCompleted)
+                    return task.Result;
+                return task.Wait(millisecondsTimeout) ? task.Result : default(T);
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                Core.Log.Write(ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+        }
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <param name="timeout">TimeSpan for waiting the task to complete</param>
+        /// <returns>Response of the task completation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this Task<T> task, TimeSpan timeout)
+        {
+            if (task == null)
+                return default;
+            try
+            {
+                if (task.IsCompleted)
+                    return task.Result;
+                return task.Wait(timeout) ? task.Result : default(T);
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                Core.Log.Write(ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+        }
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <param name="cancellationToken">Cancellation token on the Wait for the task to complete</param>
+        /// <returns>Response of the task completation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this Task<T> task, CancellationToken cancellationToken)
+        {
+            if (task == null)
+                return default;
+            try
+            {
+                if (task.IsCompleted)
+                    return task.Result;
+                task.Wait(cancellationToken);
+                return task.Result;
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                Core.Log.Write(ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+        }
+        /// <summary>
+        /// Wait for task avoiding deadlocks
+        /// </summary>
+        /// <typeparam name="T">Task type</typeparam>
+        /// <param name="task">Rask</param>
+        /// <returns>Task complete</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAsync<T>(this Task<T> task)
+        {
+            if (task.IsCompleted)
+                return task.Result;
+            var wait = new ManualResetEventSlim(false);
+            var continuation = task.ContinueWith(WaitAsyncContinuation, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            wait.Wait();
+            if (continuation.Result is ExceptionDispatchInfo edi)
+                edi.Throw();
+            return (T)continuation.Result;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static object WaitAsyncContinuation<T>(Task<T> oldTask, object state)
+        {
+            var ex = oldTask.Exception;
+            var result = (ex != null) ? ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex) : (object)oldTask.Result;
+            ((ManualResetEventSlim)state).Set();
+            return result;
+        }
+        /// <summary>
+        /// Wait for task avoiding deadlocks
+        /// </summary>
+        /// <param name="task">Rask</param>
+        /// <returns>Task complete</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WaitAsync(this Task task)
+        {
+            if (task.IsCompleted)
+                return;
+            var wait = new ManualResetEventSlim(false);
+            var continuation = task.ContinueWith((oldTask, state) =>
+            {
+                ExceptionDispatchInfo tEx = null;
+                var ex = oldTask.Exception;
+                if (ex != null)
+                    tEx = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
+                ((ManualResetEventSlim)state).Set();
+                return tEx;
+            }, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            wait.Wait();
+            continuation.Result?.Throw();
+        }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken)
+        {
+            if (asyncTask.IsCompleted) return asyncTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<TResult>(cancellationToken);
+            return InnerHandle(asyncTask, cancellationToken);
+
+            async Task<TResult> InnerHandle(Task<TResult> aTask, CancellationToken cToken)
+            {
+                var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using (cToken.Register(() => tcs.TrySetCanceled(), false))
+                {
+                    var cancellationTask = tcs.Task;
+                    var readyTask = await Task.WhenAny(aTask, cancellationTask).ConfigureAwait(false);
+                    if (readyTask == cancellationTask)
+                        await aTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                            .ConfigureAwait(false);
+                    return await readyTask.ConfigureAwait(false);
+                }
+            }
+        }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+	    /// <param name="cancellationToken2">Cancellation token 2</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
+        {
+            if (asyncTask.IsCompleted) return asyncTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<TResult>(cancellationToken);
+            if (cancellationToken2.IsCancellationRequested) return Task.FromCanceled<TResult>(cancellationToken2);
+            return InnerHandle(asyncTask, cancellationToken, cancellationToken2);
+
+            async Task<TResult> InnerHandle(Task<TResult> aTask, CancellationToken cToken, CancellationToken cToken2)
+            {
+                var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cToken, cToken2))
+                using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
+                {
+                    var cancellationTask = tcs.Task;
+                    var readyTask = await Task.WhenAny(aTask, cancellationTask).ConfigureAwait(false);
+                    if (readyTask == cancellationTask)
+                        await aTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                            .ConfigureAwait(false);
+                    return await readyTask.ConfigureAwait(false);
+                }
+            }
+        }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="cancellationToken2">Cancellation token 2</param>
+	    /// <param name="cancellationToken3">Cancellation token 3</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
+        {
+            if (asyncTask.IsCompleted) return asyncTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<TResult>(cancellationToken);
+            if (cancellationToken2.IsCancellationRequested) return Task.FromCanceled<TResult>(cancellationToken2);
+            if (cancellationToken3.IsCancellationRequested) return Task.FromCanceled<TResult>(cancellationToken3);
+            return InnerHandle(asyncTask, cancellationToken, cancellationToken2, cancellationToken3);
+
+            async Task<TResult> InnerHandle(Task<TResult> aTask, CancellationToken cToken, CancellationToken cToken2, CancellationToken cToken3)
+            {
+                var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cToken, cToken2, cToken3))
+                using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
+                {
+                    var cancellationTask = tcs.Task;
+                    var readyTask = await Task.WhenAny(aTask, cancellationTask).ConfigureAwait(false);
+                    if (readyTask == cancellationTask)
+                        await aTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                            .ConfigureAwait(false);
+                    return await readyTask.ConfigureAwait(false);
+                }
+            }
+        }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
+        {
+            if (asyncTask.IsCompleted) return Task.CompletedTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
+            return InnerHandle(asyncTask, cancellationToken);
+
+            async Task InnerHandle(Task aTask, CancellationToken cToken)
+            {
+                var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using (cToken.Register(() => tcs.TrySetCanceled(), false))
+                {
+                    var cancellationTask = tcs.Task;
+                    var readyTask = await Task.WhenAny(aTask, cancellationTask).ConfigureAwait(false);
+                    if (readyTask == cancellationTask)
+                        await aTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                            .ConfigureAwait(false);
+                    await readyTask.ConfigureAwait(false);
+                }
+            }
+        }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+	    /// <param name="cancellationToken2">Cancellation token 2</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
+        {
+            if (asyncTask.IsCompleted) return Task.CompletedTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
+            if (cancellationToken2.IsCancellationRequested) return Task.FromCanceled(cancellationToken2);
+            return InnerHandle(asyncTask, cancellationToken, cancellationToken2);
+
+            async Task InnerHandle(Task aTask, CancellationToken cToken, CancellationToken cToken2)
+            {
+                var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cToken, cToken2))
+                using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
+                {
+                    var cancellationTask = tcs.Task;
+                    var readyTask = await Task.WhenAny(aTask, cancellationTask).ConfigureAwait(false);
+                    if (readyTask == cancellationTask)
+                        await aTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                            .ConfigureAwait(false);
+                    await readyTask.ConfigureAwait(false);
+                }
+            }
+        }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="cancellationToken2">Cancellation token 2</param>
+	    /// <param name="cancellationToken3">Cancellation token 3</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
+        {
+            if (asyncTask.IsCompleted) return Task.CompletedTask;
+            if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
+            if (cancellationToken2.IsCancellationRequested) return Task.FromCanceled(cancellationToken2);
+            if (cancellationToken3.IsCancellationRequested) return Task.FromCanceled(cancellationToken3);
+            return InnerHandle(asyncTask, cancellationToken, cancellationToken2, cancellationToken3);
+
+            async Task InnerHandle(Task aTask, CancellationToken cToken, CancellationToken cToken2, CancellationToken cToken3)
+            {
+                var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cToken, cToken2, cToken3))
+                using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
+                {
+                    var cancellationTask = tcs.Task;
+                    var readyTask = await Task.WhenAny(aTask, cancellationTask).ConfigureAwait(false);
+                    if (readyTask == cancellationTask)
+                        await aTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                            .ConfigureAwait(false);
+                    await readyTask.ConfigureAwait(false);
+                }
+            }
+        }
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested) return;
+            var tcs = new TaskCompletionSource<object>();
+            using (cancellationToken.Register(state => ((TaskCompletionSource<object>)state).TrySetResult(null), tcs, false))
+                await tcs.Task.ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+	    /// <param name="cancellationToken2">Cancellation token 2 instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task WhenCanceledAsync(this CancellationToken cancellationToken, CancellationToken cancellationToken2)
+        {
+            if (cancellationToken.IsCancellationRequested || cancellationToken2.IsCancellationRequested) return Task.CompletedTask;
+            return InnerHandle(cancellationToken, cancellationToken2);
+
+            async Task InnerHandle(CancellationToken cToken, CancellationToken cToken2)
+            {
+                var tcs = new TaskCompletionSource<object>();
+                using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cToken, cToken2))
+                using (linkedToken.Token.Register(() => tcs.TrySetResult(null), false))
+                    await tcs.Task.ConfigureAwait(false);
+            }
+        }
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <param name="cancellationToken2">Cancellation token 2 instance</param>
+	    /// <param name="cancellationToken3">Cancellation token 3 instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task WhenCanceledAsync(this CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
+        {
+            if (cancellationToken.IsCancellationRequested || cancellationToken2.IsCancellationRequested || cancellationToken3.IsCancellationRequested)
+                return Task.CompletedTask;
+            return InnerHandle(cancellationToken, cancellationToken2, cancellationToken3);
+
+            async Task InnerHandle(CancellationToken cToken, CancellationToken cToken2, CancellationToken cToken3)
+            {
+                var tcs = new TaskCompletionSource<object>();
+                using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cToken, cToken2, cToken3))
+                using (linkedToken.Token.Register(() => tcs.TrySetResult(null), false))
+                    await tcs.Task.ConfigureAwait(false);
+            }
+        }
+
+        private delegate object InvokeDelegate(Delegate @delegate, params object[] args);
+        /// <summary>
+        /// Invoke a delegate as an Async Task
+        /// </summary>
+        /// <param name="delegate">Delegate</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="args">Delegate arguments</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<object> DynamicInvokeAsync(this Delegate @delegate, CancellationToken cancellationToken, params object[] args)
+        {
+            var nDelegate = new InvokeDelegate((del, mArgs) => del.DynamicInvoke(mArgs));
+            return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke).HandleCancellationAsync(cancellationToken);
+        }
+        /// <summary>
+        /// Invoke a delegate as an Async Task
+        /// </summary>
+        /// <param name="delegate">Delegate</param>
+        /// <param name="args">Delegate arguments</param>
+        /// <returns>Task with cancellation token support</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<object> DynamicInvokeAsync(this Delegate @delegate, params object[] args)
+        {
+            var nDelegate = new InvokeDelegate((mDel, mArgs) => mDel.DynamicInvoke(mArgs));
+            return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke);
+        }
+        /// <summary>
+        /// Configure an awaiter for all IEnumerable Tasks and return a Task with all results
+        /// </summary>
+        /// <typeparam name="T">Type of task</typeparam>
+        /// <param name="tasks">IEnumerable instance</param>
+        /// <param name="continueOnCapturedContext">Continue on captured context</param>
+        /// <returns>Task with all results</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ConfiguredTaskAwaitable<T[]> ConfigureAwait<T>(this IEnumerable<Task<T>> tasks, bool continueOnCapturedContext)
+            => Task.WhenAll(tasks).ConfigureAwait(continueOnCapturedContext);
+        /// <summary>
+        /// Configure an awaiter for all IEnumerable Tasks and return a Task
+        /// </summary>
+        /// <param name="tasks">IEnumerable instance</param>
+        /// <param name="continueOnCapturedContext">Continue on captured context</param>
+        /// <returns>Task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ConfiguredTaskAwaitable ConfigureAwait(this IEnumerable<Task> tasks, bool continueOnCapturedContext)
+            => Task.WhenAll(tasks).ConfigureAwait(continueOnCapturedContext);
+        #endregion
+
+        #region ValueTask extensions
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <returns>Response of the task completation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this ValueTask<T> task)
+        {
             try
             {
                 return task.GetAwaiter().GetResult();
@@ -206,29 +672,12 @@ namespace TWCore
         /// <param name="task">Task source object</param>
         /// <param name="millisecondsTimeout">Milliseconds for waiting the task to complete</param>
         /// <returns>Response of the task completation</returns>
-        public static T WaitAndResults<T>(this Task<T> task, int millisecondsTimeout)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this ValueTask<T> task, int millisecondsTimeout)
         {
-            if (task == null)
-                return default(T);
-            try
-            {
-                return task.Wait(millisecondsTimeout) ? task.Result : default(T);
-            }
-            catch (AggregateException ex)
-            {
-                if (ex.InnerExceptions.Count == 1)
-                {
-                    Core.Log.Write(ex.InnerExceptions[0]);
-                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
-                }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-                throw;
-            }
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAndResults(millisecondsTimeout);
         }
         /// <summary>
         /// Waits for task finalization and returns the result value
@@ -237,29 +686,12 @@ namespace TWCore
         /// <param name="task">Task source object</param>
         /// <param name="timeout">TimeSpan for waiting the task to complete</param>
         /// <returns>Response of the task completation</returns>
-        public static T WaitAndResults<T>(this Task<T> task, TimeSpan timeout)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this ValueTask<T> task, TimeSpan timeout)
         {
-            if (task == null)
-                return default(T);
-            try
-            {
-                return task.Wait(timeout) ? task.Result : default(T);
-            }
-            catch (AggregateException ex)
-            {
-                if (ex.InnerExceptions.Count == 1)
-                {
-                    Core.Log.Write(ex.InnerExceptions[0]);
-                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
-                }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-                throw;
-            }
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAndResults(timeout);
         }
         /// <summary>
         /// Waits for task finalization and returns the result value
@@ -268,30 +700,12 @@ namespace TWCore
         /// <param name="task">Task source object</param>
         /// <param name="cancellationToken">Cancellation token on the Wait for the task to complete</param>
         /// <returns>Response of the task completation</returns>
-        public static T WaitAndResults<T>(this Task<T> task, CancellationToken cancellationToken)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAndResults<T>(this ValueTask<T> task, CancellationToken cancellationToken)
         {
-            if (task == null)
-                return default(T);
-            try
-            {
-                task.Wait(cancellationToken);
+            if (task.IsCompleted)
                 return task.Result;
-            }
-            catch (AggregateException ex)
-            {
-                if (ex.InnerExceptions.Count == 1)
-                {
-                    Core.Log.Write(ex.InnerExceptions[0]);
-                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
-                }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-                throw;
-            }
+            return task.AsTask().WaitAndResults(cancellationToken);
         }
         /// <summary>
         /// Wait for task avoiding deadlocks
@@ -299,309 +713,35 @@ namespace TWCore
         /// <typeparam name="T">Task type</typeparam>
         /// <param name="task">Rask</param>
         /// <returns>Task complete</returns>
-        public static T WaitAsync<T>(this Task<T> task)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T WaitAsync<T>(this ValueTask<T> task)
         {
-            var wait = new ManualResetEventSlim(false);
-            var continuation = task.ContinueWith((oldTask, state) =>
-            {
-                var ex = oldTask.Exception;
-                var result = (ex != null) ? (object) ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex) : oldTask.Result;
-                ((ManualResetEventSlim)state).Set();
-                return result;
-            }, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
-            wait.Wait();
-            if (continuation.Result is ExceptionDispatchInfo edi)
-                edi.Throw();
-            return (T)continuation.Result;
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAsync();
         }
         /// <summary>
         /// Wait for task avoiding deadlocks
         /// </summary>
         /// <param name="task">Rask</param>
         /// <returns>Task complete</returns>
-        public static void WaitAsync(this Task task)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WaitAsync(this ValueTask task)
         {
-            var wait = new ManualResetEventSlim(false);
-            var continuation = task.ContinueWith((oldTask, state) =>
-            {
-                ExceptionDispatchInfo tEx = null;
-                var ex = oldTask.Exception;
-                if (ex != null)
-                    tEx = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
-                ((ManualResetEventSlim)state).Set();
-                return tEx;
-            }, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
-            wait.Wait();
-            continuation.Result?.Throw();
-        }
-        /// <summary>
-        /// Handles a cancellation Token for a task without support
-        /// </summary>
-        /// <param name="asyncTask">Async task without cancellation token</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken)
-        {
-            if (asyncTask.IsCompleted) return asyncTask.Result;
-            if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
-            var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
-            {
-                var cancellationTask = tcs.Task;
-                var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-                if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
-                        .ConfigureAwait(false);
-                return await readyTask.ConfigureAwait(false);
-            }
-        }
-        /// <summary>
-        /// Handles a cancellation Token for a task without support
-        /// </summary>
-        /// <param name="asyncTask">Async task without cancellation token</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-	    /// <param name="cancellationToken2">Cancellation token 2</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
-        {
-            if (asyncTask.IsCompleted) return asyncTask.Result;
-            if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
-            if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
-            var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2))
-            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
-            {
-                var cancellationTask = tcs.Task;
-                var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-                if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
-                        .ConfigureAwait(false);
-                return await readyTask.ConfigureAwait(false);
-            }
-        }
-        /// <summary>
-        /// Handles a cancellation Token for a task without support
-        /// </summary>
-        /// <param name="asyncTask">Async task without cancellation token</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <param name="cancellationToken2">Cancellation token 2</param>
-	    /// <param name="cancellationToken3">Cancellation token 3</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
-        {
-            if (asyncTask.IsCompleted) return asyncTask.Result;
-            if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
-            if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
-            if (cancellationToken3.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken3).ConfigureAwait(false);
-            var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2, cancellationToken3))
-            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
-            {
-                var cancellationTask = tcs.Task;
-                var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-                if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
-                        .ConfigureAwait(false);
-                return await readyTask.ConfigureAwait(false);
-            }
-        }
-        /// <summary>
-        /// Handles a cancellation Token for a task without support
-        /// </summary>
-        /// <param name="asyncTask">Async task without cancellation token</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
-        {
-            if (asyncTask.IsCompleted) return;
-            if (cancellationToken.IsCancellationRequested) return;
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
-            {
-                var cancellationTask = tcs.Task;
-                var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-                if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
-                        .ConfigureAwait(false);
-                await readyTask.ConfigureAwait(false);
-            }
-        }
-        /// <summary>
-        /// Handles a cancellation Token for a task without support
-        /// </summary>
-        /// <param name="asyncTask">Async task without cancellation token</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-	    /// <param name="cancellationToken2">Cancellation token 2</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
-        {
-            if (asyncTask.IsCompleted) return;
-            if (cancellationToken.IsCancellationRequested) return;
-            if (cancellationToken2.IsCancellationRequested) return;
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2))
-            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
-            {
-                var cancellationTask = tcs.Task;
-                var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-                if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
-                        .ConfigureAwait(false);
-                await readyTask.ConfigureAwait(false);
-            }
-        }
-        /// <summary>
-        /// Handles a cancellation Token for a task without support
-        /// </summary>
-        /// <param name="asyncTask">Async task without cancellation token</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <param name="cancellationToken2">Cancellation token 2</param>
-	    /// <param name="cancellationToken3">Cancellation token 3</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
-        {
-            if (asyncTask.IsCompleted) return;
-            if (cancellationToken.IsCancellationRequested) return;
-            if (cancellationToken2.IsCancellationRequested) return;
-            if (cancellationToken3.IsCancellationRequested) return;
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2, cancellationToken3))
-            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
-            {
-                var cancellationTask = tcs.Task;
-                var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-                if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
-                        .ConfigureAwait(false);
-                await readyTask.ConfigureAwait(false);
-            }
-        }
-        /// <summary>
-        /// Create a Task to await the cancellation of the token
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token instance</param>
-        /// <returns>Task to await the cancellation</returns>
-        public static Task WhenCanceledAsync(this CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested) return Task.CompletedTask;
-            var tcs = new TaskCompletionSource<object>();
-            var registration = cancellationToken.Register(state => ((TaskCompletionSource<object>)state).TrySetResult(null), tcs, false);
-            return tcs.Task.ContinueWith((_, obj) => ((CancellationTokenRegistration)obj).Dispose(), registration);
-        }
-        /// <summary>
-        /// Create a Task to await the cancellation of the token
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token instance</param>
-	    /// <param name="cancellationToken2">Cancellation token 2 instance</param>
-        /// <returns>Task to await the cancellation</returns>
-        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken, CancellationToken cancellationToken2)
-        {
-            if (cancellationToken.IsCancellationRequested) return;
-            if (cancellationToken2.IsCancellationRequested) return;
-            var tcs = new TaskCompletionSource<object>();
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2))
-            using (linkedToken.Token.Register(() => tcs.TrySetResult(null), false))
-                await tcs.Task.ConfigureAwait(false);
-        }
-        /// <summary>
-        /// Create a Task to await the cancellation of the token
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token instance</param>
-        /// <param name="cancellationToken2">Cancellation token 2 instance</param>
-	    /// <param name="cancellationToken3">Cancellation token 3 instance</param>
-        /// <returns>Task to await the cancellation</returns>
-        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
-        {
-            if (cancellationToken.IsCancellationRequested) return;
-            if (cancellationToken2.IsCancellationRequested) return;
-            if (cancellationToken3.IsCancellationRequested) return;
-            var tcs = new TaskCompletionSource<object>();
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2, cancellationToken3))
-            using (linkedToken.Token.Register(() => tcs.TrySetResult(null), false))
-                await tcs.Task.ConfigureAwait(false);
-        }
-
-        private delegate object InvokeDelegate(Delegate @delegate, params object[] args);
-        /// <summary>
-        /// Invoke a delegate as an Async Task
-        /// </summary>
-        /// <param name="delegate">Delegate</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <param name="args">Delegate arguments</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static Task<object> DynamicInvokeAsync(this Delegate @delegate, CancellationToken cancellationToken, params object[] args)
-        {
-            var nDelegate = new InvokeDelegate((del, mArgs) => del.DynamicInvoke(mArgs));
-            return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke).HandleCancellationAsync(cancellationToken);
-        }
-        /// <summary>
-        /// Invoke a delegate as an Async Task
-        /// </summary>
-        /// <param name="delegate">Delegate</param>
-        /// <param name="args">Delegate arguments</param>
-        /// <returns>Task with cancellation token support</returns>
-        public static Task<object> DynamicInvokeAsync(this Delegate @delegate, params object[] args)
-        {
-            var nDelegate = new InvokeDelegate((mDel, mArgs) => mDel.DynamicInvoke(mArgs));
-            return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke);
-        }
-        /// <summary>
-        /// Configure an awaiter for all IEnumerable Tasks and return a Task with all results
-        /// </summary>
-        /// <typeparam name="T">Type of task</typeparam>
-        /// <param name="tasks">IEnumerable instance</param>
-        /// <param name="continueOnCapturedContext">Continue on captured context</param>
-        /// <returns>Task with all results</returns>
-        public static ConfiguredTaskAwaitable<IEnumerable<T>> ConfigureAwait<T>(this IEnumerable<Task<T>> tasks, bool continueOnCapturedContext)
-        {
-            var tskArray = tasks as Task<T>[] ?? tasks?.ToArray() ?? new Task<T>[0];
-            return Task.WhenAll(tskArray)
-                .ContinueWith((oldTask, state) => ((Task<T>[]) state).Select(t => t.Result), tskArray,
-                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default).ConfigureAwait(continueOnCapturedContext);
-        }
-        /// <summary>
-        /// Configure an awaiter for all IEnumerable Tasks and return a Task
-        /// </summary>
-        /// <param name="tasks">IEnumerable instance</param>
-        /// <param name="continueOnCapturedContext">Continue on captured context</param>
-        /// <returns>Task</returns>
-        public static ConfiguredTaskAwaitable ConfigureAwait(this IEnumerable<Task> tasks, bool continueOnCapturedContext)
-        {
-            var tskArray = tasks as Task[] ?? tasks.ToArray() ?? new Task[0];
-            return Task.WhenAll(tskArray).ConfigureAwait(continueOnCapturedContext);
+            if (task.IsCompleted)
+                return;
+            task.AsTask().WaitAsync();
         }
         #endregion
 
+
         #region Others
-        /// <summary>
-        /// Gets the assembly of the object type
-        /// </summary>
-        /// <param name="obj">Object of the type of the assembly</param>
-        /// <returns>Assembly where type is contained</returns>
-        public static Assembly GetAssembly(this object obj)
-            => obj?.GetType().GetTypeInfo().Assembly;
-        /// <summary>
-        /// Gets the string from a byte array using an Encoding
-        /// </summary>
-        /// <param name="encoding">Encoding used to get the string</param>
-        /// <param name="bytes">Byte array with the bytes to decode</param>
-        /// <returns>A string value with the result of the encoding</returns>
-        public static string GetString(this Encoding encoding, byte[] bytes)
-            => encoding.GetString(bytes, 0, bytes.Length);
-        /// <summary>
-        /// Gets the string from a byte array using an Encoding
-        /// </summary>
-        /// <param name="encoding">Encoding used to get the string</param>
-        /// <param name="subArray">Byte array with the bytes to decode</param>
-        /// <returns>A string value with the result of the encoding</returns>
-        public static string GetString(this Encoding encoding, SubArray<byte> subArray)
-            => encoding.GetString(subArray.Array, subArray.Offset, subArray.Count);
         /// <summary>
         /// Gets the Timespan format of the DateTime object.
         /// </summary>
         /// <param name="time">DateTime to format</param>
         /// <returns>Formatted Datetime string</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetTimeSpanFormat(this DateTime time)
         {
             var day = time.Day;
@@ -611,7 +751,7 @@ namespace TWCore
             var minute = time.Minute;
             var second = time.Second;
             var millisecond = time.Millisecond;
-            var dateData = new char[21];
+            Span<char> dateData = stackalloc char[21];
             dateData[0] = (char)(day / 10 + '0');
             dateData[1] = (char)(day % 10 + '0');
             dateData[2] = '/';
@@ -634,18 +774,6 @@ namespace TWCore
             dateData[19] = (char)(millisecond / 10 % 10 + '0');
             dateData[20] = (char)(millisecond % 10 + '0');
             return new string(dateData);
-        }
-        /// <summary>
-        /// Connect Host Async
-        /// </summary>
-        /// <param name="client">Tcp Client</param>
-        /// <param name="host">Host</param>
-        /// <param name="port">Port</param>
-        /// <returns></returns>
-		public static async Task ConnectHostAsync(this TcpClient client, string host, int port)
-        {
-            var ipAddress = await IpHelper.GetIpFromHostAsync(host).ConfigureAwait(false);
-            await client.ConnectAsync(ipAddress, port).ConfigureAwait(false);
         }
         #endregion
 
@@ -754,7 +882,7 @@ namespace TWCore
             var tcs = new TaskCompletionSource<object>();
             var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, tcs, -1, true);
             var t = tcs.Task;
-            t.ContinueWith((antecedent) => rwh.Unregister(null));
+            t.ContinueWith((antecedent, state) => ((RegisteredWaitHandle)state).Unregister(null), rwh);
             return t;
         }
         /// <summary>
@@ -772,7 +900,7 @@ namespace TWCore
             var tcs = new TaskCompletionSource<object>();
             var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, tcs, millisecondsTimeout, true);
             var t = tcs.Task;
-            t.ContinueWith((antecedent) => rwh.Unregister(null));
+            t.ContinueWith((antecedent, state) => ((RegisteredWaitHandle)state).Unregister(null), rwh);
             return t;
         }
 

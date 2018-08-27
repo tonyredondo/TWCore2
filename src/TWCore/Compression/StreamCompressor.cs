@@ -17,6 +17,7 @@ limitations under the License.
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.IO;
 // ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Compression
@@ -80,13 +81,13 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual SubArray<byte> Compress(SubArray<byte> source)
+        public virtual MultiArray<byte> Compress(MultiArray<byte> source)
         {
-            using (var msDes = new MemoryStream())
+            using (var msDes = new RecycleMemoryStream())
             {
-                using (var msOrg = source.ToMemoryStream())
+                using (var msOrg = source.AsReadOnlyStream())
                     Compress(msOrg, msDes);
-                return msDes.ToSubArray();
+                return msDes.GetMultiArray();
             }
         }
         /// <inheritdoc />
@@ -96,12 +97,12 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<SubArray<byte>> CompressAsync(SubArray<byte> source)
+        public virtual async Task<MultiArray<byte>> CompressAsync(MultiArray<byte> source)
         {
-            using (var msDes = new MemoryStream())
+            using (var msDes = new RecycleMemoryStream())
             {
-                await CompressAsync(source.ToMemoryStream(), msDes).ConfigureAwait(false);
-                return msDes.ToSubArray();
+                await CompressAsync(source.AsReadOnlyStream(), msDes).ConfigureAwait(false);
+                return msDes.GetMultiArray();
             }
         }
         #endregion
@@ -145,13 +146,13 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual SubArray<byte> Decompress(SubArray<byte> source)
+        public virtual MultiArray<byte> Decompress(MultiArray<byte> source)
         {
-            using (var msDes = new MemoryStream())
+            using (var msDes = new RecycleMemoryStream())
             {
-                using (var msOrg = source.ToMemoryStream())
+                using (var msOrg = source.AsReadOnlyStream())
                     Decompress(msOrg, msDes);
-                return msDes.ToSubArray();
+                return msDes.GetMultiArray();
             }
         }
         /// <inheritdoc />
@@ -161,13 +162,13 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<SubArray<byte>> DecompressAsync(SubArray<byte> source)
+        public virtual async Task<MultiArray<byte>> DecompressAsync(MultiArray<byte> source)
         {
-            using (var msDes = new MemoryStream())
+            using (var msDes = new RecycleMemoryStream())
             {
-                using (var msOrg = source.ToMemoryStream())
+                using (var msOrg = source.AsReadOnlyStream())
                     await DecompressAsync(msOrg, msDes).ConfigureAwait(false);
-                return msDes.ToSubArray();
+                return msDes.GetMultiArray();
             }
         }
         #endregion

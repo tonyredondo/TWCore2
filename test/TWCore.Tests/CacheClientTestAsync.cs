@@ -20,7 +20,6 @@ using TWCore.Cache.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Serialization;
 using TWCore.Serialization.NSerializer;
-using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue

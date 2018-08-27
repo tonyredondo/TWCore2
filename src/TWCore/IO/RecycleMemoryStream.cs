@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 // ReSharper disable IntroduceOptionalParameters.Global
 
@@ -40,13 +41,14 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _position;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private byte[] _currentBuffer;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _collectPoolItems = true;
 
         #region Allocators
         private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
         {
             public int InitialSize => 4;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            public int DropTimeFrequencyInSeconds => 60;
+            public int DropTimeFrequencyInSeconds => 120;
             public void DropAction(byte[] value) {}
             public byte[] New() => new byte[MaxLength];
             public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
@@ -94,9 +96,8 @@ namespace TWCore.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                var val = ((double)value / MaxLength);
-                _rowIndex = (int)val;
-                _position = (int)((val - _rowIndex) * MaxLength);
+                _rowIndex = (int)value / MaxLength;
+                _position = (int)value % MaxLength;
                 _currentBuffer = _buffer[_rowIndex];
             }
         }
@@ -153,9 +154,12 @@ namespace TWCore.IO
             if (_buffer != null)
             {
                 _currentBuffer = null;
-                foreach (var array in _buffer)
-                    ByteArrayPool.Store(array);
-                ListByteArrayPool.Store(_buffer);
+                if (_collectPoolItems)
+                {
+                    foreach (var array in _buffer)
+                        ByteArrayPool.Store(array);
+                    ListByteArrayPool.Store(_buffer);
+                }
                 _buffer = null;
             }
             base.Dispose(disposing);
@@ -356,6 +360,15 @@ namespace TWCore.IO
                 Buffer.BlockCopy(_buffer[i], 0, tmp, i * MaxLength, MaxLength);
             Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * MaxLength, _length);
             return tmp;
+        }
+        /// <summary>
+        /// Get the internal buffer as MultiArray
+        /// </summary>
+        /// <returns>MultiArray instance</returns>
+        public MultiArray<byte> GetMultiArray()
+        {
+            _collectPoolItems = false;
+            return new MultiArray<byte>(_buffer, 0, (int)Length);
         }
         #endregion
     }

@@ -33,14 +33,13 @@ namespace TWCore.Messaging.RabbitMQ
 	public class RabbitMQueueRawServerListener : MQueueRawServerListenerBase
     {
         #region Fields
-        private readonly object _lock = new object();
         private readonly string _name;
         private RabbitMQueue _receiver;
         private EventingBasicConsumer _receiverConsumer;
         private string _receiverConsumerTag;
         private CancellationToken _token;
         private Task _monitorTask;
-        private bool _exceptionSleep;
+        private int _exceptionSleep;
         #endregion
 
         #region Nested Type
@@ -128,17 +127,12 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
-                    bool exSleep;
-                    lock (_lock)
-                        exSleep = _exceptionSleep;
-                    if (exSleep)
+                    if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
                     {
                         if (_receiverConsumerTag != null)
                             _receiver.Channel.BasicCancel(_receiverConsumerTag);
-                        Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+                        Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
                         await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-                        lock (_lock)
-                            _exceptionSleep = false;
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
                         Core.Log.Warning("The listener has been resumed.");
                     }
@@ -229,8 +223,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
-                lock (_lock)
-                    _exceptionSleep = true;
+                Interlocked.Exchange(ref _exceptionSleep, 1);
             }
         }
         #endregion

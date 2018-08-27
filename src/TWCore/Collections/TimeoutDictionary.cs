@@ -58,6 +58,17 @@ namespace TWCore.Collections
             public Task Task;
             public TimeSpan Timeout;
             public CancellationTokenSource TokenSource;
+
+            public override int GetHashCode()
+            {
+                return Value.GetHashCode() + Timeout.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                return obj is TimeoutStruct tStruct &&
+                    EqualityComparer<TValue>.Default.Equals(Value, tStruct.Value) &&
+                    EqualityComparer<TimeSpan>.Default.Equals(Timeout, tStruct.Timeout);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -88,6 +99,15 @@ namespace TWCore.Collections
         public TimeoutDictionary()
         {
             _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>();
+        }
+        /// <summary>
+        /// Timeout dictionary, a dictionary which items are saved and deleted using a timeout
+        /// </summary>
+        /// <param name="comparer">Equality comparer</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TimeoutDictionary(IEqualityComparer<TKey> comparer)
+        {
+            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>(comparer);
         }
         #endregion
 

@@ -104,7 +104,7 @@ namespace TWCore
             Data = new KeyValueCollection();
             foreach (var key in ex.Data.Keys)
             {
-                if (!(key is string) && key.GetType().GetTypeInfo().IsClass) continue;
+                if (!(key is string) && key.GetType().IsClass) continue;
                     
                 var strKey = key.ToString();
                 string strValue;

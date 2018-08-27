@@ -109,7 +109,14 @@ namespace TWCore.Services
                             await MessageReceived.InvokeAsync(this, new RawMessageEventArgs(e.Request, e.CorrelationId)).ConfigureAwait(false);
                         var result = await Processor.ProcessAsync(e, _cTokenSource.Token).ConfigureAwait(false);
                         if (result != ResponseMessage.NoResponse && result != null)
-                            e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
+                        {
+                            if (result is byte[] rBytes)
+                                e.Response = rBytes;
+                            else if (result is MultiArray<byte> mBytes)
+                                e.Response = mBytes;
+                            else
+                                e.Response = QueueServer.SenderSerializer.Serialize(result);
+                        }
                     };
                     QueueServer.BeforeSendResponse += async (s, e) =>
                     {

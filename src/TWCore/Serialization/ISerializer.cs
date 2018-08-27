@@ -55,7 +55,6 @@ namespace TWCore.Serialization
         /// </summary>
         /// <remarks>This compressor is ignored on TextSerializer</remarks>
         ICompressor Compressor { get; set; }
-
         //+++
 
         /// <summary>
@@ -64,7 +63,7 @@ namespace TWCore.Serialization
         /// <param name="item">Object to serialize</param>
         /// <param name="itemType">Object type</param>
         /// <returns>Serialized byte array</returns>
-        SubArray<byte> Serialize(object item, Type itemType);
+        MultiArray<byte> Serialize(object item, Type itemType);
         /// <summary>
         /// Serialize an object to a stream
         /// </summary>
@@ -109,7 +108,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object to serialize</param>
         /// <returns>Serialized byte array</returns>
-        SubArray<byte> Serialize<T>(T item);
+        MultiArray<byte> Serialize<T>(T item);
         /// <summary>
         /// Serialize an object to a stream
         /// </summary>
@@ -139,7 +138,7 @@ namespace TWCore.Serialization
         /// <param name="value">Value to deserialize</param>
         /// <param name="valueType">Value type</param>
         /// <returns>Deserialized object</returns>
-        object Deserialize(SubArray<byte> value, Type valueType);
+        object Deserialize(MultiArray<byte> value, Type valueType);
         /// <summary>
         /// Deserialize a stream content to a object
         /// </summary>
@@ -162,7 +161,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">Byte array to deserialize</param>
         /// <returns>Deserialized object</returns>
-        T Deserialize<T>(SubArray<byte> value);
+        T Deserialize<T>(MultiArray<byte> value);
         /// <summary>
         /// Deserialize a stream content to a object
         /// </summary>

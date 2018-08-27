@@ -285,8 +285,8 @@ namespace TWCore
                 if (!Core.Log.MaxLogLevel.HasFlag(item.Level)) return;
 
                 StatusCounter counter = null;
-                if (!string.IsNullOrEmpty(item.Message))
-                    counter = Counters.GetOrAdd(item.Message, msg => new StatusCounter(CounterPrefix + msg));
+                if (!string.IsNullOrEmpty(item.CounterKey))
+                    counter = Counters.GetOrAdd(item.CounterKey, msg => new StatusCounter(CounterPrefix + msg));
                 
                 double gTime;
                 string indent = null;
@@ -332,6 +332,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private string _groupValue;
             private int _id;
             private string _lastMessage;
+            private string _counterKey;
             private const string CounterPrefix = "Watch Counters: ";
 
             #region Properties
@@ -359,17 +360,19 @@ namespace TWCore
                 public readonly int Type;
                 public readonly LogLevel Level;
                 public readonly string Group;
+                public readonly string CounterKey;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, string group, int type)
+                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, string group, string counterKey, int type)
                 {
                     Id = id;
                     Level = level;
                     GlobalTicks = globalTicks;
                     LastTapTicks = lastTapTicks;
                     Message = message;
-                    Type = type;
                     Group = group;
+                    CounterKey = counterKey;
+                    Type = type;
                 }
             }
             #endregion
@@ -392,6 +395,7 @@ namespace TWCore
                 var item = ItemPools.New();
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
+                item._counterKey = null;
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -401,6 +405,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
                 item._level = level;
+                item._counterKey = null;
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -410,6 +415,7 @@ namespace TWCore
                 item._lastMessage = message;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
+                item._counterKey = message;
                 item.StartedTap(message);
                 return item;
             }
@@ -421,6 +427,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
                 item._level = level;
+                item._counterKey = message;
                 item.StartedTap(message);
                 return item;
             }
@@ -431,6 +438,7 @@ namespace TWCore
                 item._lastMessage = lastMessage;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
+                item._counterKey = startMessage;
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
@@ -442,6 +450,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
                 item._level = level;
+                item._counterKey = startMessage;
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
@@ -453,6 +462,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = groupValue;
                 item._level = level;
+                item._counterKey = message;
                 item.StartedTap(message);
                 return item;
             }
@@ -463,6 +473,7 @@ namespace TWCore
                 item._lastMessage = lastMessage;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = groupValue;
+                item._counterKey = startMessage;
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
@@ -474,6 +485,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = groupValue;
                 item._level = level;
+                item._counterKey = startMessage;
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
@@ -490,7 +502,7 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 1));
+                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 1));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -503,7 +515,7 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null)
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 0));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 0));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -516,7 +528,7 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null)
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 2));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 2));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>

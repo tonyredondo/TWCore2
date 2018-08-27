@@ -87,7 +87,6 @@ namespace TWCore.Messaging
 		    private readonly string _name;
 			private MemoryQueue _receiver;
 			private CancellationToken _token;
-			private readonly bool _cloneObject;
 
 			#region .ctor
 
@@ -104,10 +103,6 @@ namespace TWCore.Messaging
 			{
 			    var messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
 				_name = server.Name;
-				_cloneObject = false;
-
-                if (server.Config?.RequestOptions?.ServerReceiverOptions?.Parameters?.Contains("Clone") == true)
-                    _cloneObject = server.Config.RequestOptions.ServerReceiverOptions.Parameters["Clone"].ParseTo(false);
 
                 Core.Status.Attach(collection =>
 				{
@@ -157,20 +152,16 @@ namespace TWCore.Messaging
 					switch (messageBody)
 					{
 						case RequestMessage request when request.Header != null:
-							if (_cloneObject)
-								request.Body = request.Body.DeepClone();
 							request.Header.ApplicationReceivedTime = Core.Now;
 							Counters.IncrementReceivingTime(request.Header.TotalTime);
 							if (request.Header.ClientName != Config.Name)
 								Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-							var evArgs = new RequestReceivedEventArgs(_name, Connection, request, 1);
+							var evArgs = new RequestReceivedEventArgs(_name, Connection, request, 1, SenderSerializer);
 							if (request.Header.ResponseQueue != null)
 								evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
 							await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
 							break;
 						case ResponseMessage response when response.Header != null:
-							if (_cloneObject)
-								response.Body = response.Body.DeepClone();
 							response.Header.Response.ApplicationReceivedTime = Core.Now;
 							Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
 							await OnResponseReceivedAsync(new ResponseReceivedEventArgs(_name, response, 1)).ConfigureAwait(false);

@@ -73,7 +73,7 @@ namespace TWCore.Data
         {
             var response = new List<(Type Interface, Type Implementation)>();
 
-            var types = this.GetAssembly().DefinedTypes.Where(t =>
+            var types = GetType().Assembly.DefinedTypes.Where(t =>
                 !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType &&
                 t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal)));
 

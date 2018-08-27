@@ -37,13 +37,13 @@ namespace TWCore
         #region Private fields
         private readonly Func<T, Task> _func;
         private readonly Func<bool> _precondition;
-        private readonly AsyncManualResetEvent _processHandler = new AsyncManualResetEvent();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         private ConcurrentQueue<T> _queue;
         private Task _processThread;
         private CancellationTokenSource _tokenSource;
         private volatile bool _startActive;
         private volatile WorkerStatus _status = WorkerStatus.Stopped;
-        private int _queueCount;
+        private long _queueCount;
         #endregion
 
         #region Events
@@ -82,7 +82,7 @@ namespace TWCore
         /// <summary>
         /// Gets the number of elements in the queue
         /// </summary>
-        public int Count => _queueCount;
+        public int Count => (int)_queueCount;
         /// <summary>
         /// Gets or Sets if the worker must ignore Exceptions
         /// </summary>
@@ -183,7 +183,6 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Init()
         {
-            _processHandler.Reset();
             _tokenSource = new CancellationTokenSource();
             _processThread = _precondition == null ? 
                 (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThread, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThread()) :
@@ -205,7 +204,7 @@ namespace TWCore
             if (_startActive && Status == WorkerStatus.Stopped)
                 Start();
             else
-                _processHandler.Set();
+                _semaphore.Release();
             return true;
         }
         /// <summary>
@@ -234,7 +233,7 @@ namespace TWCore
         {
             if (Status == WorkerStatus.Stopped)
                 _status = WorkerStatus.Started;
-            _processHandler.Set();
+            _semaphore.Release();
         }
         /// <summary>
         /// Stops the processing thread
@@ -255,7 +254,6 @@ namespace TWCore
                     await TaskHelper.SleepUntil(() => _queue.Count <= remain).ConfigureAwait(false);
             }
             _status = WorkerStatus.Stopped;
-            _processHandler.Reset();
         }
         /// <summary>
         /// Stops the processing thread
@@ -265,7 +263,6 @@ namespace TWCore
         {
             if (_status != WorkerStatus.Started) return;
             _status = WorkerStatus.Stopped;
-            _processHandler.Reset();
         }
 
         private readonly object _locker = new object();
@@ -277,7 +274,8 @@ namespace TWCore
             var workDone = false;
             while (!token.IsCancellationRequested)
             {
-                var bRes = await _processHandler.WaitAsync(2500, token).ConfigureAwait(false);
+                if (Interlocked.Read(ref _queueCount) == 0)
+                    await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
@@ -295,7 +293,11 @@ namespace TWCore
                         if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
                         lock (_locker)
+                        {
+                            if (Exceptions.Count >= 100)
+                                throw new Exception("Too many exceptions");
                             Exceptions.Add((ex, item));
+                        }
                     }
                     finally
                     {
@@ -315,17 +317,6 @@ namespace TWCore
                     }
                 }
                 if (token.IsCancellationRequested) break;
-                if (bRes)
-                {
-                    try
-                    {
-                        _processHandler.Reset();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
             }
         }
         [IgnoreStackFrameLog]
@@ -336,7 +327,8 @@ namespace TWCore
             var workDone = false;
             while (!token.IsCancellationRequested)
             {
-                var bRes = await _processHandler.WaitAsync(1500, token).ConfigureAwait(false);
+                if (Interlocked.Read(ref _queueCount) == 0)
+                    await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
@@ -350,7 +342,11 @@ namespace TWCore
                         if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
                         lock (_locker)
+                        {
+                            if (Exceptions.Count >= 100)
+                                throw new Exception("Too many exceptions");
                             Exceptions.Add((ex, item));
+                        }
                     }
                     finally
                     {
@@ -371,17 +367,6 @@ namespace TWCore
                     }
                 }
                 if (token.IsCancellationRequested) break;
-                if (bRes)
-                {
-                    try
-                    {
-                        _processHandler.Reset();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
             }
         }
         #endregion
@@ -394,7 +379,7 @@ namespace TWCore
         public void Dispose()
         {
             StopAsync(int.MaxValue).WaitAsync();
-            _processHandler.Set();
+            _semaphore.Release();
             _tokenSource.Cancel();
             try
             {
@@ -405,7 +390,6 @@ namespace TWCore
             {
                 // ignored
             }
-            _processHandler.Reset();
             Interlocked.Exchange(ref _queueCount, 0);
             Core.Status.DeAttachObject(this);
         }

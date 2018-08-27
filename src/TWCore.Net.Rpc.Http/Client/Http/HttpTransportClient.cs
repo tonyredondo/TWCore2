@@ -170,7 +170,7 @@ namespace TWCore.Net.RPC.Client.Transports
                 }
             }
             var dataRQ = Serializer.Serialize(messageRQ);
-            var sContent = new StreamContent(dataRQ.ToMemoryStream());
+            var sContent = new StreamContent(dataRQ.AsReadOnlyStream());
             var postResult = await _httpClient.PostAsync(Url, sContent).ConfigureAwait(false);
 			Counters.IncrementBytesSent(dataRQ.Count);
             var dataRS = await postResult.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
@@ -198,7 +198,7 @@ namespace TWCore.Net.RPC.Client.Transports
                 }
             }
             var dataRQ = Serializer.Serialize(messageRQ);
-            var sContent = new StreamContent(dataRQ.ToMemoryStream());
+            var sContent = new StreamContent(dataRQ.AsReadOnlyStream());
             var postResult = await _httpClient.PostAsync(Url, sContent, cancellationToken).ConfigureAwait(false);
             Counters.IncrementBytesSent(dataRQ.Count);
             var dataRS = await postResult.Content.ReadAsByteArrayAsync().ConfigureAwait(false);

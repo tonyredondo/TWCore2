@@ -173,13 +173,12 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetNames(Type type)
         {
-            var typeInfo = type.GetTypeInfo();
             if (Settings == null) throw new NullReferenceException("The injector settings is null.");
-            if (typeInfo.IsInterface)
+            if (type.IsInterface)
                 return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
-            if (typeInfo.IsAbstract)
+            if (type.IsAbstract)
                 return Settings.GetAbstractDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
-            if (!typeInfo.IsClass) return EmptyStringArray;
+            if (!type.IsClass) return EmptyStringArray;
             return Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
         }
 

@@ -159,7 +159,7 @@ namespace TWCore.Net.Multicast
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
                     var sObj = new SerializedObject(service, Serializer);
-                    var sObjArr = sObj.ToArray();
+                    var sObjArr = sObj.ToMultiArray();
                     LocalServices.Add(new RegisteredServiceContainer(service, Serializer, sObjArr));
                     HasRegisteredLocalService = true;
                 }
@@ -194,7 +194,7 @@ namespace TWCore.Net.Multicast
             {
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
-                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, null));
+                    LocalServices.Add(new RegisteredServiceContainer(service, Serializer, MultiArray<byte>.Empty));
                     HasRegisteredLocalService = true;
                 }
             }
@@ -328,7 +328,7 @@ namespace TWCore.Net.Multicast
             }
         }
 
-        private static List<SubArray<byte>> ServicesBytesList = new List<SubArray<byte>>();
+        private static List<MultiArray<byte>> ServicesBytesList = new List<MultiArray<byte>>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SendTimerCallback(object state)
         {
@@ -336,11 +336,11 @@ namespace TWCore.Net.Multicast
             {
                 foreach (var srv in LocalServices)
                 {
-                    if (srv.DataToSend != null)
+                    if (srv.DataToSend.IsEmpty)
                     {
                         if (srv.Serializer != Serializer)
                         {
-                            srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToArray();
+                            srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToMultiArray();
                             srv.Serializer = Serializer;
                         }
                         ServicesBytesList.Add(srv.DataToSend);
@@ -348,7 +348,7 @@ namespace TWCore.Net.Multicast
                     else if (srv.Service.GetDataFunc != null)
                     {
                         srv.Service.Data = srv.Service.GetDataFunc();
-                        ServicesBytesList.Add(new SerializedObject(srv.Service, Serializer).ToArray());
+                        ServicesBytesList.Add(new SerializedObject(srv.Service, Serializer).ToMultiArray());
                     }
                 }
                 
@@ -365,9 +365,9 @@ namespace TWCore.Net.Multicast
         {
             public RegisteredService Service;
             public ISerializer Serializer;
-            public byte[] DataToSend;
+            public MultiArray<byte> DataToSend;
 
-            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, byte[] dataToSend)
+            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, MultiArray<byte> dataToSend)
             {
                 Service = service;
                 Serializer = serializer;

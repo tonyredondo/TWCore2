@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.IO;
 // ReSharper disable CheckNamespace
 
 namespace TWCore
@@ -61,12 +62,12 @@ namespace TWCore
         /// <param name="stream">Stream source</param>
         /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SubArray<byte> ReadAllBytes(this Stream stream)
+        public static MultiArray<byte> ReadAllBytes(this Stream stream)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 stream.CopyTo(ms);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -104,12 +105,12 @@ namespace TWCore
         /// <param name="bufferSize">Buffer size</param>
         /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SubArray<byte> ReadAllBytes(this Stream stream, int bufferSize)
+        public static MultiArray<byte> ReadAllBytes(this Stream stream, int bufferSize)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 stream.CopyTo(ms, bufferSize);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -148,12 +149,12 @@ namespace TWCore
         /// <param name="stream">Stream source</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 await stream.CopyToAsync(ms).ConfigureAwait(false);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -177,12 +178,12 @@ namespace TWCore
         /// <param name="bufferSize">Buffer size</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
-                return ms.ToArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -208,14 +209,14 @@ namespace TWCore
         /// <param name="timeout">Timeout</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, int timeout)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, int timeout)
         {
             var cts = new CancellationTokenSource();
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 cts.CancelAfter(timeout);
                 await stream.CopyToAsync(ms, bufferSize, cts.Token).ConfigureAwait(false);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -226,12 +227,12 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
+        public static async Task<MultiArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
         {
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 await stream.CopyToAsync(ms, bufferSize, cancellationToken).ConfigureAwait(false);
-                return ms.ToSubArray();
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -401,9 +402,9 @@ namespace TWCore
         /// <param name="value">Byte array to write to the stream</param>
         /// <param name="flush">true if a flush must be applied after write the string value. Default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBytes(this Stream stream, SubArray<byte> value, bool flush = true)
+        public static void WriteBytes(this Stream stream, MultiArray<byte> value, bool flush = true)
         {
-            stream.Write(value);
+            value.CopyTo(stream);
             if (flush)
                 stream.Flush();
         }
@@ -427,9 +428,9 @@ namespace TWCore
         /// <param name="value">Byte array to write to the stream</param>
         /// <param name="flush">true if a flush must be applied after write the string value. Default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task WriteBytesAsync(this Stream stream, SubArray<byte> value, bool flush = true)
+        public static async Task WriteBytesAsync(this Stream stream, MultiArray<byte> value, bool flush = true)
         {
-            await stream.WriteAsync(value).ConfigureAwait(false);
+            await value.CopyToAsync(stream).ConfigureAwait(false);
             if (flush)
                 await stream.FlushAsync().ConfigureAwait(false);
         }

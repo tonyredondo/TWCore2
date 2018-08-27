@@ -30,7 +30,7 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             WriteByte(DataBytesDefinition.SerializedObject);
-            value.WriteTo(Stream);
+            value.CopyTo(Stream);
         }
     }
 

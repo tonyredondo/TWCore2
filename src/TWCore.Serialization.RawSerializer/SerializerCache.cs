@@ -53,33 +53,32 @@ namespace TWCore.Serialization.RawSerializer
     }
     internal sealed class DeserializerCache<T>
     {
-        private readonly Dictionary<int, T> _deserializationCache;
+        private readonly T[] _cacheArray;
         private int _desCurrentIndex;
-
         public int Count => _desCurrentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DeserializerCache(IEqualityComparer<int> descomparer = null)
+        public DeserializerCache()
         {
-            _deserializationCache = new Dictionary<int, T>(descomparer);
+            _cacheArray = new T[2048];
         }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_desCurrentIndex == 0) return;
+            Array.Clear(_cacheArray, 0, _desCurrentIndex);
             _desCurrentIndex = 0;
-            _deserializationCache.Clear();
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get(int index)
-            => _deserializationCache[index];
-
+            => index < _desCurrentIndex ? _cacheArray[index] : throw new IndexOutOfRangeException();
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(T value)
         {
             if (_desCurrentIndex < 2047)
-                _deserializationCache.Add(_desCurrentIndex++, value);
+                _cacheArray[_desCurrentIndex++] = value;
         }
     }
 

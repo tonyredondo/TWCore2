@@ -49,7 +49,7 @@ namespace TWCore.Messaging.NATS
         private struct NATSQMessage
         {
             public Guid CorrelationId;
-            public SubArray<byte> Body;
+            public MultiArray<byte> Body;
         }
         private void MessageHandler(object sender, MsgHandlerEventArgs e)
         {

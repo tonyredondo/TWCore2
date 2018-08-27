@@ -189,11 +189,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 if (bytes.IsGzip())
                 {
                     var desBytes = Compressor.Decompress(bytes);
-                    return Encoding.UTF8.GetString(desBytes);
+                    return Encoding.UTF8.GetString(desBytes.AsSpan());
                 }
                 else
                 {
-                    return Encoding.UTF8.GetString(bytes);
+                    return Encoding.UTF8.GetString(bytes.AsSpan());
                 }
             });
         }
@@ -207,11 +207,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 if (bytes.IsGzip())
                 {
                     var desBytes = Compressor.Decompress(bytes);
-                    return Encoding.UTF8.GetString(desBytes);
+                    return Encoding.UTF8.GetString(desBytes.AsSpan());
                 }
                 else
                 {
-                    return Encoding.UTF8.GetString(bytes);
+                    return Encoding.UTF8.GetString(bytes.AsSpan());
                 }
             });
         }

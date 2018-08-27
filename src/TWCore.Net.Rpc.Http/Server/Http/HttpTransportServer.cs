@@ -178,7 +178,7 @@ namespace TWCore.Net.RPC.Server.Transports
             OnClientConnect?.Invoke(this, new ClientConnectEventArgs(clientId));
 
             context.Response.ContentType = Serializer.MimeTypes[0];
-            var responseBuffer = default(SubArray<byte>);
+            var responseBuffer = default(MultiArray<byte>);
 
             if (context.Request.Method == HttpMethod.GET && EnableGetDescriptors && OnGetDescriptorsRequest != null)
             {
@@ -198,7 +198,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     OnResponseSent?.Invoke(this, eArgs.Response);
                 }
             }
-            response.Write(responseBuffer.Array, responseBuffer.Offset, responseBuffer.Count);
+            responseBuffer.CopyTo(response.OutputStream);
             Counters.IncrementBytesSent(responseBuffer.Count);
             handled = true;
         }

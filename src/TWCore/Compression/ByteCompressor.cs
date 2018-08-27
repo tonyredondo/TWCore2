@@ -49,8 +49,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Compress(Stream source, Stream destination)
         {
-            var compressValue = Compress(source.ReadAllBytes()).AsReadOnlySpan();
-            destination.Write(compressValue);
+            var compressValue = Compress(source.ReadAllBytes());
+            compressValue.CopyTo(destination);
         }
         /// <inheritdoc />
         /// <summary>
@@ -61,8 +61,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task CompressAsync(Stream source, Stream destination)
         {
-            var compressValue = Compress(await source.ReadAllBytesAsync().ConfigureAwait(false)).AsReadOnlyMemory();
-            await destination.WriteAsync(compressValue).ConfigureAwait(false);
+            var compressValue = Compress(await source.ReadAllBytesAsync().ConfigureAwait(false));
+            await compressValue.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -71,7 +71,7 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract SubArray<byte> Compress(SubArray<byte> source);
+        public abstract MultiArray<byte> Compress(MultiArray<byte> source);
         /// <inheritdoc />
         /// <summary>
         /// Compress a byte array
@@ -79,7 +79,7 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Task<SubArray<byte>> CompressAsync(SubArray<byte> source) 
+        public virtual Task<MultiArray<byte>> CompressAsync(MultiArray<byte> source) 
             => Task.FromResult(Compress(source));
         #endregion
 
@@ -93,8 +93,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Decompress(Stream source, Stream destination)
         {
-            var decompress = Decompress(source.ReadAllBytes()).AsReadOnlySpan();
-            destination.Write(decompress);
+            var decompress = Decompress(source.ReadAllBytes());
+            decompress.CopyTo(destination);
         }
         /// <inheritdoc />
         /// <summary>
@@ -105,8 +105,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task DecompressAsync(Stream source, Stream destination)
         {
-            var decompress = Decompress(await source.ReadAllBytesAsync().ConfigureAwait(false)).AsReadOnlyMemory();
-            await destination.WriteAsync(decompress).ConfigureAwait(false);
+            var decompress = Decompress(await source.ReadAllBytesAsync().ConfigureAwait(false));
+            await decompress.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -115,7 +115,7 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract SubArray<byte> Decompress(SubArray<byte> source);
+        public abstract MultiArray<byte> Decompress(MultiArray<byte> source);
         /// <inheritdoc />
         /// <summary>
         /// Decompress a byte array
@@ -123,7 +123,7 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Task<SubArray<byte>> DecompressAsync(SubArray<byte> source)
+        public virtual Task<MultiArray<byte>> DecompressAsync(MultiArray<byte> source)
             => Task.FromResult(Decompress(source));
         #endregion
     }

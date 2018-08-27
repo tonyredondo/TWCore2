@@ -141,7 +141,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                             case string valStr:
                                                 var valBytes = Encoding.UTF8.GetBytes(valStr);
                                                 var compressedBytes = Compressor.Compress(valBytes);
-                                                msXml.WriteBytes(compressedBytes);
+                                                compressedBytes.CopyTo(msXml);
                                                 break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
                                                 XmlSerializer.Serialize(rsMessage.Body.GetValue(), msXml);
@@ -178,7 +178,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                             case string valStr:
                                                 var valBytes = Encoding.UTF8.GetBytes(valStr);
                                                 var compressedBytes = Compressor.Compress(valBytes);
-                                                msJson.WriteBytes(compressedBytes);
+                                                compressedBytes.CopyTo(msJson);
                                                 break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
                                                 JsonSerializer.Serialize(rsMessage.Body.GetValue(), msJson);

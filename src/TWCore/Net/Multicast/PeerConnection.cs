@@ -256,10 +256,48 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Send buffer
         /// </summary>
-        /// <param name="buffer">Buffer subarray</param>
+        /// <param name="buffer">MultiArray Buffer</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task SendAsync(SubArray<byte> buffer)
-            => SendAsync(buffer.Array, buffer.Offset, buffer.Count);
+        public async Task SendAsync(MultiArray<byte> buffer)
+        {
+            const int dtsize = PacketSize - 16 - 2 - 2 - 2;
+            var numMsgs = (int)Math.Ceiling((double)buffer.Count / dtsize);
+            if (numMsgs > ushort.MaxValue) throw new ArgumentOutOfRangeException($"The buffer must be less than {ushort.MaxValue} bytes");
+            var guid = Guid.NewGuid();
+            var offset = buffer.Offset;
+            var remain = buffer.Count;
+            var datagram = DatagramPool.New();
+            for (var i = 0; i < numMsgs; i++)
+            {
+                var csize = remain >= dtsize ? dtsize : remain;
+                var dGram = new Memory<byte>(datagram);
+                guid.TryWriteBytes(dGram.Span.Slice(0, 16));
+                BitConverter.TryWriteBytes(dGram.Span.Slice(16, 2), (ushort)numMsgs);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(18, 2), (ushort)i);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(20, 2), (ushort)csize);
+                buffer.Slice(offset, csize).CopyTo(dGram.Span.Slice(22));
+                dGram.Span.Slice(csize + 22).Clear();
+
+                foreach (var c in _sendClients)
+                {
+                    if (_token.IsCancellationRequested) break;
+                    if (_endpointErrors.Contains(c.Client.LocalEndPoint)) continue;
+                    try
+                    {
+                        await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        if (_endpointErrors.Add(c.Client.LocalEndPoint))
+                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
+                    }
+                }
+
+                remain -= dtsize;
+                offset += csize;
+            }
+            DatagramPool.Store(datagram);
+        }
         /// <summary>
         /// Send buffer
         /// </summary>

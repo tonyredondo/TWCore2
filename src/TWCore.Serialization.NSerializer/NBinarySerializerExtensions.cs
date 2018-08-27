@@ -35,7 +35,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>WBinary serialized object</returns>
-        public static SubArray<byte> SerializeToNBinary<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToNBinary<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize an object using the NBinary serializer
         /// </summary>
@@ -49,7 +49,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">NBinary serialized object</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromNBinary<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromNBinary<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
         /// <summary>
         /// Serialize object using NBinary and write it into the stream
         /// </summary>

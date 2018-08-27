@@ -32,8 +32,8 @@ namespace TWCore.Security
     public abstract class HashBase : IHash
     {
         private static readonly NonBlocking.ConcurrentDictionary<string, string> StringHashCache = new NonBlocking.ConcurrentDictionary<string, string>(StringComparer.Ordinal);
-        private static readonly LRU2QCollection<string, byte[]> StringBytesHashCache = new LRU2QCollection<string, byte[]>(1000);
-        private static readonly LRU2QCollection<string, Guid> StringGuidHashCache = new LRU2QCollection<string, Guid>(1000);
+        private static readonly LRU2QCollection<string, MultiArray<byte>> StringBytesHashCache = new LRU2QCollection<string, MultiArray<byte>>(250);
+        private static readonly LRU2QCollection<string, Guid> StringGuidHashCache = new LRU2QCollection<string, Guid>(250);
         private readonly string _instanceName;
 
         #region Properties
@@ -57,7 +57,7 @@ namespace TWCore.Security
         /// </summary>
         /// <param name="value">Bytes array to calculate the hash.</param>
         /// <returns>Hash bytes array.</returns>
-        public abstract byte[] GetHashValue(byte[] value);
+        public abstract MultiArray<byte> GetHashValue(MultiArray<byte> value);
 
         #region .ctor
         /// <summary>
@@ -79,7 +79,7 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] GetBytes(byte[] bytes)
+        public MultiArray<byte> GetBytes(MultiArray<byte> bytes)
         {
             return GetHashValue(bytes);
         }
@@ -90,11 +90,11 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string Get(byte[] bytes)
+        public string Get(MultiArray<byte> bytes)
         {
             var data = GetBytes(bytes);
             var sb = new StringBuilder();
-            for (var i = 0; i < data.Length; i++)
+            for (var i = 0; i < data.Count; i++)
                 sb.Append(data[i].ToString("x2"));
             return sb.ToString();
         }
@@ -105,9 +105,9 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Guid GetGuid(byte[] bytes) 
+		public Guid GetGuid(MultiArray<byte> bytes) 
 		{
-			return new Guid(GetBytes(bytes).AsSpan(0, 16));
+			return new Guid(GetBytes(bytes).Slice(0, 16).AsSpan());
 		}
 
         /// <inheritdoc />
@@ -117,7 +117,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] GetBytes(object obj) => GetBytes((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public MultiArray<byte> GetBytes(object obj) => GetBytes(GetSerializer().Serialize(obj, obj.GetType()));
         /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from an object
@@ -125,7 +125,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string Get(object obj) => Get((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public string Get(object obj) => Get(GetSerializer().Serialize(obj, obj.GetType()));
         /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from an object
@@ -133,7 +133,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Guid GetGuid(object obj) => GetGuid((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public Guid GetGuid(object obj) => GetGuid(GetSerializer().Serialize(obj, obj.GetType()));
 
         /// <inheritdoc />
         /// <summary>
@@ -142,7 +142,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] GetBytes(string obj) => StringBytesHashCache.GetOrAdd(_instanceName + obj, key => GetBytes(Encoding.GetBytes(obj)));
+        public MultiArray<byte> GetBytes(string obj) => StringBytesHashCache.GetOrAdd(_instanceName + obj, key => GetBytes(Encoding.GetBytes(obj)));
         /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from a string value

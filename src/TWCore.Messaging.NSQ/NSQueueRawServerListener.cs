@@ -47,7 +47,7 @@ namespace TWCore.Messaging.NSQ
 		{
 			public Guid CorrelationId;
             public string Name;
-			public SubArray<byte> Body;
+			public MultiArray<byte> Body;
 		}
 
 	    private class NSQMessageHandler : IHandler

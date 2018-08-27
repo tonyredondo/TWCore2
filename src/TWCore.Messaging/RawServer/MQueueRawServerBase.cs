@@ -282,7 +282,7 @@ namespace TWCore.Messaging.RawServer
                 if (MQueueRawServerEvents.RequestReceived != null)
                     await MQueueRawServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
-                if (e.SendResponse && e.Response != null)
+                if (e.SendResponse && e.Response != MultiArray<byte>.Empty)
                 {
                     var response = e.Response;
 
@@ -369,7 +369,7 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="e">Request event args</param>
 		/// <returns>Number of bytes sent to the queue, -1 if no message was sent.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract Task<int> OnSendAsync(SubArray<byte> message, RawRequestReceivedEventArgs e);
+		protected abstract Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e);
 		/// <summary>
 		/// On Dispose
 		/// </summary>

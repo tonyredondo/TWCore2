@@ -210,7 +210,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>Serialized xml value</returns>
-        public static SubArray<byte> SerializeToXmlBytes<T>(this T item) => Serializer.Serialize(item);
+        public static MultiArray<byte> SerializeToXmlBytes<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize xml value to an object instance
         /// </summary>
@@ -224,7 +224,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">Serialized xml value</param>
         /// <returns>Object instance</returns>
-        public static T DeserializeFromXmlBytes<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
+        public static T DeserializeFromXmlBytes<T>(this MultiArray<byte> value) => Serializer.Deserialize<T>(value);
 
         /// <summary>
         /// Serialize object to xml and write it into the stream

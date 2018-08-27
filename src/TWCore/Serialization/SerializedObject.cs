@@ -26,6 +26,7 @@ using System.Xml.Serialization;
 using NonBlocking;
 using TWCore.Collections;
 using TWCore.Compression;
+using TWCore.IO;
 
 namespace TWCore.Serialization
 {
@@ -33,8 +34,8 @@ namespace TWCore.Serialization
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
         private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerCache = new ConcurrentDictionary<(string, string), ISerializer>();
-        private static TimeoutDictionary<SubArray<byte>, object> DesCache = new TimeoutDictionary<SubArray<byte>, object>(SubArrayBytesComparer.Instance);
-        private static TimeSpan Timeout = TimeSpan.FromSeconds(10);
+        private static readonly TimeoutDictionary<MultiArray<byte>, object> DesCache = new TimeoutDictionary<MultiArray<byte>, object>(MultiArrayBytesComparer.Instance);
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Serialized Object File Extension
@@ -46,7 +47,7 @@ namespace TWCore.Serialization
         /// Item Data
         /// </summary>
         [DataMember]
-        public byte[] Data { get; set; }
+        public MultiArray<byte> Data { get; set; }
         /// <summary>
         /// Item Data Type
         /// </summary>
@@ -60,15 +61,15 @@ namespace TWCore.Serialization
         #endregion
 
         #region .ctor
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject()
         {
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(object data) : this(data, SerializerManager.DefaultBinarySerializer)
         {
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(object data, ISerializer serializer)
         {
             if (data == null) return;
@@ -78,6 +79,11 @@ namespace TWCore.Serialization
             {
                 SerializerMimeType = null;
                 Data = bytes;
+            }
+            else if (data is MultiArray<byte> mData)
+            {
+                SerializerMimeType = null;
+                Data = mData;
             }
             else if (data is SerializedObject serObj)
             {
@@ -93,11 +99,18 @@ namespace TWCore.Serialization
                 if (serCompressor != null)
                     SerializerMimeType += ":" + serCompressor;
                 var cSerializer = SerializerCache.GetOrAdd((serMimeType, serCompressor), vTuple => CreateSerializer(vTuple));
-                Data = (byte[])cSerializer.Serialize(data, type);
+                Data = cSerializer.Serialize(data, type);
             }
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(byte[] data, string dataType, string serializerMimeType)
+        {
+            Data = data;
+            DataType = dataType;
+            SerializerMimeType = serializerMimeType;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SerializedObject(MultiArray<byte> data, string dataType, string serializerMimeType)
         {
             Data = data;
             DataType = dataType;
@@ -124,10 +137,16 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object GetValue()
         {
-            if (Data == null) return null;
+            if (Data == MultiArray<byte>.Empty) return null;
             var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, true);
             if (string.IsNullOrWhiteSpace(SerializerMimeType))
-                return type == typeof(byte[]) ? Data : null;
+            {
+                if (type == typeof(byte[]))
+                    return Data.AsArray();
+                if (type == typeof(MultiArray<byte>))
+                    return Data;
+                return null;
+            }
             var idx = SerializerMimeType.IndexOf(':');
             var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
             var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
@@ -143,79 +162,12 @@ namespace TWCore.Serialization
         /// </summary>
         /// <returns>Byte array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] ToArray()
+        public MultiArray<byte> ToMultiArray()
         {
-            var hasDataType = !string.IsNullOrEmpty(DataType);
-            var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
-
-            var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
-            var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
-            var totalBytes = 4 + dataTypeLength + 4 + serializerMimeTypeLength + 4 + (Data?.Length ?? 0);
-            var bytes = new byte[totalBytes];
-            var span = new Span<byte>(bytes);
-
-            BitConverter.TryWriteBytes(span, hasDataType ? dataTypeLength : -1);
-            span = span.Slice(4);
-            if (hasDataType)
+            using (var ms = new RecycleMemoryStream())
             {
-                Encoding.UTF8.GetBytes(DataType, span);
-                span = span.Slice(dataTypeLength);
-            }
-
-            BitConverter.TryWriteBytes(span, hasMimeType ? serializerMimeTypeLength : -1);
-            span = span.Slice(4);
-            if (hasMimeType)
-            {
-                Encoding.UTF8.GetBytes(SerializerMimeType, span);
-                span = span.Slice(serializerMimeTypeLength);
-            }
-
-            BitConverter.TryWriteBytes(span, Data?.Length ?? -1);
-            span = span.Slice(4);
-            if (Data != null)
-            {
-                Data.CopyTo(span.Slice(0, Data.Length));
-            }
-
-            return bytes;
-        }
-        /// <summary>
-        /// Get SubArray representation of the SerializedObject instance
-        /// </summary>
-        /// <returns>SubArray instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(Span<byte> span)
-        {
-            var hasDataType = !string.IsNullOrEmpty(DataType);
-            var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
-
-            var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
-            var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
-            var totalBytes = 4 + dataTypeLength + 4 + serializerMimeTypeLength + 4 + (Data?.Length ?? 0);
-            if (span.Length < totalBytes)
-                throw new ArgumentOutOfRangeException(nameof(span), "The span length is lower than the required length");
-
-            BitConverter.TryWriteBytes(span, hasDataType ? dataTypeLength : -1);
-            span = span.Slice(4);
-            if (hasDataType)
-            {
-                Encoding.UTF8.GetBytes(DataType, span);
-                span = span.Slice(dataTypeLength);
-            }
-
-            BitConverter.TryWriteBytes(span, hasMimeType ? serializerMimeTypeLength : -1);
-            span = span.Slice(4);
-            if (hasMimeType)
-            {
-                Encoding.UTF8.GetBytes(SerializerMimeType, span);
-                span = span.Slice(serializerMimeTypeLength);
-            }
-
-            BitConverter.TryWriteBytes(span, Data?.Length ?? -1);
-            span = span.Slice(4);
-            if (Data != null)
-            {
-                Data.CopyTo(span.Slice(0, Data.Length));
+                CopyTo(ms);
+                return ms.GetMultiArray();
             }
         }
         /// <summary>
@@ -223,7 +175,7 @@ namespace TWCore.Serialization
         /// </summary>
         /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteTo(Stream stream)
+        public void CopyTo(Stream stream)
         {
             var hasDataType = !string.IsNullOrEmpty(DataType);
             var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
@@ -254,12 +206,9 @@ namespace TWCore.Serialization
             }
 
             //Data
-            BitConverter.TryWriteBytes(intBuffer, Data?.Length ?? -1);
+            BitConverter.TryWriteBytes(intBuffer, Data.Count);
             stream.Write(intBuffer);
-            if (Data != null)
-            {
-                stream.Write(Data, 0, Data.Length);
-            }
+            Data.CopyTo(stream);
         }
         /// <summary>
         /// Write the SerializedObject to a file
@@ -273,7 +222,7 @@ namespace TWCore.Serialization
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
-                WriteTo(fs);
+                CopyTo(fs);
                 await fs.FlushAsync().ConfigureAwait(false);
             }
         }
@@ -288,84 +237,18 @@ namespace TWCore.Serialization
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
-                WriteTo(fs);
-        }
-
-        /// <summary>
-        /// Get SerializedObject instance from the SubArray representation.
-        /// </summary>
-        /// <param name="byteArray">SubArray instance</param>
-        /// <returns>SerializedObject instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedObject FromArray(byte[] byteArray)
-        {
-            if (byteArray.Length == 0) return null;
-            return FromSpan(byteArray.AsSpan());
+                CopyTo(fs);
         }
         /// <summary>
-        /// Get SerializedObject instance from the SubArray representation.
+        /// Get SerializedObject instance from the MultiArray representation.
         /// </summary>
-        /// <param name="byteArray">SubArray instance</param>
+        /// <param name="multiArrayData">MultiArray instance</param>
         /// <returns>SerializedObject instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedObject FromSubArray(SubArray<byte> byteArray)
+        public static SerializedObject FromMultiArray(MultiArray<byte> multiArrayData)
         {
-            if (byteArray.Count == 0) return null;
-            return FromSpan(byteArray.AsReadOnlySpan());
-        }
-        /// <summary>
-        /// Get SerializedObject instance from the Memory representation.
-        /// </summary>
-        /// <param name="byteArray">Readonly Memory instance</param>
-        /// <returns>SerializedObject instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedObject FromMemory(ReadOnlyMemory<byte> memoryData)
-        {
-            if (memoryData.IsEmpty) return null;
-            return FromSpan(memoryData.Span);
-        }
-        /// <summary>
-        /// Get SerializedObject instance from the Span representation.
-        /// </summary>
-        /// <param name="byteArray">Readonly Span instance</param>
-        /// <returns>SerializedObject instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedObject FromSpan(ReadOnlySpan<byte> spanData)
-        {
-            if (spanData.IsEmpty) return null;
-            var length = spanData.Length;
-
-            var dtLength = BitConverter.ToInt32(spanData.Slice(0, 4));
-            if (dtLength < -1 || dtLength > length) return null;
-            var dataTypeByte = ReadOnlySpan<byte>.Empty;
-            if (dtLength != -1)
-            {
-                dataTypeByte = spanData.Slice(4, dtLength);
-                length -= dtLength;
-                spanData = spanData.Slice(4 + dtLength);
-            }
-
-            var smtLength = BitConverter.ToInt32(spanData.Slice(0, 4));
-            if (smtLength < -1 || smtLength > length) return null;
-            var serializerMimeTypeByte = ReadOnlySpan<byte>.Empty;
-            if (smtLength != -1)
-            {
-                serializerMimeTypeByte = spanData.Slice(4, smtLength);
-                length -= smtLength;
-                spanData = spanData.Slice(4 + smtLength);
-            }
-
-            var dataLength = BitConverter.ToInt32(spanData.Slice(0, 4));
-            if (dataLength < -1 || dataLength > length) return null;
-            var data = ReadOnlySpan<byte>.Empty;
-            if (dataLength != -1)
-            {
-                data = spanData.Slice(4, dataLength);
-            }
-
-            return new SerializedObject(data.ToArray(),
-                !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
+            if (multiArrayData.IsEmpty) return null;
+            return FromStream(multiArrayData.AsReadOnlyStream());
         }
         /// <summary>
         /// Get SerializedObject instance from the ReadonlySequence representation.
@@ -429,7 +312,7 @@ namespace TWCore.Serialization
             Span<byte> intBuffer = stackalloc byte[4];
             string dataType = null;
             string serializerMimeType = null;
-            byte[] data = null;
+            MultiArray<byte> data = MultiArray<byte>.Empty;
 
             stream.Fill(intBuffer);
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
@@ -453,8 +336,72 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                data = new byte[dataLength];
-                stream.ReadExact(data, 0, dataLength);
+                const int segmentLength = 1024;
+                var rows = dataLength / segmentLength;
+                var pos = dataLength % segmentLength;
+                if (pos > 0)
+                    rows++;
+
+                var bytes = new byte[rows][];
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = new byte[segmentLength];
+                    stream.ReadExact(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength);
+                }
+
+                data = new MultiArray<byte>(bytes, 0, dataLength);
+            }
+
+            return new SerializedObject(data, dataType, serializerMimeType);
+        }
+        /// <summary>
+        /// Get SerializedObject instance from a stream
+        /// </summary>
+        /// <param name="stream">Source stream</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<SerializedObject> FromStreamAsync(Stream stream)
+        {
+            var intBuffer = new byte[4];
+            string dataType = null;
+            string serializerMimeType = null;
+            MultiArray<byte> data = MultiArray<byte>.Empty;
+
+            stream.Fill(intBuffer);
+            var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
+            if (dataTypeByteLength > -1)
+            {
+                var dBuffer = new byte[dataTypeByteLength];
+                await stream.FillAsync(dBuffer).ConfigureAwait(false);
+                dataType = Encoding.UTF8.GetString(dBuffer);
+            }
+
+            stream.Fill(intBuffer);
+            var serializerMimeTypeByteLength = BitConverter.ToInt32(intBuffer);
+            if (serializerMimeTypeByteLength > -1)
+            {
+                var dBuffer = new byte[serializerMimeTypeByteLength];
+                await stream.FillAsync(dBuffer).ConfigureAwait(false);
+                serializerMimeType = Encoding.UTF8.GetString(dBuffer);
+            }
+
+            stream.Fill(intBuffer);
+            var dataLength = BitConverter.ToInt32(intBuffer);
+            if (dataLength > -1)
+            {
+                const int segmentLength = 1024;
+                var rows = dataLength / segmentLength;
+                var pos = dataLength % segmentLength;
+                if (pos > 0)
+                    rows++;
+
+                var bytes = new byte[rows][];
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = new byte[segmentLength];
+                    await stream.ReadExactAsync(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength).ConfigureAwait(false);
+                }
+                data = new MultiArray<byte>(bytes, 0, dataLength);
             }
 
             return new SerializedObject(data, dataType, serializerMimeType);
@@ -470,7 +417,7 @@ namespace TWCore.Serialization
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                return FromMemory(await fs.ReadAllBytesAsMemoryAsync().ConfigureAwait(false));
+                return await FromStreamAsync(fs).ConfigureAwait(false);
         }
         /// <summary>
         /// Read the SerializedObject from a file
@@ -483,7 +430,7 @@ namespace TWCore.Serialization
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                return FromMemory(fs.ReadAllBytesAsMemory());
+                return FromStream(fs);
         }
         #endregion
         
@@ -493,7 +440,7 @@ namespace TWCore.Serialization
         {
             var hash = SerializerMimeType?.GetHashCode() ?? 0;
             hash += (DataType?.GetHashCode() ?? 0) ^ 31;
-            hash += Data != null ? ByteArrayComparer.Instance.GetHashCode(Data) ^ 31 : 0;
+            hash += Data.GetHashCode() ^ 31;
             return hash;
         }
 
@@ -508,7 +455,7 @@ namespace TWCore.Serialization
             if (ReferenceEquals(this, other)) return true;
             if (other.DataType != DataType) return false;
             if (other.SerializerMimeType != SerializerMimeType) return false;
-            return ByteArrayComparer.Instance.Equals(Data, other.Data);
+            return MultiArrayBytesComparer.Instance.Equals(Data, other.Data);
         }
         
         public static bool operator ==(SerializedObject a, SerializedObject b)
@@ -519,7 +466,7 @@ namespace TWCore.Serialization
             if (ReferenceEquals(a, b)) return true;
             if (a.DataType != b.DataType) return false;
             if (a.SerializerMimeType != b.SerializerMimeType) return false;
-            return ByteArrayComparer.Instance.Equals(a.Data, b.Data);
+            return MultiArrayBytesComparer.Instance.Equals(a.Data, b.Data);
         }
         public static bool operator !=(SerializedObject a, SerializedObject b)
         {
@@ -532,13 +479,13 @@ namespace TWCore.Serialization
             if (!(other is SerializedObject bSer)) return false;
             if (!comparer.Equals(DataType, bSer.DataType)) return false;
             if (!comparer.Equals(SerializerMimeType, bSer.SerializerMimeType)) return false;
-            return ByteArrayComparer.Instance.Equals(Data, bSer.Data);
+            return MultiArrayBytesComparer.Instance.Equals(Data, bSer.Data);
         }
         public int GetHashCode(IEqualityComparer comparer)
         {
             var hash = SerializerMimeType != null ? comparer.GetHashCode(SerializerMimeType) : 0;
             hash += (DataType != null ? comparer.GetHashCode(DataType) : 0) ^ 31;
-            hash += Data != null ? ByteArrayComparer.Instance.GetHashCode(Data) ^ 31 : 0;
+            hash += MultiArrayBytesComparer.Instance.GetHashCode(Data) ^ 31;
             return hash;
         }
         #endregion

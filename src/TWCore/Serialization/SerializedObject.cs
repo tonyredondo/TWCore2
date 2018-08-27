@@ -34,8 +34,8 @@ namespace TWCore.Serialization
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
         private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerCache = new ConcurrentDictionary<(string, string), ISerializer>();
-        private static TimeoutDictionary<MultiArray<byte>, object> DesCache = new TimeoutDictionary<MultiArray<byte>, object>(MultiArrayBytesComparer.Instance);
-        private static TimeSpan Timeout = TimeSpan.FromSeconds(10);
+        private static readonly TimeoutDictionary<MultiArray<byte>, object> DesCache = new TimeoutDictionary<MultiArray<byte>, object>(MultiArrayBytesComparer.Instance);
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Serialized Object File Extension

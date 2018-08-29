@@ -58,12 +58,13 @@ namespace TWCore.Data.MySql
             if (value == null && propertyValue == null)
                 return true;
 
-            if (valueType == typeof(MySqlGeometry))
-            {
-                if (value != null) 
-                    propertyValue = ((MySqlGeometry) value).GetWKT();
-                return true;
-            }
+            //TODO: Not supported by MySqlConnector
+            //if (valueType == typeof(MySqlGeometry))
+            //{
+            //    if (value != null) 
+            //        propertyValue = ((MySqlGeometry) value).GetWKT();
+            //    return true;
+            //}
 
             var dtValue = value as DateTime?;
             var sdtValue = value as MySqlDateTime?;
@@ -74,7 +75,7 @@ namespace TWCore.Data.MySql
             }
             if (sdtValue.HasValue)
             {
-                propertyValue = sdtValue.Value.Value;
+                propertyValue = sdtValue.Value;
                 return true;
             }
 

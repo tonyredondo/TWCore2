@@ -188,7 +188,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
             if (_senderOptions == null)
-                throw new ArgumentNullException("SenderOptions");
+                throw new NullReferenceException("SenderOptions is null.");
 
             if (message.Header.ResponseQueue == null)
             {

@@ -47,6 +47,7 @@ namespace TWCore.Geo
                 while (!stream.EndOfStream)
                 {
                     var line = stream.ReadLine();
+                    if (line == null) continue;
                     var items = line.Split(',');
                     var ip1 = items[0].Replace("\"", string.Empty);
                     var ip2 = items[1].Replace("\"", string.Empty);

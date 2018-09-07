@@ -824,7 +824,6 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region GetOrSet
-        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -846,7 +845,6 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
-        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -869,7 +867,6 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
-        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -893,7 +890,6 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
-        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -916,7 +912,6 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
-        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>

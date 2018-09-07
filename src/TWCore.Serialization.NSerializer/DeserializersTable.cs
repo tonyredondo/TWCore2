@@ -16,16 +16,15 @@ limitations under the License.
 
 using System;
 using System.Buffers;
-using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using NonBlocking;
 using TWCore.Reflection;
+// ReSharper disable UnusedMember.Local
 
 namespace TWCore.Serialization.NSerializer
 {
@@ -86,7 +85,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
-            object value = null;
+            object value;
             try
             {
                 Stream = stream;
@@ -295,13 +294,13 @@ namespace TWCore.Serialization.NSerializer
                         }
                         catch (Exception ex)
                         {
-                            var metaProperties = metadata.Properties?.Join(", ");
+                            var metaProperties = metadata.Properties.Join(", ");
                             var typeProperties = descriptor.Metadata.Properties?.Join(", ");
                             Core.Log.Error(ex, $"Error trying to fill the property '{name}' of the object type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}].");
                         }
                     }
                     else
-                        Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type.FullName);
+                        Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type?.FullName);
                 }
 
                 StreamReadByte();

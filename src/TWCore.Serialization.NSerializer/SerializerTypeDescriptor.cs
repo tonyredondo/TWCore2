@@ -22,6 +22,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Serialization.NSerializer
 {

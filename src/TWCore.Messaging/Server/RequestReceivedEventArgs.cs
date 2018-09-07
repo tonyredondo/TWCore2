@@ -75,15 +75,16 @@ namespace TWCore.Messaging.Server
         public int MessageLength { get; }
 
 
-		/// <inheritdoc />
-		/// <summary>
-		/// Event args for request sent event
-		/// </summary>
-		/// <param name="name">Client name</param>
-		/// <param name="sender">Sender queue</param>
-		/// <param name="request">Request message</param>
-		/// <param name="messageLength">Message length</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <inheritdoc />
+        /// <summary>
+        /// Event args for request sent event
+        /// </summary>
+        /// <param name="name">Client name</param>
+        /// <param name="sender">Sender queue</param>
+        /// <param name="request">Request message</param>
+        /// <param name="messageLength">Message length</param>
+        /// <param name="senderSerializer">Sender serializer</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request, int messageLength, ISerializer senderSerializer)
         {
             _senderSerializer = senderSerializer;

@@ -15,8 +15,8 @@ limitations under the License.
  */
 
 using System;
-using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization.NSerializer
 {

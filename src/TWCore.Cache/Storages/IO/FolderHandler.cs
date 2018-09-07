@@ -102,7 +102,7 @@ namespace TWCore.Cache.Storages.IO
             _oldIndexFilePath = _indexFilePath + ".old";
 
             _pendingItems = new NonBlocking.ConcurrentDictionary<string, SerializedObject>();
-            _storageWorker = new Worker<FileStorageMetaLog>(new Action<FileStorageMetaLog>(WorkerProcess))
+            _storageWorker = new Worker<FileStorageMetaLog>(WorkerProcess)
             {
                 EnableWaitTimeout = false
             };

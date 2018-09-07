@@ -57,7 +57,6 @@ namespace TWCore.Messaging.Server
         /// Gets or sets the receiver serializer
         /// </summary>
         public ISerializer ReceiverSerializer { get; set; }
-        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the sender serializer
         /// </summary>

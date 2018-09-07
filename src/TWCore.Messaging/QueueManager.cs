@@ -48,7 +48,7 @@ namespace TWCore.Messaging
         /// </summary>
         public QueueManager(MQPairConfig config)
         {
-            Config = config ?? throw new ArgumentNullException("The configuration pair must not be null", nameof(config));
+            Config = config ?? throw new ArgumentNullException(nameof(config), "The configuration pair must not be null");
             Security = Config.Security?.FirstOf(
                 c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
                 c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,

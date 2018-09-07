@@ -15,8 +15,8 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+// ReSharper disable PossibleNullReferenceException
 
 namespace TWCore.Serialization.NSerializer
 {

@@ -22,8 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using TWCore.Reflection;
+// ReSharper disable UnusedMember.Local
 
 namespace TWCore.Serialization.NSerializer
 {
@@ -786,7 +786,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     if (valueType.ReflectedType == typeof(Enumerable) || valueType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
                     {
-                        var ienumerable = valueType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                        var ienumerable = valueType.AllInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
                         valueType = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
                         value = (IList)Activator.CreateInstance(valueType, iEValue);
                     }
@@ -852,7 +852,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (vType.ReflectedType == typeof(Enumerable) || vType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
                 {
-                    var ienumerable = vType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                    var ienumerable = vType.AllInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
                     vType = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
                     value = (IList)Activator.CreateInstance(vType, iEValue);
                 }

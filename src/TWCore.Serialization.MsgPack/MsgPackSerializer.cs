@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MessagePack;
@@ -90,7 +89,7 @@ namespace TWCore.Serialization.MsgPack
             try
             {
                 var serialize = SerializeMethods.GetOrAdd(itemType, type => SerializeMethod.MakeGenericMethod(type));
-                serialize.Invoke(null, new object[] { stream, item, MessagePack.Resolvers.ContractlessStandardResolver.Instance });
+                serialize.Invoke(null, new[] { stream, item, MessagePack.Resolvers.ContractlessStandardResolver.Instance });
             }
             catch (TargetInvocationException tie)
             {

@@ -17,6 +17,9 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ReturnTypeCanBeEnumerable.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {
@@ -141,6 +144,13 @@ namespace TWCore
         #endregion
 
         #region Public
+        /// <summary>
+        /// Gets the Frequency and duration list for the melody in terms.
+        /// </summary>
+        /// <param name="terms">Melody to play</param>
+        /// <param name="tempo">Base tempo</param>
+        /// <param name="octave">Base octave</param>
+        /// <returns>List of frequencies and durations for each note of the melody.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static List<(int, int)> GetFreqTempoPairs(string terms, int tempo = 120, int octave = 4)
         {
@@ -155,7 +165,12 @@ namespace TWCore
             }
             return lstTerms;
         }
-
+        /// <summary>
+        /// Plays a melody from a string using the Console.Beep command.
+        /// </summary>
+        /// <param name="terms">Melody to play</param>
+        /// <param name="tempo">Base tempo</param>
+        /// <param name="octave">Base octave</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Play(string terms, int tempo = 120, int octave = 4)
         {

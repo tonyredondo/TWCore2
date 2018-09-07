@@ -111,12 +111,18 @@ namespace TWCore.Collections
         #endregion
 
         #region Overrides
+        /// <summary>
+        /// On Init
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnInit()
         {
             base.OnInit();
             KeySelector = KeySelector ?? DefaultKeySelector ?? (item => IndexOf(item).ToString());
         }
+        /// <summary>
+        /// Clear all items
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ClearItems()
         {

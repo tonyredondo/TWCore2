@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore
 {
@@ -24,6 +25,12 @@ namespace TWCore
     /// </summary>
     public static class ArrayEqualityComparer
     {
+        /// <summary>
+        /// Create an ArrayEqualityComparer from an EqualityComparer instance
+        /// </summary>
+        /// <param name="comparer">EqualityComparer instance</param>
+        /// <typeparam name="T">Type of equality comparer</typeparam>
+        /// <returns>Equality comparer for the Array of the type</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEqualityComparer<T[]> Create<T>(IEqualityComparer<T> comparer)
             => new ArrayEqualityComparer<T>(comparer);
@@ -35,6 +42,9 @@ namespace TWCore
     /// </summary>
     public sealed class ArrayEqualityComparer<T> : IEqualityComparer<T[]>
     {
+        /// <summary>
+        /// Default ArrayEqualityComparer for type T
+        /// </summary>
         public static IEqualityComparer<T[]> Default { get; } = new ArrayEqualityComparer<T>();
         private readonly IEqualityComparer<T> _elementComparer;
 

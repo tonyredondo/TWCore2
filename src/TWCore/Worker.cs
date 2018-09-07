@@ -401,9 +401,21 @@ namespace TWCore
     /// </summary>
     public enum WorkerStatus 
     {
+        /// <summary>
+        /// Worker stopped
+        /// </summary>
         Stopped,
+        /// <summary>
+        /// Worker started
+        /// </summary>
         Started,
+        /// <summary>
+        /// Worker stopping
+        /// </summary>
         Stopping,
+        /// <summary>
+        /// Worker disposed
+        /// </summary>
         Disposed
     }
 }

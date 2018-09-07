@@ -47,6 +47,7 @@ namespace TWCore
     /// Action for object ref delegate
     /// </summary>
     /// <param name="obj">Object reference</param>
+    /// <param name="arg1">Argument 1</param>
     /// <typeparam name="T">Object type</typeparam>
     /// <typeparam name="T1">Object argument 1</typeparam>
     public delegate void ActionRef<T, T1>(ref T obj, in T1 arg1);
@@ -54,6 +55,8 @@ namespace TWCore
     /// Action for object ref delegate
     /// </summary>
     /// <param name="obj">Object reference</param>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
     /// <typeparam name="T">Object type</typeparam>
     /// <typeparam name="T1">Object argument 1</typeparam>
     /// <typeparam name="T2">Object argument 2</typeparam>

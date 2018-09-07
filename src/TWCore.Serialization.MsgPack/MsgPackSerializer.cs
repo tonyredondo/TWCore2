@@ -65,6 +65,13 @@ namespace TWCore.Serialization.MsgPack
             });
         }
 
+        /// <summary>
+        /// On deserialize
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="itemType">Item type</param>
+        /// <returns>Deserialized item</returns>
+        /// <exception cref="Exception">On target invocation in the reflection</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
@@ -83,6 +90,14 @@ namespace TWCore.Serialization.MsgPack
                 }
             }
         }
+        
+        /// <summary>
+        /// On Serialize
+        /// </summary>
+        /// <param name="stream">Stream destination</param>
+        /// <param name="item">Item to serialize</param>
+        /// <param name="itemType">Item type to serialize</param>
+        /// <exception cref="Exception">On target invocation in the reflection</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {

@@ -191,6 +191,9 @@ namespace TWCore.Threading
         }
         #endregion
 
+        /// <summary>
+        /// Dispose instance resources
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {

@@ -31,6 +31,9 @@ using TWCore.Settings;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <summary>
+    /// Telegram Bot Log Storage
+    /// </summary>
     [SettingsContainer("TelegramBotLog")]
     public class TelegramBotLogStorage : SettingsBase, ILogStorage
     {

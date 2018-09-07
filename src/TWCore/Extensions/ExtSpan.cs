@@ -62,7 +62,7 @@ namespace TWCore
         /// <summary>
         /// Split a char memory using a separator
         /// </summary>
-        /// <param name="span">Source span</param>
+        /// <param name="memory">Source memory</param>
         /// <param name="separator">Char separator</param>
         /// <param name="options">StringSplit options</param>
         /// <returns>List with the split result</returns>
@@ -87,7 +87,7 @@ namespace TWCore
         /// <summary>
         /// Split a char memory using a separator
         /// </summary>
-        /// <param name="span">Source span</param>
+        /// <param name="memory">Source memory</param>
         /// <param name="separator">Char separator</param>
         /// <param name="options">StringSplit options</param>
         /// <returns>List with the split result</returns>
@@ -112,7 +112,7 @@ namespace TWCore
         /// <summary>
         /// Split a char memory using a separator
         /// </summary>
-        /// <param name="span">Source span</param>
+        /// <param name="memory">Source memory</param>
         /// <param name="separator">Char separator</param>
         /// <param name="options">StringSplit options</param>
         /// <returns>List with the split result</returns>
@@ -122,7 +122,7 @@ namespace TWCore
         /// <summary>
         /// Split a char memory using a separator
         /// </summary>
-        /// <param name="span">Source span</param>
+        /// <param name="memory">Source memory</param>
         /// <param name="separator">Char separator</param>
         /// <param name="options">StringSplit options</param>
         /// <returns>List with the split result</returns>

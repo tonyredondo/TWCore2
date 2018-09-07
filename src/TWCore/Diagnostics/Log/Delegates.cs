@@ -26,6 +26,8 @@ namespace TWCore.Diagnostics.Log
     /// <param name="message">Item message</param>
     /// <param name="groupName">Item group name</param>
     /// <param name="ex">Item exception</param>
+    /// <param name="assemblyName">Assembly name</param>
+    /// <param name="typeName">Type name</param>
     /// <returns>LogItem instance</returns>
     public delegate ILogItem CreateLogItemDelegate(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName);
 

@@ -73,6 +73,9 @@ namespace TWCore.Threading
             _producerEndEvent = new AsyncManualResetEvent(false);
             _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset());
         }
+        /// <summary>
+        /// Finalizer
+        /// </summary>
         ~ProducerConsumerEnumerable()
         {
             Dispose();

@@ -28,6 +28,9 @@ namespace TWCore.Cache.Client
     public interface IStorageAsync : IDisposable
     {
 		#region Properties
+        /// <summary>
+        /// Storage type
+        /// </summary>
 		StorageType Type { get; }
 		#endregion
 

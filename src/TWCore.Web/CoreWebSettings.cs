@@ -27,11 +27,29 @@ namespace TWCore.Web
     /// </summary>
     public class CoreWebSettings : SettingsBase
     {
+        /// <summary>
+        /// Enable format mapping
+        /// </summary>
         public bool EnableFormatMapping { get; set; } = true;
+        /// <summary>
+        /// Enable TWCore Serializers
+        /// </summary>
         public bool EnableTWCoreSerializers { get; set; } = true;
+        /// <summary>
+        /// Enable JSon Strings values on enums
+        /// </summary>
         public bool EnableJsonStringEnum { get; set; } = true;
+        /// <summary>
+        /// Enable TWCore Logger
+        /// </summary>
         public bool EnableTWCoreLogger { get; set; } = true;
+        /// <summary>
+        /// Enable GZip Compressor
+        /// </summary>
         public bool EnableGZipCompressor { get; set; } = true;
+        /// <summary>
+        /// Use custom xml serializer
+        /// </summary>
         public bool UseCustomXmlSerializer { get; set; } = false;
     }
 }

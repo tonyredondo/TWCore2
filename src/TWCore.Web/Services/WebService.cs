@@ -115,6 +115,11 @@ namespace TWCore.Services
         }
         #endregion
 
+        /// <summary>
+        /// On Action async method.
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Action task</returns>
         protected override async Task OnActionAsync(CancellationToken token)
         {
             var webHost = _webHostFactory(StartArguments);

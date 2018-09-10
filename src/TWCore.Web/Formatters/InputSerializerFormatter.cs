@@ -47,6 +47,11 @@ namespace TWCore.Web.Formatters
                 SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse(mime));
         }
 
+        /// <summary>
+        /// Reads an object from the request body.
+        /// </summary>
+        /// <param name="context">The Microsoft.AspNetCore.Mvc.Formatters.InputFormatterContext.</param>
+        /// <returns>A System.Threading.Tasks.Task that on completion deserializes the request body.</returns>
         public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context)
         {
             try

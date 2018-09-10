@@ -23,15 +23,45 @@ namespace TWCore.Data.Schema
     [DataContract]
     public enum IndexType
     {
+        /// <summary>
+        /// Unknown
+        /// </summary>
         Unknown,
+        /// <summary>
+        /// Primary key
+        /// </summary>
         PrimaryKey,
+        /// <summary>
+        /// Unique key
+        /// </summary>
         UniqueKey,
+        /// <summary>
+        /// Foreign key
+        /// </summary>
         ForeignKey,
+        /// <summary>
+        /// Non clustered non unique index
+        /// </summary>
         NonClusteredNonUniqueIndex,
+        /// <summary>
+        /// Unique index
+        /// </summary>
         UniqueIndex,
+        /// <summary>
+        /// Alternate index
+        /// </summary>
         AlternateIndex,
+        /// <summary>
+        /// Clustered index
+        /// </summary>
         ClusteredIndex,
+        /// <summary>
+        /// Covering index
+        /// </summary>
         CoveringIndex,
+        /// <summary>
+        /// Unique clustered index
+        /// </summary>
         UniqueClusteredIndex
     }
 }

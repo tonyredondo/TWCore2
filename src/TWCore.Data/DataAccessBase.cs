@@ -157,6 +157,12 @@ namespace TWCore.Data
             }
             return dctParameters;
         }
+        /// <summary>
+        /// Extract or get cached version of the columns names from a DBDataReader result
+        /// </summary>
+        /// <param name="nameOrQuery">Name of the SP or Sql query</param>
+        /// <param name="reader">DbDataReader instance</param>
+        /// <returns>Dictionary of the column names</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual Dictionary<string, int> ExtractColumnNames(string nameOrQuery, DbDataReader reader)
         {
@@ -171,6 +177,12 @@ namespace TWCore.Data
             }
             return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
         }
+        /// <summary>
+        /// Extract the columns names from a DBDataReader result
+        /// </summary>
+        /// <param name="nameOrQuery">Name of the SP or Sql query</param>
+        /// <param name="reader">DbDataReader instance</param>
+        /// <returns>Dictionary of the column names</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual Dictionary<string, int> InternalExtractColumnNames(string nameOrQuery, DbDataReader reader)
         {
@@ -233,16 +245,28 @@ namespace TWCore.Data
             /// </summary>
             public readonly object ReturnValue;
 
+            #region .ctor
+            /// <summary>
+            /// Cache value
+            /// </summary>
+            /// <param name="responseCollection">Response collection from a SelectElements method</param>
+            /// <param name="returnValue">Return value object</param>
             public CacheValue(IEnumerable<T> responseCollection, object returnValue)
             {
                 ResponseCollection = responseCollection;
                 ReturnValue = returnValue;
             }
+            /// <summary>
+            /// Cache value
+            /// </summary>
+            /// <param name="response">Response from a SelectElement</param>
+            /// <param name="returnValue">Return value object</param>
             public CacheValue(T response, object returnValue)
             {
                 Response = response;
                 ReturnValue = returnValue;
             }
+            #endregion
         }
         #endregion
 

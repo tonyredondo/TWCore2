@@ -23,10 +23,25 @@ namespace TWCore.Data.Schema.Generator
     /// </summary>
     public class GeneratorSelectionContainer
     {
+        /// <summary>
+        /// Columns
+        /// </summary>
         public List<GeneratorSelectionColumn> Columns { get; } = new List<GeneratorSelectionColumn>();
+        /// <summary>
+        /// From table name
+        /// </summary>
         public string From { get; set; }
+        /// <summary>
+        /// Query joins
+        /// </summary>
         public List<GeneratorSelectionJoin> Joins { get; } = new List<GeneratorSelectionJoin>();
+        /// <summary>
+        /// Query wheres
+        /// </summary>
 		public List<GeneratorWhereIndex> Wheres { get; } = new List<GeneratorWhereIndex>();
+        /// <summary>
+        /// Table columns
+        /// </summary>
         public List<(string, string)> TableColumns { get; } = new List<(string, string)>();
     }
 }

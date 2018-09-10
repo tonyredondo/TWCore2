@@ -62,6 +62,9 @@ namespace TWCore.Data
         #endregion
 
         #region .ctor
+        /// <summary>
+        /// Entity Dal base class
+        /// </summary>
         protected EntityDal()
         {
             var poolKey = Settings.GetHashSHA1();

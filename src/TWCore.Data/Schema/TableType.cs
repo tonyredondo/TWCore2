@@ -24,7 +24,13 @@ namespace TWCore.Data.Schema
     [DataContract]
     public enum TableType
     {
+        /// <summary>
+        /// Table
+        /// </summary>
         Table,
+        /// <summary>
+        /// View
+        /// </summary>
         View
     }
 }

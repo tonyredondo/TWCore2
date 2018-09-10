@@ -22,7 +22,13 @@ namespace TWCore.Data.Schema.Generator
 	/// </summary>
 	public class GeneratorWhereField
 	{
+        /// <summary>
+        /// Table name
+        /// </summary>
 		public string TableName { get; set; }
+        /// <summary>
+        /// Field name
+        /// </summary>
 		public string FieldName { get; set; }
 	}
 }

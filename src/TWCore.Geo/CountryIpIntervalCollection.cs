@@ -26,18 +26,35 @@ using TWCore.Serialization;
 
 namespace TWCore.Geo
 {
+    /// <summary>
+    /// Country Ip interval collection
+    /// </summary>
     [DataContract]
     public class CountryIpIntervalCollection : RangeTree<uint, CountryIpInterval>
     {
+        #region .ctor
+        /// <summary>
+        /// Country Ip interval collection
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CountryIpIntervalCollection() : base(new DefaultRangeProviderComparer<CountryIpInterval, uint>())
         {
         }
+        /// <summary>
+        /// Country Ip interval collection
+        /// </summary>
+        /// <param name="enumerable">IEnumerable of countries ip intervals</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CountryIpIntervalCollection(IEnumerable<CountryIpInterval> enumerable) : base(enumerable, new DefaultRangeProviderComparer<CountryIpInterval, uint>())
         {
         }
+        #endregion
 
+        /// <summary>
+        /// Import data from csv
+        /// </summary>
+        /// <param name="filename">Csv filename with ip data</param>
+        /// <returns>CountryIpInterval collection</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static CountryIpIntervalCollection ImportFromCsv(string filename)
         {
@@ -59,6 +76,11 @@ namespace TWCore.Geo
             lstInterval.Rebuild();
             return lstInterval;
         }
+        /// <summary>
+        /// Import data from csv async
+        /// </summary>
+        /// <param name="filename">Csv filename with ip data</param>
+        /// <returns>CountryIpInterval collection</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<CountryIpIntervalCollection> ImportFromCsvAsync(string filename)
         {
@@ -79,6 +101,12 @@ namespace TWCore.Geo
             lstInterval.Rebuild();
             return lstInterval;
         }
+
+        /// <summary>
+        /// Get interval from an Ip address
+        /// </summary>
+        /// <param name="address">Ip address</param>
+        /// <returns>Country Ip interval</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CountryIpInterval GetInterval(string address)
         {
@@ -87,18 +115,34 @@ namespace TWCore.Geo
             var number = IpHelper.IpToInt(address);
             return Query(number).FirstOrDefault();
         }
+        /// <summary>
+        /// Gets the country from an Ip address
+        /// </summary>
+        /// <param name="address">Ip address</param>
+        /// <returns>Country name</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetCountry(string address)
         {
             var interval = GetInterval(address);
             return interval?.Country;
         }
+
+        /// <summary>
+        /// Save the current Country ip interval collection to a binary file
+        /// </summary>
+        /// <param name="fileName">Filename</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Save(string fileName)
         {
             if (Items != null)
                 SerializerManager.DefaultBinarySerializer.SerializeToFile(Items.ToList(), fileName);
         }
+
+        /// <summary>
+        /// Load a country ip interval collection from a binary file
+        /// </summary>
+        /// <param name="fileName">Filename</param>
+        /// <returns>CountryIpIntervalCollection instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static CountryIpIntervalCollection Load(string fileName)
         {
@@ -106,6 +150,5 @@ namespace TWCore.Geo
             var list = serializer.DeserializeFromFile<List<CountryIpInterval>>(fileName);
             return new CountryIpIntervalCollection(list);
         }
-
     }
 }

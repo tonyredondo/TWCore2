@@ -71,6 +71,12 @@ namespace TWCore.Data.SQLite
         #endregion
 
         #region IDataAccessDynamicGenerator
+        /// <inheritdoc />
+        /// <summary>
+        /// Get the Select Base Sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Select base sql query</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string GetSelectFromContainer(GeneratorSelectionContainer container)
         {
@@ -91,6 +97,12 @@ namespace TWCore.Data.SQLite
             }
             return sb.ToString();
         }
+        /// <inheritdoc />
+        /// <summary>
+        /// Get the Where from Sql from GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>The where list.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container)
         {
@@ -107,6 +119,12 @@ namespace TWCore.Data.SQLite
             }
             return lst;
         }
+        /// <inheritdoc />
+        /// <summary>
+        /// Get the Insert sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string GetInsertFromContainer(GeneratorSelectionContainer container)
         {
@@ -124,6 +142,12 @@ namespace TWCore.Data.SQLite
             sb.AppendLine($"({ string.Join(", ", lstVals.ToArray()) })");
             return sb.ToString();
         }
+        /// <inheritdoc />
+        /// <summary>
+        /// Get the Update sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string GetUpdateFromContainer(GeneratorSelectionContainer container)
         {
@@ -140,6 +164,12 @@ namespace TWCore.Data.SQLite
 
             return sb.ToString();
         }
+        /// <inheritdoc />
+        /// <summary>
+        /// Get the Delete sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string GetDeleteFromContainer(GeneratorSelectionContainer container)
         {

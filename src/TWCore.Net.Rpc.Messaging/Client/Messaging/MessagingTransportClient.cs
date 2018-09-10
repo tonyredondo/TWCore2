@@ -92,6 +92,9 @@ namespace TWCore.Net.RPC.Client.Transports
         #endregion
 
         #region Events
+        /// <summary>
+        /// Events received from the RPC transport server
+        /// </summary>
         public event EventHandler<EventDataEventArgs> OnEventReceived;
         #endregion
 

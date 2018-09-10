@@ -108,7 +108,10 @@ namespace TWCore.Messaging.Server
         #endregion
 
         #region .ctor
-	    protected MQueueServerBase()
+        /// <summary>
+        /// Message Queue server base
+        /// </summary>
+        protected MQueueServerBase()
         {
             Counters = new MQServerCounters();
 	        Core.Status.Attach(collection =>
@@ -116,6 +119,9 @@ namespace TWCore.Messaging.Server
 		        collection.Add("Type", GetType().FullName);
 	        });
         }
+        /// <summary>
+        /// Message Queue server base finalizer
+        /// </summary>
         ~MQueueServerBase()
 		{
 			Dispose();

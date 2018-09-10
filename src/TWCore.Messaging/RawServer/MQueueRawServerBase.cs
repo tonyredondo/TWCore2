@@ -112,7 +112,10 @@ namespace TWCore.Messaging.RawServer
         #endregion
 
         #region .ctor
-	    protected MQueueRawServerBase()
+        /// <summary>
+        /// Message Queue server base
+        /// </summary>
+        protected MQueueRawServerBase()
         {
             Counters = new MQRawServerCounters();
 	        Core.Status.Attach(collection =>
@@ -120,6 +123,9 @@ namespace TWCore.Messaging.RawServer
 		        collection.Add("Type", GetType().FullName);
 	        });
         }
+        /// <summary>
+        /// Message Queue server base finalizer
+        /// </summary>
         ~MQueueRawServerBase()
         {
             Dispose();

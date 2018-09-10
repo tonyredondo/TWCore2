@@ -30,6 +30,7 @@ namespace TWCore.Services.Messaging
     /// </summary>
     /// <typeparam name="T">Type of message to process</typeparam>
     /// <param name="message">Message to process</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Async task</returns>
     public delegate Task ActionMessageAsyncDelegate<in T>(T message, CancellationToken cancellationToken);
 

@@ -28,10 +28,19 @@ namespace TWCore.Diagnostics.Trace.Storages
     [DataContract]
     public class MessagingTraceItem : TraceItem
     {
+        /// <summary>
+        /// Environment name
+        /// </summary>
         [XmlAttribute, DataMember]
         public string EnvironmentName { get; set; }
+        /// <summary>
+        /// Machine name
+        /// </summary>
         [XmlAttribute, DataMember]
         public string MachineName { get; set; }
+        /// <summary>
+        /// Application name
+        /// </summary>
         [XmlAttribute, DataMember]
         public string ApplicationName { get; set; }
     }

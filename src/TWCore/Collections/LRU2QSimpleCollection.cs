@@ -36,13 +36,34 @@ namespace TWCore.Collections
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
+            /// <summary>
+            /// Slot number
+            /// </summary>
             public readonly int Slot;
+            /// <summary>
+            /// Am List node
+            /// </summary>
             public LinkedListNode<TKey> ListNodeAm;
+            /// <summary>
+            /// A1 List node
+            /// </summary>
             public LinkedListNode<TKey> ListNodeA1;
+
+            #region .ctor
+            /// <summary>
+            /// LRU Collection Value Node
+            /// </summary>
+            /// <param name="value">Value node value</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value) : base(value) { }
+            /// <summary>
+            /// LRU Collection Value Node
+            /// </summary>
+            /// <param name="value">Value node value</param>
+            /// <param name="slot">Slot number</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value, int slot) : base(value) => Slot = slot;
+            #endregion
         }
         #endregion
 
@@ -97,7 +118,12 @@ namespace TWCore.Collections
         #endregion
 
         #region Overrides
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Update the internal list
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <param name="node">Value node value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void UpdateList(TKey key, ValueNode node)
         {
             var isInAm = node.ListNodeAm != null;
@@ -135,14 +161,23 @@ namespace TWCore.Collections
                 ReportInsert(key, value);
             }
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Create a value node
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <param name="value">Value</param>
+        /// <returns>ValueNode instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override ValueNode CreateNode(TKey key, TValue value)
         {
             var nValue = new ValueNode(value, _availableSlots.Count > 0 ? _availableSlots.Dequeue() : _currentSlot++);
             _slots[nValue.Slot] = key;
             return nValue;
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Handles when Clean is called
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnClean()
         {
             _a1List.Clear();
@@ -151,7 +186,11 @@ namespace TWCore.Collections
             _availableSlots.Clear();
             _currentSlot = 0;
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Handles when a node is removed
+        /// </summary>
+        /// <param name="node">ValueNode instance to remove</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnNodeRemove(ValueNode node)
         {
             if (node.ListNodeAm != null)
@@ -167,7 +206,13 @@ namespace TWCore.Collections
             _slots.Remove(node.Slot);
             _availableSlots.Enqueue(node.Slot);
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// On get the index of a key
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <param name="index">Index of that key in the collection</param>
+        /// <returns>True if the key was found in the collection; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetIndex(TKey key, out int index)
         {
             if (ValueStorage.TryGetValue(key, out var node))
@@ -178,7 +223,13 @@ namespace TWCore.Collections
             index = -1;
             return false;
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// On get the key of an index
+        /// </summary>
+        /// <param name="index">Index value</param>
+        /// <param name="key">Key of the index</param>
+        /// <returns>True if the key was found in the collection; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetKey(int index, out TKey key)
         {
             return _slots.TryGetValue(index, out key);

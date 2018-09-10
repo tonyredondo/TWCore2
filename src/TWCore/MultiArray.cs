@@ -565,12 +565,28 @@ namespace TWCore
             return new MultiArray<T>(lst, fromPosition, _count);
         }
         
+        /// <summary>
+        /// Creates a MultiArray instance from an Array
+        /// </summary>
+        /// <param name="array">Array source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
+        /// <summary>
+        /// Creates a MultiArray instance from an ArraySegment instance
+        /// </summary>
+        /// <param name="arraySegment">ArraySegment source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(ArraySegment<T> arraySegment) => new MultiArray<T>(arraySegment);
+        /// <summary>
+        /// Creates a MultiArray instance from a list of Arrays
+        /// </summary>
+        /// <param name="listOfSegments">List of arrays sources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(List<T[]> listOfSegments) => new MultiArray<T>(listOfSegments);
+        /// <summary>
+        /// Creates a MultiArray instance from an Array of Arrays
+        /// </summary>
+        /// <param name="listOfSegments">Array of arrays sources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments);
         #endregion

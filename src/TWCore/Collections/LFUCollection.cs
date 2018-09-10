@@ -37,24 +37,68 @@ namespace TWCore.Collections
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
+            /// <summary>
+            /// Slot number
+            /// </summary>
             public readonly int Slot;
+            /// <summary>
+            /// CountList Node
+            /// </summary>
             public LinkedListNode<CountNode> CountListNode;
+            /// <summary>
+            /// KeyList Node
+            /// </summary>
             public LinkedListNode<KeyNode> KeyListNode;
+
+            #region .ctor
+            /// <summary>
+            /// LFU Collection Value Node
+            /// </summary>
+            /// <param name="value">Value instance</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value) : base(value) { }
+            /// <summary>
+            /// LFU Collection Value Node
+            /// </summary>
+            /// <param name="value">Value instance</param>
+            /// <param name="slot">Slot number</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value, int slot) : base(value) => Slot = slot;
+            #endregion
 
+            /// <summary>
+            /// Count Node
+            /// </summary>
             public sealed class CountNode
             {
+                /// <summary>
+                /// Count
+                /// </summary>
                 public int Count;
+                /// <summary>
+                /// KeyNode List
+                /// </summary>
                 public LinkedList<KeyNode> List = new LinkedList<KeyNode>();
+                /// <summary>
+                /// Count Node
+                /// </summary>
+                /// <param name="count">Count value</param>
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public CountNode(int count) => Count = count;
             }
+            /// <summary>
+            /// Key Node
+            /// </summary>
             public sealed class KeyNode
             {
+                /// <summary>
+                /// Key value
+                /// </summary>
                 public readonly TKey Key;
+                /// <summary>
+                /// Key Node
+                /// </summary>
+                /// <param name="key">Key value</param>
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public KeyNode(TKey key) => Key = key;
             }

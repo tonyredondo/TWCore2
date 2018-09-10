@@ -25,17 +25,49 @@ namespace TWCore
     /// <summary>
     /// Readable Bytes
     /// </summary>
-    public struct ReadableBytes
+    public readonly struct ReadableBytes
     {
-        public long Value { get; set; }
-        public string Text { get; set; }
+        /// <summary>
+        /// Bytes Value
+        /// </summary>
+        public long Value { get; }
+        /// <summary>
+        /// Human redable bytes text
+        /// </summary>
+        public string Text { get; }
 
+        #region .ctor
+        /// <summary>
+        /// Readable bytes
+        /// </summary>
+        /// <param name="value">Bytes value</param>
+        /// <param name="text">Human redable bytes text</param>
+        public ReadableBytes(long value, string text)
+        {
+            Value = value;
+            Text = text;
+        }
+        #endregion
+
+        /// <summary>
+        /// Readable Bytes String
+        /// </summary>
+        /// <returns>Human redable bytes text</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString() 
             => Text;
+        /// <summary>
+        /// Gets the hash code of the instance
+        /// </summary>
+        /// <returns>Hash code</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
             => Value.GetHashCode() + Text?.GetHashCode() ?? 0;
+        /// <summary>
+        /// Gets if this instance is equal to other
+        /// </summary>
+        /// <param name="obj">Object instance</param>
+        /// <returns>True if the object is the same of this instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
             => obj is ReadableBytes rBytes && Value == rBytes.Value && Text == rBytes.Text;
@@ -61,10 +93,10 @@ namespace TWCore
             foreach (var order in orders)
             {
                 if (bytes > max)
-                    return new ReadableBytes { Text = string.Format("{0:##.##} {1}", decimal.Divide(bytes, max), order), Value = bytes };
+                    return new ReadableBytes(bytes, string.Format("{0:##.##} {1}", decimal.Divide(bytes, max), order));
                 max /= scale;
             }
-            return new ReadableBytes { Text = "0 Bytes", Value = bytes };
+            return new ReadableBytes(bytes, "0 Bytes");
         }
         /// <summary>
         /// Format the length to a human readeable style format.

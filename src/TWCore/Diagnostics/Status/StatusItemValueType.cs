@@ -20,12 +20,30 @@ limitations under the License.
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <summary>
+    /// Status item value type
+    /// </summary>
     public enum StatusItemValueType
     {
+        /// <summary>
+        /// Text Type
+        /// </summary>
         Text,
+        /// <summary>
+        /// Number Type
+        /// </summary>
         Number,
+        /// <summary>
+        /// Date Type
+        /// </summary>
         Date,
+        /// <summary>
+        /// Time Type
+        /// </summary>
         Time,
+        /// <summary>
+        /// Array Type
+        /// </summary>
         Array
     }
 }

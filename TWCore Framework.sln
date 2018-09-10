@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		common.props = common.props
+		commonWithDoc.props = commonWithDoc.props
 		LICENSE = LICENSE
 		README.md = README.md
 		version.props = version.props

@@ -392,14 +392,25 @@ namespace TWCore.Serialization
         #endregion
 
         #region GetSerializedObject
+        /// <summary>
+        /// Get Serialized Object
+        /// </summary>
+        /// <param name="item">Item to serialize</param>
+        /// <returns>SerializedObject instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject GetSerializedObject(object item) => item is SerializedObject serObj ? serObj : new SerializedObject(item, this);
+        /// <summary>
+        /// Get Serialized Object
+        /// </summary>
+        /// <typeparam name="T">Type of the item</typeparam>
+        /// <param name="item">Item to serialize</param>
+        /// <returns>SerializedObject instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject GetSerializedObject<T>(T item) => item is SerializedObject serObj ? serObj : new SerializedObject(item, this);
         #endregion
 
         #region CoreStart
-        public void CoreInit(Factories factories)
+        void ICoreStart.CoreInit(Factories factories)
             => SerializerManager.Register(this);
         #endregion
     }

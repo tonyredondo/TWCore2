@@ -159,7 +159,10 @@ namespace TWCore.IO
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void SetLength(long value) => throw new NotSupportedException();
-
+        /// <summary>
+        /// Dispose all resources of the instance
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Dispose(bool disposing)
         {

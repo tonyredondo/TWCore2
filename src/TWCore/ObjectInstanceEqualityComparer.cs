@@ -44,6 +44,9 @@ namespace TWCore
         private delegate bool EqualsDelegate(object x, object y);
         private delegate int HashCodeDelegate(object obj);
         //
+        /// <summary>
+        /// Object instance equality comparer default instance
+        /// </summary>
         public static readonly ObjectInstanceEqualityComparer Instance = new ObjectInstanceEqualityComparer();
         //
         private static readonly ConcurrentDictionary<Type, HashCodeDelegate> HashCodeDelegates = new ConcurrentDictionary<Type, HashCodeDelegate>();
@@ -59,6 +62,12 @@ namespace TWCore
         private static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
         private static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
 
+        /// <summary>
+        /// Get if two objects are equal
+        /// </summary>
+        /// <param name="x">First object</param>
+        /// <param name="y">Second object</param>
+        /// <returns>True if first and second object are the same</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool Equals(object x, object y) => InnerEquals(x, y);
         
@@ -77,7 +86,11 @@ namespace TWCore
             return equalsDelegate(x, y);
         }
         
-
+        /// <summary>
+        /// Gets the hashcode of an object
+        /// </summary>
+        /// <param name="obj">Object to calculate the hash code</param>
+        /// <returns>Hash code</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetHashCode(object obj)
         {

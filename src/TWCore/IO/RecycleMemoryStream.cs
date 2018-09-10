@@ -143,11 +143,18 @@ namespace TWCore.IO
                 Write(buffer, index, count);
             _canWrite = writable;
         }
+        /// <summary>
+        /// RecycleMemoryStream finalizer
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ~RecycleMemoryStream()
         {
             Dispose(true);
         }
+        /// <summary>
+        /// Dispose all internal resources
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Dispose(bool disposing)
         {

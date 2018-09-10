@@ -38,6 +38,9 @@ namespace TWCore.Services
     public class ServiceContainer : IServiceContainer
     {
         #region Statics
+        /// <summary>
+        /// Parameters handlers
+        /// </summary>
         protected static readonly NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler>();
         private static string[] _currentArgs;
         private static volatile bool _serviceEndAfterStart;
@@ -59,6 +62,9 @@ namespace TWCore.Services
         #endregion
 
         private IService _service;
+        /// <summary>
+        /// Init action
+        /// </summary>
         protected internal readonly Action InitAction;
 
         #region Properties
@@ -244,6 +250,9 @@ namespace TWCore.Services
         #endregion
 
         #region Virtual Methods
+        /// <summary>
+        /// Show header
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowHeader()
         {
@@ -262,6 +271,10 @@ namespace TWCore.Services
             Console.ResetColor();
             Console.WriteLine();
         }
+        /// <summary>
+        /// Show full header
+        /// </summary>
+        /// <param name="showSettings">Show current settings</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowFullHeader(bool showSettings = true)
         {
@@ -292,6 +305,9 @@ namespace TWCore.Services
             }
             Core.Log.InfoBasic("**************************************************************************************");
         }
+        /// <summary>
+        /// Show help
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowHelp()
         {
@@ -307,6 +323,9 @@ namespace TWCore.Services
             }
             Console.WriteLine();
         }
+        /// <summary>
+        /// Show assemblies versions
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowVersion()
         {
@@ -321,6 +340,9 @@ namespace TWCore.Services
                 Console.WriteLine("{0} = {1}", name, version);
             }
         }
+        /// <summary>
+        /// Show settings of the app
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowSettings()
         {
@@ -337,6 +359,10 @@ namespace TWCore.Services
                 Console.WriteLine("There aren't any settings configured for this app.");
             }
         }
+        /// <summary>
+        /// Internal Run command
+        /// </summary>
+        /// <param name="args">Run arguments</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void InternalRun(string[] args)
         {
@@ -458,6 +484,9 @@ namespace TWCore.Services
 
         #region Protected Methods
         private bool _discovery;
+        /// <summary>
+        /// Register discovery service
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void RegisterDiscovery()
         {
@@ -493,6 +522,9 @@ namespace TWCore.Services
                 }
             });
         }
+        /// <summary>
+        /// Unregister discovery service
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void UnregisterDiscovery()
         {

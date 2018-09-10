@@ -192,6 +192,9 @@ namespace TWCore.Cache.Storages.IO
             }
             return false;
         }
+        /// <summary>
+        /// Dispose all instance resources
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {

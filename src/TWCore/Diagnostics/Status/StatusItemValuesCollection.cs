@@ -32,13 +32,22 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         public bool SortValues { get; set; } = true;
 
+        #region .ctor
+        /// <summary>
+        /// Collection of values for a Status Item
+        /// </summary>
         public StatusItemValuesCollection()
         {
         }
+        /// <summary>
+        /// Collection of values for a Status Item
+        /// </summary>
+        /// <param name="col">IEnumerable of status item values</param>
         public StatusItemValuesCollection(IEnumerable<StatusItemValue> col) : base(col)
         {
         }
-        
+        #endregion
+
         /// <summary>
         /// Adds a new item value
         /// </summary>

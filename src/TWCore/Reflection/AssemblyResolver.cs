@@ -342,13 +342,23 @@ namespace TWCore.Reflection
             /// </summary>
             public Assembly Instance => _lazyInstance?.Value;
 
+            #region .ctor
+            /// <summary>
+            /// Assembly info constructor
+            /// </summary>
+            /// <param name="filePath">Filepath</param>
+            /// <param name="assemblyName">AssemblyName instance</param>
             public AssemblyInfo(string filePath, AssemblyName assemblyName)
             {
                 FilePath = filePath;
                 AssemblyName = assemblyName;
                 _lazyInstance = new Lazy<Assembly>(() => Assembly.LoadFile(FilePath));
             }
+            #endregion
 
+            /// <summary>
+            /// Preload the lazy instance
+            /// </summary>
             public void Preload()
             {
                 var value = _lazyInstance.Value;

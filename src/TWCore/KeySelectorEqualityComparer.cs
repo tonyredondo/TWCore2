@@ -25,9 +25,24 @@ namespace TWCore
     /// </summary>
     public static class KeySelectorEqualityComparer
     {
+        /// <summary>
+        /// Create a new KeySelector EqualityComparer
+        /// </summary>
+        /// <typeparam name="T">Type of item</typeparam>
+        /// <typeparam name="TKey">Type of the key</typeparam>
+        /// <param name="keySelector">Key selector func</param>
+        /// <param name="keyComparer"></param>
+        /// <returns>EqualityComparer instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEqualityComparer<T> Create<T, TKey>(Func<T, TKey> keySelector, IEqualityComparer<TKey> keyComparer)
             => new KeySelectorEqualityComparer<T, TKey>(keySelector, keyComparer);
+        /// <summary>
+        /// Create a new KeySelector EqualityComparer
+        /// </summary>
+        /// <typeparam name="T">Type of item</typeparam>
+        /// <typeparam name="TKey">Type of the key</typeparam>
+        /// <param name="keySelector">Key selector func</param>
+        /// <returns>EqualityComparer instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEqualityComparer<T> Create<T, TKey>(Func<T, TKey> keySelector)
             => new KeySelectorEqualityComparer<T, TKey>(keySelector);

@@ -339,6 +339,16 @@ namespace TWCore.Net.RPC.Client
             }
         }
 
+        /// <summary>
+        /// Invoke a Server RPC method with 1 argument 
+        /// </summary>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeAsync<TArg1, TReturn>(string serviceName, string method, TArg1 arg1, CancellationToken? cancellationToken = null)
         {
@@ -360,6 +370,18 @@ namespace TWCore.Net.RPC.Client
                 throw response.Exception.GetException();
             return (TReturn)response.ReturnValue;
         }
+        /// <summary>
+        /// Invoke a Server RPC method with 2 argument 
+        /// </summary>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, CancellationToken? cancellationToken = null)
         {
@@ -384,6 +406,20 @@ namespace TWCore.Net.RPC.Client
                 throw response.Exception.GetException();
             return (TReturn)response.ReturnValue;
         }
+        /// <summary>
+        /// Invoke a Server RPC method with 3 argument 
+        /// </summary>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TArg3, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, TArg3 arg3, CancellationToken? cancellationToken = null)
         {
@@ -411,6 +447,22 @@ namespace TWCore.Net.RPC.Client
                 throw response.Exception.GetException();
             return (TReturn)response.ReturnValue;
         }
+        /// <summary>
+        /// Invoke a Server RPC method with 4 argument 
+        /// </summary>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, CancellationToken? cancellationToken = null)
         {

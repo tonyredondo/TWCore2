@@ -19,63 +19,158 @@ using System.Threading.Tasks;
 
 namespace TWCore.Data.Cache
 {
+    /// <summary>
+    /// Cached dal base class
+    /// </summary>
+    /// <typeparam name="TKey">Key type</typeparam>
+    /// <typeparam name="TEntity">Entity type</typeparam>
+    /// <typeparam name="TDal">Dal Type</typeparam>
     public abstract class CachedDal<TKey, TEntity, TDal> : ICachedDal
     {
+        /// <summary>
+        /// All entities
+        /// </summary>
         protected IEnumerable<TEntity> All { get; set; }
+        /// <summary>
+        /// Entities cache
+        /// </summary>
         protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        /// <summary>
+        /// Current Dal
+        /// </summary>
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
-
+        
+        /// <summary>
+        /// Load cache
+        /// </summary>
+        public abstract void Load();
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         public virtual void Clear()
         {
             Cache.Clear();
             All = null;
         }
-        public abstract void Load();
     }
 
+    /// <summary>
+    /// Async Cached dal base class
+    /// </summary>
+    /// <typeparam name="TKey">Key type</typeparam>
+    /// <typeparam name="TEntity">Entity type</typeparam>
+    /// <typeparam name="TDal">Dal Type</typeparam>
     public abstract class CachedDalAsync<TKey, TEntity, TDal> : ICachedDalAsync
     {
+        /// <summary>
+        /// All entities
+        /// </summary>
         protected IEnumerable<TEntity> All { get; set; }
+        /// <summary>
+        /// Entities cache
+        /// </summary>
         protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        /// <summary>
+        /// Current Dal
+        /// </summary>
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
+        /// <summary>
+        /// Load cache
+        /// </summary>
+        /// <returns>Load task</returns>
+        public abstract Task LoadAsync();
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         public virtual void Clear()
         {
             Cache.Clear();
             All = null;
         }
-        public abstract Task LoadAsync();
     }
 
+
+    /// <summary>
+    /// Cached dal base class
+    /// </summary>
+    /// <typeparam name="TKey">Key 1 type</typeparam>
+    /// <typeparam name="TKey2">Key 2 type</typeparam>
+    /// <typeparam name="TEntity">Entity type</typeparam>
+    /// <typeparam name="TDal">Dal Type</typeparam>
     public abstract class CachedDal<TKey, TKey2, TEntity, TDal> : ICachedDal
     {
+        /// <summary>
+        /// All entities
+        /// </summary>
         protected IEnumerable<TEntity> All { get; set; }
+        /// <summary>
+        /// Entities cache 1
+        /// </summary>
         protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        /// <summary>
+        /// Entities cache 2
+        /// </summary>
         protected NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
+        /// <summary>
+        /// Current Dal
+        /// </summary>
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
+        /// <summary>
+        /// Load cache
+        /// </summary>
+        public abstract void Load();
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         public virtual void Clear()
         {
             Cache.Clear();
             Cache2.Clear();
             All = null;
         }
-        public abstract void Load();
     }
 
+    /// <summary>
+    /// Async Cached dal base class
+    /// </summary>
+    /// <typeparam name="TKey">Key 1 type</typeparam>
+    /// <typeparam name="TKey2">Key 2 type</typeparam>
+    /// <typeparam name="TEntity">Entity type</typeparam>
+    /// <typeparam name="TDal">Dal Type</typeparam>
     public abstract class CachedDalAsync<TKey, TKey2, TEntity, TDal> : ICachedDalAsync
     {
+        /// <summary>
+        /// All entities
+        /// </summary>
         protected IEnumerable<TEntity> All { get; set; }
+        /// <summary>
+        /// Entities cache 1
+        /// </summary>
         protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        /// <summary>
+        /// Entities cache 2
+        /// </summary>
         protected NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
+        /// <summary>
+        /// Current Dal
+        /// </summary>
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
+        /// <summary>
+        /// Load cache
+        /// </summary>
+        /// <returns>Load task</returns>
+        public abstract Task LoadAsync();
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         public virtual void Clear()
         {
             Cache.Clear();
             Cache2.Clear();
             All = null;
         }
-        public abstract Task LoadAsync();
     }
 }

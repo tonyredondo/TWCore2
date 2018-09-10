@@ -620,14 +620,14 @@ namespace TWCore.Cache.Storages.IO
         {
             DisposeAsync(disposing).WaitAsync();
         }
-
+        /// <summary>
+        /// Dispose the folder handler in async
+        /// </summary>
+        /// <param name="disposing"></param>
+        /// <returns>Task of the disposing</returns>
         public async Task DisposeAsync(bool disposing)
         {
             if (_disposedValue) return;
-            if (disposing)
-            {
-
-            }
             Core.Log.InfoBasic("Stopping storage folder worker on: {0}", BasePath);
             await _storageWorker.StopAsync(int.MaxValue).ConfigureAwait(false);
             Core.Log.InfoBasic("Saving metadata on: {0}", BasePath);
@@ -646,11 +646,17 @@ namespace TWCore.Cache.Storages.IO
             Core.Log.InfoBasic("Folder disposed: {0}", BasePath);
         }
 
+        /// <summary>
+        /// FolderHandler finalizer
+        /// </summary>
         ~FolderHandler()
         {
             Dispose(false);
         }
 
+        /// <summary>
+        /// Dispose the folder handler
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
@@ -664,8 +670,17 @@ namespace TWCore.Cache.Storages.IO
     /// </summary>
     public enum FolderHandlerStatus
     {
+        /// <summary>
+        /// Folder handler has just initialized
+        /// </summary>
         Startup,
+        /// <summary>
+        /// Folder handler has been loaded
+        /// </summary>
         Loaded,
+        /// <summary>
+        /// Folder handler failed to load.
+        /// </summary>
         LoadFailed
     }
 }

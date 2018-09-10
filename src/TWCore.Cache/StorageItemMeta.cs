@@ -214,6 +214,9 @@ namespace TWCore.Cache
         #endregion
 
         #region Protected Methods
+        /// <summary>
+        /// Fires the OnExpire event
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void FireOnExpire()
         {

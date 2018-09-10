@@ -22,7 +22,7 @@ namespace TWCore.Serialization.WSerializer
     /// <summary>
     /// Serializer Byte Map Type
     /// </summary>
-    public class DataType
+    internal class DataType
     {
         public const byte   Unknown 					= 0;
         public const byte   TypeStart                   = 1;

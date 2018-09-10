@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Buffers;
 // ReSharper disable InconsistentNaming
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.WSerializer.Types
 {

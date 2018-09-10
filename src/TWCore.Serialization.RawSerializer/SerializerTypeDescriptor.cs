@@ -17,13 +17,12 @@ limitations under the License.
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TWCore.Reflection;
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.RawSerializer
 {

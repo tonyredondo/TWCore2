@@ -23,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.PWSerializer.Deserializer
 {

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using TWCore.Serialization.PWSerializer.Types.ValueTypes;
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.PWSerializer.Types
 {

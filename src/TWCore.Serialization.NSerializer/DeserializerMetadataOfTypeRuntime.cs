@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.NSerializer
 {

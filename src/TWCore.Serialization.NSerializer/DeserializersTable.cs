@@ -25,6 +25,7 @@ using System.Text;
 using NonBlocking;
 using TWCore.Reflection;
 // ReSharper disable UnusedMember.Local
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.NSerializer
 {

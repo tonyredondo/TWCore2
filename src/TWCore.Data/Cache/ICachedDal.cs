@@ -18,14 +18,33 @@ using System.Threading.Tasks;
 
 namespace TWCore.Data.Cache
 {
+    /// <summary>
+    /// Cached dal interface
+    /// </summary>
     public interface ICachedDal
     {
+        /// <summary>
+        /// Load cache
+        /// </summary>
         void Load();
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         void Clear();
     }
+    /// <summary>
+    /// Async cached dal interface
+    /// </summary>
     public interface ICachedDalAsync
     {
+        /// <summary>
+        /// Load cache
+        /// </summary>
+        /// <returns>Load task</returns>
         Task LoadAsync();
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         void Clear();
     }
 }

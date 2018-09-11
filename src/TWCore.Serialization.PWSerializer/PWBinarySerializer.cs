@@ -47,6 +47,12 @@ namespace TWCore.Serialization.PWSerializer
         public override string[] MimeTypes => sMimeTypes;
         #endregion
 
+        /// <summary>
+        /// Gets the object instance deserialized from a stream
+        /// </summary>
+        /// <param name="stream">Deserialized stream value</param>
+        /// <param name="itemType">Object type</param>
+        /// <returns>Object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
@@ -59,6 +65,13 @@ namespace TWCore.Serialization.PWSerializer
             var obj = ser.Deserialize(stream, itemType);
             return obj;
         }
+        /// <summary>
+        /// Serialize an object and writes it to the stream
+        /// </summary>
+        /// <param name="stream">Destination stream</param>
+        /// <param name="item">Object instance to serialize</param>
+        /// <param name="itemType">Object type</param>
+        /// <returns>Deserialized byte array value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {

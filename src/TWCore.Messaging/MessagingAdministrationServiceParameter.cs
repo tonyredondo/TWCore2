@@ -24,7 +24,15 @@ namespace TWCore.Services
     /// </summary>
     public class MessagingAdministrationServiceParameter : ContainerParameterService
     {
+        /// <summary>
+        /// Messaging administration service parameter
+        /// </summary>
         public MessagingAdministrationServiceParameter() : base("createqueues", "Reads the default configuration and create all needed queues.") { }
+
+        /// <summary>
+        /// OnHandler Method 
+        /// </summary>
+        /// <param name="info">Parameter handler info</param>
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             var queues = Core.Services.GetDefaultQueuesConfiguration();

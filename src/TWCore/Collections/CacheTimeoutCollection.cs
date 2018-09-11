@@ -57,17 +57,53 @@ namespace TWCore.Collections
         /// <summary>
         /// Internal dictionary item
         /// </summary>
-        public struct TimeoutStruct
+        public readonly struct TimeoutStruct
         {
-            public TValue Value;
-            public Task Task;
-            public TimeSpan Timeout;
-            public CancellationTokenSource TokenSource;
+            /// <summary>
+            /// Current Value
+            /// </summary>
+            public readonly TValue Value;
+            /// <summary>
+            /// Timeout
+            /// </summary>
+            public readonly TimeSpan Timeout;
+            /// <summary>
+            /// Task that handles the timeout
+            /// </summary>
+            public readonly Task Task;
+            /// <summary>
+            /// Cancellation token source of the task.
+            /// </summary>
+            public readonly CancellationTokenSource TokenSource;
 
+            /// <summary>
+            /// Create a new TimeoutStruct
+            /// </summary>
+            /// <param name="value">Value</param>
+            /// <param name="timeout">Timeout</param>
+            /// <param name="task">Task that handles the timeout</param>
+            /// <param name="tokenSource">Cancellation token source</param>
+            public TimeoutStruct(TValue value, TimeSpan timeout, Task task, CancellationTokenSource tokenSource)
+            {
+                Value = value;
+                Task = task;
+                Timeout = timeout;
+                TokenSource = tokenSource;
+            }
+
+            /// <summary>
+            /// Gets the struct hashcode
+            /// </summary>
+            /// <returns>Hashcode</returns>
             public override int GetHashCode()
             {
                 return Value.GetHashCode() + Timeout.GetHashCode();
             }
+            /// <summary>
+            /// Gets if the struct is equal to other object or struct
+            /// </summary>
+            /// <param name="obj">Object to compare</param>
+            /// <returns>True if both are equals; otherwise, false.</returns>
             public override bool Equals(object obj)
             {
                 return obj is TimeoutStruct tStruct && 
@@ -345,22 +381,17 @@ namespace TWCore.Collections
         private TimeoutStruct Create(TKey key, TValue value, TimeSpan valueTimeout)
         {
             var cts = new CancellationTokenSource();
-            return new TimeoutStruct
-            {
-                Value = value,
-                TokenSource = cts,
-                Timeout = valueTimeout,
-                Task = Task.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
+            return new TimeoutStruct(value, valueTimeout, 
+                Task.Delay((int) valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
                 {
-                    var objArray = (object[])obj;
-                    var mCollection = (ICacheCollection<TKey, TimeoutStruct>)objArray[0];
-                    var mKey = (TKey)objArray[1];
-					if (mCollection != null && mCollection.TryRemove(mKey, out var tVal))
-                        OnItemTimeout?.Invoke(this, new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });
-                }, new object[] { _collection, key }, CancellationToken.None,
-                        TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
-                        TaskScheduler.Default)
-            };
+                    var objArray = (object[]) obj;
+                    var mCollection = (ICacheCollection<TKey, TimeoutStruct>) objArray[0];
+                    var mKey = (TKey) objArray[1];
+                    if (mCollection != null && mCollection.TryRemove(mKey, out var tVal))
+                        OnItemTimeout?.Invoke(this, new TimeOutEventArgs {Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout});
+                }, new object[] {_collection, key}, CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
+                TaskScheduler.Default), cts);
         }
 
         private class TimeoutDictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>

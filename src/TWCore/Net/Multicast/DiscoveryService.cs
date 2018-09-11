@@ -44,7 +44,13 @@ namespace TWCore.Net.Multicast
         private static bool _connected;
 
         #region Consts
+        /// <summary>
+        /// Framework category constant
+        /// </summary>
         public const string FrameworkCategory = "FRAMEWORK";
+        /// <summary>
+        /// App category constant
+        /// </summary>
         public const string AppCategory = "APP";
         #endregion
 
@@ -380,6 +386,9 @@ namespace TWCore.Net.Multicast
         [Serializable, DataContract]
         public class RegisteredService
         {
+            /// <summary>
+            /// Func to get the data about the service
+            /// </summary>
             [NonSerialize, NonSerialized]
             public Func<SerializedObject> GetDataFunc;
 

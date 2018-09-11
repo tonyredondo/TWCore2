@@ -35,6 +35,9 @@ namespace TWCore.Diagnostics.Log.Storages
     [StatusName("Storages")]
     public class LogStorageCollection : ILogStorage
     {
+        /// <summary>
+        /// All Log Storage Levels
+        /// </summary>
         public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
         private readonly object _locker = new object();
         private readonly List<(ILogStorage, LogLevel)> _items = new List<(ILogStorage, LogLevel)>();

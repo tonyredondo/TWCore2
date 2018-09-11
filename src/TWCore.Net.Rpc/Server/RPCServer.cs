@@ -43,6 +43,9 @@ namespace TWCore.Net.RPC.Server
         private readonly Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)> _methods = new Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)>(100);
         private ITransportServer _transport;
 
+        /// <summary>
+        /// Connection cancellation token
+        /// </summary>
         [ThreadStatic]
         public static CancellationToken ConnectionCancellationToken;
 

@@ -16,7 +16,6 @@ limitations under the License.
 
 using TWCore.Cache.Storages.IO;
 using TWCore.Collections;
-using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global

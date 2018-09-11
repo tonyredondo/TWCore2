@@ -35,6 +35,9 @@ namespace TWCore.Geo
         private Range<uint> _range;
 
         #region Properties
+        /// <summary>
+        /// Range From
+        /// </summary>
         [XmlAttribute, DataMember]
         public uint From
         {
@@ -43,6 +46,9 @@ namespace TWCore.Geo
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { _range.From = value; }
         }
+        /// <summary>
+        /// Range To
+        /// </summary>
         [XmlAttribute, DataMember]
         public uint To
         {
@@ -51,10 +57,19 @@ namespace TWCore.Geo
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { _range.To = value; }
         }
+        /// <summary>
+        /// Country
+        /// </summary>
         [XmlAttribute, DataMember]
         public string Country { get; set; }
+        /// <summary>
+        /// Length
+        /// </summary>
         [XmlIgnore, NonSerialize]
         public uint Length => _range.To - _range.From;
+        /// <summary>
+        /// Range
+        /// </summary>
         [XmlIgnore, NonSerialize]
         public Range<uint> Range => _range;
         #endregion

@@ -17,9 +17,21 @@ limitations under the License.
 
 namespace TWCore.Serialization.RawSerializer
 {
+    /// <summary>
+    /// Raw serializer interface
+    /// </summary>
     public interface IRawSerializable
     {
+        /// <summary>
+        /// Serialize object
+        /// </summary>
+        /// <param name="table">Serializers table</param>
         void Serialize(SerializersTable table);
+        /// <summary>
+        /// Fill instance
+        /// </summary>
+        /// <param name="table">Deserializer table</param>
+        /// <param name="metadata">Deserializer metadata</param>
         void Fill(DeserializersTable table, DeserializerMetaDataOfType metadata);
     }
 }

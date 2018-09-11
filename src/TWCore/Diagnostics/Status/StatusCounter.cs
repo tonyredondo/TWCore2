@@ -58,10 +58,16 @@ namespace TWCore.Diagnostics.Status
             Name = name;
             Core.Status.Attach(GetStatusItem);
         }
+        /// <summary>
+        /// StatusCounter instance finalizer
+        /// </summary>
         ~StatusCounter()
         {
             Dispose();
         }
+        /// <summary>
+        /// Dispose all instance resources
+        /// </summary>
         public void Dispose()
         {
             Core.Status.DeAttachObject(this);

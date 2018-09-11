@@ -65,7 +65,7 @@ namespace TWCore.Messaging.NSQ
 
 			var senderOptions = Config.ResponseOptions.ServerSenderOptions;
 			if (senderOptions == null)
-				throw new ArgumentNullException("ServerSenderOptions");
+				throw new NullReferenceException("ServerSenderOptions is null.");
 
 			var data = SenderSerializer.Serialize(message);
             var body = NSQueueClient.CreateMessageBody(data, message.CorrelationId);

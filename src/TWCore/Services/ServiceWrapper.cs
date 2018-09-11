@@ -228,12 +228,33 @@ namespace TWCore.Services
         /// </summary>
         public enum ServiceStatus
         {
+            /// <summary>
+            /// Service starting
+            /// </summary>
             Starting,
+            /// <summary>
+            /// Service running
+            /// </summary>
             Running,
+            /// <summary>
+            /// Service stopping
+            /// </summary>
             Stopping,
+            /// <summary>
+            /// Service stopped
+            /// </summary>
             Stopped,
+            /// <summary>
+            /// Service pausing
+            /// </summary>
             Pausing,
+            /// <summary>
+            /// Service paused
+            /// </summary>
             Paused,
+            /// <summary>
+            /// Service continuing
+            /// </summary>
             Continuing
         }
         #endregion

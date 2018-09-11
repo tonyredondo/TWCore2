@@ -24,15 +24,90 @@ using TWCore.Reflection;
 namespace TWCore
 {
     #region Delegates
+    /// <summary>
+    /// Weak action delegate
+    /// </summary>
     public delegate bool WeakAction();
+    /// <summary>
+    /// Weak action delegate
+    /// </summary>
+    /// <param name="arg">Argument 1</param>
+    /// <typeparam name="T">Type of argument 1</typeparam>
     public delegate bool WeakAction<in T>(T arg);
+    /// <summary>
+    /// Weak action delegate
+    /// </summary>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
+    /// <typeparam name="T1">Type of argument 1</typeparam>
+    /// <typeparam name="T2">Type of argument 2</typeparam>
     public delegate bool WeakAction<in T1, in T2>(T1 arg1, T2 arg2);
+    /// <summary>
+    /// Weak action delegate
+    /// </summary>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
+    /// <param name="arg3">Argument 3</param>
+    /// <typeparam name="T1">Type of argument 1</typeparam>
+    /// <typeparam name="T2">Type of argument 2</typeparam>
+    /// <typeparam name="T3">Type of argument 3</typeparam>
     public delegate bool WeakAction<in T1, in T2, in T3>(T1 arg1, T2 arg2, T3 arg3);
+    /// <summary>
+    /// Weak action delegate
+    /// </summary>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
+    /// <param name="arg3">Argument 3</param>
+    /// <param name="arg4">Argument 3</param>
+    /// <typeparam name="T1">Type of argument 1</typeparam>
+    /// <typeparam name="T2">Type of argument 2</typeparam>
+    /// <typeparam name="T3">Type of argument 3</typeparam>
+    /// <typeparam name="T4">Type of argument 4</typeparam>
     public delegate bool WeakAction<in T1, in T2, in T3, in T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4);
+    /// <summary>
+    /// Weak Func delegate
+    /// </summary>
+    /// <typeparam name="TResult">Type of result</typeparam>
     public delegate (bool Ran, TResult Result) WeakFunc<TResult>();
+    /// <summary>
+    /// Weak Func delegate
+    /// </summary>
+    /// <param name="arg">Argument 1</param>
+    /// <typeparam name="T">Type of argument 1</typeparam>
+    /// <typeparam name="TResult">Type of result</typeparam>
     public delegate (bool Ran, TResult Result) WeakFunc<in T, TResult>(T arg);
+    /// <summary>
+    /// Weak Func delegate
+    /// </summary>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
+    /// <typeparam name="T1">Type of argument 1</typeparam>
+    /// <typeparam name="T2">Type of argument 2</typeparam>
+    /// <typeparam name="TResult">Type of result</typeparam>
     public delegate (bool Ran, TResult Result) WeakFunc<in T1, in T2, TResult>(T1 arg1, T2 arg2);
+    /// <summary>
+    /// Weak Func delegate
+    /// </summary>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
+    /// <param name="arg3">Argument 3</param>
+    /// <typeparam name="T1">Type of argument 1</typeparam>
+    /// <typeparam name="T2">Type of argument 2</typeparam>
+    /// <typeparam name="T3">Type of argument 3</typeparam>
+    /// <typeparam name="TResult">Type of result</typeparam>
     public delegate (bool Ran, TResult Result) WeakFunc<in T1, in T2, in T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
+    /// <summary>
+    /// Weak Func delegate
+    /// </summary>
+    /// <param name="arg1">Argument 1</param>
+    /// <param name="arg2">Argument 2</param>
+    /// <param name="arg3">Argument 3</param>
+    /// <param name="arg4">Argument 4</param>
+    /// <typeparam name="T1">Type of argument 1</typeparam>
+    /// <typeparam name="T2">Type of argument 2</typeparam>
+    /// <typeparam name="T3">Type of argument 3</typeparam>
+    /// <typeparam name="T4">Type of argument 4</typeparam>
+    /// <typeparam name="TResult">Type of result</typeparam>
     public delegate (bool Ran, TResult Result) WeakFunc<in T1, in T2, in T3, in T4, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4);
     #endregion
 

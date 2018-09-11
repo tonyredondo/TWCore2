@@ -21,8 +21,19 @@ using TWCore.Diagnostics.Status;
 
 namespace TWCore.Triggers
 {
+    /// <summary>
+    /// Update event trigger delegate
+    /// </summary>
+    /// <param name="environment">Environment name</param>
+    /// <param name="applicationName">Application name</param>
+    /// <param name="machineName">Machine name</param>
+    /// <param name="triggerName">Trigger name</param>
+    /// <returns>True if the trigger must be trigged; otherwise, false.</returns>
     public delegate bool UpdateEventTriggerDelegate(string environment, string applicationName, string machineName, string triggerName);
 
+    /// <summary>
+    /// Update event trigger
+    /// </summary>
     [StatusName("Update Event Trigger")]
     public class UpdateEventTrigger : TriggerBase
     {
@@ -32,6 +43,9 @@ namespace TWCore.Triggers
         private readonly string _triggerName;
 
         #region Events
+        /// <summary>
+        /// Event to check if an update has been made and the trigger must be triggered.
+        /// </summary>
         public event UpdateEventTriggerDelegate OnEventTriggerCheck;
         #endregion
 
@@ -43,11 +57,20 @@ namespace TWCore.Triggers
         #endregion
 
         #region .ctor
+        /// <summary>
+        /// Update event trigger with a default check frequency of 60 sec
+        /// </summary>
+        /// <param name="triggerName">Trigger name</param>
         public UpdateEventTrigger(string triggerName)
         {
             _triggerName = triggerName;
             CheckFrequency = TimeSpan.FromSeconds(60);
         }
+        /// <summary>
+        /// Update event trigger
+        /// </summary>
+        /// <param name="triggerName">Trigger name</param>
+        /// <param name="checkFrequency">Check frequency timespan</param>
         public UpdateEventTrigger(string triggerName, TimeSpan checkFrequency)
         {
             _triggerName = triggerName;
@@ -56,6 +79,9 @@ namespace TWCore.Triggers
         #endregion
 
         #region Overrides
+        /// <summary>
+        /// On trigger init
+        /// </summary>
         protected override void OnInit()
         {
             Core.Log.LibVerbose("{0}: OnInit(), setting frequency {1}", GetType().Name, CheckFrequency);
@@ -81,6 +107,9 @@ namespace TWCore.Triggers
                 _processing = false;
             }, _tokenSource, CheckFrequency, CheckFrequency);
         }
+        /// <summary>
+        /// On trigger finalize
+        /// </summary>
         protected override void OnFinalize()
         {
             Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);

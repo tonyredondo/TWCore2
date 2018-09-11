@@ -21,9 +21,21 @@ namespace TWCore.Cache
 	/// </summary>
 	public enum StorageType
 	{
+        /// <summary>
+        /// Unknown
+        /// </summary>
 		Unknown,
+        /// <summary>
+        /// Memory
+        /// </summary>
 		Memory,
+        /// <summary>
+        /// File
+        /// </summary>
 		File,
+        /// <summary>
+        /// Network
+        /// </summary>
 		Network
 	}
 }

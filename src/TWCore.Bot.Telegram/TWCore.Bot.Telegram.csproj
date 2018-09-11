@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Title>TWCore.Bot.Telegram</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Telegram.Bot" Version="14.9.0" />
+    <PackageReference Include="Telegram.Bot" Version="14.10.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Bot\TWCore.Bot.csproj" />

@@ -20,11 +20,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TWCore;
 using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
+// ReSharper disable UnusedMember.Local
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace TWCore.Cache
 {
@@ -1072,7 +1073,7 @@ namespace TWCore.Cache
 				.SelectMany(a => a)
 				.Distinct()
 				.ToArray();
-            if (res != null && res.Length > 0)
+            if (res.Length > 0)
             {
                 IndexReportRemoveTags(tags);
                 foreach (var str in res)
@@ -1191,16 +1192,14 @@ namespace TWCore.Cache
                 }
                 return dct.Where(d => d.Value.Count == tags.Length).Select(i => i.Key).ToArray();
             }
-            else
-            {
-                var hset = new HashSet<string>();
-                foreach (var (tag, keys) in lstIndexes)
-                {
-                    foreach (var key in keys.Keys)
-                        hset.Add(key);
-                }
-                return hset.ToArray();
-            }
+
+	        var hset = new HashSet<string>();
+	        foreach (var (_, keys) in lstIndexes)
+	        {
+		        foreach (var key in keys.Keys)
+			        hset.Add(key);
+	        }
+	        return hset.ToArray();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void IndexCreate(string[] tags)

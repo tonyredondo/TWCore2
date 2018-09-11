@@ -36,11 +36,13 @@ namespace TWCore.Cache
         /// Storage item tags
         /// </summary>
         public List<string> Tags { get; }
+
         /// <inheritdoc />
         /// <summary>
         /// Event args of the event when an Item has been removed from the storage
         /// </summary>
         /// <param name="key">Key of the removed item</param>
+        /// <param name="tags">Tags of the removed item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ItemRemovedEventArgs(string key, List<string> tags)
         {

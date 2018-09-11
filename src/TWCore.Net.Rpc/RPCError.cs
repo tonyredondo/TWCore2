@@ -26,6 +26,9 @@ namespace TWCore.Net.RPC
     [Serializable, DataContract]
     public class RPCError : RPCMessage
     {
+        /// <summary>
+        /// Message exception
+        /// </summary>
         [DataMember]
         public SerializableException Exception { get; set; }
     }

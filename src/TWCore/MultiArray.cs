@@ -565,12 +565,28 @@ namespace TWCore
             return new MultiArray<T>(lst, fromPosition, _count);
         }
         
+        /// <summary>
+        /// Creates a MultiArray instance from an Array
+        /// </summary>
+        /// <param name="array">Array source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
+        /// <summary>
+        /// Creates a MultiArray instance from an ArraySegment instance
+        /// </summary>
+        /// <param name="arraySegment">ArraySegment source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(ArraySegment<T> arraySegment) => new MultiArray<T>(arraySegment);
+        /// <summary>
+        /// Creates a MultiArray instance from a list of Arrays
+        /// </summary>
+        /// <param name="listOfSegments">List of arrays sources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(List<T[]> listOfSegments) => new MultiArray<T>(listOfSegments);
+        /// <summary>
+        /// Creates a MultiArray instance from an Array of Arrays
+        /// </summary>
+        /// <param name="listOfSegments">Array of arrays sources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments);
         #endregion
@@ -600,12 +616,32 @@ namespace TWCore
             private MultiArray<byte> _source;
             private int _position;
             private bool _disposed;
-            
+
             #region Properties
+            /// <inheritdoc />
+            /// <summary>
+            ///  Gets a value indicating whether the current stream supports reading.
+            /// </summary>
             public override bool CanRead => true;
+            /// <inheritdoc />
+            /// <summary>
+            /// Gets a value indicating whether the current stream supports seeking.
+            /// </summary>
             public override bool CanSeek => true;
+            /// <inheritdoc />
+            /// <summary>
+            /// Gets a value indicating whether the current stream supports writing.
+            /// </summary>
             public override bool CanWrite => false;
+            /// <inheritdoc />
+            /// <summary>
+            /// Gets the length in bytes of the stream.
+            /// </summary>
             public override long Length => _source._count;
+            /// <inheritdoc />
+            /// <summary>
+            /// Gets or sets the position within the current stream.
+            /// </summary>
             public override long Position
             {
                 get => _position;
@@ -620,6 +656,9 @@ namespace TWCore
             private MultiArrayReadOnlyStream()
             {
             }
+            /// <summary>
+            /// MultiArray Readonly stream finalizer
+            /// </summary>
             ~MultiArrayReadOnlyStream()
             {
                 if (_disposed) return;
@@ -628,6 +667,11 @@ namespace TWCore
                 _disposed = true;
                 StreamPool.Store(this);
             }
+            /// <summary>
+            /// Creates a MultiArrayReadOnlyStream instance from a MultiArray source
+            /// </summary>
+            /// <param name="source">MultiArray source</param>
+            /// <returns>A MultiArrayReadOnlyStream instance from the pool</returns>
             public static MultiArrayReadOnlyStream New(MultiArray<byte> source)
             {
                 var stream = StreamPool.New();
@@ -635,6 +679,10 @@ namespace TWCore
                 stream._disposed = false;
                 return stream;
             }
+            /// <summary>
+            /// Dispose all resources
+            /// </summary>
+            /// <param name="disposing"></param>
             protected override void Dispose(bool disposing)
             {
                 if (_disposed) return;
@@ -645,6 +693,15 @@ namespace TWCore
             }
             #endregion
 
+            /// <inheritdoc />
+            /// <summary>
+            /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
+            /// </summary>
+            /// <param name="buffer">An array of bytes. When this method returns, the buffer contains the specified byte array with the values between offset and (offset + count - 1) replaced by the bytes read from the current source.</param>
+            /// <param name="offset">The zero-based byte offset in buffer at which to begin storing the data read from the current stream.</param>
+            /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
+            /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override int Read(byte[] buffer, int offset, int count)
             {
                 if (_position == _source._count)
@@ -654,12 +711,23 @@ namespace TWCore
                 _position += bytes;
                 return bytes;
             }
+            /// <inheritdoc />
+            /// <summary>
+            /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
+            /// </summary>
+            /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override int ReadByte()
             {
                 if (_position == _source._count)
                     return -1;
                 return _source[_position++];
             }
+            /// <summary>
+            /// Read and fills the span with a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
+            /// </summary>
+            /// <param name="buffer">Span buffer to fill</param>
+            /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
             public override int Read(Span<byte> buffer)
             {
                 if (_position == _source._count)
@@ -668,7 +736,14 @@ namespace TWCore
                 _position += bytes;
                 return bytes;
             }
-
+            /// <inheritdoc />
+            /// <summary>
+            /// Sets the position within the current stream.
+            /// </summary>
+            /// <param name="offset">A byte offset relative to the origin parameter.</param>
+            /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
+            /// <returns>The new position within the current stream.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override long Seek(long offset, SeekOrigin origin)
             {
                 long res;
@@ -689,16 +764,33 @@ namespace TWCore
                 Position = res;
                 return Position;
             }
-            
-
+            /// <inheritdoc />
+            /// <summary>
+            /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void Flush()
             {
                 throw new IOException("The stream is read only.");
             }
+            /// <inheritdoc />
+            /// <summary>
+            /// Sets the length of the current stream.
+            /// </summary>
+            /// <param name="value">The desired length of the current stream in bytes.</param>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void SetLength(long value)
             {
                 throw new IOException("The stream is read only.");
             }
+            /// <inheritdoc />
+            /// <summary>
+            ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+            /// </summary>
+            /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
+            /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
+            /// <param name="count">The number of bytes to be written to the current stream.</param>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void Write(byte[] buffer, int offset, int count)
             {
                 throw new IOException("The stream is read only.");

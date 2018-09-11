@@ -11,11 +11,26 @@ namespace DasMulli.Win32.ServiceUtils
     /// </summary>
     public class ServiceFailureActions : IEquatable<ServiceFailureActions>
     {
+        #region Properties
+        /// <summary>
+        /// Reset period
+        /// </summary>
         public TimeSpan ResetPeriod { get; }
+        /// <summary>
+        /// Reboot message
+        /// </summary>
         public string RebootMessage { get; }
+        /// <summary>
+        /// Restart command
+        /// </summary>
         public string RestartCommand { get; }
+        /// <summary>
+        /// Actions
+        /// </summary>
         public IReadOnlyCollection<ScAction> Actions { get; }
+        #endregion
 
+        #region .ctor
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceFailureActions"/> class.
         /// </summary>
@@ -26,14 +41,36 @@ namespace DasMulli.Win32.ServiceUtils
             RestartCommand = restartCommand;
             Actions = actions;
         }
+        #endregion
 
+        #region Methods
+        /// <summary>
+        /// Checks if the ServiceFailureActions is equals to other instance
+        /// </summary>
+        /// <param name="obj">Other object instance</param>
+        /// <returns>True if both actions are equals; otherwise, false.</returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is ServiceFailureActions srvFailure && Equals(srvFailure);
         }
 
+        /// <summary>
+        /// Checks if the ServiceFailureActions is equals to other instance
+        /// </summary>
+        /// <param name="other">Other ServiceFailureActions instance</param>
+        /// <returns>True if both actions are equals; otherwise, false.</returns>
+        public bool Equals(ServiceFailureActions other)
+        {
+            if (other == null)
+                return false;
+            return GetHashCode() == other.GetHashCode();
+        }
 
+        /// <summary>
+        /// Gets the hashcode of the instance
+        /// </summary>
+        /// <returns>Hashcode</returns>
         public override int GetHashCode()
         {
             return HashCode
@@ -42,14 +79,6 @@ namespace DasMulli.Win32.ServiceUtils
                 .And(RestartCommand)
                 .AndEach(Actions);
         }
-
-        public bool Equals(ServiceFailureActions other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-            return GetHashCode() == other.GetHashCode();
-        }
+        #endregion
     }
 }

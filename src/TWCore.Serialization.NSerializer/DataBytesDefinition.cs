@@ -19,7 +19,7 @@ namespace TWCore.Serialization.NSerializer
     /// <summary>
     /// Serializer Bytes Definition
     /// </summary>
-    public class DataBytesDefinition
+    internal class DataBytesDefinition
     {
         public const byte   Unknown 					= 0;
         public const byte   ValueNull   				= 1;

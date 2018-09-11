@@ -188,7 +188,7 @@ namespace TWCore.Net.HttpServer
             methods.Each(m =>
             {
                 var routes = m.GetCustomAttributes<HttpRouteAttribute>().ToArray();
-                if (routes?.Any() == true)
+                if (routes.Any())
                 {
                     routes.Each(route => AddRouteHandler(route.Method, route.Url, context =>
                     {

@@ -34,9 +34,18 @@ namespace TWCore.Messaging
         private readonly NonBlocking.ConcurrentDictionary<Guid, Message> _messageStorage = new NonBlocking.ConcurrentDictionary<Guid, Message>();
         private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         
+        /// <summary>
+        /// Memory Queue message
+        /// </summary>
         public class Message
         {
+            /// <summary>
+            /// Value
+            /// </summary>
             public object Value;
+            /// <summary>
+            /// Task completion source
+            /// </summary>
             public readonly TaskCompletionSource<bool> TaskSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 

@@ -51,6 +51,9 @@ namespace TWCore.Cache.Client
             Core.Status.AttachChild(storage, this);
         }
 
+        /// <summary>
+        /// Dispose all instance resources
+        /// </summary>
         public void Dispose()
         {
             _storage.Dispose();

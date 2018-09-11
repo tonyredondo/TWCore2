@@ -20,7 +20,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging;
 using TWCore.Messaging.Server;
-using TWCore.Serialization;
 using TWCore.Services.Messaging;
 using TWCore.Threading;
 // ReSharper disable CheckNamespace
@@ -151,7 +150,7 @@ namespace TWCore.Services
                             if (e.Request?.Body == null) return;
                             var body = e.Request.Body.GetValue();
                             ReceivedMessagesCache.TryAdd(body, e.Request);
-                            object result = null;
+                            object result;
                             Status.IncrementCurrentMessagesBeingProcessed();
                             try
                             {

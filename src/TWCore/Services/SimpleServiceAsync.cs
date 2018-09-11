@@ -59,6 +59,11 @@ namespace TWCore.Services
         #endregion
 
         #region Abstract Methods
+        /// <summary>
+        /// On Action async method.
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Action task</returns>
         protected abstract Task OnActionAsync(CancellationToken token);
         #endregion
 

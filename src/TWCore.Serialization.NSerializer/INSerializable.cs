@@ -17,9 +17,21 @@ limitations under the License.
 
 namespace TWCore.Serialization.NSerializer
 {
+    /// <summary>
+    /// NSerializable interface
+    /// </summary>
     public interface INSerializable
     {
+        /// <summary>
+        /// Serialize method
+        /// </summary>
+        /// <param name="table">SerializersTable instance</param>
         void Serialize(SerializersTable table);
+        /// <summary>
+        /// Fill 
+        /// </summary>
+        /// <param name="table">DeserializersTable instance</param>
+        /// <param name="metadata">Matadata instance</param>
         void Fill(DeserializersTable table, DeserializerMetaDataOfType metadata);
     }
 }

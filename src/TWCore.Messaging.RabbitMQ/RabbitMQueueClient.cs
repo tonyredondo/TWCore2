@@ -188,7 +188,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
             if (_senderOptions == null)
-                throw new ArgumentNullException("SenderOptions");
+                throw new NullReferenceException("SenderOptions is null.");
 
             if (message.Header.ResponseQueue == null)
             {
@@ -254,8 +254,7 @@ namespace TWCore.Messaging.RabbitMQ
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
-            var message = new RabbitResponseMessage();
-            ReceivedMessages.TryAdd(correlationId, message);
+            var message = ReceivedMessages.GetOrAdd(correlationId, _ => new RabbitResponseMessage());
 
             Interlocked.Increment(ref _receiverThreads);
             var strCorrelationId = correlationId.ToString();

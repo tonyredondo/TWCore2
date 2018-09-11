@@ -15,13 +15,13 @@ limitations under the License.
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.NSerializer
 {

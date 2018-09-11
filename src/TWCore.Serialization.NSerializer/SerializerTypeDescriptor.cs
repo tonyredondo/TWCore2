@@ -22,6 +22,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+// ReSharper disable InconsistentNaming
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.NSerializer
 {

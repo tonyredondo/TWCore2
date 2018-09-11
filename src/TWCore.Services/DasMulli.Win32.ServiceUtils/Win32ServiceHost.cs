@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace DasMulli.Win32.ServiceUtils
 {
+    /// <summary>
+    /// Win32 Service Host
+    /// </summary>
     // This implementation is roughly based on https://msdn.microsoft.com/en-us/library/bb540475(v=vs.85).aspx
     public sealed class Win32ServiceHost
     {
@@ -21,6 +24,11 @@ namespace DasMulli.Win32.ServiceUtils
         private ServiceStatusHandle _serviceStatusHandle;
         private readonly TaskCompletionSource<int> _stopTaskCompletionSource = new TaskCompletionSource<int>();
 
+        #region .ctor
+        /// <summary>
+        /// Win32 Service Host
+        /// </summary>
+        /// <param name="service">Win32 service implementation</param>
         public Win32ServiceHost(IWin32Service service)
             : this(service, Win32Interop.Wrapper)
         {
@@ -35,6 +43,11 @@ namespace DasMulli.Win32.ServiceUtils
             _serviceControlHandlerDelegate = HandleServiceControlCommand;
         }
 
+        /// <summary>
+        /// Win32 Service Host
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="stateMachine">Win32 service state machine</param>
         public Win32ServiceHost(string serviceName, IWin32ServiceStateMachine stateMachine)
             : this(serviceName, stateMachine, Win32Interop.Wrapper)
         {
@@ -48,7 +61,13 @@ namespace DasMulli.Win32.ServiceUtils
             _serviceMainFunctionDelegate = ServiceMainFunction;
             _serviceControlHandlerDelegate = HandleServiceControlCommand;
         }
+        #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Run service async 
+        /// </summary>
+        /// <returns>Start code</returns>
         public Task<int> RunAsync()
         {
             var serviceTable = new ServiceTableEntry[2]; // second one is null/null to indicate termination
@@ -72,11 +91,17 @@ namespace DasMulli.Win32.ServiceUtils
             return _stopTaskCompletionSource.Task;
         }
 
+        /// <summary>
+        /// Run service
+        /// </summary>
+        /// <returns>Start code</returns>
         public int Run()
         {
             return RunAsync().Result;
         }
+        #endregion
 
+        #region Private Methods
         private void ServiceMainFunction(int numArgs, IntPtr argPtrPtr)
         {
             var startupArguments = ParseArguments(numArgs, argPtrPtr);
@@ -159,5 +184,6 @@ namespace DasMulli.Win32.ServiceUtils
             }
             return args;
         }
+        #endregion
     }
 }

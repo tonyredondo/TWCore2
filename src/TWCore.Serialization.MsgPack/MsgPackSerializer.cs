@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MessagePack;
@@ -66,6 +65,13 @@ namespace TWCore.Serialization.MsgPack
             });
         }
 
+        /// <summary>
+        /// On deserialize
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="itemType">Item type</param>
+        /// <returns>Deserialized item</returns>
+        /// <exception cref="Exception">On target invocation in the reflection</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
@@ -84,13 +90,21 @@ namespace TWCore.Serialization.MsgPack
                 }
             }
         }
+        
+        /// <summary>
+        /// On Serialize
+        /// </summary>
+        /// <param name="stream">Stream destination</param>
+        /// <param name="item">Item to serialize</param>
+        /// <param name="itemType">Item type to serialize</param>
+        /// <exception cref="Exception">On target invocation in the reflection</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
             try
             {
                 var serialize = SerializeMethods.GetOrAdd(itemType, type => SerializeMethod.MakeGenericMethod(type));
-                serialize.Invoke(null, new object[] { stream, item, MessagePack.Resolvers.ContractlessStandardResolver.Instance });
+                serialize.Invoke(null, new[] { stream, item, MessagePack.Resolvers.ContractlessStandardResolver.Instance });
             }
             catch (TargetInvocationException tie)
             {

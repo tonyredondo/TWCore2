@@ -37,6 +37,9 @@ namespace TWCore.Web.Logger
         public ILogger CreateLogger(string categoryName)
             => _loggers.GetOrAdd(categoryName, name => new TWCoreLogger(name));
 
+        /// <summary>
+        /// Dispose resources
+        /// </summary>
         public void Dispose() 
             => _loggers.Clear();
     }

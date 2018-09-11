@@ -18,6 +18,7 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#pragma warning disable 1591
 
 namespace TWCore.Serialization.NSerializer
 {

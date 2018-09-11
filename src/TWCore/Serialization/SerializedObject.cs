@@ -30,6 +30,9 @@ using TWCore.IO;
 
 namespace TWCore.Serialization
 {
+    /// <summary>
+    /// Serialized Object
+    /// </summary>
     [DataContract, Serializable]
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
@@ -61,14 +64,26 @@ namespace TWCore.Serialization
         #endregion
 
         #region .ctor
+        /// <summary>
+        /// Serialized Object
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject()
         {
         }
+        /// <summary>
+        /// Serialized Object
+        /// </summary>
+        /// <param name="data">Object instance to serialize</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(object data) : this(data, SerializerManager.DefaultBinarySerializer)
         {
         }
+        /// <summary>
+        /// Serialized Object
+        /// </summary>
+        /// <param name="data">Object instance to serialize</param>
+        /// <param name="serializer">Serializer instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(object data, ISerializer serializer)
         {
@@ -102,6 +117,12 @@ namespace TWCore.Serialization
                 Data = cSerializer.Serialize(data, type);
             }
         }
+        /// <summary>
+        /// Serialized Object
+        /// </summary>
+        /// <param name="data">Byte array with the serializer data</param>
+        /// <param name="dataType">Data type name</param>
+        /// <param name="serializerMimeType">Serializer mime type</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(byte[] data, string dataType, string serializerMimeType)
         {
@@ -109,6 +130,12 @@ namespace TWCore.Serialization
             DataType = dataType;
             SerializerMimeType = serializerMimeType;
         }
+        /// <summary>
+        /// Serialized Object
+        /// </summary>
+        /// <param name="data">MultiArray byte with the serializer data</param>
+        /// <param name="dataType">Data type name</param>
+        /// <param name="serializerMimeType">Serializer mime type</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(MultiArray<byte> data, string dataType, string serializerMimeType)
         {
@@ -435,7 +462,10 @@ namespace TWCore.Serialization
         #endregion
         
         #region Overrides
-
+        /// <summary>
+        /// Gets the SerializedObject hash code
+        /// </summary>
+        /// <returns>Hash code value</returns>
         public override int GetHashCode()
         {
             var hash = SerializerMimeType?.GetHashCode() ?? 0;
@@ -443,12 +473,31 @@ namespace TWCore.Serialization
             hash += Data.GetHashCode() ^ 31;
             return hash;
         }
-
-        public override bool Equals(object obj)
+        /// <summary>
+        /// Gets the SerializedObject hash code using a custom EqualityComparer
+        /// </summary>
+        /// <param name="comparer">EqualityComparer instance</param>
+        /// <returns>Hash code value</returns>
+        public int GetHashCode(IEqualityComparer comparer)
         {
-            return base.Equals(obj as SerializedObject);
+            var hash = SerializerMimeType != null ? comparer.GetHashCode(SerializerMimeType) : 0;
+            hash += (DataType != null ? comparer.GetHashCode(DataType) : 0) ^ 31;
+            hash += MultiArrayBytesComparer.Instance.GetHashCode(Data) ^ 31;
+            return hash;
         }
-        
+
+        /// <summary>
+        /// Gets if the SerializedObject instance is equal to other object
+        /// </summary>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>True if both objects are equal</returns>
+        public override bool Equals(object obj)
+            => base.Equals(obj as SerializedObject);
+        /// <summary>
+        /// Gets if the SerializedObject instance is equal to other SerializedObject
+        /// </summary>
+        /// <param name="other">SerializedObject to compare</param>
+        /// <returns>True if both objects are equal</returns>
         public bool Equals(SerializedObject other)
         {
             if (ReferenceEquals(other, null)) return false;
@@ -457,7 +506,27 @@ namespace TWCore.Serialization
             if (other.SerializerMimeType != SerializerMimeType) return false;
             return MultiArrayBytesComparer.Instance.Equals(Data, other.Data);
         }
-        
+        /// <summary>
+        /// Gets if the SerializedObject instance is equal to other object
+        /// </summary>
+        /// <param name="other">Object to compare</param>
+        /// <param name="comparer">EqualityComparer instance</param>
+        /// <returns>True if both objects are equal</returns>
+        public bool Equals(object other, IEqualityComparer comparer)
+        {
+            if (ReferenceEquals(other, null)) return false;
+            if (!(other is SerializedObject bSer)) return false;
+            if (!comparer.Equals(DataType, bSer.DataType)) return false;
+            if (!comparer.Equals(SerializerMimeType, bSer.SerializerMimeType)) return false;
+            return MultiArrayBytesComparer.Instance.Equals(Data, bSer.Data);
+        }
+
+        /// <summary>
+        /// Gets if the SerializedObject instance is equal to other SerializedObject
+        /// </summary>
+        /// <param name="a">First instance</param>
+        /// <param name="b">Second instance</param>
+        /// <returns>True if both instances are equal</returns>
         public static bool operator ==(SerializedObject a, SerializedObject b)
         {
             if (ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return false;
@@ -468,27 +537,16 @@ namespace TWCore.Serialization
             if (a.SerializerMimeType != b.SerializerMimeType) return false;
             return MultiArrayBytesComparer.Instance.Equals(a.Data, b.Data);
         }
+        /// <summary>
+        /// Gets if the SerializedObject instance is different to other SerializedObject
+        /// </summary>
+        /// <param name="a">First instance</param>
+        /// <param name="b">Second instance</param>
+        /// <returns>True if both instances are different</returns>
         public static bool operator !=(SerializedObject a, SerializedObject b)
         {
             return !(a == b);
         }
-
-        public bool Equals(object other, IEqualityComparer comparer)
-        {
-            if (ReferenceEquals(other, null)) return false;
-            if (!(other is SerializedObject bSer)) return false;
-            if (!comparer.Equals(DataType, bSer.DataType)) return false;
-            if (!comparer.Equals(SerializerMimeType, bSer.SerializerMimeType)) return false;
-            return MultiArrayBytesComparer.Instance.Equals(Data, bSer.Data);
-        }
-        public int GetHashCode(IEqualityComparer comparer)
-        {
-            var hash = SerializerMimeType != null ? comparer.GetHashCode(SerializerMimeType) : 0;
-            hash += (DataType != null ? comparer.GetHashCode(DataType) : 0) ^ 31;
-            hash += MultiArrayBytesComparer.Instance.GetHashCode(Data) ^ 31;
-            return hash;
-        }
         #endregion
-
     }
 }

@@ -23,7 +23,13 @@ namespace TWCore.Data.Schema.Generator
 	/// </summary>
 	public class GeneratorWhereIndex
 	{
+        /// <summary>
+        /// Name
+        /// </summary>
 		public string Name { get; set; }
+        /// <summary>
+        /// Fields
+        /// </summary>
 		public List<GeneratorWhereField> Fields { get; } = new List<GeneratorWhereField>();
 	}
 }

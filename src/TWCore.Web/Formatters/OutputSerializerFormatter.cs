@@ -46,6 +46,11 @@ namespace TWCore.Web.Formatters
                 SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse(mime));
         }
 
+        /// <summary>
+        /// Writes the response body.
+        /// </summary>
+        /// <param name="context">The formatter context associated with the call.</param>
+        /// <returns>A task which can write the response body.</returns>
         public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context)
         {
             try

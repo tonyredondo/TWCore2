@@ -206,7 +206,7 @@ namespace TWCore.Messaging.NATS
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
             if (_senderOptions == null)
-                throw new ArgumentNullException("SenderOptions");
+                throw new NullReferenceException("SenderOptions is null.");
 
             if (message.Header.ResponseQueue == null)
             {
@@ -291,7 +291,7 @@ namespace TWCore.Messaging.NATS
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
             var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-            ReceivedMessages.TryRemove(correlationId, out var _);
+            ReceivedMessages.TryRemove(correlationId, out _);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
             return rs;

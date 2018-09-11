@@ -901,8 +901,8 @@ namespace TWCore
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Retry Task instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Task> CreateWithRetry(this Action function, int retryInterval = 1000, int retryCount = 3)
-            => () => function.InvokeWithRetry(retryInterval, retryCount);
+        public static Func<Task> CreateWithRetry(this Action action, int retryInterval = 1000, int retryCount = 3)
+            => () => action.InvokeWithRetry(retryInterval, retryCount);
         #endregion
 
         #region WaitForAction

@@ -22,8 +22,17 @@ namespace TWCore.Data.Schema.Generator
     /// </summary>
     public class GeneratorSelectionColumn
     {
+        /// <summary>
+        /// Table name
+        /// </summary>
         public string Table { get; set; }
+        /// <summary>
+        /// Column name
+        /// </summary>
         public string Column { get; set; }
+        /// <summary>
+        /// Alias
+        /// </summary>
         public string Alias { get; set; }
     }
 }

@@ -73,6 +73,9 @@ namespace TWCore
         #endregion
 
         #region .ctor
+        /// <summary>
+        /// Default Factories
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DefaultFactories()
         {
@@ -91,6 +94,10 @@ namespace TWCore
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Factory init.
+        /// </summary>
+        /// <exception cref="FileNotFoundException">If configuration file wasn't found</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Init()
         {

@@ -28,6 +28,9 @@ namespace TWCore.Services.Messaging
     /// </summary>
     public abstract class BusinessAsyncBase : IBusinessAsync
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -92,6 +95,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T">Message object type to process</typeparam>
     public abstract class BusinessAsyncBase<T> : IBusinessAsync<T>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -169,6 +175,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T2">Message object type 2 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2> : IBusinessAsync<T1, T2>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -269,6 +278,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T3">Message object type 3 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2, T3> : IBusinessAsync<T1, T2, T3>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -395,6 +407,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T4">Message object type 4 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2, T3, T4> : IBusinessAsync<T1, T2, T3, T4>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -544,6 +559,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T5">Message object type 5 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5> : IBusinessAsync<T1, T2, T3, T4, T5>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -716,6 +734,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T6">Message object type 6 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5, T6> : IBusinessAsync<T1, T2, T3, T4, T5, T6>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -911,6 +932,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T7">Message object type 7 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5, T6, T7> : IBusinessAsync<T1, T2, T3, T4, T5, T6, T7>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
@@ -1129,6 +1153,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T8">Message object type 8 to process</typeparam>
     public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5, T6, T7, T8> : IBusinessAsync<T1, T2, T3, T4, T5, T6, T7, T8>
     {
+        /// <summary>
+        /// Timeout cancellation token
+        /// </summary>
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods

@@ -18,10 +18,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable NotAccessedField.Local
 #pragma warning disable 649
 
 namespace TWCore
@@ -40,6 +40,9 @@ namespace TWCore
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
 
+        /// <summary>
+        /// Pool count
+        /// </summary>
         public int Count => _objectStack.Count;
 
         /// <summary>

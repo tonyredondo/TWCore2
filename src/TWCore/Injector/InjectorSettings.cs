@@ -263,14 +263,19 @@ namespace TWCore.Injector
                 Type = type;
                 Loaded = loaded;
             }
+            /// <summary>
+            /// Gets the hash code of the struct
+            /// </summary>
+            /// <returns>Hash code</returns>
             public override int GetHashCode()
-            {
-                return Type?.GetHashCode() ?? 0 + Loaded.GetHashCode();
-            }
+                => Type?.GetHashCode() ?? 0 + Loaded.GetHashCode();
+            /// <summary>
+            /// Gets if the object instance is equal to the struct
+            /// </summary>
+            /// <param name="obj">Object instance</param>
+            /// <returns>True if the object is equal to the current struct</returns>
             public override bool Equals(object obj)
-            {
-                return obj is TypeLoadResult tRes && Type == tRes.Type && Loaded == tRes.Loaded;
-            }
+                => obj is TypeLoadResult tRes && Type == tRes.Type && Loaded == tRes.Loaded;
         }
         #endregion
     }

@@ -31,6 +31,9 @@ using TWCore.Settings;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <summary>
+    /// Telegram Bot Log Storage
+    /// </summary>
     [SettingsContainer("TelegramBotLog")]
     public class TelegramBotLogStorage : SettingsBase, ILogStorage
     {
@@ -118,7 +121,7 @@ namespace TWCore.Diagnostics.Log.Storages
                         Core.Log.InfoBasic("Saving tracked chats file: {0}", TrackedChatsFilePath);
                         var botChats = ((IBotEngine)s).TrackedChats.ToList();
                         _serializer.SerializeToFile(botChats, TrackedChatsFilePath);
-                        Core.Log.InfoBasic("{0} tracked chats saved.", botChats?.Count);
+                        Core.Log.InfoBasic("{0} tracked chats saved.", botChats.Count);
                     });
                 };
             }

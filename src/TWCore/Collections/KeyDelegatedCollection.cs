@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
+// ReSharper disable IdentifierTypo
 
 namespace TWCore.Collections
 {
@@ -41,6 +42,9 @@ namespace TWCore.Collections
     [Serializable]
     public class KeyDelegatedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>
     {
+        /// <summary>
+        /// KeyDelegated collection locker
+        /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         protected readonly object Ilocker = new object();
 
@@ -287,6 +291,11 @@ namespace TWCore.Collections
         #endregion
 
         #region Overrides
+        /// <summary>
+        /// Gets the key for an item.
+        /// </summary>
+        /// <param name="item">Item to get the key</param>
+        /// <returns>Key of the item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override TKey GetKeyForItem(TItem item)
         {

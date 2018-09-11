@@ -46,11 +46,25 @@ namespace TWCore.Data.Schema.Generator
         /// Gets the StoredProcedure name Delegate
         /// </summary>
         public Func<string, string, string> GetStoredProcedureNameDelegate { get; set; } = (table, name) => "sp" + table + name;
-
+        /// <summary>
+        /// Enable create entities
+        /// </summary>
         public bool EnableCreateEntities { get; set; } = true;
+        /// <summary>
+        /// Enable create interfaces
+        /// </summary>
         public bool EnableCreateInterfaces { get; set; } = true;
+        /// <summary>
+        /// Enable create solution
+        /// </summary>
         public bool EnableCreateSolution { get; set; } = true;
+        /// <summary>
+        /// Enable create dal
+        /// </summary>
         public bool EnableCreateDal { get; set; } = true;
+        /// <summary>
+        /// Generator type
+        /// </summary>
         public DalGeneratorType GeneratorType { get; set; } = DalGeneratorType.Embedded;
         #endregion
 

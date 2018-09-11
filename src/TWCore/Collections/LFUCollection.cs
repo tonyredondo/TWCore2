@@ -37,24 +37,68 @@ namespace TWCore.Collections
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
+            /// <summary>
+            /// Slot number
+            /// </summary>
             public readonly int Slot;
+            /// <summary>
+            /// CountList Node
+            /// </summary>
             public LinkedListNode<CountNode> CountListNode;
+            /// <summary>
+            /// KeyList Node
+            /// </summary>
             public LinkedListNode<KeyNode> KeyListNode;
+
+            #region .ctor
+            /// <summary>
+            /// LFU Collection Value Node
+            /// </summary>
+            /// <param name="value">Value instance</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value) : base(value) { }
+            /// <summary>
+            /// LFU Collection Value Node
+            /// </summary>
+            /// <param name="value">Value instance</param>
+            /// <param name="slot">Slot number</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value, int slot) : base(value) => Slot = slot;
+            #endregion
 
+            /// <summary>
+            /// Count Node
+            /// </summary>
             public sealed class CountNode
             {
+                /// <summary>
+                /// Count
+                /// </summary>
                 public int Count;
+                /// <summary>
+                /// KeyNode List
+                /// </summary>
                 public LinkedList<KeyNode> List = new LinkedList<KeyNode>();
+                /// <summary>
+                /// Count Node
+                /// </summary>
+                /// <param name="count">Count value</param>
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public CountNode(int count) => Count = count;
             }
+            /// <summary>
+            /// Key Node
+            /// </summary>
             public sealed class KeyNode
             {
+                /// <summary>
+                /// Key value
+                /// </summary>
                 public readonly TKey Key;
+                /// <summary>
+                /// Key Node
+                /// </summary>
+                /// <param name="key">Key value</param>
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public KeyNode(TKey key) => Key = key;
             }
@@ -111,6 +155,11 @@ namespace TWCore.Collections
         #region Overrides
         private LinkedListNode<ValueNode.CountNode> _insertionPoint;
 
+        /// <summary>
+        /// Update the internal list
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <param name="node">Value node value</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void UpdateList(TKey key, ValueNode node)
         {
@@ -243,6 +292,12 @@ namespace TWCore.Collections
             }
             node.KeyListNode = node.CountListNode.Value.List.AddFirst(keyValue);
         }
+        /// <summary>
+        /// Create a value node
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <param name="value">Value</param>
+        /// <returns>ValueNode instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override ValueNode CreateNode(TKey key, TValue value)
         {
@@ -250,6 +305,9 @@ namespace TWCore.Collections
             _slots[nValue.Slot] = key;
             return nValue;
         }
+        /// <summary>
+        /// Handles when Clean is called
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnClean()
         {
@@ -258,6 +316,10 @@ namespace TWCore.Collections
             _availableSlots.Clear();
             _currentSlot = 0;
         }
+        /// <summary>
+        /// Handles when a node is removed
+        /// </summary>
+        /// <param name="node">ValueNode instance to remove</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnNodeRemove(ValueNode node)
         {
@@ -275,6 +337,12 @@ namespace TWCore.Collections
             node.CountListNode = null;
             node.KeyListNode = null;
         }
+        /// <summary>
+        /// On get the index of a key
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <param name="index">Index of that key in the collection</param>
+        /// <returns>True if the key was found in the collection; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetIndex(TKey key, out int index)
         {
@@ -286,6 +354,12 @@ namespace TWCore.Collections
             index = -1;
             return false;
         }
+        /// <summary>
+        /// On get the key of an index
+        /// </summary>
+        /// <param name="index">Index value</param>
+        /// <param name="key">Key of the index</param>
+        /// <returns>True if the key was found in the collection; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetKey(int index, out TKey key)
         {

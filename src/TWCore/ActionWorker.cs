@@ -135,6 +135,7 @@ namespace TWCore
     /// <summary>
     /// Worker where the Queue elements are actions to be executed in order
     /// </summary>
+    /// <typeparam name="T">Type of the argument of the action</typeparam>
     public class ActionWorker<T> : Worker<ActionWorker<T>.WorkerItem>
     {
         #region .ctors

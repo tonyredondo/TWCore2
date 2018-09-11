@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -155,32 +154,64 @@ namespace TWCore.Cache.Storages.IO
         {
             InitAsync().WaitAsync();
         }
+        /// <summary>
+        /// Storage items meta
+        /// </summary>
         protected override IEnumerable<StorageItemMeta> Metas
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _metas.Values;
         }
-        
+        /// <summary>
+        /// Gets if the storage has a key
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <returns>True if the storage contains a value for the key; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
             => _metas.ContainsKey(key);
-
+        /// <summary>
+        /// Gets all the keys on the storage
+        /// </summary>
+        /// <returns>IEnumerable with all the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override IEnumerable<string> OnGetKeys()
             => _metas.Keys;
-        
+        /// <summary>
+        /// Removes an item from the storage
+        /// </summary>
+        /// <param name="key">Key to remove</param>
+        /// <param name="meta">Meta of the item</param>
+        /// <returns>True if the item was successfully removed from the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
             => _handlers[GetFolderNumber(key)].TryRemove(key, out meta);
-        
+        /// <summary>
+        /// Sets and creates an item on the storage
+        /// </summary>
+        /// <param name="meta">Item metadata to store</param>
+        /// <param name="value">Item data to store</param>
+        /// <returns>True if the item was successfully stored in the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
             => _handlers[GetFolderNumber(meta.Key)].TrySet(meta, value);
-        
+        /// <summary>
+        /// Tries to get an item from the storage
+        /// </summary>
+        /// <param name="key">Key of the item</param>
+        /// <param name="value">StorageItem of the key</param>
+        /// <param name="condition">Condition to evaluate before getting the key from the storage</param>
+        /// <returns>True if the item was successfully loaded from the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
             => _handlers[GetFolderNumber(key)].TryGet(key, out value, condition);
-        
+        /// <summary>
+        /// Tries to get the metadata from a item
+        /// </summary>
+        /// <param name="key">Key of the item</param>
+        /// <param name="value">StorageItem metadata of the key</param>
+        /// <param name="condition">Condition to evaluate before getting the key from the storage</param>
+        /// <returns>True if the item was successfully loaded from the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
         {
@@ -193,6 +224,9 @@ namespace TWCore.Cache.Storages.IO
             }
             return false;
         }
+        /// <summary>
+        /// Dispose all instance resources
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {

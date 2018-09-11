@@ -28,62 +28,116 @@ namespace TWCore
         /// <summary>
         /// Create Action delegate
         /// </summary>
+        /// <param name="action">Destination action</param>
+        /// <returns>Action delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action Create(Action result) => result;
+        public static Action Create(Action action) => action;
         /// <summary>
         /// Create Action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Action delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T1> Create<T1>(Action<T1> result) => result;
+        public static Action<T1> Create<T1>(Action<T1> action) => action;
         /// <summary>
         /// Create Action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Action delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T1, T2> Create<T1, T2>(Action<T1, T2> result) => result;
+        public static Action<T1, T2> Create<T1, T2>(Action<T1, T2> action) => action;
         /// <summary>
         /// Create Action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <typeparam name="T3">Type of the parameter 3</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Action delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T1, T2, T3> Create<T1, T2, T3>(Action<T1, T2, T3> result) => result;
+        public static Action<T1, T2, T3> Create<T1, T2, T3>(Action<T1, T2, T3> action) => action;
         /// <summary>
         /// Create Action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <typeparam name="T3">Type of the parameter 3</typeparam>
+        /// <typeparam name="T4">Type of the parameter 4</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Action delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T1, T2, T3, T4> Create<T1, T2, T3, T4>(Action<T1, T2, T3, T4> result) => result;
+        public static Action<T1, T2, T3, T4> Create<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action) => action;
         /// <summary>
         /// Create Action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <typeparam name="T3">Type of the parameter 3</typeparam>
+        /// <typeparam name="T4">Type of the parameter 4</typeparam>
+        /// <typeparam name="T5">Type of the parameter 5</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Action delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T1, T2, T3, T4, T5> Create<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> result) => result;
+        public static Action<T1, T2, T3, T4, T5> Create<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> action) => action;
         /// <summary>
-        /// Create Async Action delegate
+        /// Create a Func with the Async version of the action delegate
         /// </summary>
+        /// <param name="action">Destination action</param>
+        /// <returns>Func with the async version of the destination action</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Task> CreateAsync(Action result) => result.CreateAsync();
+        public static Func<Task> CreateAsync(Action action) => action.CreateAsync();
         /// <summary>
-        /// Create Async Action delegate
+        /// Create a Func with the Async version of the action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Func with the async version of the destination action</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T1, Task> CreateAsync<T1>(Action<T1> result) => result.CreateAsync();
+        public static Func<T1, Task> CreateAsync<T1>(Action<T1> action) => action.CreateAsync();
         /// <summary>
-        /// Create Async Action delegate
+        /// Create a Func with the Async version of the action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Func with the async version of the destination action</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T1, T2, Task> CreateAsync<T1, T2>(Action<T1, T2> result) => result.CreateAsync();
+        public static Func<T1, T2, Task> CreateAsync<T1, T2>(Action<T1, T2> action) => action.CreateAsync();
         /// <summary>
-        /// Create Async Action delegate
+        /// Create a Func with the Async version of the action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <typeparam name="T3">Type of the parameter 3</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Func with the async version of the destination action</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T1, T2, T3, Task> CreateAsync<T1, T2, T3>(Action<T1, T2, T3> result) => result.CreateAsync();
+        public static Func<T1, T2, T3, Task> CreateAsync<T1, T2, T3>(Action<T1, T2, T3> action) => action.CreateAsync();
         /// <summary>
-        /// Create Async Action delegate
+        /// Create a Func with the Async version of the action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <typeparam name="T3">Type of the parameter 3</typeparam>
+        /// <typeparam name="T4">Type of the parameter 4</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Func with the async version of the destination action</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T1, T2, T3, T4, Task> CreateAsync<T1, T2, T3, T4>(Action<T1, T2, T3, T4> result) => result.CreateAsync();
+        public static Func<T1, T2, T3, T4, Task> CreateAsync<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action) => action.CreateAsync();
         /// <summary>
-        /// Create Async Action delegate
+        /// Create a Func with the Async version of the action delegate
         /// </summary>
+        /// <typeparam name="T1">Type of the parameter 1</typeparam>
+        /// <typeparam name="T2">Type of the parameter 2</typeparam>
+        /// <typeparam name="T3">Type of the parameter 3</typeparam>
+        /// <typeparam name="T4">Type of the parameter 4</typeparam>
+        /// <typeparam name="T5">Type of the parameter 5</typeparam>
+        /// <param name="action">Destination action</param>
+        /// <returns>Func with the async version of the destination action</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T1, T2, T3, T4, T5, Task> CreateAsync<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> result) => result.CreateAsync();
+        public static Func<T1, T2, T3, T4, T5, Task> CreateAsync<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> action) => action.CreateAsync();
     }
 }

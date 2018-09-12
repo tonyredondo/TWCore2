@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace TWCore.Serialization
     /// </summary>
     public sealed class XmlTextSerializer : TextSerializer
     {
-        private static readonly NonBlocking.ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings> SettingsCache = new NonBlocking.ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings>();
+        private static readonly ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings> SettingsCache = new ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings>();
         private static readonly string[] SExtensions = { ".xml" };
         private static readonly string[] SMimeTypes = { SerializerMimeTypes.Xml, "text/xml" };
 
@@ -101,7 +102,7 @@ namespace TWCore.Serialization
         }
         #endregion
 
-        private static readonly NonBlocking.ConcurrentDictionary<string, XmlSerializer> CacheSerializer = new NonBlocking.ConcurrentDictionary<string, XmlSerializer>();
+        private static readonly ConcurrentDictionary<string, XmlSerializer> CacheSerializer = new ConcurrentDictionary<string, XmlSerializer>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static XmlSerializer CreateSerializer(Type type, Type[] extraTypes)
         {

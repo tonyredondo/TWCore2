@@ -29,9 +29,9 @@ namespace TWCore.Messaging
     /// </summary>
     public class MemoryQueue
     {
-        private static readonly NonBlocking.ConcurrentDictionary<CancellationToken, Task> CancellationTasks = new NonBlocking.ConcurrentDictionary<CancellationToken, Task>();
+        private static readonly ConcurrentDictionary<CancellationToken, Task> CancellationTasks = new ConcurrentDictionary<CancellationToken, Task>();
         private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
-        private readonly NonBlocking.ConcurrentDictionary<Guid, Message> _messageStorage = new NonBlocking.ConcurrentDictionary<Guid, Message>();
+        private readonly ConcurrentDictionary<Guid, Message> _messageStorage = new ConcurrentDictionary<Guid, Message>();
         private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         
         /// <summary>

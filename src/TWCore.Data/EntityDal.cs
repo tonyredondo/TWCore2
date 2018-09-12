@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -30,8 +31,8 @@ namespace TWCore.Data
     /// </summary>
     public abstract class EntityDal : IEntityDal
     {
-        private static readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new NonBlocking.ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
-        private static readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>> AsyncPools = new NonBlocking.ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>>();
+        private static readonly ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
+        private static readonly ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>> AsyncPools = new ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>>();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private EntityDalSettings _settings;

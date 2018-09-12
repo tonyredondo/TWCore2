@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -31,7 +32,7 @@ namespace TWCore.Security
     /// </summary>
     public abstract class HashBase : IHash
     {
-        private static readonly NonBlocking.ConcurrentDictionary<string, string> StringHashCache = new NonBlocking.ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+        private static readonly ConcurrentDictionary<string, string> StringHashCache = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
         private static readonly LRU2QCollection<string, MultiArray<byte>> StringBytesHashCache = new LRU2QCollection<string, MultiArray<byte>>(250);
         private static readonly LRU2QCollection<string, Guid> StringGuidHashCache = new LRU2QCollection<string, Guid>(250);
         private readonly string _instanceName;

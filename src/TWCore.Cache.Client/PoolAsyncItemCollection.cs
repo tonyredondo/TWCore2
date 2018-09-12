@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -81,7 +82,7 @@ namespace TWCore.Cache.Client
         private bool _hasMemoryStorage;
         internal readonly List<PoolAsyncItem> Items;
         internal readonly HashSet<PoolAsyncItem> EnabledItems;
-        internal readonly NonBlocking.ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]> ItemsCache = new NonBlocking.ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]>();
+        internal readonly ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]> ItemsCache = new ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]>();
         
         #region Properties
         /// <summary>

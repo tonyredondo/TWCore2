@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Reflection;
@@ -33,7 +34,7 @@ namespace TWCore.Net.RPC.Client
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object[] _taskArgument = new object[1];
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<Type, MethodInfo> TaskFromResultsMethods = new NonBlocking.ConcurrentDictionary<Type, MethodInfo>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<Type, MethodInfo> TaskFromResultsMethods = new ConcurrentDictionary<Type, MethodInfo>();
 
         /// <inheritdoc />
         /// <summary>

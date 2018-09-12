@@ -15,8 +15,8 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Text
@@ -45,7 +45,7 @@ namespace TWCore.Text
     /// </summary>
     public static class StringParser
     {
-        private static readonly NonBlocking.ConcurrentDictionary<string, object> Cache = new NonBlocking.ConcurrentDictionary<string, object>();
+        private static readonly ConcurrentDictionary<string, object> Cache = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Parse a string to another type.

@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NATS.Client;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using NATS.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
 // ReSharper disable InconsistentNaming

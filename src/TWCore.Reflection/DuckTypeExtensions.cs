@@ -20,10 +20,10 @@ using TWCore.Reflection;
 
 namespace TWCore
 {
-	/// <summary>
-	/// DuckType extensions
-	/// </summary>
-	public static class DuckTypeExtensions
+    /// <summary>
+    /// DuckType extensions
+    /// </summary>
+    public static class DuckTypeExtensions
 	{
 		/// <summary>
 		/// Creates a new proxy object arround the current object using an interface type for duck typing

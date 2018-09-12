@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
@@ -25,7 +26,6 @@ using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
 using TWCore.Reflection;
-using TWCore.Threading;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable VirtualMemberNeverOverridden.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -298,7 +298,7 @@ namespace TWCore
 
         #region Default delegates implementation
         private static readonly (string AssemblyName, string TypeName) DefaultMValue = (null, null);
-        private static readonly NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)> MethodValues = new NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)>();
+        private static readonly ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)> MethodValues = new ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)

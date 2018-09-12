@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -41,7 +42,7 @@ namespace TWCore.Services
         /// <summary>
         /// Parameters handlers
         /// </summary>
-        protected static readonly NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler>();
+        protected static readonly ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
         private static string[] _currentArgs;
         private static volatile bool _serviceEndAfterStart;
         private static bool _hasConsole = true;

@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using Microsoft.CSharp.RuntimeBinder;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -23,7 +25,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.CSharp.RuntimeBinder;
 
 namespace TWCore.Reflection
 {
@@ -34,11 +35,11 @@ namespace TWCore.Reflection
 	{
 		#region Private fields
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private NonBlocking.ConcurrentDictionary<string, MethodAccessorDelegate> _methodsDelegates;
+		private ConcurrentDictionary<string, MethodAccessorDelegate> _methodsDelegates;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private NonBlocking.ConcurrentDictionary<string, FastPropertyInfo> _propertyInfo;
+		private ConcurrentDictionary<string, FastPropertyInfo> _propertyInfo;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private NonBlocking.ConcurrentDictionary<(string Method, string Types), CallSite> _dynMethodDelegates;
+		private ConcurrentDictionary<(string Method, string Types), CallSite> _dynMethodDelegates;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private object _realObject;
 		#endregion
@@ -59,11 +60,11 @@ namespace TWCore.Reflection
 			var containerType = realObject.GetType();
 			if (_realObject is DynamicObject)
 			{
-				_dynMethodDelegates = new NonBlocking.ConcurrentDictionary<(string, string), CallSite>();
+				_dynMethodDelegates = new ConcurrentDictionary<(string, string), CallSite>();
 			}
 			else
 			{
-				_methodsDelegates = new NonBlocking.ConcurrentDictionary<string, MethodAccessorDelegate>();
+				_methodsDelegates = new ConcurrentDictionary<string, MethodAccessorDelegate>();
 				var methods = containerType.GetMethods();
 				for (var i = 0; i < methods.Length; i++)
 				{
@@ -73,7 +74,7 @@ namespace TWCore.Reflection
 					_methodsDelegates.TryAdd(method.Name, accessor);
 				}
 			}
-			_propertyInfo = new NonBlocking.ConcurrentDictionary<string, FastPropertyInfo>();
+			_propertyInfo = new ConcurrentDictionary<string, FastPropertyInfo>();
 			var properties = containerType.GetProperties();
 			for (var i = 0; i < properties.Length; i++)
 			{

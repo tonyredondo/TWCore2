@@ -41,7 +41,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// All file log storage writers
         /// </summary>
-        private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();
+        private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
         private static readonly ConcurrentStack<StringBuilder> StringBuilderPool = new ConcurrentStack<StringBuilder>();
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;

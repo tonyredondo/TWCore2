@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -32,7 +33,7 @@ namespace TWCore.Net.RPC.Client
 	    private RPCClient _client;
 	    private string _serviceName;
 	    private readonly Dictionary<string, FieldInfo> _events;
-        private readonly NonBlocking.ConcurrentDictionary<string, string> _memberNames = new NonBlocking.ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _memberNames = new ConcurrentDictionary<string, string>();
 
         #region .ctor
         /// <summary>

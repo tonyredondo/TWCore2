@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace TWCore.Threading
     public class AsyncManualResetEvent : IDisposable
     {
         private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        private static readonly NonBlocking.ConcurrentDictionary<CancellationToken, Task> CTasks = new NonBlocking.ConcurrentDictionary<CancellationToken, Task>();
+        private static readonly ConcurrentDictionary<CancellationToken, Task> CTasks = new ConcurrentDictionary<CancellationToken, Task>();
         private static readonly Task DisposedExceptionTask = Task.FromException(new Exception("The instance has been disposed."));
 
         #region Properties

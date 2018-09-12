@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -41,7 +42,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
     {
         private readonly object _locker = new object();
         private readonly List<RpcServerClient> _sessions = new List<RpcServerClient>();
-        private readonly NonBlocking.ConcurrentDictionary<Guid, CancellationTokenSource> _rpcMessagesCancellations = new NonBlocking.ConcurrentDictionary<Guid, CancellationTokenSource>();
+        private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _rpcMessagesCancellations = new ConcurrentDictionary<Guid, CancellationTokenSource>();
         private TcpListener _listener;
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;

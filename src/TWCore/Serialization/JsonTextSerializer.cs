@@ -17,6 +17,7 @@ limitations under the License.
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -32,7 +33,7 @@ namespace TWCore.Serialization
     /// </summary>
     public sealed class JsonTextSerializer : TextSerializer
     {
-        private static readonly NonBlocking.ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer> SerializerSettings = new NonBlocking.ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer>();
+        private static readonly ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer> SerializerSettings = new ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer>();
         private static readonly string[] SExtensions = { ".json" };
         private static readonly string[] SMimeTypes = { SerializerMimeTypes.Json, "text/json" };
         private JsonSerializer _serializer;

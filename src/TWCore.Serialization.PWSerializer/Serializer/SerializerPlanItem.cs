@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -29,8 +30,8 @@ namespace TWCore.Serialization.PWSerializer.Serializer
     {
         #region Static
         private static readonly string[] IgnoredAssemblies = { "System.Private.CoreLib", "mscorlib", "NETStandard" };
-        private static readonly NonBlocking.ConcurrentDictionary<Type, string> AllTypeNames = new NonBlocking.ConcurrentDictionary<Type, string>();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, (string @assembly, string @namespace, string @type)> AllTypeNamesArray = new NonBlocking.ConcurrentDictionary<Type, (string @assembly, string @namespace, string @type)>();
+        private static readonly ConcurrentDictionary<Type, string> AllTypeNames = new ConcurrentDictionary<Type, string>();
+        private static readonly ConcurrentDictionary<Type, (string @assembly, string @namespace, string @type)> AllTypeNamesArray = new ConcurrentDictionary<Type, (string @assembly, string @namespace, string @type)>();
         #endregion
 
         #region Fields and Properties

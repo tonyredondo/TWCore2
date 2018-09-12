@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -256,7 +257,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
 
         #endregion
 
-        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
         {

@@ -34,11 +34,11 @@ namespace TWCore.Data
         /// <summary>
         /// Properties of entities type
         /// </summary>
-        public static NonBlocking.ConcurrentDictionary<Type, EntityInfo> Entities { get; } = new NonBlocking.ConcurrentDictionary<Type, EntityInfo>();
+        public static ConcurrentDictionary<Type, EntityInfo> Entities { get; } = new ConcurrentDictionary<Type, EntityInfo>();
         /// <summary>
         /// Types overwrite definition
         /// </summary>
-        public static NonBlocking.ConcurrentDictionary<Type, Type> TypesOverwrite { get; } = new NonBlocking.ConcurrentDictionary<Type, Type>();
+        public static ConcurrentDictionary<Type, Type> TypesOverwrite { get; } = new ConcurrentDictionary<Type, Type>();
         /// <summary>
         /// Prepare Type for entity binder
         /// </summary>

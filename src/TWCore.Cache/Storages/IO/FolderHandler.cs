@@ -16,6 +16,7 @@ limitations under the License.
 
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,9 +58,9 @@ namespace TWCore.Cache.Storages.IO
         private int _pendingItemsCount;
 
         private int _currentTransactionLogLength;
-        private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _globalMetas;
-        private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _metas;
-        private readonly NonBlocking.ConcurrentDictionary<string, SerializedObject> _pendingItems;
+        private ConcurrentDictionary<string, StorageItemMeta> _globalMetas;
+        private ConcurrentDictionary<string, StorageItemMeta> _metas;
+        private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
         private readonly Worker<FileStorageMetaLog> _storageWorker;
 
         private readonly Action _saveMetadataBuffered;
@@ -87,7 +88,7 @@ namespace TWCore.Cache.Storages.IO
         /// <param name="storage">Storage base</param>
         /// <param name="globalMetas">Global Metas</param>
         /// <param name="basePath">Base path</param>
-        public FolderHandler(FileStorage storage, NonBlocking.ConcurrentDictionary<string, StorageItemMeta> globalMetas, string basePath)
+        public FolderHandler(FileStorage storage, ConcurrentDictionary<string, StorageItemMeta> globalMetas, string basePath)
         {
             BasePath = basePath;
             _storage = storage;
@@ -101,7 +102,7 @@ namespace TWCore.Cache.Storages.IO
             _oldTransactionLogFilePath = _transactionLogFilePath + ".old";
             _oldIndexFilePath = _indexFilePath + ".old";
 
-            _pendingItems = new NonBlocking.ConcurrentDictionary<string, SerializedObject>();
+            _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
             _storageWorker = new Worker<FileStorageMetaLog>(WorkerProcess)
             {
                 EnableWaitTimeout = false
@@ -167,7 +168,7 @@ namespace TWCore.Cache.Storages.IO
                     if (_storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
                         eTime = _storage.ItemsExpirationAbsoluteDateOverwrite.Value;
 
-                    if (_metas == null) _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>();
+                    if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
 
                     await Task.Run(() =>
                     {
@@ -430,7 +431,7 @@ namespace TWCore.Cache.Storages.IO
                 if (index != null)
                 {
                     var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i)).ToArray();
-                    _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                    _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
                     foreach (var valuePair in pairEnumerable)
                         _globalMetas.TryAdd(valuePair.Key, valuePair.Value);
                     return true;

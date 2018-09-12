@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -34,7 +35,7 @@ namespace TWCore.Data.Cache
         /// <summary>
         /// Entities cache
         /// </summary>
-        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        protected ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
         /// <summary>
         /// Current Dal
         /// </summary>
@@ -69,7 +70,7 @@ namespace TWCore.Data.Cache
         /// <summary>
         /// Entities cache
         /// </summary>
-        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        protected ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
         /// <summary>
         /// Current Dal
         /// </summary>
@@ -107,11 +108,11 @@ namespace TWCore.Data.Cache
         /// <summary>
         /// Entities cache 1
         /// </summary>
-        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        protected ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
         /// <summary>
         /// Entities cache 2
         /// </summary>
-        protected NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
+        protected ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
         /// <summary>
         /// Current Dal
         /// </summary>
@@ -148,11 +149,11 @@ namespace TWCore.Data.Cache
         /// <summary>
         /// Entities cache 1
         /// </summary>
-        protected NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
+        protected ConcurrentDictionary<TKey, IEnumerable<TEntity>> Cache { get; } = new ConcurrentDictionary<TKey, IEnumerable<TEntity>>();
         /// <summary>
         /// Entities cache 2
         /// </summary>
-        protected NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new NonBlocking.ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
+        protected ConcurrentDictionary<TKey2, IEnumerable<TEntity>> Cache2 { get; } = new ConcurrentDictionary<TKey2, IEnumerable<TEntity>>();
         /// <summary>
         /// Current Dal
         /// </summary>

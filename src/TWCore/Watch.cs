@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -261,7 +262,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(100);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<int, string> IndentTexts = new NonBlocking.ConcurrentDictionary<int, string>();
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<int, string> IndentTexts = new ConcurrentDictionary<int, string>();
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly double FrequencyTime = 1000d / Stopwatch.Frequency;
 
             private struct ItemPoolAllocator : IPoolObjectLifecycle<WItem>

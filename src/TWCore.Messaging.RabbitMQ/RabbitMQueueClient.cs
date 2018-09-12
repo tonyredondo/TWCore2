@@ -14,15 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
@@ -40,9 +41,9 @@ namespace TWCore.Messaging.RabbitMQ
     /// </summary>
     public class RabbitMQueueClient : MQueueClientBase
     {
-        private static readonly NonBlocking.ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, RabbitResponseMessage>();
-        private readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new NonBlocking.ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
-        private readonly NonBlocking.ConcurrentDictionary<Guid, string> _correlationIdConsumers = new NonBlocking.ConcurrentDictionary<Guid, string>();
+        private static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
+        private readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
+        private readonly ConcurrentDictionary<Guid, string> _correlationIdConsumers = new ConcurrentDictionary<Guid, string>();
 
         #region Fields
         private List<RabbitMQueue> _senders;

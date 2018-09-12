@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -25,9 +26,9 @@ namespace TWCore.Reflection
     /// </summary>
     public class FastPropertyInfo
     {
-        private static readonly NonBlocking.ConcurrentDictionary<PropertyInfo, FastPropertyInfo> Infos = new NonBlocking.ConcurrentDictionary<PropertyInfo, FastPropertyInfo>();
-        private static readonly NonBlocking.ConcurrentDictionary<PropertyInfo, GetAccessorDelegate> GetAccessorCache = new NonBlocking.ConcurrentDictionary<PropertyInfo, GetAccessorDelegate>();
-        private static readonly NonBlocking.ConcurrentDictionary<PropertyInfo, SetAccessorDelegate> SetAccessorCache = new NonBlocking.ConcurrentDictionary<PropertyInfo, SetAccessorDelegate>();
+        private static readonly ConcurrentDictionary<PropertyInfo, FastPropertyInfo> Infos = new ConcurrentDictionary<PropertyInfo, FastPropertyInfo>();
+        private static readonly ConcurrentDictionary<PropertyInfo, GetAccessorDelegate> GetAccessorCache = new ConcurrentDictionary<PropertyInfo, GetAccessorDelegate>();
+        private static readonly ConcurrentDictionary<PropertyInfo, SetAccessorDelegate> SetAccessorCache = new ConcurrentDictionary<PropertyInfo, SetAccessorDelegate>();
 
         /// <summary>
         /// Getter delegate

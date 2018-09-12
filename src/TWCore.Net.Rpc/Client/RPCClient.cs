@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -41,7 +42,7 @@ namespace TWCore.Net.RPC.Client
     {
         private static readonly object[] _emptyArgs = new object[0];
         private static readonly object[] _nullItemArgs = { null };
-        private readonly NonBlocking.ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache = new NonBlocking.ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>(new MethodDescriptionEqualityComparer());
+        private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>(new MethodDescriptionEqualityComparer());
         private ITransportClient _transport;
         private bool _transportInit;
         private ServiceDescriptorCollection _serverDescriptors;

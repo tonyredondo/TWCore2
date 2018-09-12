@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -38,7 +39,7 @@ namespace TWCore.Collections
     public class TimeoutDictionary<TKey, TValue>
     {
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct> _dictionary;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentDictionary<TKey, TimeoutStruct> _dictionary;
         #endregion
 
         #region Events
@@ -98,7 +99,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeoutDictionary()
         {
-            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>();
+            _dictionary = new ConcurrentDictionary<TKey, TimeoutStruct>();
         }
         /// <summary>
         /// Timeout dictionary, a dictionary which items are saved and deleted using a timeout
@@ -107,7 +108,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeoutDictionary(IEqualityComparer<TKey> comparer)
         {
-            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>(comparer);
+            _dictionary = new ConcurrentDictionary<TKey, TimeoutStruct>(comparer);
         }
         #endregion
 
@@ -299,7 +300,7 @@ namespace TWCore.Collections
                 Task = Task.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
                 {
                     var objArray = (object[])obj;
-                    var mDictio = (NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>)objArray[0];
+                    var mDictio = (ConcurrentDictionary<TKey, TimeoutStruct>)objArray[0];
                     var mKey = (TKey)objArray[1];
                     if (mDictio != null && mDictio.TryRemove(mKey, out var tVal))
                         OnItemTimeout?.Invoke(this, new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });

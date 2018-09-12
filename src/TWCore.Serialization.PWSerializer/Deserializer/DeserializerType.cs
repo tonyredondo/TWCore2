@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +26,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
 {
     internal class DeserializerType
     {
-        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
         private object _tmpDictionary;
 
         public Type Type;

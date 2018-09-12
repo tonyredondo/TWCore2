@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma warning disable IDE0018 // Declaración de variables alineada
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -477,7 +478,7 @@ namespace TWCore.Diagnostics.Status
         }
         private class WeakValue
         {
-            private static readonly NonBlocking.ConcurrentDictionary<Type, Func<object, StatusItem>> AttributeFunc = new NonBlocking.ConcurrentDictionary<Type, Func<object, StatusItem>>();
+            private static readonly ConcurrentDictionary<Type, Func<object, StatusItem>> AttributeFunc = new ConcurrentDictionary<Type, Func<object, StatusItem>>();
             public List<WeakDelegate> FuncDelegates;
             public List<WeakDelegate> ActionDelegates;
             public Func<object, StatusItem> AttributeStatus;

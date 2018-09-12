@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -215,7 +216,7 @@ namespace TWCore.Net.RPC.Server
         [StatusName("Service Instance")]
         private class ServiceItem
         {
-            public static readonly NonBlocking.ConcurrentDictionary<Type, FastPropertyInfo> TaskResultsProperties = new NonBlocking.ConcurrentDictionary<Type, FastPropertyInfo>();
+            public static readonly ConcurrentDictionary<Type, FastPropertyInfo> TaskResultsProperties = new ConcurrentDictionary<Type, FastPropertyInfo>();
             private readonly RPCServer _server;
             private readonly Dictionary<int, Guid> _threadClientId = new Dictionary<int, Guid>();
 

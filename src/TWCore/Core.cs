@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -56,8 +57,8 @@ namespace TWCore
         private static readonly SymmetricKeyProvider SymmetricProvider = new SymmetricKeyProvider();
         private static readonly Regex EnvironmentTemplateFormatRegex = new Regex(@"{Env:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex EncriptionTemplateFormatRegex = new Regex(@"{Encripted:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly NonBlocking.ConcurrentDictionary<Type, SettingsBase> SettingsCache = new NonBlocking.ConcurrentDictionary<Type, SettingsBase>();
-        private static readonly NonBlocking.ConcurrentDictionary<string, Type> TypesCache = new NonBlocking.ConcurrentDictionary<string, Type>();
+        private static readonly ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
+        private static readonly ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
         private static CoreSettings _globalSettings;
         private static Dictionary<string, object> _data;
         private static Dictionary<object, object> _objectData;

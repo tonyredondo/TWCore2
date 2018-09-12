@@ -14,18 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NATS.Client;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using NATS.Client;
+using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
-using System.Threading.Tasks;
-using TWCore.Diagnostics.Status;
 using TWCore.Threading;
 
 // ReSharper disable NotAccessedField.Local
@@ -39,7 +40,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueClient : MQueueClientBase
     {
-        private static readonly NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage>();
+        private static readonly ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NATSQueueMessage>();
 
         #region Fields
         private ConnectionFactory _factory;

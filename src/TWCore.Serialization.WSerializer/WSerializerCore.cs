@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -39,18 +40,18 @@ namespace TWCore.Serialization.WSerializer
     {
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, MultiArray<byte>> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, MultiArray<byte>>();
-        private static readonly NonBlocking.ConcurrentDictionary<MultiArray<byte>, Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<MultiArray<byte>, Type>(MultiArrayBytesComparer.Instance);
+        private static readonly ConcurrentDictionary<Type, MultiArray<byte>> GlobalKnownTypes = new ConcurrentDictionary<Type, MultiArray<byte>>();
+        private static readonly ConcurrentDictionary<MultiArray<byte>, Type> GlobalKnownTypesValues = new ConcurrentDictionary<MultiArray<byte>, Type>(MultiArrayBytesComparer.Instance);
         private static readonly IHash Hash = HashManager.Get("SHA1");
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         
         private static readonly ObjectPool<CachePoolItem, CachePoolAllocator> CachePool = new ObjectPool<CachePoolItem, CachePoolAllocator>();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
+        private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly ObjectPool<Stack<SerializerScope>, StackPoolAllocator> StackPool = new ObjectPool<Stack<SerializerScope>, StackPoolAllocator>();
         private static readonly ObjectPool<DesCachePoolItem, DesCachePoolAllocator> DCachePool = new ObjectPool<DesCachePoolItem, DesCachePoolAllocator>();
         private static readonly ObjectPool<Stack<DeserializerTypeItem>, DesStackPoolAllocator> DTypeStackPool = new ObjectPool<Stack<DeserializerTypeItem>, DesStackPoolAllocator>();
-        private static readonly NonBlocking.ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new NonBlocking.ConcurrentDictionary<(string, string, string), Type>();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new ConcurrentDictionary<(string, string, string), Type>();
+        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
 
         private readonly HashSet<Type> _knownTypes = new HashSet<Type>();
         private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();

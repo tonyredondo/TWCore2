@@ -14,23 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
 // ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Messaging.RabbitMQ
 {
-	/// <inheritdoc />
-	/// <summary>
-	/// RabbitMQ server listener implementation
-	/// </summary>
-	public class RabbitMQueueRawServerListener : MQueueRawServerListenerBase
+    /// <inheritdoc />
+    /// <summary>
+    /// RabbitMQ server listener implementation
+    /// </summary>
+    public class RabbitMQueueRawServerListener : MQueueRawServerListenerBase
     {
         #region Fields
         private readonly string _name;

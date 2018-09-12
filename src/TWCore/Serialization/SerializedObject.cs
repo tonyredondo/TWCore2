@@ -17,13 +17,13 @@ limitations under the License.
 using System;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using NonBlocking;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;

@@ -14,22 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
 using RabbitMQ.Client;
+using System;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
 using TWCore.Threading;
 
 namespace TWCore.Messaging.RabbitMQ
 {
-	/// <inheritdoc />
-	/// <summary>
-	/// RabbitMQ Server Implementation
-	/// </summary>
-	public class RabbitMQueueRawServer : MQueueRawServerBase
+    /// <inheritdoc />
+    /// <summary>
+    /// RabbitMQ Server Implementation
+    /// </summary>
+    public class RabbitMQueueRawServer : MQueueRawServerBase
 	{
-		private readonly NonBlocking.ConcurrentDictionary<string, RabbitMQueue> _rQueue = new NonBlocking.ConcurrentDictionary<string, RabbitMQueue>();
+		private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
 		private byte _priority;
 		private byte _deliveryMode;
 		private string _expiration;

@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NATS.Client;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using NATS.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 using TWCore.Threading;
@@ -32,7 +33,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueServer : MQueueServerBase
     {
-        private readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<IConnection>> _rQueue = new NonBlocking.ConcurrentDictionary<string, ObjectPool<IConnection>>();
+        private readonly ConcurrentDictionary<string, ObjectPool<IConnection>> _rQueue = new ConcurrentDictionary<string, ObjectPool<IConnection>>();
         private readonly ConnectionFactory _factory;
 
         #region .ctor

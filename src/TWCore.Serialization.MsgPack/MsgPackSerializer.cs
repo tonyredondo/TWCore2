@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using MessagePack;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using MessagePack;
-using NonBlocking;
 
 namespace TWCore.Serialization.MsgPack
 {

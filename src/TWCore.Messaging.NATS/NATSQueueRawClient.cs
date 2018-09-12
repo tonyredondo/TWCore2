@@ -14,18 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NATS.Client;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using NATS.Client;
-using TWCore.Messaging.Configuration;
-using TWCore.Messaging.Exceptions;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
+using TWCore.Messaging.Configuration;
+using TWCore.Messaging.Exceptions;
 using TWCore.Messaging.RawClient;
 using TWCore.Threading;
 
@@ -40,7 +41,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueRawClient : MQueueRawClientBase
     {
-        private static readonly NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage>();
+        private static readonly ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NATSQueueMessage>();
         private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -133,7 +134,7 @@ namespace TWCore.Collections
 
         #region Public Methods
         [NonSerialized]
-        private readonly NonBlocking.ConcurrentDictionary<string, string> _partialKeys = new NonBlocking.ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _partialKeys = new ConcurrentDictionary<string, string>();
         /// <summary>
         /// Get if part of the name is contained on the key.
         /// </summary>

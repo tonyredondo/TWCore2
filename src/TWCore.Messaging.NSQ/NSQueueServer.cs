@@ -14,23 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
-using System.Linq;
 using NsqSharp;
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
-using System.Threading.Tasks;
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.NSQ
 {
-	/// <inheritdoc />
-	/// <summary>
-	/// NSQ Server Implementation
-	/// </summary>
-	public class NSQueueServer : MQueueServerBase
+    /// <inheritdoc />
+    /// <summary>
+    /// NSQ Server Implementation
+    /// </summary>
+    public class NSQueueServer : MQueueServerBase
 	{
-		private readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new NonBlocking.ConcurrentDictionary<string, ObjectPool<Producer>>();
+		private readonly ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
 
 		#region .ctor
 		/// <summary>

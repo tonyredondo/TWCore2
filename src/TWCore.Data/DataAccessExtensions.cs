@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedParameter.Global
@@ -25,7 +26,7 @@ namespace TWCore.Data
     /// </summary>
     public static class DataAccessExtensions
     {
-        private static readonly NonBlocking.ConcurrentDictionary<(Assembly, string), string> ResourceCache = new NonBlocking.ConcurrentDictionary<(Assembly, string), string>();
+        private static readonly ConcurrentDictionary<(Assembly, string), string> ResourceCache = new ConcurrentDictionary<(Assembly, string), string>();
 
 		/// <summary>
 		/// Gets the Sql query from a embedded resource

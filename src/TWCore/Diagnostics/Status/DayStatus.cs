@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Collections.Concurrent;
 using System.Linq;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable MemberCanBePrivate.Local
@@ -26,7 +27,7 @@ namespace TWCore.Diagnostics.Status
     /// </summary>
     public class DayStatus : IStatusItemProvider
     {
-        private readonly NonBlocking.ConcurrentDictionary<string, IStatusItemProvider> _data = new NonBlocking.ConcurrentDictionary<string, IStatusItemProvider>();
+        private readonly ConcurrentDictionary<string, IStatusItemProvider> _data = new ConcurrentDictionary<string, IStatusItemProvider>();
 
         #region Properties
         /// <inheritdoc />

@@ -14,20 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NsqSharp;
+using NsqSharp.Api;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using NsqSharp;
-using NsqSharp.Api;
-using TWCore.Messaging.RawClient;
-using TWCore.Messaging.Configuration;
-using TWCore.Messaging.Exceptions;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
+using TWCore.Messaging.Configuration;
+using TWCore.Messaging.Exceptions;
+using TWCore.Messaging.RawClient;
 using TWCore.Threading;
 
 // ReSharper disable NotAccessedField.Local
@@ -41,7 +42,7 @@ namespace TWCore.Messaging.NSQ
     /// </summary>
     public class NSQueueRawClient : MQueueRawClientBase
     {
-        private static readonly NonBlocking.ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NSQueueMessage>();
+        private static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
         private static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
         private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 

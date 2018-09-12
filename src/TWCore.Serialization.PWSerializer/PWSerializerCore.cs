@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -161,7 +162,7 @@ namespace TWCore.Serialization.PWSerializer
         #endregion
 
         #region Serializer
-        private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
+        private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ObjectPool<SerPoolItem, SerPoolAllocator> SerPool = new ObjectPool<SerPoolItem, SerPoolAllocator>();
         private static readonly ObjectPool<SerializerScope, SerializerScopeAllocator> SerializerScopePool = new ObjectPool<SerializerScope, SerializerScopeAllocator>();
@@ -749,7 +750,7 @@ namespace TWCore.Serialization.PWSerializer
         private static readonly ObjectPool<DesPoolItem, DesPoolAllocator> DesPool = new ObjectPool<DesPoolItem, DesPoolAllocator>();
         private static readonly ReferencePool<DeserializerType> DesarializerTypePool = new ReferencePool<DeserializerType>(Environment.ProcessorCount, d => d.Clear());
         private static readonly ReferencePool<Stack<DynamicDeserializedType>> GdStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(Environment.ProcessorCount, s => s.Clear());
-        private static readonly NonBlocking.ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new NonBlocking.ConcurrentDictionary<(string, string, string), Type>();
+        private static readonly ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new ConcurrentDictionary<(string, string, string), Type>();
 
         /// <summary>
         /// Deserialize a Portable Tony Wanhjor stream into a object value

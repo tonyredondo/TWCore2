@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace TWCore.Services
     /// </summary>
     public abstract class MessagingServiceAsync : IMessagingServiceAsync
     {
-        private static readonly NonBlocking.ConcurrentDictionary<object, object> ReceivedMessagesCache = new NonBlocking.ConcurrentDictionary<object, object>();
+        private static readonly ConcurrentDictionary<object, object> ReceivedMessagesCache = new ConcurrentDictionary<object, object>();
         private CancellationTokenSource _cTokenSource;
 
         #region Events

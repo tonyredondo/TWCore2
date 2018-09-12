@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -44,8 +45,8 @@ namespace TWCore.Injector
     public class InjectorEngine : IDisposable
     {
         private static readonly string[] EmptyStringArray = new string[0];
-        private readonly NonBlocking.ConcurrentDictionary<(Type, string), RegisteredValues> _registeredDelegates = new NonBlocking.ConcurrentDictionary<(Type, string), RegisteredValues>();
-        private readonly NonBlocking.ConcurrentDictionary<Instantiable, ActivatorItem> _instantiableCache = new NonBlocking.ConcurrentDictionary<Instantiable, ActivatorItem>();
+        private readonly ConcurrentDictionary<(Type, string), RegisteredValues> _registeredDelegates = new ConcurrentDictionary<(Type, string), RegisteredValues>();
+        private readonly ConcurrentDictionary<Instantiable, ActivatorItem> _instantiableCache = new ConcurrentDictionary<Instantiable, ActivatorItem>();
         private InjectorSettings _settings;
         private bool _attributesRegistered;
         private bool _useOnlyLoadedAssemblies = true;

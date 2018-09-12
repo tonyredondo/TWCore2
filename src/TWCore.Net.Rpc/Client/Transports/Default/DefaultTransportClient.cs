@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -39,7 +40,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     public class DefaultTransportClient : ITransportClient
     {
         private const int ResetIndex = 500000;
-        private readonly NonBlocking.ConcurrentDictionary<Guid, RpcMessageHandler> _messageResponsesHandlers = new NonBlocking.ConcurrentDictionary<Guid, RpcMessageHandler>();
+        private readonly ConcurrentDictionary<Guid, RpcMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RpcMessageHandler>();
         private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(100);
         private readonly AsyncLock _connectionLocker = new AsyncLock();
         private CancellationTokenSource _connectionCancellationTokenSource;

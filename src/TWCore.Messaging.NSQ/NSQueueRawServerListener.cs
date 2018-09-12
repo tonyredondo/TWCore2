@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NsqSharp;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
 // ReSharper disable InconsistentNaming
@@ -27,11 +27,11 @@ using TWCore.Messaging.RawServer;
 
 namespace TWCore.Messaging.NSQ
 {
-	/// <inheritdoc />
-	/// <summary>
-	/// NSQ raw server listener implementation
-	/// </summary>
-	public class NSQueueRawServerListener : MQueueRawServerListenerBase
+    /// <inheritdoc />
+    /// <summary>
+    /// NSQ raw server listener implementation
+    /// </summary>
+    public class NSQueueRawServerListener : MQueueRawServerListenerBase
 	{
 		#region Fields
 		private readonly string _name;

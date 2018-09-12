@@ -29,31 +29,21 @@ namespace TWCore.Serialization.NSerializer
 {
     public delegate void SerializeActionDelegate(object obj, SerializersTable table);
 
-    public struct SerializerTypeDescriptor
+    public readonly struct SerializerTypeDescriptor
     {
-        public Type Type;
-        public PropertyInfo[] RuntimeProperties;
-        public Type IListType;
-        public Type IDictionaryType;
-        //
-        public string[] Properties;
-        public bool IsArray;
-        public bool IsList;
-        public bool IsDictionary;
-        public bool IsNSerializable;
-        public byte[] Definition;
-        public SerializeActionDelegate SerializeAction;
+        public readonly bool IsNSerializable;
+        public readonly byte[] Definition;
+        public readonly SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerTypeDescriptor(Type type)
         {
-            Type = type;
             var ifaces = type.GetInterfaces();
-            IListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-            IDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-            var isIList = IListType != null;
-            var isIDictionary = IDictionaryType != null;
-            RuntimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
+            var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var isIList = iListType != null;
+            var isIDictionary = iDictionaryType != null;
+            var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
             {
                 if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
                 if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
@@ -63,22 +53,15 @@ namespace TWCore.Serialization.NSerializer
             }).ToArray();
 
             //
-            Properties = RuntimeProperties.Select(p => p.Name).ToArray();
+            var properties = runtimeProperties.Select(p => p.Name).ToArray();
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
-            IsArray = type.IsArray;
-            if (!IsArray)
-            {
-                IsDictionary = isIDictionary;
-                IsList = !IsDictionary && isIList;
-            }
-            else
-            {
-                IsList = false;
-                IsDictionary = false;
-            }
+            var isArray = type.IsArray;
+            var isList = false;
+            if (!isArray)
+                isList = !isIDictionary && isIList;
             //
             var typeName = type.GetTypeName();
-            var defText = typeName + ";" + (IsArray ? "1" : "0") + ";" + (IsList ? "1" : "0") + ";" + (IsDictionary ? "1" : "0") + ";" + Properties.Join(";");
+            var defText = typeName + ";" + (isArray ? "1" : "0") + ";" + (isList ? "1" : "0") + ";" + (isIDictionary ? "1" : "0") + ";" + properties.Join(";");
             var defBytesLength = Encoding.UTF8.GetByteCount(defText);
             var defBytes = new byte[defBytesLength + 5];
             defBytes[0] = DataBytesDefinition.TypeStart;
@@ -100,9 +83,9 @@ namespace TWCore.Serialization.NSerializer
             varExpressions.Add(instance);
             serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
             //
-            if (IsArray)
+            if (isArray)
             {
-                var elementType = Type.GetElementType();
+                var elementType = type.GetElementType();
 
                 var arrLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(arrLength);
@@ -123,9 +106,9 @@ namespace TWCore.Serialization.NSerializer
                                 Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }
-            else if (IsList)
+            else if (isList)
             {
-                var argTypes = IListType.GenericTypeArguments;
+                var argTypes = iListType.GenericTypeArguments;
                 var iLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(iLength);
                 serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListCountGetMethod)));
@@ -145,9 +128,9 @@ namespace TWCore.Serialization.NSerializer
                                 Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }
-            else if (IsDictionary)
+            else if (isIDictionary)
             {
-                var argTypes = IDictionaryType.GenericTypeArguments;
+                var argTypes = iDictionaryType.GenericTypeArguments;
                 var iLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(iLength);
                 serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListCountGetMethod)));
@@ -173,9 +156,9 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(loop);
             }
             //
-            if (RuntimeProperties.Length > 0)
+            if (runtimeProperties.Length > 0)
             {
-                foreach (var prop in RuntimeProperties)
+                foreach (var prop in runtimeProperties)
                 {
                     var getExpression = Expression.Property(instance, prop);
                     serExpressions.Add(WriteExpression(prop.PropertyType, getExpression, serTable));

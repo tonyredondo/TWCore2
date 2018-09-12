@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
 {
-    public struct DeserializerMetadataOfTypeRuntime
+    public readonly struct DeserializerMetadataOfTypeRuntime
     {
         public readonly DeserializerMetaDataOfType MetaDataOfType;
         public readonly DeserializerTypeDescriptor Descriptor;

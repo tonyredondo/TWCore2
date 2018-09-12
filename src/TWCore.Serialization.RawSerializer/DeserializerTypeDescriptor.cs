@@ -27,19 +27,17 @@ namespace TWCore.Serialization.RawSerializer
 {
     public delegate object DeserializeDelegate(DeserializersTable table);
 
-    public struct DeserializerTypeDescriptor
+    public readonly struct DeserializerTypeDescriptor
     {
-        public Type Type;
-        public ActivatorDelegate Activator;
-        public Dictionary<string, FastPropertyInfo> Properties;
-        public bool IsNSerializable;
-        public DeserializerMetaDataOfType Metadata;
-        public DeserializeDelegate DeserializeFunc;
+        public readonly ActivatorDelegate Activator;
+        public readonly Dictionary<string, FastPropertyInfo> Properties;
+        public readonly bool IsNSerializable;
+        public readonly DeserializerMetaDataOfType Metadata;
+        public readonly DeserializeDelegate DeserializeFunc;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerTypeDescriptor(Type type)
         {
-            Type = type;
             var ifaces = type.GetInterfaces();
             var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
             var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));

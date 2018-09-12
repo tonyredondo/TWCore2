@@ -246,7 +246,7 @@ namespace TWCore.Net.HttpServer
         public T GetPostObject<T>()
         {
             var serializer = SerializerManager.GetByMimeType(ContentType);
-            return serializer != null ? serializer.Deserialize<T>(PostData) : default(T);
+            return serializer != null ? serializer.Deserialize<T>(PostData) : default;
         }
         /// <summary>
         /// Gets the object from the Post data

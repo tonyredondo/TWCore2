@@ -44,7 +44,7 @@ namespace TWCore.Collections
             if (rangeComparer != null)
                 _sRangeComparer = rangeComparer;
 
-            _center = default(TKey);
+            _center = default;
             _leftNode = null;
             _rightNode = null;
             _items = null;

@@ -332,7 +332,7 @@ namespace TWCore.Cache.Client
             Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
             var items = await WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
             if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead)
-                return (default(T), null);
+                return (default, null);
             for (var i = 0; i < items.Length; i++)
             {
                 var item = items[i];
@@ -350,7 +350,7 @@ namespace TWCore.Cache.Client
                 }
             }
             Core.Log.LibVerbose("\tItem not Found in the pool.");
-            return (default(T), null);
+            return (default, null);
         }
         #endregion
 

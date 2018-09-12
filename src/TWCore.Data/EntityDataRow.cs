@@ -64,7 +64,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public EntityDataRow(object[] rowValues, EntityBinder binder, FillDataDelegate<T> fillMethod)
         {
-            _entity = default(T);
+            _entity = default;
             _rowValues = rowValues;
             _binder = binder;
             _fillMethod = fillMethod;

@@ -231,7 +231,7 @@ namespace TWCore.Collections
         public bool TryRemove(TKey key, out TValue value)
         {
             var res = _dictionary.TryRemove(key, out var weakValue);
-            value = weakValue.IsAlive ? weakValue.Target : default(TValue);
+            value = weakValue.IsAlive ? weakValue.Target : default;
             return res;
         }
 

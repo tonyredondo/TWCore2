@@ -62,7 +62,7 @@ namespace TWCore.Configuration
         public T CreateInstance<T>()
         {
             if (!Enabled)
-                return default(T);
+                return default;
 			Ensure.ReferenceNotNull(TypeFactory, "The TypeFactory property is null.");
             var factory = (ITypeFactory)Activator.CreateInstance(Core.GetType(TypeFactory));
             Ensure.ReferenceNotNull(factory, string.Format("The factory type could not be created, please check the TypeFactory: {0} and ensure the assembly exists.", TypeFactory));

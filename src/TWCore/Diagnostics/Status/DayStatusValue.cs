@@ -154,8 +154,8 @@ namespace TWCore.Diagnostics.Status
                 var values = sumItem.Value[i].Cast<TValue>().ToArray();
                 var calls = values.Length;
                 var percentage = (double)calls * 100 / sumItem.TotalCallsDay;
-                var minValue = calls > 0 ? values.Min() : default(TValue);
-                var maxValue = calls > 0 ? values.Max() : default(TValue);
+                var minValue = calls > 0 ? values.Min() : default;
+                var maxValue = calls > 0 ? values.Max() : default;
                 (var averageValue, var stdValue) = values.GetAverageAndStdDev(v => v.ToDouble(null));
 
                 var plot = sumItem.Key == now.Date && i == now.Hour;

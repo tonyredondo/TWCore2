@@ -79,7 +79,7 @@ namespace TWCore.Collections
             {
                 TryGet(key, out var item);
 #pragma warning disable IDE0030 // Usar propagación de null
-                return (item != null) ? item.Value : default(TValue);
+                return (item != null) ? item.Value : default;
 #pragma warning restore IDE0030 // Usar propagación de null
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

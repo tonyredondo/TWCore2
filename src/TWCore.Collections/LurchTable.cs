@@ -368,7 +368,7 @@ namespace TWCore.Collections
                 value = info.Value;
                 return true;
             }
-            value = default(TValue);
+            value = default;
             return false;
         }
 
@@ -1144,7 +1144,7 @@ namespace TWCore.Collections
                     index = _entries[index >> _shift][index & _shiftMask].Link;
                 }
 
-                value = default(TValue);
+                value = default;
                 return false;
             }
         }
@@ -1378,8 +1378,8 @@ namespace TWCore.Collections
 
         void FreeSlot(ref int index, int ver)
         {
-            _entries[index >> _shift][index & _shiftMask].Key = default(TKey);
-            _entries[index >> _shift][index & _shiftMask].Value = default(TValue);
+            _entries[index >> _shift][index & _shiftMask].Key = default;
+            _entries[index >> _shift][index & _shiftMask].Value = default;
             Interlocked.Exchange(ref _entries[index >> _shift][index & _shiftMask].Link, 0);
 
             int slot = (ver & int.MaxValue) % FreeSlots;
@@ -1446,7 +1446,7 @@ namespace TWCore.Collections
 
             public DelInfo(TValue expected)
             {
-                Value = default(TValue);
+                Value = default;
                 _testValue = expected;
                 _hasTestValue = true;
                 Condition = null;
@@ -1511,7 +1511,7 @@ namespace TWCore.Collections
                     value = Value = Create(key);
                     return true;
                 }
-                value = Value = default(TValue);
+                value = Value = default;
                 return false;
             }
 
@@ -1536,14 +1536,14 @@ namespace TWCore.Collections
 
             public UpdateInfo(TValue expected)
             {
-                Value = default(TValue);
+                Value = default;
                 _testValue = expected;
                 _hasTestValue = true;
             }
 
             bool ICreateValue<TKey, TValue>.CreateValue(TKey key, out TValue value)
             {
-                value = default(TValue);
+                value = default;
                 return false;
             }
             public bool UpdateValue(TKey key, ref TValue value)

@@ -35,7 +35,7 @@ namespace TWCore
         /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T>(Func<T> tryFunction, Func<Exception, T> onException, T defaultValue = default(T))
+        public static T Do<T>(Func<T> tryFunction, Func<Exception, T> onException, T defaultValue = default)
         {
             var res = defaultValue;
             try
@@ -61,7 +61,7 @@ namespace TWCore
         /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T>(Func<T> tryFunction, Action<Exception> onException = null, bool throwsAfter = false, T defaultValue = default(T))
+        public static T Do<T>(Func<T> tryFunction, Action<Exception> onException = null, bool throwsAfter = false, T defaultValue = default)
         {
             var res = defaultValue;
             try
@@ -88,7 +88,7 @@ namespace TWCore
         /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T>(Func<T> tryFunction, bool throwsAfter, T defaultValue = default(T))
+        public static T Do<T>(Func<T> tryFunction, bool throwsAfter, T defaultValue = default)
         {
             var res = defaultValue;
             try
@@ -202,7 +202,7 @@ namespace TWCore
         /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, Func<Exception, T> onException, T defaultValue = default(T))
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, Func<Exception, T> onException, T defaultValue = default)
         {
             var res = defaultValue;
             try
@@ -230,7 +230,7 @@ namespace TWCore
         /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, Action<Exception> onException = null, bool throwsAfter = false, T defaultValue = default(T))
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, Action<Exception> onException = null, bool throwsAfter = false, T defaultValue = default)
         {
             var res = defaultValue;
             try
@@ -259,7 +259,7 @@ namespace TWCore
         /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, bool throwsAfter, T defaultValue = default(T))
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, bool throwsAfter, T defaultValue = default)
         {
             var res = defaultValue;
             try

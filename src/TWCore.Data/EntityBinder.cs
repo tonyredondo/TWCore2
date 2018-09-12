@@ -175,7 +175,7 @@ namespace TWCore.Data
         {
             if (ColumnIndex.TryGetValue(columnName, out var index) && rowValues.Length > index)
                 return (T)rowValues[index];
-            return default(T);
+            return default;
         }
 
         #region Nested Classes

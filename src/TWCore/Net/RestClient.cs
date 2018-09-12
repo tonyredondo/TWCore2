@@ -566,13 +566,13 @@ namespace TWCore.Net
                 Core.Log.LibVerbose("Deserializing response byte array to an object type.");
                 return (response.ValueInBytes?.Length > 0) ?
                     new RestClientResponse<T>(response, Serializer.Deserialize<T>(response.ValueInBytes)) :
-                    new RestClientResponse<T>(response, default(T));
+                    new RestClientResponse<T>(response, default);
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
                 if (response.IsSuccessStatusCode) throw;
-                return new RestClientResponse<T>(response, default(T));
+                return new RestClientResponse<T>(response, default);
             }
         }
         /// <summary>

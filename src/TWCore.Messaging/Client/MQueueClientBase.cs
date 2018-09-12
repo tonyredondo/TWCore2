@@ -214,7 +214,7 @@ namespace TWCore.Messaging.Client
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var rsMsg = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
-            if (rsMsg is null) return default(T);
+            if (rsMsg is null) return default;
 
             rsMsg.Header.Response.ApplicationReceivedTime = Core.Now;
             Counters.IncrementMessagesReceived();
@@ -229,7 +229,7 @@ namespace TWCore.Messaging.Client
                     await MQueueClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
             }
 
-            if (rsMsg.Body is null) return default(T);
+            if (rsMsg.Body is null) return default;
 
             var res = default(T);
             try

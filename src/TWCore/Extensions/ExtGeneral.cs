@@ -218,7 +218,7 @@ namespace TWCore
             {
                 if (task.IsCompleted)
                     return task.Result;
-                return task.Wait(millisecondsTimeout) ? task.Result : default(T);
+                return task.Wait(millisecondsTimeout) ? task.Result : default;
             }
             catch (AggregateException ex)
             {
@@ -252,7 +252,7 @@ namespace TWCore
             {
                 if (task.IsCompleted)
                     return task.Result;
-                return task.Wait(timeout) ? task.Result : default(T);
+                return task.Wait(timeout) ? task.Result : default;
             }
             catch (AggregateException ex)
             {

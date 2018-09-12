@@ -507,7 +507,7 @@ namespace TWCore
         {
             if (enumerable is null) return null;
             var comparer = EqualityComparer<T>.Default;
-            var defaultValue = default(T);
+            T defaultValue = default;
             if (enumerable is IList<T> enumList)
             {
                 var noDefaults = new List<T>();

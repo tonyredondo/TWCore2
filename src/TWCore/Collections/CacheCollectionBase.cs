@@ -265,7 +265,7 @@ namespace TWCore.Collections
                 lock (_padlock)
                 {
                     if (!OnGetKey(index, out var key))
-                        return default(TValue);
+                        return default;
                     var nValue = ValueStorage[key];
                     UpdateList(key, nValue);
                     return nValue.Value;
@@ -509,7 +509,7 @@ namespace TWCore.Collections
                     return true;
                 }
             }
-            value = default(TValue);
+            value = default;
             return false;
         }
         /// <inheritdoc />
@@ -533,7 +533,7 @@ namespace TWCore.Collections
                     return true;
                 }
             }
-            value = default(TValue);
+            value = default;
             return false;
         }
         #endregion

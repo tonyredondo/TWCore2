@@ -214,7 +214,7 @@ namespace TWCore.Messaging.RawClient
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var msg = await ReceiveBytesAsync(correlationId, cancellationToken).ConfigureAwait(false);
-            if (msg is null) return default(T);
+            if (msg is null) return default;
             if (typeof(T) == typeof(byte[]))
                 return (T)(object)msg;
             return ReceiverSerializer.Deserialize<T>(msg);

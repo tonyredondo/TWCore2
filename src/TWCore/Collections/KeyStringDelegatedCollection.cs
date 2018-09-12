@@ -172,7 +172,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetByPartialKey(string partialKey, out TItem item)
         {
-            item = default(TItem);
+            item = default;
             if (!ContainsPartialKey(partialKey)) return false;
             item = this[_partialKeys[partialKey]];
             return true;

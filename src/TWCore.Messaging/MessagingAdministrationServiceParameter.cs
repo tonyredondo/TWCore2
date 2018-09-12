@@ -36,7 +36,7 @@ namespace TWCore.Services
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             var queues = Core.Services.GetDefaultQueuesConfiguration();
-            if (queues == null)
+            if (queues is null)
             {
                 Core.Log.Warning("Nothing to do.");
                 return;

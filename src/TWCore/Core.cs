@@ -215,7 +215,7 @@ namespace TWCore
                         if (!Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading log storage: {0}", name);
                         var lSto = Injector.New<ILogStorage>(name);
-                        if (lSto == null)
+                        if (lSto is null)
                         {
                             Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
                             continue;
@@ -245,7 +245,7 @@ namespace TWCore
                         if (!Settings[$"Core.Trace.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading trace storage: {0}", name);
                         var lTrace = Injector.New<ITraceStorage>(name);
-                        if (lTrace == null)
+                        if (lTrace is null)
                         {
                             Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ITraceStorage).Name, name);
                             continue;
@@ -265,7 +265,7 @@ namespace TWCore
                         if (!Settings[$"Core.Status.Transport.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading status transport: {0}", name);
                         var sTransport = Injector.New<IStatusTransport>(name);
-                        if (sTransport == null)
+                        if (sTransport is null)
                         {
                             Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(IStatusTransport).Name, name);
                             continue;
@@ -315,7 +315,7 @@ namespace TWCore
 
             Status.Attach(() =>
             {
-                if (Settings == null) return null;
+                if (Settings is null) return null;
                 var sItem = new StatusItem
                 {
                     Name = "Application Information\\Settings"
@@ -561,7 +561,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetLogEngine(ILogEngine engine)
         {
-            if (engine == null) return;
+            if (engine is null) return;
             var prevItems = Log?.GetPendingItems();
             Log = engine;
             if (prevItems != null)
@@ -610,7 +610,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void LoadSettings(string settingsFilePath, string environmentName = null, string machineName = null, string applicationName = null)
         {
-            if (settingsFilePath == null)
+            if (settingsFilePath is null)
                 throw new NullReferenceException("The settings file path is null.");
 
             environmentName = environmentName ?? EnvironmentName;
@@ -690,7 +690,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void LoadInjector(string injectorFilePath, string environmentName = null, string machineName = null, string applicationName = null)
         {
-            if (injectorFilePath == null)
+            if (injectorFilePath is null)
                 throw new NullReferenceException("The injector file path is null.");
 
             environmentName = environmentName ?? EnvironmentName;
@@ -832,7 +832,7 @@ namespace TWCore
                     return null;
                 }
             });
-            if (type == null)
+            if (type is null)
                 Log.Warning("The type '{0}' couldn't be found or loaded, this could lead to exceptions.", typeName);
             return type;
         }
@@ -857,7 +857,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReplaceEnvironmentTemplate(string source)
         {
-            if (source == null) return null;
+            if (source is null) return null;
             if (source.IndexOf("{Env:", StringComparison.Ordinal) == -1 
                 && source.IndexOf("{MACHINENAME}", StringComparison.Ordinal) == -1) return source;
             source = source.Replace("{MACHINENAME}", MachineName);
@@ -885,7 +885,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReplaceEncriptionTemplate(string source)
         {
-            if (source == null) return null;
+            if (source is null) return null;
             if (source.IndexOf("{Encripted:", StringComparison.Ordinal) == -1) return source;
             var result = EncriptionTemplateFormatRegex.Replace(source, match =>
             {

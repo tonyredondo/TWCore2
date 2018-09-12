@@ -71,7 +71,7 @@ namespace TWCore.Services
             {
                 OnInit(args);
                 var triggeredActions = GetTriggeredActions();
-                if (triggeredActions == null)
+                if (triggeredActions is null)
                     throw new NullReferenceException("Check your GetTriggeredActions method implementation, the return value can't be null.");
                 TriggeredActions = new List<TriggeredAction>(triggeredActions);
             }

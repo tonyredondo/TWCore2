@@ -101,7 +101,7 @@ namespace TWCore.Data.PostgreSQL
                 var tableRow = tableRows.FirstOrDefault((dRow, tName) => (string)dRow["TABLE_NAME"] == tName, tableName);
                 
                 var table = catalog.Tables.FirstOrDefault((t, mTableName, mTableSchema) => t.Name == mTableName && t.Schema == mTableSchema, tableName, tableSchema);
-                if (table == null)
+                if (table is null)
                 {
                     table = new TableSchema { Name = tableName, Schema = tableSchema };
                     switch ((string)tableRow?["TABLE_TYPE"])
@@ -117,7 +117,7 @@ namespace TWCore.Data.PostgreSQL
                 }
 
                 var tableColumn = table.Columns.FirstOrDefault((c, cName) => c.Name == cName, columnName);
-                if (tableColumn == null)
+                if (tableColumn is null)
                 {
                     tableColumn = new TableColumnSchema
                     {
@@ -222,10 +222,10 @@ namespace TWCore.Data.PostgreSQL
                 var indexName = (string)indexColumn["index_name"];
 
                 var table = catalog.Tables.FirstOrDefault((t, mTableName, mTableSchema) => t.Name == mTableName && t.Schema == mTableSchema, tableName, tableSchema);
-                if (table == null) continue;
+                if (table is null) continue;
 
                 var tIndex = table.Indexes.FirstOrDefault((i, iName) => i.Name == iName, indexName);
-                if (tIndex == null)
+                if (tIndex is null)
                 {
                     tIndex = new TableIndexSchema { Name = indexName, ConstraintName = indexName };
                     if (indexName.StartsWith("PK_"))

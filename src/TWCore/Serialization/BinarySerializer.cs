@@ -99,7 +99,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize(object item, Type itemType, Stream stream)
         {
-            if (Compressor == null)
+            if (Compressor is null)
             {
                 OnSerialize(stream, item, itemType);
                 return;
@@ -121,7 +121,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream, Type itemType)
         {
-            if (Compressor == null)
+            if (Compressor is null)
             {
                 return OnDeserialize(stream, itemType);
             }
@@ -145,7 +145,7 @@ namespace TWCore.Serialization
         {
             using (var stream = new RecycleMemoryStream())
             {
-                if (Compressor == null)
+                if (Compressor is null)
                 {
                     OnSerialize(stream, item, itemType);
                     return stream.GetMultiArray();
@@ -171,7 +171,7 @@ namespace TWCore.Serialization
         {
             using (var stream = value.AsReadOnlyStream())
             {
-                if (Compressor == null)
+                if (Compressor is null)
                 {
                     return OnDeserialize(stream, valueType);
                 }

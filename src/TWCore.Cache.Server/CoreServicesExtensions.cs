@@ -68,7 +68,7 @@ namespace TWCore.Services
                 throw new Exception($"The Cache config file: {cachesConfigFile} can't be deserialized.", ex);
             }
 
-            if (_serverCacheSettings == null)
+            if (_serverCacheSettings is null)
             {
                 Core.Log.Warning("The Cache configuration file is null or empty.");
                 return;

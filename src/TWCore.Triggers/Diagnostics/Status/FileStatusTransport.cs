@@ -111,7 +111,7 @@ namespace TWCore.Diagnostics.Status.Transports
             var status = OnFetchStatus?.Invoke();
             try
             {
-                if (status == null) return;
+                if (status is null) return;
                 var now = Core.Now;
                 var filename = FileNameFormat
                     .Replace("{yyyy}", now.ToString("yyyy"))

@@ -244,7 +244,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RegisterParametersHandler(ContainerParameterHandler paramHandler)
         {
-            if (paramHandler?.Name == null) return;
+            if (paramHandler?.Name is null) return;
             paramHandler.Name = paramHandler.Name.ToLowerInvariant();
             ParametersHandlers.TryAdd(paramHandler.Name, paramHandler);
         }
@@ -505,7 +505,7 @@ namespace TWCore.Services
                 if (!string.IsNullOrWhiteSpace(Core.GlobalSettings.DiscoverySerializerMimeType))
                 {
                     serializer = SerializerManager.GetByMimeType(Core.GlobalSettings.DiscoverySerializerMimeType);
-                    if (serializer == null)
+                    if (serializer is null)
                     {
                         Core.Log.Warning("Discovery.SerializerMimeType can't be loaded, using default binary serializer.");
                         serializer = SerializerManager.DefaultBinarySerializer;

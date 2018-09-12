@@ -479,7 +479,7 @@ namespace TWCore.Serialization.WSerializer
                                         for (var i = 0; i < iListCount; i++)
                                         {
                                             var itemList = iList[i];
-                                            if (itemList == null)
+                                            if (itemList is null)
                                                 bw.Write(DataType.ValueNull);
                                             else
                                                 valueTypeSerializer.Write(bw, itemList);
@@ -487,7 +487,7 @@ namespace TWCore.Serialization.WSerializer
                                     }
                                     else if (iListCount == 1)
                                     {
-                                        if (iList[0] == null)
+                                        if (iList[0] is null)
                                             bw.Write(DataType.ValueNull);
                                         else
                                         {
@@ -537,7 +537,7 @@ namespace TWCore.Serialization.WSerializer
                                                 for (var i = 0; i < iListCount; i++)
                                                 {
                                                     var itemList = iList[i];
-                                                    if (itemList == null)
+                                                    if (itemList is null)
                                                         bw.Write(DataType.ValueNull);
                                                     else
                                                         valueTypeSerializer.Write(bw, itemList);
@@ -607,13 +607,13 @@ namespace TWCore.Serialization.WSerializer
                                     {
                                         foreach (var keyValue in iDictio.Keys)
                                         {
-                                            if (keyValue == null)
+                                            if (keyValue is null)
                                                 bw.Write(DataType.ValueNull);
                                             else
                                                 serializersTable.Write(dictioItem.KeySerializerType, bw, keyValue);
 
                                             var valueValue = iDictio[keyValue];
-                                            if (valueValue == null)
+                                            if (valueValue is null)
                                                 bw.Write(DataType.ValueNull);
                                             else
                                                 serializersTable.Write(dictioItem.ValueSerializerType, bw, valueValue);
@@ -738,7 +738,7 @@ namespace TWCore.Serialization.WSerializer
                             var rItem = (SerializerPlanItem.PropertyReference) item;
                             //debugText += " = " + rItem.Name;
                             var rVal = rItem.Property.GetValue(scope.Value);
-                            if (rVal == null)
+                            if (rVal is null)
                                 bw.Write(DataType.ValueNull);
                             else
                             {
@@ -757,7 +757,7 @@ namespace TWCore.Serialization.WSerializer
                         case SerializerPlanItemType.Value:
                             var vItem = (SerializerPlanItem.ValueItem) item;
                             //debugText += " (" + vItem.Type + ")";
-                            if (scope.Value == null)
+                            if (scope.Value is null)
                                 bw.Write(DataType.ValueNull);
                             else if (vItem.SerializerType != null)
                                 serializersTable.Write(vItem.SerializerType, bw, scope.Value);
@@ -778,7 +778,7 @@ namespace TWCore.Serialization.WSerializer
                         case SerializerPlanItemType.RuntimeValue:
                             var rvItem = (SerializerPlanItem.RuntimeValue) item;
                             //debugText += " (" + rvItem.Type + ")";
-                            if (rvItem.Value == null)
+                            if (rvItem.Value is null)
                                 bw.Write(DataType.ValueNull);
                             else if (rvItem.SerializerType != null)
                                 serializersTable.Write(rvItem.SerializerType, bw, rvItem.Value);
@@ -892,9 +892,9 @@ namespace TWCore.Serialization.WSerializer
                     var valueIsNullable = valueTypeInfo.IsGenericType && valueTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
                     var valueSer = valueIsNullable ? serializerTable.GetSerializerByValueType(Nullable.GetUnderlyingType(valueType)) : serializerTable.GetSerializerByValueType(valueType);
 
-                    if (keySer == null && !_currentSerializerPlanTypes.Contains(keyType))
+                    if (keySer is null && !_currentSerializerPlanTypes.Contains(keyType))
                         GetSerializerPlan(serializerTable, keyType);
-                    if (valueSer == null && !_currentSerializerPlanTypes.Contains(valueType))
+                    if (valueSer is null && !_currentSerializerPlanTypes.Contains(valueType))
                         GetSerializerPlan(serializerTable, valueType);
 
                     plan.Add(new SerializerPlanItem.KeyValueStart(mType, keyType, keySer?.GetType(), keyIsNullable, valueType, valueSer?.GetType(), valueIsNullable));
@@ -931,7 +931,7 @@ namespace TWCore.Serialization.WSerializer
                             propType = Nullable.GetUnderlyingType(propType);
                         var serType = serializerTable.GetSerializerByValueType(propType)?.GetType();
                         propNames.Add(prop.Name);
-                        if (serType == null)
+                        if (serType is null)
                         {
                             plan.Add(new SerializerPlanItem.PropertyReference(prop));
                             if (!_currentSerializerPlanTypes.Contains(propType))
@@ -994,9 +994,9 @@ namespace TWCore.Serialization.WSerializer
                             var valueIsNullable = valueTypeInfo.IsGenericType && valueTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
                             var valueSer = valueIsNullable ? serializerTable.GetSerializerByValueType(Nullable.GetUnderlyingType(valueType)) : serializerTable.GetSerializerByValueType(valueType);
 
-                            if (keySer == null && !_currentSerializerPlanTypes.Contains(keyType))
+                            if (keySer is null && !_currentSerializerPlanTypes.Contains(keyType))
                                 GetSerializerPlan(serializerTable, keyType);
-                            if (valueSer == null && !_currentSerializerPlanTypes.Contains(valueType))
+                            if (valueSer is null && !_currentSerializerPlanTypes.Contains(valueType))
                                 GetSerializerPlan(serializerTable, valueType);
 
                             plan.Add(new SerializerPlanItem.DictionaryStart(type, keyType, keySer?.GetType(), keyIsNullable, valueType, valueSer?.GetType(), valueIsNullable));
@@ -1076,13 +1076,13 @@ namespace TWCore.Serialization.WSerializer
                             for (var i = 0; i < typeQuantity; i++)
                             {
                                 gTypes[i] = DeserializeType(br, stringSerializer, br.ReadByte());
-                                if (gTypes[i] == null)
+                                if (gTypes[i] is null)
                                     someNull = true;
                             }
                             if (!someNull)
                                 typeType = typeType.MakeGenericType(gTypes);
                         }
-                        if (typeType == null)
+                        if (typeType is null)
                             throw new NullReferenceException($"The type can't be found: {typeNamespace}.{typeName} from assembly: {typeAssembly}");
                         var typePropertiesLength = numberSerializer.ReadValue(br);
                         var typeProperties = new string[typePropertiesLength];
@@ -1386,7 +1386,7 @@ namespace TWCore.Serialization.WSerializer
         private static DeserializerTypeItem CreateDeserializerNewTypeItem(SerializerCache<object> objectCache, DeserializerTypeDefinition typeDefinition)
         {
             var newTypeItem = new DeserializerTypeItem(typeDefinition);
-            if (newTypeItem.Type == null)
+            if (newTypeItem.Type is null)
                 objectCache.DeserializerSet(null);
             else if (!newTypeItem.Type.IsArray)
                 objectCache.DeserializerSet(newTypeItem.Value);
@@ -1395,7 +1395,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ProcessTypeEnd(DeserializerTypeItem typeItem, object lastObject)
         {
-            if (typeItem == null) return;
+            if (typeItem is null) return;
 
             switch (typeItem.Last)
             {
@@ -1405,7 +1405,7 @@ namespace TWCore.Serialization.WSerializer
                         var propName = typeItem.Properties[typeItem.PropertyIndex++];
                         if (typeItem.TypeInfo.Properties.TryGetValue(propName, out var fprop))
                         {
-                            if (lastObject == null)
+                            if (lastObject is null)
                                 fprop.SetValue(typeItem.Value, null);
                             else if (lastObject.GetType() == fprop.PropertyType)
                                 fprop.SetValue(typeItem.Value, lastObject);
@@ -1488,10 +1488,10 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
         {
-            if (type == null) return null;
+            if (type is null) return null;
             return DeserializationTypeInfo.GetOrAdd(type, valueType =>
             {
-                if (valueType == null) return null;
+                if (valueType is null) return null;
 
                 var typeInfo = valueType.GetTypeInfo();
                 var isGenericType = typeInfo.IsGenericType;
@@ -1555,7 +1555,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string[] GetPropertiesFromType(Type type)
         {
-            if (type == null) return null;
+            if (type is null) return null;
             var typeInfo = type.GetTypeInfo();
             var isIList = typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
 
@@ -1583,7 +1583,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddKnownType(Type type, bool includeInnerTypes = false)
         {
-            if (type == null) return;
+            if (type is null) return;
             if (!_knownTypes.Add(type)) return;
 
             GlobalKnownTypes.GetOrAdd(type, mType =>

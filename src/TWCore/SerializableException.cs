@@ -99,7 +99,7 @@ namespace TWCore
             if (ex.InnerException != null)
                 InnerException = new SerializableException(ex.InnerException);
 
-            if (ex.Data == null) return;
+            if (ex.Data is null) return;
             
             Data = new KeyValueCollection();
             foreach (var key in ex.Data.Keys)

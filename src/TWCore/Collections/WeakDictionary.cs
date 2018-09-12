@@ -30,7 +30,7 @@ namespace TWCore.Collections
     {
         public static WeakReference<T> Create(T target)
         {
-            return target == null ? WeakNullReference<T>.Singleton : new WeakReference<T>(target);
+            return target is null ? WeakNullReference<T>.Singleton : new WeakReference<T>(target);
         }
 
         protected WeakReference(T target) : base(target, false) { }
@@ -75,7 +75,7 @@ namespace TWCore.Collections
 
         internal WeakKeyComparer(IEqualityComparer<T> comparer)
         {
-            if (comparer == null)
+            if (comparer is null)
                 comparer = EqualityComparer<T>.Default;
 
             _comparer = comparer;
@@ -178,7 +178,7 @@ namespace TWCore.Collections
         
         public bool TryAdd(TKey key, TValue value)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key is null) throw new ArgumentNullException(nameof(key));
             var weakKey = new WeakKeyReference<TKey>(key, _comparer);
             if (_dictionary.TryGetValue(weakKey, out var oValue))
             {
@@ -193,7 +193,7 @@ namespace TWCore.Collections
         }
         public TValue GetOrAdd(TKey key, TValue value)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key is null) throw new ArgumentNullException(nameof(key));
             var weakKey = new WeakKeyReference<TKey>(key, _comparer);
             _removeWeakReferencesInNull();
             WeakReference<TValue> res;
@@ -208,7 +208,7 @@ namespace TWCore.Collections
         }
         public TValue GetOrAdd(TKey key, Func<object, TValue> valueFactory)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key is null) throw new ArgumentNullException(nameof(key));
             var weakKey = new WeakKeyReference<TKey>(key, _comparer);
             _removeWeakReferencesInNull();
             WeakReference<TValue> res;

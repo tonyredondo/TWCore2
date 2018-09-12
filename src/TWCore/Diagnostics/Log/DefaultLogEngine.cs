@@ -172,7 +172,7 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(ILogItem item)
         {
-            if (!Enabled || item == null || item.Level > MaxLogLevel || item.Level > Storage.GetMaxLogLevel()) return;
+            if (!Enabled || item is null || item.Level > MaxLogLevel || item.Level > Storage.GetMaxLogLevel()) return;
             if (_itemsWorker?.Count < MaximumItemsInQueue)
             {
                 _completationHandler.Reset();
@@ -1707,7 +1707,7 @@ namespace TWCore.Diagnostics.Log
         private void WriteUnsafeInternal(LogLevel level, string groupName, string message, Exception ex = null)
         {
             var item = ItemFactory(level, null, message, groupName, ex, null, null);
-            if (item == null) return;
+            if (item is null) return;
             _itemsWorker?.Enqueue(item);
             if (item.Level != LogLevel.Error) return;
             Start();

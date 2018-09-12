@@ -87,7 +87,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject(object data, ISerializer serializer)
         {
-            if (data == null) return;
+            if (data is null) return;
             var type = data.GetType();
             DataType = type.GetTypeName();
             if (data is byte[] bytes)
@@ -148,7 +148,7 @@ namespace TWCore.Serialization
         private static ISerializer CreateSerializer((string, string) vTuple)
         {
             var ser = SerializerManager.GetByMimeType(vTuple.Item1);
-            if (ser == null)
+            if (ser is null)
                 throw new FormatException($"The serializer with MimeType = {vTuple.Item1} wasn't found.");
             if (!string.IsNullOrWhiteSpace(vTuple.Item2))
                 ser.Compressor = CompressorManager.GetByEncodingType(vTuple.Item2);

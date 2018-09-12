@@ -43,7 +43,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid? value)
         {
-            if (value == null)
+            if (value is null)
                 WriteByte(DataBytesDefinition.ValueNull);
             else
                 WriteValue(value.Value);

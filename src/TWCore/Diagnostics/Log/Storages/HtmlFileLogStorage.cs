@@ -357,7 +357,7 @@ namespace TWCore.Diagnostics.Log.Storages
             EnsureLogFile(fileName);
             _flushTimer = new Timer(obj =>
             {
-                if (_sWriter == null) return;
+                if (_sWriter is null) return;
                 try
                 {
                     if (Interlocked.CompareExchange(ref _shouldFlush, 0, 1) == 1)
@@ -474,7 +474,7 @@ namespace TWCore.Diagnostics.Log.Storages
             while (true)
             {
                 sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
-                if (itemEx.InnerException == null) break;
+                if (itemEx.InnerException is null) break;
                 itemEx = itemEx.InnerException;
 
             }
@@ -491,7 +491,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public async Task WriteAsync(ILogItem item)
         {
             EnsureLogFile(FileName);
-            if (_sWriter == null) return;
+            if (_sWriter is null) return;
             if (!StringBuilderPool.TryPop(out var strBuffer))
                 strBuffer = new StringBuilder();
             var time = item.Timestamp.GetTimeSpanFormat();

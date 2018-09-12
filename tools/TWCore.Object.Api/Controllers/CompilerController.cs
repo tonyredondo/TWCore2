@@ -81,8 +81,8 @@ namespace TWCore.Object.Api.Controllers
         public TreeListCollection GetTreeListData(ObjectDescription description)
         {
             var collection = new TreeListCollection();
-            if (description == null) return collection;
-            if (description.Value == null)
+            if (description is null) return collection;
+            if (description.Value is null)
             {
                 collection.Add(new TreeListItem {Id = 0, Name = "Value", Value = "(null)", Type = "Unknown", Member = "object" });
                 return collection;

@@ -457,7 +457,7 @@ namespace TWCore
         /// <param name="e">Event Args</param>
         public static Task InvokeAsync<T>(this EventHandler<T> @event, object sender, T e)
         {
-            if (@event == null) return Task.CompletedTask;
+            if (@event is null) return Task.CompletedTask;
             var tcs = new TaskCompletionSource<bool>();
             Task.Run(() =>
             {
@@ -481,7 +481,7 @@ namespace TWCore
         /// <param name="e">Event Args</param>
         public static Task InvokeAsync(this EventHandler @event, object sender, EventArgs e)
         {
-            if (@event == null) return Task.CompletedTask;
+            if (@event is null) return Task.CompletedTask;
             var tcs = new TaskCompletionSource<bool>();
             Task.Run(() =>
             {

@@ -182,7 +182,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 {
                     _connectionCancellationTokenSource = new CancellationTokenSource();
                     _connectionCancellationToken = _connectionCancellationTokenSource.Token;
-                    if (_clients == null)
+                    if (_clients is null)
                     {
                         _clients = new RpcClient[_socketsPerClient];
                         for (var i = 0; i < _clients.Length; i++)

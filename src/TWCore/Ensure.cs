@@ -114,7 +114,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ArgumentNotNull(object argument, string userMessage = null)
         {
-            if (argument == null)
+            if (argument is null)
                 throw new ArgumentException(userMessage);
         }
         /// <summary>
@@ -126,7 +126,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ArgumentNotNull(object argument, string userMessage, string argumentName)
         {
-            if (argument == null)
+            if (argument is null)
                 throw new ArgumentException(userMessage, argumentName);
         }
 		#endregion
@@ -140,7 +140,7 @@ namespace TWCore
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ReferenceNotNull(object obj, string userMessage = null)
         {
-            if (obj == null)
+            if (obj is null)
                 throw new NullReferenceException(userMessage);
         }
         #endregion

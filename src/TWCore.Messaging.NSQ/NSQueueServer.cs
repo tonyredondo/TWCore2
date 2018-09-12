@@ -65,7 +65,7 @@ namespace TWCore.Messaging.NSQ
 				return -1;
 
 			var senderOptions = Config.ResponseOptions.ServerSenderOptions;
-			if (senderOptions == null)
+			if (senderOptions is null)
 				throw new NullReferenceException("ServerSenderOptions is null.");
 
 			var data = SenderSerializer.Serialize(message);

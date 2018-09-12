@@ -91,7 +91,7 @@ namespace TWCore.Net
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ParseIpAddress(string ipaddr)
         {
-            if (ipaddr == null || ipaddr.Length < 7 || ipaddr.Length > 15)
+            if (ipaddr is null || ipaddr.Length < 7 || ipaddr.Length > 15)
                 return 0;
             var ipTokens = ipaddr.Split('.');
             if (ipTokens.Length != 4)

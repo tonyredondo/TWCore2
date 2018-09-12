@@ -84,7 +84,7 @@ namespace TWCore.Diagnostics.Status
         public StatusItemValueItem(string name, object value, StatusItemValueStatus status, bool plot)
         {
             Name = name;
-            if (value == null)
+            if (value is null)
             {
                 Value = null;
                 RawValue = null;

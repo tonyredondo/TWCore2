@@ -90,7 +90,7 @@ namespace TWCore.Net
             foreach (var item in DefaultHeaders)
                 _client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
 
-            if (headers == null) return;
+            if (headers is null) return;
 
             foreach (var item in headers)
             {

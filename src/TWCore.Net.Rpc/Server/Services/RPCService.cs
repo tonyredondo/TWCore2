@@ -128,7 +128,7 @@ namespace TWCore.Services
                 ServiceToken = _cts.Token;
                 OnInit(args);
                 Server = await GetRPCServerAsync().ConfigureAwait(false);
-                if (Server == null)
+                if (Server is null)
                     throw new NullReferenceException("The RPCServer can't be null, nothing to start. Check your GetRPCServer method implementation.");
                 Core.Status.AttachChild(Server, this);
                 await Server.StartAsync().ConfigureAwait(false);

@@ -27,7 +27,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(string value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.StringNull);
                 return;

@@ -172,7 +172,7 @@ namespace TWCore.Reflection
             if (!conversionType.IsGenericType ||
                 conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
                 return Convert.ChangeType(value, conversionType);
-            if (value == null) return null;
+            if (value is null) return null;
             conversionType = Nullable.GetUnderlyingType(conversionType);
             return Convert.ChangeType(value, conversionType);
         }

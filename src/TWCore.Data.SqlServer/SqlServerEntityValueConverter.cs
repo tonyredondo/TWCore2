@@ -54,7 +54,7 @@ namespace TWCore.Data.SqlServer
             propertyValue = propertyType.IsValueType ? Activator.CreateInstance(propertyType) : null;
             if (value == DBNull.Value)
                 return true;
-            if (value == null && propertyValue == null)
+            if (value is null && propertyValue is null)
                 return true;
             if (valueType != null)
             {

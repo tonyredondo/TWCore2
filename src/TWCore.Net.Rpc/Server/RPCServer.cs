@@ -175,7 +175,7 @@ namespace TWCore.Net.RPC.Server
         public void AddService(object serviceInstance)
         {
             var interfaces = serviceInstance?.GetType()?.GetInterfaces().Where(i => i != typeof(IDisposable) && i != typeof(IEnumerable<>) && i != typeof(IDictionary<,>));
-            if (interfaces == null) return;
+            if (interfaces is null) return;
             foreach (var iface in interfaces)
                 AddService(iface, serviceInstance);
         }
@@ -251,13 +251,13 @@ namespace TWCore.Net.RPC.Server
                 
                 foreach (var evDesc in Descriptor.Events.Values)
                 {
-                    if (evDesc.Event == null) continue;
+                    if (evDesc.Event is null) continue;
                         
                     var eventAttribute = (RPCEventAttribute)ServiceInstance?.GetType().GetRuntimeEvent(evDesc.Name)?.GetCustomAttribute(typeof(RPCEventAttribute)) ??
                                          new RPCEventAttribute(RPCMessageScope.Session);
                     var evHandler = new EventHandler((s, e) =>
                     {
-                        if (_server.Transport == null) return;
+                        if (_server.Transport is null) return;
                         Guid clientId;
                         lock (_threadClientId) _threadClientId.TryGetValue(Environment.CurrentManagedThreadId, out clientId);
                         _server.Transport.FireEvent(eventAttribute, clientId, Descriptor.Name, evDesc.Event.Name, s, e);
@@ -293,7 +293,7 @@ namespace TWCore.Net.RPC.Server
             {
                 Try.Do(() =>
                 {
-                    if (OnClientConnectMethod == null) return;
+                    if (OnClientConnectMethod is null) return;
                     var tId = Environment.CurrentManagedThreadId;
                     lock (_threadClientId) _threadClientId[tId] = clientId;
                     var pTers = OnClientConnectMethod.GetParameters();

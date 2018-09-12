@@ -127,7 +127,7 @@ namespace TWCore.Services.Messaging
         private IBusinessAsync BusinessCreate(ObjectPool<IBusinessAsync> pool)
         {
             var item = _creationFunction();
-            if (item == null)
+            if (item is null)
                 throw new NullReferenceException("The business creation function returns a null IBusiness value. Please check the creation function.");
             item.Init();
             return item;
@@ -180,7 +180,7 @@ namespace TWCore.Services.Messaging
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            if (_businessPool == null) return;
+            if (_businessPool is null) return;
             var businesses = _businessPool.GetCurrentObjects();
             foreach (var item in businesses)
                 item.Dispose();

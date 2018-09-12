@@ -96,7 +96,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(BinaryWriter writer, SerializedObject value)
         {
-            if (value == null)
+            if (value is null)
                 writer.Write(DataType.SerializedObjectNull);
             else
             {

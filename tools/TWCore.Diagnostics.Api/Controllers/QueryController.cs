@@ -111,7 +111,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             try
             {
                 var value = serObject?.GetValue();
-                if (value == null) return null;
+                if (value is null) return null;
                 if (value is ResponseMessage rsMessage)
                     return rsMessage.Body?.GetValue()?.SerializeToXml();
                 if (value is RequestMessage rqMessage)
@@ -136,7 +136,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             try
             {
                 var value = serObject?.GetValue();
-                if (value == null) return null;
+                if (value is null) return null;
                 if (value is ResponseMessage rsMessage)
                 {
                     var rsBody = rsMessage.Body?.GetValue();

@@ -70,7 +70,7 @@ namespace TWCore.Services
                 throw new Exception($"The Queues config file: {queuesConfigFile} can't be deserialized.", ex);
             }
 
-            if (_queues == null)
+            if (_queues is null)
             {
                 Core.Log.Warning("The Queues configuration file is null or empty.");
                 return;
@@ -106,7 +106,7 @@ namespace TWCore.Services
         public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
         {
             Init();
-            if (_queueServer == null)
+            if (_queueServer is null)
             {
                 var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
                 throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found or loaded in the queue configuration file.");
@@ -142,7 +142,7 @@ namespace TWCore.Services
         public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
         {
             Init();
-            if (_queueServer == null)
+            if (_queueServer is null)
             {
                 var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
                 throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found or loaded in the queue configuration file.");

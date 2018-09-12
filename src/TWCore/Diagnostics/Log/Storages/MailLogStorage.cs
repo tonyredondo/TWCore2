@@ -269,7 +269,7 @@ namespace TWCore.Diagnostics.Log.Storages
             }
             message.Body = msg;
 
-            if (_smtp == null) return;
+            if (_smtp is null) return;
             try
             {
                 _smtp.Send(message);

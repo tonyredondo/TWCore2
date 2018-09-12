@@ -41,7 +41,7 @@ namespace TWCore.Diagnostics.Api.Models.Status
 
         public static NodeStatusItem Create(StatusItemCollection collection)
         {
-            if (collection == null) return null;
+            if (collection is null) return null;
             var newStatus = new NodeStatusItem
             {
                 Environment = collection.EnvironmentName,
@@ -60,8 +60,8 @@ namespace TWCore.Diagnostics.Api.Models.Status
 
         public void FillValues(StatusItemCollection collection)
         {
-            if (collection == null) return;
-            if (Values == null)
+            if (collection is null) return;
+            if (Values is null)
                 Values = new List<NodeStatusItemValue>();
             else
                 Values.Clear();
@@ -70,7 +70,7 @@ namespace TWCore.Diagnostics.Api.Models.Status
 
             void InnerFillValues(string keyPrefix, List<StatusItem> children)
             {
-                if (children == null) return;
+                if (children is null) return;
                 foreach (var item in children)
                 {
                     var key = string.IsNullOrEmpty(keyPrefix) ? item.Name : keyPrefix + "\\" + item.Name;

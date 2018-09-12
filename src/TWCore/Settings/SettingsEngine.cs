@@ -69,7 +69,7 @@ namespace TWCore.Settings
                 else
                     settingValue = Core.Settings[string.Format("{0}.{1}", container, p.Name)] ?? (shortContainer.IsNotNullOrWhitespace() ? Core.Settings[string.Format("{0}.{1}", shortContainer, p.Name)] : null);
 
-                if (arrayAttribute == null && dictionaryAttribute == null)
+                if (arrayAttribute is null && dictionaryAttribute is null)
                 {
                     //No Array
                     var settingValueObject = Try.Do(vTuple => StringParser.Parse(vTuple.settingValue, vTuple.p.PropertyType, vTuple.p.GetValue(vTuple.instance), vTuple.dataFormat, vTuple.provider), (settingValue, p, instance, dataFormat, provider), false);

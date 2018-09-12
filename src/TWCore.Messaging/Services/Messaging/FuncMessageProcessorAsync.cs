@@ -59,7 +59,7 @@ namespace TWCore.Services.Messaging
         /// <param name="func">Func to process the message</param>
         public void RegisterFunc<T>(Func<T, Task<object>> func)
         {
-            if (func == null) throw new NullReferenceException("You can't register a null Func");
+            if (func is null) throw new NullReferenceException("You can't register a null Func");
             var messageType = typeof(T);
             var processor = new Func<object, CancellationToken, Task<object>>((obj, cancellation) => func((T)obj));
             Funcs[messageType] = processor;
@@ -72,7 +72,7 @@ namespace TWCore.Services.Messaging
         /// <param name="func">Func to process the message</param>
         public void RegisterFunc<T, TR>(Func<T, Task<TR>> func)
         {
-            if (func == null) throw new NullReferenceException("You can't register a null Func");
+            if (func is null) throw new NullReferenceException("You can't register a null Func");
             var messageType = typeof(T);
             var processor = new Func<object, CancellationToken, Task<object>>(async (obj, cancellation) => await func((T)obj).ConfigureAwait(false));
             Funcs[messageType] = processor;
@@ -85,7 +85,7 @@ namespace TWCore.Services.Messaging
         /// <param name="func">Func to process the message</param>
         public void RegisterFunc<T>(Func<T, CancellationToken, Task<object>> func)
         {
-            if (func == null) throw new NullReferenceException("You can't register a null Func");
+            if (func is null) throw new NullReferenceException("You can't register a null Func");
             var messageType = typeof(T);
             var processor = new Func<object, CancellationToken, Task<object>>((obj, cancellation) => func((T)obj, cancellation));
             Funcs[messageType] = processor;
@@ -98,7 +98,7 @@ namespace TWCore.Services.Messaging
         /// <param name="func">Func to process the message</param>
         public void RegisterFunc<T, TR>(Func<T, CancellationToken, Task<TR>> func)
         {
-            if (func == null) throw new NullReferenceException("You can't register a null Func");
+            if (func is null) throw new NullReferenceException("You can't register a null Func");
             var messageType = typeof(T);
             var processor = new Func<object, CancellationToken, Task<object>>(async (obj, cancellation) => await func((T)obj, cancellation).ConfigureAwait(false));
             Funcs[messageType] = processor;

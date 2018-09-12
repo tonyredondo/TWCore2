@@ -131,7 +131,7 @@ namespace TWCore.Numerics
                 int countSmaller = 0;
                 int countSmallerPosition = 0;
                 int? lastSmallerPosition = null;
-                while (countSmaller <= _currentFactorialNumber[i] || lastSmallerPosition == null)
+                while (countSmaller <= _currentFactorialNumber[i] || lastSmallerPosition is null)
                 {
                     if (_currentFactorialElements[countSmallerPosition] && countSmaller <= _currentFactorialNumber[i])
                     {

@@ -75,7 +75,7 @@ namespace TWCore
         {
             if (x == y)
                 return true;
-            if (x == null || y == null || x.Length != y.Length)
+            if (x is null || y is null || x.Length != y.Length)
                 return false;
             for (var i = 0; i < x.Length; i++)
             {

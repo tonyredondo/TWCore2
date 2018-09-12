@@ -115,7 +115,7 @@ namespace TWCore.Messaging.NATS
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_receiver == null) return;
+            if (_receiver is null) return;
             try
             {
                 _receiver.Unsubscribe();

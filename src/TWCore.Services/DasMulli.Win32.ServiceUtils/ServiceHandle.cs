@@ -75,7 +75,7 @@ namespace DasMulli.Win32.ServiceUtils
 
         public virtual void SetFailureActions(ServiceFailureActions serviceFailureActions)
         {
-            var failureActions = serviceFailureActions == null ? ServiceFailureActionsInfo.Default : new ServiceFailureActionsInfo(serviceFailureActions.ResetPeriod, serviceFailureActions.RebootMessage, serviceFailureActions.RestartCommand, serviceFailureActions.Actions);
+            var failureActions = serviceFailureActions is null ? ServiceFailureActionsInfo.Default : new ServiceFailureActionsInfo(serviceFailureActions.ResetPeriod, serviceFailureActions.RebootMessage, serviceFailureActions.RestartCommand, serviceFailureActions.Actions);
             var lpFailureActions = Marshal.AllocHGlobal(Marshal.SizeOf<ServiceFailureActionsInfo>());
             try
             {

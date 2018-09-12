@@ -69,7 +69,7 @@ namespace TWCore.Messaging.NATS
                 return TaskHelper.CompleteValueMinus1;
 
             var senderOptions = Config.ResponseOptions.ServerSenderOptions;
-            if (senderOptions == null)
+            if (senderOptions is null)
                 throw new NullReferenceException("ServerSenderOptions is null.");
 
             var data = SenderSerializer.Serialize(message);

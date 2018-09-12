@@ -37,7 +37,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         protected override ITransportServer CreateTransport(KeyValueCollection parameters)
         {
             var strPort = parameters["Port"];
-            if (strPort == null || strPort == Factory.SkipInstanceValue)
+            if (strPort is null || strPort == Factory.SkipInstanceValue)
             {
                 Core.Log.Warning("Skipping transport instance by Port value.");
                 return null;

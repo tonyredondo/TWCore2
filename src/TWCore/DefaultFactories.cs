@@ -300,7 +300,7 @@ namespace TWCore
             {
                 var jser = JsonSerializer.CreateDefault();
                 var fSettings = jser.Deserialize<FactorySettings>(new JsonTextReader(new StreamReader(configFile)));
-                if (fSettings == null) return true;
+                if (fSettings is null) return true;
                 Core.DefaultEnvironmentVariables = fSettings.EnvironmentDefaults ?? new Dictionary<string, string>();
                 Core.EncryptionKey = "daba6a48-ad1f-4904-81be-e6293cf5db75";
                 if (fSettings.Core != null)
@@ -332,7 +332,7 @@ namespace TWCore
                 if (fSettings.Core != null && fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
                 {
                     var settingsFile = ResolveLowLowFilePath(fSettings.Core.SettingsFile);
-                    if (settingsFile == null)
+                    if (settingsFile is null)
                         throw new FileNotFoundException("The settings file: " + fSettings.Core.SettingsFile + " was not found.");
                     Core.LoadSettings(settingsFile);
                 }
@@ -365,7 +365,7 @@ namespace TWCore
                 if (fSettings.Core != null && fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
                 {
                     var injectorFile = ResolveLowLowFilePath(fSettings.Core.InjectorFile);
-                    if (injectorFile == null)
+                    if (injectorFile is null)
                         throw new FileNotFoundException("The injector file: " + fSettings.Core.InjectorFile + " was not found.");
                     Core.LoadInjector(injectorFile);
                 }

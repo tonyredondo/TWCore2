@@ -105,10 +105,10 @@ namespace TWCore.Messaging
         {
             if (_clientQueues.SendQueues?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
-            if (_senderOptions == null)
+            if (_senderOptions is null)
                 throw new NullReferenceException("SenderOptions is null.");
 
-            if (message.Header.ResponseQueue == null)
+            if (message.Header.ResponseQueue is null)
             {
                 var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
@@ -146,13 +146,13 @@ namespace TWCore.Messaging
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (_receiver == null)
+            if (_receiver is null)
                 throw new NullReferenceException("There is not receiver queue.");
 
             var message = await _receiver.DequeueAsync(correlationId, _receiverOptionsTimeout * 1000, cancellationToken).ConfigureAwait(false);
-            if (message == null)
+            if (message is null)
                 throw new MessageQueueTimeoutException(TimeSpan.FromSeconds(_receiverOptionsTimeout), correlationId.ToString());
-            if (message.Value == null)
+            if (message.Value is null)
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             var response = message.Value as ResponseMessage;

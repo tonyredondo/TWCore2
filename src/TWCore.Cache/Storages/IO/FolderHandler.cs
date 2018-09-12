@@ -168,7 +168,7 @@ namespace TWCore.Cache.Storages.IO
                     if (_storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
                         eTime = _storage.ItemsExpirationAbsoluteDateOverwrite.Value;
 
-                    if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
+                    if (_metas is null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
 
                     await Task.Run(() =>
                     {
@@ -200,7 +200,7 @@ namespace TWCore.Cache.Storages.IO
                 #region Loading transaction log file
 
                 var transactionLog = await LoadTransactionFileAsync(_transactionLogFilePath).ConfigureAwait(false);
-                if (transactionLog == null)
+                if (transactionLog is null)
                     transactionLog = await LoadTransactionFileAsync(_oldTransactionLogFilePath).ConfigureAwait(false);
 
                 #endregion
@@ -239,7 +239,7 @@ namespace TWCore.Cache.Storages.IO
                 RemoveExpiredItems(false);
                 foreach (var metaItem in _metas)
                 {
-                    if (metaItem.Value == null) continue;
+                    if (metaItem.Value is null) continue;
                     metaItem.Value.OnExpire = Meta_OnExpire;
                 }
 
@@ -376,7 +376,7 @@ namespace TWCore.Cache.Storages.IO
                 return false;
             try
             {
-                if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
+                if (metaValue != null && !metaValue.IsExpired && (condition is null || condition(metaValue)))
                 {
                     if (_pendingItems.TryGetValue(key, out var serObj))
                     {
@@ -406,7 +406,7 @@ namespace TWCore.Cache.Storages.IO
         {
             value = null;
             if (!_metas.TryGetValue(key, out var metaValue)) return false;
-            if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
+            if (metaValue != null && !metaValue.IsExpired && (condition is null || condition(metaValue)))
             {
                 value = metaValue;
                 return true;
@@ -497,7 +497,7 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WorkerProcess(FileStorageMetaLog workerItem)
         {
-            if (workerItem.Meta == null) return;
+            if (workerItem.Meta is null) return;
             if (workerItem.Type == FileStorageMetaLog.TransactionType.Add && workerItem.Meta.IsExpired) return;
             if (_currentTransactionLogLength >= _storage.TransactionLogThreshold) _currentTransactionLogLength = 0;
 
@@ -554,7 +554,7 @@ namespace TWCore.Cache.Storages.IO
         {
             if (Interlocked.CompareExchange(ref _savingMetadata, 1, 0) == 1) return;
             if (_disposedValue) return;
-            if (_transactionStream == null) return;
+            if (_transactionStream is null) return;
             if (!_transactionStream.CanWrite) return;
             Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
             try
@@ -587,7 +587,7 @@ namespace TWCore.Cache.Storages.IO
                 Core.Log.InfoBasic("Removing expired items.");
                 foreach (var meta in _metas)
                 {
-                    if (meta.Value == null)
+                    if (meta.Value is null)
                     {
                         Core.Log.Warning("Metadata for {0} is null.", meta.Key);
                         _metas.TryRemove(meta.Key, out _);

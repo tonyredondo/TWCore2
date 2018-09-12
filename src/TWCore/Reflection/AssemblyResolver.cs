@@ -126,7 +126,7 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AppendPath(params string[] paths)
         {
-            if (paths == null || paths.Length == 0) return;
+            if (paths is null || paths.Length == 0) return;
             var domainAssemblies = Domain.GetAssemblies();
             var basePath = Domain.BaseDirectory;
             var localAssembliesInfo = new ConcurrentBag<AssemblyInfo>();
@@ -226,7 +226,7 @@ namespace TWCore.Reflection
                 Assemblies.FirstOrDefault((a, mAsm) => 
                     a.Name == mAsm.Name, asmName);
 
-            if (asmInstance == null)
+            if (asmInstance is null)
             {
                 Core.Log.LibDebug("Assembly {0} not found!", asmName);
                 return null;
@@ -270,7 +270,7 @@ namespace TWCore.Reflection
                 Assemblies.FirstOrDefault((a, mAsm) => 
                     a.Name == mAsm.Name, asmName);
 
-            if (asmInstance == null)
+            if (asmInstance is null)
             {
                 Core.Log.LibDebug("Assembly {0} not found!", asmName);
                 return null;

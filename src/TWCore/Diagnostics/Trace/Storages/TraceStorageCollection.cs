@@ -102,9 +102,9 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteAsync(TraceItem item)
         {
-            if (_isDirty || _cItems == null)
+            if (_isDirty || _cItems is null)
             {
-                if (_items == null) return Task.CompletedTask;
+                if (_items is null) return Task.CompletedTask;
                 lock (_locker)
                 {
                     _cItems = new List<ITraceStorage>(_items);

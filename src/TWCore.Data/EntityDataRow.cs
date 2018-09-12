@@ -41,7 +41,7 @@ namespace TWCore.Data
             get
             {
 
-                if (_bound || _rowValues == null)
+                if (_bound || _rowValues is null)
                     return _entity;
                 lock (this)
                 {

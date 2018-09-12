@@ -49,7 +49,7 @@ namespace TWCore.Services
         #region Install/Uninstall Service
         private void Init()
         {
-            if (Service == null) return;
+            if (Service is null) return;
             _settings = Core.GetSettings<LinuxServiceSettings>();
             RegisterParametersHandler("service-create", "Create Systemd service file", CreateService);
             RegisterParametersHandler("service-remove", "Remove Systemd service file", RemoveService);

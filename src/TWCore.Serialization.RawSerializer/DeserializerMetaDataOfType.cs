@@ -49,9 +49,9 @@ namespace TWCore.Serialization.RawSerializer
             if (IsArray != other.IsArray) return false;
             if (IsList != other.IsList) return false;
             if (IsDictionary != other.IsDictionary) return false;
-            if (Properties == null && other.Properties != null) return false;
-            if (Properties != null && other.Properties == null) return false;
-            if (Properties == null && other.Properties == null) return true;
+            if (Properties is null && other.Properties != null) return false;
+            if (Properties != null && other.Properties is null) return false;
+            if (Properties is null && other.Properties is null) return true;
             if (Properties.Length != other.Properties.Length) return false;
             var length = Math.Min(Properties.Length, other.Properties.Length);
             for (var i = 0; i < length; i++)
@@ -61,7 +61,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
+            if (obj is null) return false;
             if (obj.GetType() != typeof(DeserializerMetaDataOfType)) return false;
             return Equals((DeserializerMetaDataOfType)obj);
         }

@@ -55,7 +55,7 @@ namespace TWCore.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void SetRealObject(object realObject)
 		{
-			if (realObject == null) return;
+			if (realObject is null) return;
 			_realObject = realObject;
 			var containerType = realObject.GetType();
 			if (_realObject is DynamicObject)
@@ -220,9 +220,9 @@ namespace TWCore.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DuckTypeProxy Create(Type interfaceType, object realObject)
 		{
-			if (interfaceType == null)
+			if (interfaceType is null)
 				throw new ArgumentNullException(nameof(interfaceType), "The Interface type can't be null");
-			if (realObject == null)
+			if (realObject is null)
 				throw new ArgumentNullException(nameof(realObject), "The original object can't be null");
 			if (realObject is Task)
 				throw new ArgumentNullException(nameof(realObject), "The original object can't be a Task");

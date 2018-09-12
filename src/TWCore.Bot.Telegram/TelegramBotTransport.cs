@@ -98,7 +98,7 @@ namespace TWCore.Bot.Telegram
         {
             try
             {
-                if (e.Message == null) return;
+                if (e.Message is null) return;
 
                 switch (e.Message.Type)
                 {

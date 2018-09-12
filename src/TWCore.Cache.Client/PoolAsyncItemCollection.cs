@@ -157,7 +157,7 @@ namespace TWCore.Cache.Client
                 collection.Add(nameof(WriteMode), WriteMode);
                 collection.Add(nameof(SelectionOrder), SelectionOrder);
                 collection.Add(nameof(ForceAtLeastOneNetworkItemEnabled), ForceAtLeastOneNetworkItemEnabled);
-                if (Items == null) return;
+                if (Items is null) return;
                 collection.Add(nameof(Items.Count), Items.Count);
                 foreach (var item in Items)
                     Core.Status.AttachChild(item, this);
@@ -172,7 +172,7 @@ namespace TWCore.Cache.Client
         /// <param name="item">Pool item to be added in the collection</param>
         public void Add(PoolAsyncItem item)
         {
-            if (item == null) return;
+            if (item is null) return;
             item.PingDelay = PingDelay;
             item.PingDelayOnError = PingDelayOnError;
             item.EnabledChanged += Item_EnabledChanged;

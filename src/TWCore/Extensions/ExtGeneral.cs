@@ -74,7 +74,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IDictionary<string, object> ToDictionary(this object source)
         {
-            if (source == null) return null;
+            if (source is null) return null;
             var sType = source.GetType();
             if (sType.IsValueType) return null;
             var dct = new Dictionary<string, object>();
@@ -96,7 +96,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FromDictionary(this object target, IDictionary<string, object> source)
         {
-            if (source == null || target == null) return;
+            if (source is null || target is null) return;
             var sType = target.GetType();
             if (sType.IsValueType) return;
             foreach (var item in source)
@@ -118,7 +118,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dictionary<string, string> ToStringDictionary(this object source, Func<object, Type, string> objectToStringFunction)
         {
-            if (source == null) return null;
+            if (source is null) return null;
             var sType = source.GetType();
             if (sType.IsValueType) return null;
             var dct = new Dictionary<string, string>();
@@ -141,13 +141,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FromStringDictionary(this object target, Dictionary<string, string> source, Func<string, Type, object> stringToObjectFunction)
         {
-            if (source == null || target == null) return;
+            if (source is null || target is null) return;
             var sType = target.GetType();
             if (sType.IsValueType) return;
             foreach (var item in source)
             {
                 var prop = sType.GetRuntimeProperty(item.Key);
-                if (prop == null || !prop.CanWrite) continue;
+                if (prop is null || !prop.CanWrite) continue;
                 var nValue = stringToObjectFunction(item.Value, prop.PropertyType);
                 prop.SetValue(target, nValue, null);
             }
@@ -178,7 +178,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T WaitAndResults<T>(this Task<T> task)
         {
-            if (task == null)
+            if (task is null)
                 return default;
             try
             {
@@ -212,7 +212,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T WaitAndResults<T>(this Task<T> task, int millisecondsTimeout)
         {
-            if (task == null)
+            if (task is null)
                 return default;
             try
             {
@@ -246,7 +246,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T WaitAndResults<T>(this Task<T> task, TimeSpan timeout)
         {
-            if (task == null)
+            if (task is null)
                 return default;
             try
             {
@@ -280,7 +280,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T WaitAndResults<T>(this Task<T> task, CancellationToken cancellationToken)
         {
-            if (task == null)
+            if (task is null)
                 return default;
             try
             {
@@ -830,7 +830,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<bool> WaitOneAsync(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
         {
-            if (handle == null)
+            if (handle is null)
                 throw new ArgumentNullException("waitHandle");
             var tcs = new TaskCompletionSource<bool>();
             var registeredHandle = ThreadPool.UnsafeRegisterWaitForSingleObject(handle, FinalizeTaskCompletionBoolWithCancellation, tcs, millisecondsTimeout, true);
@@ -876,7 +876,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task WaitOneAsync(this WaitHandle waitHandle)
         {
-            if (waitHandle == null)
+            if (waitHandle is null)
                 throw new ArgumentNullException("waitHandle");
 
             var tcs = new TaskCompletionSource<object>();
@@ -894,7 +894,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task WaitOneAsync(this WaitHandle waitHandle, int millisecondsTimeout)
         {
-            if (waitHandle == null)
+            if (waitHandle is null)
                 throw new ArgumentNullException("waitHandle");
 
             var tcs = new TaskCompletionSource<object>();

@@ -99,10 +99,10 @@ namespace TWCore.Services
                 OnInit(args);
                 Status = new MessagingServiceStatus(this);
                 QueueServer = GetQueueServer();
-                if (QueueServer == null)
+                if (QueueServer is null)
                     throw new Exception("The queue server is null, please check the configuration file and ensure the Types assemblies are on the assembly folder.");
                 Processor = GetMessageProcessorAsync(QueueServer);
-                if (Processor == null)
+                if (Processor is null)
                     throw new Exception("The message processor is null, please check your GetMessageProcessor method implementation.");
                 if (QueueServer.ResponseServer)
                 {
@@ -113,7 +113,7 @@ namespace TWCore.Services
                             var sw = Stopwatch.StartNew();
                             if (MessageReceived != null)
                                 await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
-                            if (e.Message?.Body == null) return;
+                            if (e.Message?.Body is null) return;
                             var body = e.Message.Body.GetValue();
                             ReceivedMessagesCache.TryAdd(body, e.Message);
                             Status.IncrementCurrentMessagesBeingProcessed();
@@ -148,7 +148,7 @@ namespace TWCore.Services
                             var sw = Stopwatch.StartNew();
                             if (MessageReceived != null)
                                 await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Request)).ConfigureAwait(false);
-                            if (e.Request?.Body == null) return;
+                            if (e.Request?.Body is null) return;
                             var body = e.Request.Body.GetValue();
                             ReceivedMessagesCache.TryAdd(body, e.Request);
                             object result;

@@ -25,7 +25,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(SerializedObject value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.SerializedObjectNull);
                 return;

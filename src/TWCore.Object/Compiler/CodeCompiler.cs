@@ -117,7 +117,7 @@ namespace TWCore.Object.Compiler
 
 
                     var runType = assembly.GetTypes().FirstOrDefault(type => type.GetInterface(typeof(IRuntimeCode).FullName) != null);
-                    if (runType == null)
+                    if (runType is null)
                         throw new Exception("An implementation of the IRuntimeCode interface can't be found.");
 
                     var runCode = (IRuntimeCode)Activator.CreateInstance(runType);

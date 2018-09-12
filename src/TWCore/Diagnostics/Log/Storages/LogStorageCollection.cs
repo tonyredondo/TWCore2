@@ -58,7 +58,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 foreach (var item in _items)
                 {
-                    if (item.Item1 == null) continue;
+                    if (item.Item1 is null) continue;
                     collection.Add(item.Item1.ToString(), item.Item2);
                 }
             });
@@ -179,9 +179,9 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteAsync(ILogItem item)
         {
-            if (_isDirty || _cItems == null)
+            if (_isDirty || _cItems is null)
             {
-                if (_items == null) return Task.CompletedTask;
+                if (_items is null) return Task.CompletedTask;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);
@@ -220,9 +220,9 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task WriteEmptyLineAsync()
         {
-            if (_isDirty || _cItems == null)
+            if (_isDirty || _cItems is null)
             {
-                if (_items == null) return;
+                if (_items is null) return;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);

@@ -125,7 +125,7 @@ namespace TWCore.Data
                 var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
                 var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
 
-                if (value == null)
+                if (value is null)
                     prop.SetValue(entity, defaultValue);
                 else if (propertyType == valueType)
                     prop.SetValue(entity, value);

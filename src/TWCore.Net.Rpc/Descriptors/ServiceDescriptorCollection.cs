@@ -47,7 +47,7 @@ namespace TWCore.Net.RPC.Descriptors
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Combine(ServiceDescriptorCollection descriptors)
         {
-            if (descriptors?.Items == null) return;
+            if (descriptors?.Items is null) return;
             foreach(var item in descriptors.Items)
                 Items[item.Key] = item.Value;
         }

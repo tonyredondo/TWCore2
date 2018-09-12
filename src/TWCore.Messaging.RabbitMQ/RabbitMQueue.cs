@@ -143,7 +143,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             lock (this)
             {
-                if (Channel == null) return;
+                if (Channel is null) return;
                 if (Channel.IsOpen)
                     Channel.Close();
                 if (Connection.IsOpen)

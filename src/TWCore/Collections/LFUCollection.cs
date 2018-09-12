@@ -230,7 +230,7 @@ namespace TWCore.Collections
                         }
                         else
                             lastCountNode = lastCountNode.Previous;
-                        if (lastCountNode == null)
+                        if (lastCountNode is null)
                             break;
                     }
                 }

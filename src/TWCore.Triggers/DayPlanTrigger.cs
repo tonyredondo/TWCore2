@@ -36,7 +36,7 @@ namespace TWCore.Triggers
         /// <param name="times">Times of the day when the trigger will execute.</param>
         public DayPlanTrigger(params TimeSpan[] times)
         {
-            if (times == null) return;
+            if (times is null) return;
             _triggers = new TimeOfDayTrigger[times.Length];
             for (var i = 0; i < times.Length; i++)
             {
@@ -51,7 +51,7 @@ namespace TWCore.Triggers
         /// /// <param name="timesInString">Times of the day when the trigger will execute.</param>
         public DayPlanTrigger(params string[] timesInString)
         {
-            if (timesInString == null) return;
+            if (timesInString is null) return;
             _triggers = new TimeOfDayTrigger[timesInString.Length];
             for (var i = 0; i < timesInString.Length; i++)
             {
@@ -74,7 +74,7 @@ namespace TWCore.Triggers
         /// </summary>
         protected override void OnInit()
         {
-            if (_triggers == null) return;
+            if (_triggers is null) return;
             Core.Log.LibVerbose("{0}: OnInit()", GetType().Name);
             foreach (var trigger in _triggers)
                 trigger.Init();
@@ -85,7 +85,7 @@ namespace TWCore.Triggers
         /// </summary>
         protected override void OnFinalize()
         {
-            if (_triggers == null) return;
+            if (_triggers is null) return;
             Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
             foreach (var trigger in _triggers)
                 trigger.Dispose();

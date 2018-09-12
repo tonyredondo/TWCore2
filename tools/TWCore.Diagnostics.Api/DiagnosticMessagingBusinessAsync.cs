@@ -35,7 +35,7 @@ namespace TWCore.Diagnostics.Api
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<object> OnProcessAsync(List<LogItem> message)
         {
-			if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
+			if (message is null || message.Count == 0) return ResponseMessage.NoResponse;
 
 			await DbHandlers.Instance.Messages.ProcessLogItemsMessageAsync(message).ConfigureAwait(false);
 	        
@@ -45,7 +45,7 @@ namespace TWCore.Diagnostics.Api
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<object> OnProcessAsync(List<MessagingTraceItem> message)
         {
-	        if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
+	        if (message is null || message.Count == 0) return ResponseMessage.NoResponse;
 
 			await DbHandlers.Instance.Messages.ProcessTraceItemsMessageAsync(message).ConfigureAwait(false);
 
@@ -55,7 +55,7 @@ namespace TWCore.Diagnostics.Api
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<object> OnProcessAsync(StatusItemCollection message)
         {
-			if (message == null) return ResponseMessage.NoResponse;
+			if (message is null) return ResponseMessage.NoResponse;
 
 			await DbHandlers.Instance.Messages.ProcessStatusMessageAsync(message).ConfigureAwait(false);
             

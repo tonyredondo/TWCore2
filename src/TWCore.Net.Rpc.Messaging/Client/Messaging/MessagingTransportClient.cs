@@ -58,7 +58,7 @@ namespace TWCore.Net.RPC.Client.Transports
             get => _queueClient?.SenderSerializer;
             set
             {
-                if (_queueClient == null) return;
+                if (_queueClient is null) return;
                 _queueClient.SenderSerializer = value;
                 _queueClient.ReceiverSerializer = value;
             }
@@ -75,7 +75,7 @@ namespace TWCore.Net.RPC.Client.Transports
             set
             {
                 _descriptors = value;
-                if (_descriptors == null) return;
+                if (_descriptors is null) return;
                 _methods.Clear();
                 foreach (var descriptor in _descriptors.Items.Values)
                 {

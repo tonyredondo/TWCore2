@@ -86,7 +86,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -104,7 +104,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(char[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -122,7 +122,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTimeOffset[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -140,7 +140,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTime[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -158,7 +158,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Enum[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -176,7 +176,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -194,7 +194,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -212,7 +212,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -230,7 +230,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -248,7 +248,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -266,7 +266,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -284,7 +284,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -302,7 +302,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -320,7 +320,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -338,7 +338,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -356,7 +356,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -374,7 +374,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(string[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -392,7 +392,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -410,7 +410,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(object[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -428,7 +428,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<bool> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -446,7 +446,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<char> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -464,7 +464,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<DateTimeOffset> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -482,7 +482,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<DateTime> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -500,7 +500,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<Enum> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -518,7 +518,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<Guid> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -536,7 +536,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<decimal> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -554,7 +554,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<double> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -572,7 +572,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<float> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -590,7 +590,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<long> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -608,7 +608,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<ulong> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -626,7 +626,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<int> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -644,7 +644,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<uint> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -662,7 +662,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<short> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -680,7 +680,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<ushort> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -698,7 +698,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<sbyte> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -716,7 +716,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<string> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -734,7 +734,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<TimeSpan> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -752,7 +752,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<object> value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -777,7 +777,7 @@ namespace TWCore.Serialization.NSerializer
                 Stream = stream;
                 Stream.WriteByte(DataBytesDefinition.Start);
 
-                if (value == null)
+                if (value is null)
                 {
                     Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
@@ -843,7 +843,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalWriteObjectValue(object value)
         {
-            if (value == null)
+            if (value is null)
             {
                 Stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;
@@ -896,7 +896,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalSimpleWriteObjectValue(object value)
         {
-            if (value == null)
+            if (value is null)
             {
                 Stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;

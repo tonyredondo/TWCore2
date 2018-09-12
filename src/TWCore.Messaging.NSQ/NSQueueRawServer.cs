@@ -69,7 +69,7 @@ namespace TWCore.Messaging.NSQ
             });
 
             var senderOptions = Config.ResponseOptions.ServerSenderOptions;
-            if (senderOptions == null)
+            if (senderOptions is null)
                 throw new NullReferenceException("ServerSenderOptions is null.");
 
             var body = NSQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, e.Metadata["ReplyTo"]);

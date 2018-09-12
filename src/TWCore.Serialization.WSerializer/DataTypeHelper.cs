@@ -133,7 +133,7 @@ namespace TWCore.Serialization.WSerializer
         {
             if (typeTo == typeof(object))
                 return obj;
-            if (obj == null)
+            if (obj is null)
                 return typeTo.IsValueType ? Activator.CreateInstance(typeTo) : null;
             var objType = obj.GetType();
             if (typeTo == objType)

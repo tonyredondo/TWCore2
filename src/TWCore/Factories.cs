@@ -149,10 +149,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string GetAbsolutePath(string relativePath, string basePath = null)
         {
-            if (relativePath == null)
+            if (relativePath is null)
                 return null;
 
-            basePath = basePath == null ? Path.GetFullPath(".") : GetAbsolutePath(basePath);
+            basePath = basePath is null ? Path.GetFullPath(".") : GetAbsolutePath(basePath);
 
             if (relativePath.StartsWith("~", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
             if (Factory.PlatformType == PlatformType.Windows)
@@ -190,7 +190,7 @@ namespace TWCore
         public virtual string ResolveLowLowFilePath(string lowlowPath)
         {
             // "<</" or "<<(Name)/"
-            if (lowlowPath == null) return null;
+            if (lowlowPath is null) return null;
             if (lowlowPath.StartsWith("<</", StringComparison.Ordinal))
             {
                 var lPath = "." + lowlowPath.Substring(2);
@@ -235,7 +235,7 @@ namespace TWCore
         public virtual string ResolveLowLowPath(string lowlowPath)
         {
             // "<</" or "<<(Name)/"
-            if (lowlowPath == null) return null;
+            if (lowlowPath is null) return null;
             if (lowlowPath.StartsWith("<</", StringComparison.Ordinal))
             {
                 var lPath = "." + lowlowPath.Substring(2);
@@ -303,14 +303,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
         {
-            if (assemblyName == null || typeName == null)
+            if (assemblyName is null || typeName is null)
             {
                 var stack = new StackTrace(2, false);
                 var frames = stack.GetFrames();
                 foreach (var frame in frames)
                 {
                     var method = frame.GetMethod();
-                    if (method == null) continue;
+                    if (method is null) continue;
                     var value = MethodValues.GetOrAdd(method, cMethod =>
                     {
                         #region Name Attr
@@ -330,7 +330,7 @@ namespace TWCore
                         #endregion
 
                         var declarationType = method.DeclaringType;
-                        if (declarationType == null) return DefaultMValue;
+                        if (declarationType is null) return DefaultMValue;
 
                         #region Name Type Attr
                         var typeAttrs = declarationType.GetCustomAttributes(false);
@@ -444,7 +444,7 @@ namespace TWCore
         {
             if (x == y)
                 return true;
-            if (x == null || y == null || x.Length != y.Length)
+            if (x is null || y is null || x.Length != y.Length)
                 return false;
             fixed (byte* bytes1 = x, bytes2 = y)
             {

@@ -26,7 +26,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Enum enumValue)
         {
-            if (enumValue == null)
+            if (enumValue is null)
                 WriteByte(DataBytesDefinition.ValueNull);
             else
                 WriteDefInt(DataBytesDefinition.EnumInt, Convert.ToInt32(enumValue));

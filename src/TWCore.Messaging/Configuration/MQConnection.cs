@@ -91,7 +91,7 @@ namespace TWCore.Messaging.Configuration
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsSkippingRoute()
         {
-            return Route == null || Route == Factory.SkipInstanceValue;
+            return Route is null || Route == Factory.SkipInstanceValue;
         }
     }
 }

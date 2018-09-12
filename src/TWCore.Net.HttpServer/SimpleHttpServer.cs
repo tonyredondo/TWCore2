@@ -203,7 +203,7 @@ namespace TWCore.Net.HttpServer
                             if (context.Request.HasPostObject)
                             {
                                 postObjectParam = mParams.FirstOrDefault(p => p.GetCustomAttribute(typeof(PostObjectAttribute)) != null);
-                                if (postObjectParam == null && mParams.Length == 1) postObjectParam = mParams[0];
+                                if (postObjectParam is null && mParams.Length == 1) postObjectParam = mParams[0];
                                 if (postObjectParam != null)
                                     postObject = Try.Do(() => context.Request.GetPostObject(postObjectParam.ParameterType));
                             }
@@ -219,7 +219,7 @@ namespace TWCore.Net.HttpServer
                             }
 
                             var response = m.Invoke(ctl, ivkParams.ToArray());
-                            if (response == null) return;
+                            if (response is null) return;
                             var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
                             switch (serializer)
                             {
@@ -243,7 +243,7 @@ namespace TWCore.Net.HttpServer
                         else
                         {
                             var response = m.Invoke(ctl, new object[0]);
-                            if (response == null) return;
+                            if (response is null) return;
                             var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
                             switch (serializer)
                             {
@@ -282,10 +282,10 @@ namespace TWCore.Net.HttpServer
             {
                 var ctl = Activator.CreateInstance<T>();
                 ctl.Context = context;
-                if (action == null)
+                if (action is null)
                     action = url.Substring(1);
                 var ctlMethod = ctl.GetType().GetRuntimeMethods().FirstOrDefault((m, mAction) => string.Equals(m.Name, mAction, StringComparison.InvariantCultureIgnoreCase), action);
-                if (ctlMethod == null) return;
+                if (ctlMethod is null) return;
                 var mParams = ctlMethod.GetParameters();
                 if (mParams.Length > 0)
                 {
@@ -295,7 +295,7 @@ namespace TWCore.Net.HttpServer
                     if (context.Request.HasPostObject)
                     {
                         postObjectParam = mParams.FirstOrDefault(p => p.GetCustomAttribute(typeof(PostObjectAttribute)) != null);
-                        if (postObjectParam == null && mParams.Length == 1) postObjectParam = mParams[0];
+                        if (postObjectParam is null && mParams.Length == 1) postObjectParam = mParams[0];
                         if (postObjectParam != null)
                             postObject = Try.Do(() => context.Request.GetPostObject(postObjectParam.ParameterType));
                     }
@@ -311,7 +311,7 @@ namespace TWCore.Net.HttpServer
                     }
 
                     var response = ctlMethod.Invoke(ctl, ivkParams.ToArray());
-                    if (response == null) return;
+                    if (response is null) return;
                     var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
                     switch (serializer)
                     {
@@ -335,7 +335,7 @@ namespace TWCore.Net.HttpServer
                 else
                 {
                     var response = ctlMethod.Invoke(ctl, new object[0]);
-                    if (response == null) return;
+                    if (response is null) return;
                     var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
                     switch (serializer)
                     {

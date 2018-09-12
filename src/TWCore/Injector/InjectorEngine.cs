@@ -174,7 +174,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetNames(Type type)
         {
-            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             if (type.IsInterface)
                 return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
             if (type.IsAbstract)
@@ -250,13 +250,13 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(Type noninstantiableType, Type instantiableType, bool singleton, string name, params object[] args)
         {
-            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             var nonTypeInfo = noninstantiableType.GetTypeInfo();
             NonInstantiable def = null;
             if (nonTypeInfo.IsInterface)
             {
                 def = Settings.GetInterfaceDefinition(noninstantiableType.AssemblyQualifiedName);
-                if (def == null)
+                if (def is null)
                 {
                     def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
                     Settings.Interfaces.Add(def);
@@ -265,14 +265,14 @@ namespace TWCore.Injector
             else if (nonTypeInfo.IsAbstract)
             {
                 def = Settings.GetAbstractDefinition(noninstantiableType.AssemblyQualifiedName);
-                if (def == null)
+                if (def is null)
                 {
                     def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
                     Settings.Abstracts.Add(def);
                 }
             }
-            if (def == null) return;
-            if (name == null)
+            if (def is null) return;
+            if (name is null)
             {
                 if (def.ClassDefinitions.FirstOrDefault((d, iType) => d.Type == iType.AssemblyQualifiedName, instantiableType) != null) return;
                 var inst = new Instantiable
@@ -347,13 +347,13 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetTypeDefault(Type noninstantiableType, string name)
         {
-            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             var nonTypeInfo = noninstantiableType.GetTypeInfo();
             NonInstantiable def = null;
             if (nonTypeInfo.IsInterface)
             {
                 def = Settings.GetInterfaceDefinition(noninstantiableType.AssemblyQualifiedName);
-                if (def == null)
+                if (def is null)
                 {
                     def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
                     Settings.Interfaces.Add(def);
@@ -362,7 +362,7 @@ namespace TWCore.Injector
             else if (nonTypeInfo.IsAbstract)
             {
                 def = Settings.GetAbstractDefinition(noninstantiableType.AssemblyQualifiedName);
-                if (def == null)
+                if (def is null)
                 {
                     def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
                     Settings.Abstracts.Add(def);
@@ -409,10 +409,10 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateInterfaceInstance(string type, string name)
         {
-            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
             var instanceDefinition = Settings.GetInterfaceInstanceDefinition(type, name);
-            if (instanceDefinition == null)
+            if (instanceDefinition is null)
             {
                 if (name.IsNullOrEmpty())
                     throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
@@ -425,10 +425,10 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateAbstractInstance(string type, string name)
         {
-            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
             var instanceDefinition = Settings.GetAbstractInstanceDefinition(type, name);
-            if (instanceDefinition == null)
+            if (instanceDefinition is null)
             {
                 if (name.IsNullOrEmpty())
                     throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
@@ -441,10 +441,10 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateClassInstance(string type, string name)
         {
-            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
             var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault((i, mName) => i.Name == mName, name);
-            if (instanceDefinition == null) return null;
+            if (instanceDefinition is null) return null;
             if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
@@ -478,10 +478,10 @@ namespace TWCore.Injector
             if (!_instantiableCache.TryGetValue(instanceDefinition, out var activatorItem))
             {
                 activatorItem = GetActivatorItem(instanceDefinition);
-                if (activatorItem == null || activatorItem.EnableCache)
+                if (activatorItem is null || activatorItem.EnableCache)
                     _instantiableCache.TryAdd(instanceDefinition, activatorItem);
             }
-            if (activatorItem == null) return null;
+            if (activatorItem is null) return null;
             
             var response = activatorItem.CreateInstance();
             if (response != null && instanceDefinition.PropertiesSets?.Any() == true)
@@ -489,7 +489,7 @@ namespace TWCore.Injector
                 foreach (var set in instanceDefinition.PropertiesSets)
                 {
                     var valueType = response.GetMemberObjectType(set.Name);
-                    if (valueType == null) continue;
+                    if (valueType is null) continue;
                     var value = set.ArgumentName.IsNotNullOrEmpty() ? 
                         GetArgumentValue(GetArgument(set.ArgumentName), valueType) : 
                         GetArgumentValue(set, valueType);
@@ -508,9 +508,9 @@ namespace TWCore.Injector
         private ActivatorItem GetActivatorItem(Instantiable definition)
         {
             var type = Core.GetType(definition.Type, ThrowExceptionOnInstanceCreationError);
-            if (type == null) return null;
+            if (type is null) return null;
             var typeInfo = type.GetTypeInfo();
-            if (definition.Parameters == null || definition.Parameters.Count == 0)
+            if (definition.Parameters is null || definition.Parameters.Count == 0)
                 return new ActivatorItem { Type = type, EnableCache = true };
 
             var parameters = definition.Parameters;

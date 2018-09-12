@@ -153,7 +153,7 @@ namespace TWCore.Text
                 }
                 else if (type.IsEnum)
                 {
-                    if (value == null) return resp;
+                    if (value is null) return resp;
                     var objValue = Enum.Parse(type, value);
                     resp = objValue;
                 }

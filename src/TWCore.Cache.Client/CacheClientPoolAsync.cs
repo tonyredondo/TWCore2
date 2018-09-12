@@ -175,7 +175,7 @@ namespace TWCore.Cache.Client
                 var dictionary = new Dictionary<string, bool>();
                 foreach (var innerDictio in tasksResults)
                 {
-                    if (innerDictio == null) continue;
+                    if (innerDictio is null) continue;
                     foreach (var item in innerDictio)
                     {
                         dictionary.TryGetValue(item.Key, out var value);
@@ -439,11 +439,11 @@ namespace TWCore.Cache.Client
                 var dictionary = new Dictionary<string, StorageItem>();
                 foreach (var innerDictio in tasksResults)
                 {
-                    if (innerDictio == null) continue;
+                    if (innerDictio is null) continue;
                     foreach (var item in innerDictio)
                     {
                         dictionary.TryGetValue(item.Key, out var value);
-                        if (value == null)
+                        if (value is null)
                             dictionary[item.Key] = item.Value;
                     }
                 }
@@ -471,11 +471,11 @@ namespace TWCore.Cache.Client
                 var dictionary = new Dictionary<string, StorageItem>();
                 foreach (var innerDictio in tasksResults)
                 {
-                    if (innerDictio == null) continue;
+                    if (innerDictio is null) continue;
                     foreach (var item in innerDictio)
                     {
                         dictionary.TryGetValue(item.Key, out var value);
-                        if (value == null)
+                        if (value is null)
                             dictionary[item.Key] = item.Value;
                     }
                 }
@@ -503,11 +503,11 @@ namespace TWCore.Cache.Client
                 var dictionary = new Dictionary<string, StorageItem>();
                 foreach (var innerDictio in tasksResults)
                 {
-                    if (innerDictio == null) continue;
+                    if (innerDictio is null) continue;
                     foreach (var item in innerDictio)
                     {
                         dictionary.TryGetValue(item.Key, out var value);
-                        if (value == null)
+                        if (value is null)
                             dictionary[item.Key] = item.Value;
                     }
                 }
@@ -836,7 +836,7 @@ namespace TWCore.Cache.Client
             using (var w = Watch.Create())
             {
                 var sto = await GetAsync(key).ConfigureAwait(false);
-                if (sto == null)
+                if (sto is null)
                 {
                     await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
@@ -858,7 +858,7 @@ namespace TWCore.Cache.Client
             using (var w = Watch.Create())
             {
                 var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
-                if (sto == null)
+                if (sto is null)
                 {
                     await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
@@ -881,7 +881,7 @@ namespace TWCore.Cache.Client
             using (var w = Watch.Create())
             {
                 var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
-                if (sto == null)
+                if (sto is null)
                 {
                     await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
@@ -903,7 +903,7 @@ namespace TWCore.Cache.Client
             using (var w = Watch.Create())
             {
                 var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
-                if (sto == null)
+                if (sto is null)
                 {
                     await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
@@ -926,7 +926,7 @@ namespace TWCore.Cache.Client
             using (var w = Watch.Create())
             {
                 var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
-                if (sto == null)
+                if (sto is null)
                 {
                     await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);

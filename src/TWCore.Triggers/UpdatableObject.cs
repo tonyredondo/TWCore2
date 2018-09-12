@@ -119,7 +119,7 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void AddTrigger(TriggerBase trigger)
         {
-            if (trigger == null) return;
+            if (trigger is null) return;
             if (_triggers.Contains(trigger)) return;
             trigger.OnTriggered += OnTriggerExecute;
             trigger.Init();
@@ -131,7 +131,7 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void RemoveTrigger(TriggerBase trigger)
         {
-            if (trigger == null) return;
+            if (trigger is null) return;
             if (!_triggers.Contains(trigger)) return;
             trigger.OnTriggered -= OnTriggerExecute;
             trigger.Dispose();
@@ -183,7 +183,7 @@ namespace TWCore.Triggers
         }
         private void InnerOnTriggerExecute(TriggerBase trigger)
         {
-            if (_instanceLoader == null) return;
+            if (_instanceLoader is null) return;
             lock (_localSync)
             {
                 Core.Log.LibVerbose("Trigger execution was received, executing update.");

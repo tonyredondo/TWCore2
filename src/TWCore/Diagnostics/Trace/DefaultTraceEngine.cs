@@ -68,7 +68,7 @@ namespace TWCore.Diagnostics.Trace
 
             _itemsWorker = new Worker<TraceItem>(() => !_disposed && Storage.Count > 0, async item =>
             {
-                if (item == null) return;
+                if (item is null) return;
                 try
                 {
                     await Storage.WriteAsync(item).ConfigureAwait(false);
@@ -100,7 +100,7 @@ namespace TWCore.Diagnostics.Trace
         public void Write(TraceItem item)
         {
             if (_disposed) return;
-            if (!Enabled || item == null) return;
+            if (!Enabled || item is null) return;
             if (Storage.Count == 0)
             {
                 Core.Log.Warning("There are any trace storage defined. The item can't be traced.");

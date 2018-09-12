@@ -62,7 +62,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TaskService(Action<CancellationToken> actionFunction)
         {
-            if (actionFunction == null) throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
+            if (actionFunction is null) throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
             _creationFunction = token => new Task(() => actionFunction(token), token);
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
@@ -73,7 +73,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TaskService(Action actionFunction)
         {
-            if (actionFunction == null) throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
+            if (actionFunction is null) throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
             _creationFunction = token => new Task(actionFunction, token);
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
@@ -94,7 +94,7 @@ namespace TWCore.Services
                 _tokenSource = new CancellationTokenSource();
                 _token = _tokenSource.Token;
                 _task = _creationFunction(_token);
-                if (_task == null)
+                if (_task is null)
                     throw new NullReferenceException("The returned task from the Task creation function can't be null");
                 _task.ContinueWith(t =>
                 {

@@ -150,7 +150,7 @@ namespace TWCore.Cache.Client
         /// </summary>
         public void Dispose()
         {
-            if (_pingTask == null) return;
+            if (_pingTask is null) return;
             Core.Status.DeAttachObject(this);
             _tokenSource.Cancel();
             try
@@ -177,7 +177,7 @@ namespace TWCore.Cache.Client
             {
                 try
                 {
-                    if (Storage == null)
+                    if (Storage is null)
                     {
                         Core.Log.Error("The cache pool item node: {0} doesn't have any storage associated", Name);
                         break;

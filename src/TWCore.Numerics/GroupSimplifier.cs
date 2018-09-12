@@ -57,7 +57,7 @@ namespace TWCore.Numerics
             foreach (var elm in Matrix.Keys)
             {
                 var vect = vectors.GetVectorByKey(elm.Name);
-                if (vect == null)
+                if (vect is null)
                 {
                     vect = new Vector { Key = elm.Name };
                     vectors.Add(vect);

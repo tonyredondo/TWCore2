@@ -126,7 +126,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ResolveLowLowFilePath(string lowlowPath)
         {
-            if (_factories == null) throw new FrameworkNotInitializedException();
+            if (_factories is null) throw new FrameworkNotInitializedException();
             return _factories.ResolveLowLowFilePath(lowlowPath);
         }
         /// <summary>
@@ -137,7 +137,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ResolveLowLowPath(string lowlowPath)
         {
-            if (_factories == null) throw new FrameworkNotInitializedException();
+            if (_factories is null) throw new FrameworkNotInitializedException();
             return _factories.ResolveLowLowPath(lowlowPath);
         }
         /// <summary>

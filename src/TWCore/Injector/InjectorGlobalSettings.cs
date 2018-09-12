@@ -92,7 +92,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void NonIntantiableClassAppend(KeyStringDelegatedCollection<NonInstantiable> nonNew, KeyStringDelegatedCollection<NonInstantiable> nonBase)
         {
-            if (nonNew == null) return;
+            if (nonNew is null) return;
             foreach (var item in nonNew)
             {
                 if (!nonBase.Contains(item.Type))

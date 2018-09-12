@@ -32,7 +32,7 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static HttpValueCollection ParseQueryString(string query)
         {
-            if (query == null)
+            if (query is null)
                 throw new ArgumentNullException("query");
 
             if ((query.Length > 0) && (query[0] == '?'))

@@ -100,7 +100,7 @@ namespace TWCore.IO
                 FilePath = Path.Combine(currentPath, FilePath);
                 Try.Do(fw =>
                 {
-                    if (fw == null) return;
+                    if (fw is null) return;
                     fw.EnableRaisingEvents = false;
                     fw.Dispose();
                     fw = null;
@@ -211,7 +211,7 @@ namespace TWCore.IO
                 FileObjectEvents.FireException(this, watchException);
                 Try.Do(fw =>
                 {
-                    if (fw == null) return;
+                    if (fw is null) return;
                     fw.EnableRaisingEvents = false;
                     fw.Dispose();
                 }, _fwatcher);
@@ -289,7 +289,7 @@ namespace TWCore.IO
         public void Dispose()
         {
             OnChanged = null;
-            if (_fwatcher == null) return;
+            if (_fwatcher is null) return;
             _fwatcher.EnableRaisingEvents = false;
             _fwatcher = null;
         }

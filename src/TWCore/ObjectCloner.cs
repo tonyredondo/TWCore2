@@ -63,7 +63,7 @@ namespace TWCore
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object Clone(object value)
         {
-            if (value == null) return null;
+            if (value is null) return null;
             var vType = value.GetType();
             if (vType.IsValueType || vType == typeof(string)) return value;
             var cloneDelegate = Descriptors.GetOrAdd(vType, type => CreateCopyDelegate(type));

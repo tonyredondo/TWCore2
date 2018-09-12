@@ -127,7 +127,7 @@ namespace TWCore.Text
         public string Encode(byte[] bytes)
         {
             Ensure.Requires<ArgumentNullException>(bytes != null);
-            if (bytes == null) return null;
+            if (bytes is null) return null;
             
             // Don't really have to do this, our code will build this result (empty string),
             // but why not catch the condition before doing work?

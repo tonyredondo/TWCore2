@@ -53,7 +53,7 @@ namespace TWCore.Cache.Client.Configuration
                 c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
                 c => c.EnvironmentName.IsNullOrWhitespace());
 
-            if (cConfig?.Pool == null) return null;
+            if (cConfig?.Pool is null) return null;
             var pingDelay = cConfig.Pool.PingDelay.ParseTo(5000);
             var pingDelayOnError = cConfig.Pool.PingDelayOnError.ParseTo(30000);
             var readMode = cConfig.Pool.ReadMode;

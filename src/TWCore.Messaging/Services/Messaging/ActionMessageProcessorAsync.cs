@@ -67,7 +67,7 @@ namespace TWCore.Services.Messaging
         /// <param name="action">Action to process the message</param>
         public void RegisterAction<T>(ActionMessageAsyncDelegate<T> action)
         {
-            if (action == null) throw new NullReferenceException("You can't register a null Action");
+            if (action is null) throw new NullReferenceException("You can't register a null Action");
             var messageType = typeof(T);
             var processor = new ActionMessageAsyncDelegate<object>((obj, cancellation) => action((T)obj, cancellation));
             Actions[messageType] = processor;

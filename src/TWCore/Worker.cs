@@ -184,7 +184,7 @@ namespace TWCore
         private void Init()
         {
             _tokenSource = new CancellationTokenSource();
-            _processThread = _precondition == null ? 
+            _processThread = _precondition is null ? 
                 (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThread, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThread()) :
                 (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThreadWithPrecondition, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThreadWithPrecondition());
         }

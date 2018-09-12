@@ -128,7 +128,7 @@ namespace TWCore.Collections
         public KeyDelegatedCollection(Func<TItem, TKey> keySelector) : base(null, 0)
         {
             KeySelector = keySelector;
-            if (DefaultKeySelector == null && KeySelector != null)
+            if (DefaultKeySelector is null && KeySelector != null)
                 DefaultKeySelector = KeySelector;
             OnInit();
         }
@@ -143,7 +143,7 @@ namespace TWCore.Collections
         {
             ThrowExceptionOnDuplicateKeys = throwExceptionOnDuplicateKeys;
             KeySelector = keySelector;
-            if (DefaultKeySelector == null && KeySelector != null)
+            if (DefaultKeySelector is null && KeySelector != null)
                 DefaultKeySelector = KeySelector;
             OnInit();
         }
@@ -208,7 +208,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRange(IEnumerable<TItem> enumerable)
         {
-            if (enumerable == null) return;
+            if (enumerable is null) return;
             if (ThrowExceptionOnDuplicateKeys)
             {
                 foreach (var item in enumerable)
@@ -254,7 +254,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddAndCombine(IEnumerable<TItem> enumerable)
         {
-            if (enumerable == null) return;
+            if (enumerable is null) return;
             foreach (var item in enumerable)
                 AddAndCombine(item);
         }
@@ -267,7 +267,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGet(TKey key, out TItem item)
         {
-            item = default(TItem);
+            item = default;
             if (Count == 0) return false;
             lock (Ilocker)
                 return Dictionary.TryGetValue(key, out item);

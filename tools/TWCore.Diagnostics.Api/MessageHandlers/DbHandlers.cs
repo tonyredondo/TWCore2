@@ -47,9 +47,9 @@ namespace TWCore.Diagnostics.Api
 			_messageHandlers = Core.Injector.GetAllInstances<IDiagnosticMessagesHandler>();
 			Query = Core.Injector.New<IDiagnosticQueryHandler>();
 			
-			if (_messageHandlers == null)
+			if (_messageHandlers is null)
 				throw new Exception("Messages handlers are not defined.");
-			if (Query == null)
+			if (Query is null)
 				throw new Exception("Query handler are not defined.");
 			
 			Messages = new MessagesHandler(this);

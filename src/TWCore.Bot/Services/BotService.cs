@@ -117,7 +117,7 @@ namespace TWCore.Services
                 Core.Log.InfoBasic("Starting Bot service...");
                 OnInit(args);
                 Bot = GetBotEngine();
-                if (Bot == null)
+                if (Bot is null)
                     throw new NullReferenceException("There aren't a Bot engine instance to start, check the GetBotEngine() method return value");
                 if (SaveTrackedChats)
                 {

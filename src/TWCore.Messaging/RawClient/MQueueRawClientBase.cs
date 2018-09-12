@@ -113,7 +113,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
-            if (config == null) return;
+            if (config is null) return;
             Config = config;
 
             Name = Config.Name;
@@ -214,7 +214,7 @@ namespace TWCore.Messaging.RawClient
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var msg = await ReceiveBytesAsync(correlationId, cancellationToken).ConfigureAwait(false);
-            if (msg == null) return default(T);
+            if (msg is null) return default(T);
             if (typeof(T) == typeof(byte[]))
                 return (T)(object)msg;
             return ReceiverSerializer.Deserialize<T>(msg);
@@ -239,7 +239,7 @@ namespace TWCore.Messaging.RawClient
         public async Task<byte[]> ReceiveBytesAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
-            if (bytes == null) return null;
+            if (bytes is null) return null;
 
             Counters.IncrementMessagesReceived();
             Counters.IncrementTotalBytesReceived(bytes.Length);

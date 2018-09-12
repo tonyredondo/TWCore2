@@ -74,9 +74,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool InnerEquals(object x, object y)
         {
-            if (x == null && y == null) return true;
-            if (x != null && y == null) return false;
-            if (x == null) return false;
+            if (x is null && y is null) return true;
+            if (x != null && y is null) return false;
+            if (x is null) return false;
             var xType = x.GetType();
             var yType = y.GetType();
             if (xType != yType) return false;
@@ -94,7 +94,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetHashCode(object obj)
         {
-            if (obj == null) return -1;
+            if (obj is null) return -1;
             var oType = obj.GetType();
             if (oType.IsValueType || oType == typeof(string))
                 return obj.GetHashCode();

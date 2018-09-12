@@ -91,7 +91,7 @@ namespace TWCore.Triggers
         {
             Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
             _tokenSource?.Cancel();
-            if (_timer == null) return;
+            if (_timer is null) return;
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
             _timer.Dispose();
             _timer = null;

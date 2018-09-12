@@ -62,7 +62,7 @@ namespace DasMulli.Win32.ServiceUtils
         /// <returns>True if both actions are equals; otherwise, false.</returns>
         public bool Equals(ServiceFailureActions other)
         {
-            if (other == null)
+            if (other is null)
                 return false;
             return GetHashCode() == other.GetHashCode();
         }

@@ -53,7 +53,7 @@ namespace TWCore.Settings
             var globals = Global?.GetItems(environmentName, machineName);
             if (globals != null)
                 globals.ThrowExceptionOnDuplicateKeys = false;
-            if (Applications == null) return globals;
+            if (Applications is null) return globals;
 
             var results = new KeyValueCollection
             {

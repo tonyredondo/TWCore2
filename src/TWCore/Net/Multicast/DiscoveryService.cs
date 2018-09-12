@@ -290,7 +290,7 @@ namespace TWCore.Net.Multicast
             try
             {
                 var serObj = SerializedObject.FromReadOnlySequence(e.Data);
-                if (serObj == null) return;
+                if (serObj is null) return;
                 if (!(serObj.GetValue() is RegisteredService rService)) return;
 
                 try

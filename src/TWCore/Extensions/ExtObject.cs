@@ -42,8 +42,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T DeepClone<T>(this T source)
         {
-            if (source == null) return default(T);
-            if (source.GetType().IsValueType) return default(T);
+            if (source == null) return default;
+            if (source.GetType().IsValueType) return default;
             return (T)ObjectCloner.Clone(source);
         }
         
@@ -70,7 +70,7 @@ namespace TWCore
         /// <returns>Property or field value</returns>
         public static Type GetMemberObjectType(this object source, string name)
         {
-            if (source == null) return null;
+            if (source is null) return null;
             var sourceType = source.GetType();
             if (source is IDictionary sourceDictio)
                 return sourceDictio.Contains(name) ? sourceDictio[name]?.GetType() : null;
@@ -90,7 +90,7 @@ namespace TWCore
         /// <returns>Property or field value</returns>
         public static object GetMemberObjectValue(this object source, string name)
         {
-            if (source == null) return null;
+            if (source is null) return null;
             var sourceType = source.GetType();
             GetAccessorDelegate getter = null;
             var key = string.Format("{0}.{1}", sourceType.AssemblyQualifiedName, name);
@@ -106,7 +106,7 @@ namespace TWCore
                 if (prop != null && prop.CanRead)
                     getter = Factory.Accessors.BuildGetAccessor(prop);
 
-                if (getter == null)
+                if (getter is null)
                 {
                     var field = sourceType.GetRuntimeField(name);
                     if (field != null)
@@ -128,7 +128,7 @@ namespace TWCore
         public static T GetMemberValue<T>(this object source, string name)
         {
             var objRes = GetMemberObjectValue(source, name);
-            if (objRes == (object) default(T) || objRes == null) return default(T);
+            if (objRes == (object) default(T) || objRes is null) return default;
             try
             {
                 return (T)Convert.ChangeType(objRes, typeof(T));
@@ -146,7 +146,7 @@ namespace TWCore
         /// <param name="value">Property or field value</param>
         public static void SetMemberObjectValue(this object source, string name, object value)
         {
-            if (source == null) return;
+            if (source is null) return;
             var sourceType = source.GetType();
             if (source is IDictionary sDictio)
             {
@@ -164,7 +164,7 @@ namespace TWCore
                 var prop = sourceType.GetRuntimeProperty(name);
                 if (prop != null && prop.CanWrite)
                     setter = Factory.Accessors.BuildSetAccessor(prop);
-                if (setter == null)
+                if (setter is null)
                 {
                     var field = sourceType.GetRuntimeField(name);
                     if (field != null)
@@ -190,7 +190,7 @@ namespace TWCore
             {
                 var iTarget = target as IList;
                 var iSource = (IList)source;
-                if (iTarget == null) return;
+                if (iTarget is null) return;
                 Type innerType = null;
                 if (typeof(T).IsArray)
                     innerType = typeof(T).GetElementType();
@@ -226,7 +226,7 @@ namespace TWCore
                 {
                     var sFastProp = sProp.GetFastPropertyInfo();
                     var tProp = targetType.GetRuntimeProperty(sProp.Name);
-                    if (tProp == null || tProp.IsSpecialName || !tProp.CanWrite) continue;
+                    if (tProp is null || tProp.IsSpecialName || !tProp.CanWrite) continue;
                     var tFastProp = tProp.GetFastPropertyInfo();
                     var sPropValue = sFastProp.GetValue(source);
                     var sPropTypeInfo = sFastProp.PropertyType;
@@ -238,7 +238,7 @@ namespace TWCore
                         tFastProp.SetValue(target, sPropValue);
                     else
                     {
-                        if (sPropValue == null)
+                        if (sPropValue is null)
                             tFastProp.SetValue(target, null);
                         else
                         {
@@ -253,7 +253,7 @@ namespace TWCore
                 foreach (var sField in sourceFields)
                 {
                     var tField = targetType.GetRuntimeField(sField.Name);
-                    if (tField == null) continue;
+                    if (tField is null) continue;
                     var sFieldValue = sField.GetValue(source);
                     var sFieldTypeInfo = sField.FieldType;
                     var tFieldTypeInfo = tField.FieldType;
@@ -264,7 +264,7 @@ namespace TWCore
                         tField.SetValue(target, sFieldValue);
                     else
                     {
-                        if (sFieldValue == null)
+                        if (sFieldValue is null)
                             tField.SetValue(target, null);
                         else
                         {
@@ -295,7 +295,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetDictionaryValues(this object destination, Dictionary<string, object> source)
         {
-            if (source == null || destination == null) return;
+            if (source is null || destination is null) return;
             foreach (var item in source)
             {
                 var prop = destination.GetType().GetRuntimeProperty(item.Key);

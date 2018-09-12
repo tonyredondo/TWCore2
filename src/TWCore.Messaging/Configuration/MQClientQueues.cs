@@ -52,7 +52,7 @@ namespace TWCore.Messaging.Configuration
         {
             get
             {
-                if (_sendQueues == null) _sendQueues = new List<MQConnection>();
+                if (_sendQueues is null) _sendQueues = new List<MQConnection>();
                 if (!_sendQueuesProcessed)
                 {
                     _sendQueuesProcessed = true;
@@ -91,7 +91,7 @@ namespace TWCore.Messaging.Configuration
                 if (!_recvQueueProcessed)
                 {
                     _recvQueueProcessed = true;
-                    if (_recvQueue == null) return null;
+                    if (_recvQueue is null) return null;
                     if (_recvQueue.IsSkippingRoute())
                     {
                         Core.Log.Warning("Skipping client receiving queue by route skip value");

@@ -163,10 +163,10 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
         {
-            if (type == null) return null;
+            if (type is null) return null;
             return DeserializationTypeInfo.GetOrAdd(type, valueType =>
             {
-                if (valueType == null) return null;
+                if (valueType is null) return null;
                 var typeInfo = valueType.GetTypeInfo();
                 var isGenericType = typeInfo.IsGenericType;
 

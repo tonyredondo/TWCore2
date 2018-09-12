@@ -137,7 +137,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Init(MQPairConfig config)
 		{
-			if (config == null) return;
+			if (config is null) return;
 			StopListeners();
 			QueueServerListeners.Clear();
 
@@ -239,7 +239,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void StopListeners()
 		{
-			if (_tokenSource == null) return;
+			if (_tokenSource is null) return;
 			Core.Log.InfoBasic("Stopping queue server listeners for {0}", Name);
 			_tokenSource.Cancel();
 			Task.WaitAll(_listenerTasks.ToArray());

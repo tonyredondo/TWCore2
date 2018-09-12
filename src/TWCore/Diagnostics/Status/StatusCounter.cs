@@ -231,7 +231,7 @@ namespace TWCore.Diagnostics.Status
                     CallsQuantity = sorted.Length;
                     LowestValue = sorted.First().Item2;
                     HighestValue = sorted.Last().Item2;
-                    if (Percentiles == null || Percentiles.Count == 0) return;
+                    if (Percentiles is null || Percentiles.Count == 0) return;
                     var posIndexes = sorted.Length - 1;
                     foreach (var percentile in Percentiles)
                     {

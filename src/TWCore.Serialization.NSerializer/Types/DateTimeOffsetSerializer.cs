@@ -40,7 +40,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTimeOffset? value)
         {
-            if (value == null)
+            if (value is null)
                 WriteByte(DataBytesDefinition.ValueNull);
             else
                 WriteValue(value.Value);

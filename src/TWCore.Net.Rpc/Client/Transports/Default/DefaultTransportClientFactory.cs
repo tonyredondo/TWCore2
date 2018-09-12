@@ -37,13 +37,13 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         protected override ITransportClient CreateTransport(KeyValueCollection parameters)
         {
             var host = parameters["Host"];
-            if (host == null || host == Factory.SkipInstanceValue)
+            if (host is null || host == Factory.SkipInstanceValue)
             {
                 Core.Log.Warning("Skipping transport instance by Host value.");
                 return null;
             }
             var strPort = parameters["Port"];
-            if (strPort == null || strPort == Factory.SkipInstanceValue)
+            if (strPort is null || strPort == Factory.SkipInstanceValue)
             {
                 Core.Log.Warning("Skipping transport instance by Port value.");
                 return null;
@@ -70,7 +70,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             Core.Log.LibDebug("\tHost: {0}", host);
             Core.Log.LibDebug("\tPort: {0}", port);
             Core.Log.LibDebug("\tSocketsPerClient: {0}", socketsPerClient);
-            if (serializerMimeType == null)
+            if (serializerMimeType is null)
                 return client;
             Core.Log.LibDebug("\tSerializer: {0}", serializer);
             if (serializer?.Compressor != null)

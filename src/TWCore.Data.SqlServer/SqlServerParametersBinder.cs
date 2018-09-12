@@ -62,7 +62,7 @@ namespace TWCore.Data.SqlServer
         /// <param name="parameterPrefix">DbCommand parameter prefix</param>
         public void BindParameters(DbCommand command, IDictionary<string, object> parameters, string parameterPrefix)
         {
-            if (parameters == null) return;
+            if (parameters is null) return;
             foreach (var item in parameters)
             {
                 var paramKey = item.Key.StartsWith(parameterPrefix) ? item.Key : parameterPrefix + item.Key;
@@ -124,7 +124,7 @@ namespace TWCore.Data.SqlServer
         /// <param name="parameterPrefix">DbCommand parameter prefix</param>
         public void RetrieveOutputParameters(DbCommand command, IDictionary<string, object> parameters, string parameterPrefix)
         {
-            if (command?.Parameters == null || parameters == null) return;
+            if (command?.Parameters is null || parameters is null) return;
             foreach (DbParameter itemParam in command.Parameters)
             {
                 if (itemParam.Direction != ParameterDirection.InputOutput &&

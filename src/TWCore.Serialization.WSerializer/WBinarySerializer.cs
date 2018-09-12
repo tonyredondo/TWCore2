@@ -70,7 +70,7 @@ namespace TWCore.Serialization.WSerializer
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
             var ser = _serializer;
-            if (ser == null)
+            if (ser is null)
             {
                 ser = new WSerializerCore();
                 _serializer = ser;
@@ -96,7 +96,7 @@ namespace TWCore.Serialization.WSerializer
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
             var ser = _serializer;
-            if (ser == null)
+            if (ser is null)
             {
                 ser = new WSerializerCore();
                 _serializer = ser;

@@ -46,7 +46,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IDictionary<TKey, TValue> dictionary) : base(i => i.Key)
         {
-            if (dictionary == null) return;
+            if (dictionary is null) return;
             foreach (var item in dictionary)
                 Add(new KeyValue<TKey, TValue>(item));
         }
@@ -142,7 +142,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IDictionary<string, string> dictionary) : base(i => i.Key)
         {
-            if (dictionary == null) return;
+            if (dictionary is null) return;
             foreach (var item in dictionary)
                 Add(new KeyValue<string, string>(item.Key, item.Value));
         }
@@ -155,7 +155,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IDictionary<string, string> dictionary, bool throwExceptionOnDuplicateKeys) : base(i => i.Key, throwExceptionOnDuplicateKeys)
         {
-            if (dictionary == null) return;
+            if (dictionary is null) return;
             foreach (var item in dictionary)
                 Add(new KeyValue<string, string>(item.Key, item.Value));
         }

@@ -144,7 +144,7 @@ namespace TWCore.Messaging
 
 			private async Task ProcessingTaskAsync(MemoryQueue.Message message)
 			{
-                if (message == null) return;
+                if (message is null) return;
 				try
 				{
 					Core.Log.LibVerbose("Received message from the memory queue '{0}/{1}'", Connection.Route, Connection.Name);

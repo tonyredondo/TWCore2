@@ -123,7 +123,7 @@ namespace TWCore.Messaging.RabbitMQ
                     if (_clientQueues.RecvQueue != null)
                         _receiver = new RabbitMQueue(_clientQueues.RecvQueue);
                 }
-                if (_senderOptions == null) throw new Exception("Client Sender Options is Null.");
+                if (_senderOptions is null) throw new Exception("Client Sender Options is Null.");
 
                 _priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
 				                   _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
@@ -136,7 +136,7 @@ namespace TWCore.Messaging.RabbitMQ
                 if (_senders != null)
                     for (var i = 0; i < _senders.Count; i++)
                     {
-                        if (_senders[i]?.Factory == null) continue;
+                        if (_senders[i]?.Factory is null) continue;
                         collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Factory.HostName);
                     }
                 if (_receiver?.Factory != null)
@@ -188,10 +188,10 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
-            if (_senderOptions == null)
+            if (_senderOptions is null)
                 throw new NullReferenceException("SenderOptions is null.");
 
-            if (message.Header.ResponseQueue == null)
+            if (message.Header.ResponseQueue is null)
             {
                 var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
@@ -251,7 +251,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (_receiver == null)
+            if (_receiver is null)
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
@@ -302,7 +302,7 @@ namespace TWCore.Messaging.RabbitMQ
                 throw new MessageQueueTimeoutException(_receiverOptionsTimeout, strCorrelationId);
             }
 
-            if (message.Body == null)
+            if (message.Body is null)
                 throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + strCorrelationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, strCorrelationId);
@@ -322,11 +322,11 @@ namespace TWCore.Messaging.RabbitMQ
         private void CreateReceiverConsumer()
         {
             if (_receiverConsumer != null) return;
-            if (_receiver == null) return;
+            if (_receiver is null) return;
             lock (_receiver)
             {
                 if (_receiverConsumer != null) return;
-                if (_receiver == null) return;
+                if (_receiver is null) return;
                 _receiver.EnsureConnection();
                 _receiver.EnsureQueue();
                 _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
@@ -355,7 +355,7 @@ namespace TWCore.Messaging.RabbitMQ
         private void RemoveReceiverConsumer()
         {
             if (Interlocked.Read(ref _receiverThreads) > 0) return;
-            if (_receiver == null) return;
+            if (_receiver is null) return;
             if (!string.IsNullOrEmpty(_receiverConsumerTag))
             {
                 _receiver.Channel.BasicCancel(_receiverConsumerTag);

@@ -51,7 +51,7 @@ namespace TWCore.Cache.Storages
             SetReady(true);
             Core.Status.Attach(collection =>
             {
-                if (_storage == null)
+                if (_storage is null)
                     return;
                 var percent = (double)_storage.Count / _storage.Capacity;
                 collection.Add(nameof(_storage.Capacity), _storage.Capacity);
@@ -101,7 +101,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
         {
-            if (meta == null) return false;
+            if (meta is null) return false;
             _storage.AddOrUpdate(meta.Key, (meta, value), (k, v) => (meta, value));
             return true;
         }
@@ -134,7 +134,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
-            if (_storage.TryGetValue(key, out var item) && (condition == null || condition(item.Item1)))
+            if (_storage.TryGetValue(key, out var item) && (condition is null || condition(item.Item1)))
             {
                 value = new StorageItem(item.Item1, item.Item2);
                 return true;
@@ -153,7 +153,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
         {
-            if (_storage.TryGetValue(key, out var item) && (condition == null || condition(item.Item1)))
+            if (_storage.TryGetValue(key, out var item) && (condition is null || condition(item.Item1)))
             {
                 value = item.Item1;
                 return true;

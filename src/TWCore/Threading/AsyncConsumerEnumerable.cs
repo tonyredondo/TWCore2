@@ -128,10 +128,10 @@ namespace TWCore.Threading
 
             private async Task<bool> OnMoveNextAsync()
             {
-                if (_tskArray == null) return false;
+                if (_tskArray is null) return false;
                 while (true)
                 {
-                    if (_innerEnumerator == null)
+                    if (_innerEnumerator is null)
                     {
                         if (_tskArray.Length == 0) return false;
                         if (_tskArray.Length <= _index) return false;

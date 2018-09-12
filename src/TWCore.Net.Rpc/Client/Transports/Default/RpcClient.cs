@@ -150,7 +150,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _networkStream = _client.GetStream();
                 _readStream = new BufferedStream(_networkStream);
                 _writeStream = new BufferedStream(_networkStream);
-                if (_connectionCancellationTokenSource == null || _connectionCancellationTokenSource.IsCancellationRequested)
+                if (_connectionCancellationTokenSource is null || _connectionCancellationTokenSource.IsCancellationRequested)
                 {
                     _connectionCancellationTokenSource = new CancellationTokenSource();
                     _connectionCancellationToken = _connectionCancellationTokenSource.Token;
@@ -172,10 +172,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> DisconnectAsync()
         {
-            if (_client == null || !_client.Connected) return false;
+            if (_client is null || !_client.Connected) return false;
             using (await _connectionLocker.LockAsync().ConfigureAwait(false))
             {
-                if (_client == null || !_client.Connected) return false;
+                if (_client is null || !_client.Connected) return false;
                 _shouldBeConnected = false;
                 _connectionCancellationTokenSource?.Cancel();
                 _onSession = false;
@@ -208,7 +208,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             {
                 if (_connectionCancellationToken.IsCancellationRequested)
                     return false;
-                if (_client == null || !_client.Connected)
+                if (_client is null || !_client.Connected)
                 {
                     OnDisconnect?.Invoke(this, EventArgs.Empty);
                     await ConnectAsync().ConfigureAwait(false);
@@ -225,7 +225,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
-            if (_receiveTask == null || _receiveTask.IsCompleted)
+            if (_receiveTask is null || _receiveTask.IsCompleted)
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -236,7 +236,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             {
                 try
                 {
-                    if (_client == null || !_client.Connected)
+                    if (_client is null || !_client.Connected)
                     {
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
                         await ConnectAsync().ConfigureAwait(false);

@@ -71,7 +71,7 @@ namespace TWCore.Diagnostics.Status
             Transports = new ObservableCollection<IStatusTransport>();
             Transports.CollectionChanged += (s, e) =>
             {
-                if (e == null) return;
+                if (e is null) return;
                 switch (e.Action)
                 {
                     case NotifyCollectionChangedAction.Add:
@@ -79,7 +79,7 @@ namespace TWCore.Diagnostics.Status
                         {
                             foreach (IStatusTransport item in e.NewItems)
                             {
-                                if (item == null)
+                                if (item is null)
                                 {
                                     Core.Log.LibDebug("The IStatusTransport item is null");
                                     continue;
@@ -94,7 +94,7 @@ namespace TWCore.Diagnostics.Status
                         {
                             foreach (IStatusTransport item in e.OldItems)
                             {
-                                if (item == null)
+                                if (item is null)
                                 {
                                     Core.Log.LibDebug("The IStatusTransport item is null");
                                     continue;
@@ -109,7 +109,7 @@ namespace TWCore.Diagnostics.Status
                         {
                             foreach (IStatusTransport item in e.NewItems)
                             {
-                                if (item == null)
+                                if (item is null)
                                 {
                                     Core.Log.LibDebug("The IStatusTransport item is null");
                                     continue;
@@ -122,7 +122,7 @@ namespace TWCore.Diagnostics.Status
                         {
                             foreach (IStatusTransport item in e.OldItems)
                             {
-                                if (item == null)
+                                if (item is null)
                                 {
                                     Core.Log.LibDebug("The IStatusTransport item is null");
                                     continue;
@@ -137,7 +137,7 @@ namespace TWCore.Diagnostics.Status
                         {
                             foreach (IStatusTransport item in e.OldItems)
                             {
-                                if (item == null)
+                                if (item is null)
                                 {
                                     Core.Log.LibDebug("The IStatusTransport item is null");
                                     continue;
@@ -184,16 +184,16 @@ namespace TWCore.Diagnostics.Status
         public void AttachObject(object objectToAttach)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
-            if (objectToAttach == null) return;
+            if (objectToAttach is null) return;
             _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
         }
         /// <inheritdoc />
         public void AttachChild(object objectToAttach, object parent)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
-            if (objectToAttach == null) return;
+            if (objectToAttach is null) return;
             var value = _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
-            if (parent == null) return;
+            if (parent is null) return;
             value.SetParent(parent);
             _weakValues.GetOrAdd(parent, CreateWeakValue);
             var wChildren = _weakChildren.GetOrAdd(parent, CreateWeakChildren);
@@ -204,7 +204,7 @@ namespace TWCore.Diagnostics.Status
         public void DeAttachObject(object objectToDetach)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
-            if (objectToDetach == null) return;
+            if (objectToDetach is null) return;
             var value = _weakValues.GetOrAdd(objectToDetach, CreateWeakValue);
             value.Enable = false;
         }
@@ -241,7 +241,7 @@ namespace TWCore.Diagnostics.Status
         {
             if (!Enabled)
                 return null;
-            if (_lastResult == null)
+            if (_lastResult is null)
                 UpdateStatus();
             else
                 _throttledUpdate();
@@ -272,15 +272,15 @@ namespace TWCore.Diagnostics.Status
                         {
                             var key = weakItem.Key;
                             var value = weakItem.Value;
-                            if (value.CurrentStatusItem == null)
+                            if (value.CurrentStatusItem is null)
                             {
                                 value.Update();
-                                if (value.CurrentStatusItem == null)
+                                if (value.CurrentStatusItem is null)
                                     continue;
                             }
 
                             var name = value.CurrentStatusItem.Name;
-                            if (name == null) continue;
+                            if (name is null) continue;
 
                             var slashIdx = name.IndexOf('\\', StringComparison.Ordinal);
                             if (slashIdx > 0)
@@ -295,7 +295,7 @@ namespace TWCore.Diagnostics.Status
                     #region Merge Similar by name
                     foreach (var (value, index) in lstWithSlashName)
                     {
-                        if (value.CurrentStatusItem == null) continue;
+                        if (value.CurrentStatusItem is null) continue;
                         var sSlashItem = value.CurrentStatusItem;
                         var name = sSlashItem.Name;
                         var baseName = name.Substring(0, index);
@@ -337,7 +337,7 @@ namespace TWCore.Diagnostics.Status
 
                             var parentStatus = parentValue.CurrentStatusItem;
                             var childStatus = value.CurrentStatusItem;
-                            if (childStatus == null) continue;
+                            if (childStatus is null) continue;
                             if (parentStatus != null)
                             {
                                 parentStatus.Children.Add(childStatus);
@@ -407,7 +407,7 @@ namespace TWCore.Diagnostics.Status
         private static void SetIds(string prefix, List<StatusItem> items)
         {
             prefix = prefix ?? string.Empty;
-            if (items == null) return;
+            if (items is null) return;
             foreach (var item in items)
             {
                 var key = prefix + item.Name;
@@ -422,12 +422,12 @@ namespace TWCore.Diagnostics.Status
         private static void SetIds(string prefix, StatusItemValuesCollection collection)
         {
             prefix = prefix ?? string.Empty;
-            if (collection == null) return;
+            if (collection is null) return;
             foreach (var item in collection)
             {
                 var key = prefix + item.Key;
                 item.Id = key.GetHashSHA1();
-                if (item.Values == null) continue;
+                if (item.Values is null) continue;
                 foreach (var itemValue in item.Values)
                 {
                     var valueKey = key + itemValue.Name;
@@ -438,7 +438,7 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void CheckSameNames(List<StatusItem> items)
         {
-            if (items == null) return;
+            if (items is null) return;
             if (items.Count == 0) return;
             if (items.Count > 1)
             {
@@ -464,7 +464,7 @@ namespace TWCore.Diagnostics.Status
             }
             foreach (var item in items)
             {
-                if (item.Children == null) continue;
+                if (item.Children is null) continue;
                 CheckSameNames(item.Children);
             }
         }
@@ -535,7 +535,7 @@ namespace TWCore.Diagnostics.Status
                 {
                     if (@delegate.TryInvoke(null, out var itemResult) && itemResult is StatusItem sItemResult)
                     {
-                        if (item == null)
+                        if (item is null)
                         {
                             item = sItemResult;
                             continue;
@@ -549,7 +549,7 @@ namespace TWCore.Diagnostics.Status
                     }
                 }
 
-                if (item == null)
+                if (item is null)
                     item = new StatusItem { Name = GetName(obj) };
 
                 foreach (var @delegate in ActionDelegates)
@@ -596,11 +596,11 @@ namespace TWCore.Diagnostics.Status
                 {
                     var attrPropAttr = prop.GetAttribute<StatusPropertyAttribute>();
                     var attrRefAttr = prop.GetAttribute<StatusReferenceAttribute>();
-                    if (attrPropAttr == null && attrRefAttr == null) continue;
+                    if (attrPropAttr is null && attrRefAttr is null) continue;
                     var fastProp = prop.GetFastPropertyInfo();
                     lstProps.Add((fastProp, attrPropAttr, attrRefAttr));
                 }
-                if (lstProps.Count == 0 && nameAttribute == null) return null;
+                if (lstProps.Count == 0 && nameAttribute is null) return null;
                 return item =>
                 {
                     var sItem = new StatusItem();

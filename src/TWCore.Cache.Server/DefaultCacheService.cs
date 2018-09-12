@@ -42,7 +42,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override StorageManager GetManager()
         {
-            if (_serverOptions == null)
+            if (_serverOptions is null)
                 _serverOptions = Core.Services.GetDefaultCacheServerOptions();
             Ensure.ReferenceNotNull(_serverOptions, "The Cache server configuration couldn't be loaded. Please check your configuration files.");
             Ensure.ReferenceNotNull(_serverOptions.StorageStack, "The Cache server was loaded but the StorageStack is not defined. Please check your configuration files.");
@@ -57,7 +57,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override ITransportServer[] GetTransports()
         {
-            if (_serverOptions == null)
+            if (_serverOptions is null)
                 _serverOptions = Core.Services.GetDefaultCacheServerOptions();
             Ensure.ReferenceNotNull(_serverOptions, "The Cache server configuration couldn't be loaded. Please check your configuration files.");
             Ensure.ReferenceNotNull(_serverOptions.Transports, "The Cache server configuration was loaded but there is not TransportServers defined. Please check your configuration files.");

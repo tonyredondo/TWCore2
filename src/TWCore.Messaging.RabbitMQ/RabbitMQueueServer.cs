@@ -45,7 +45,7 @@ namespace TWCore.Messaging.RabbitMQ
 		{
 			base.OnInit();
 			var senderOptions = Config.ResponseOptions.ServerSenderOptions;
-			if (senderOptions == null)
+			if (senderOptions is null)
 				throw new NullReferenceException("ServerSenderOptions is null.");
 			_priority = (byte)(senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
 							senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);

@@ -75,7 +75,7 @@ namespace TWCore.Serialization.NSerializer
             foreach (var method in methods)
             {
                 var attr = method.GetAttribute<DeserializerMethodAttribute>();
-                if (attr == null) continue;
+                if (attr is null) continue;
                 foreach (var byteType in attr.ByteTypes)
                     ReadValues[byteType] = (method, Factory.Accessors.BuildMethodAccessor(method));
                 ReadValuesFromType[attr.ReturnType] = method;

@@ -49,7 +49,7 @@ namespace TWCore.Net.Browser
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<BrowserResponse> NavigateAsync(BrowserRequest request)
         {
-            if (request == null) return null;
+            if (request is null) return null;
             if (History.Count > 0)
             {
                 request.UrlReferer = History[History.Count - 1].Item2.ResponseUrl;
@@ -68,7 +68,7 @@ namespace TWCore.Net.Browser
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<BrowserResponse> NavigateNoHistoryAsync(BrowserRequest request)
         {
-            if (request == null) return null;
+            if (request is null) return null;
             if (string.IsNullOrEmpty(request.Method)) request.Method = "GET";
 
             var wClientHandler = new HttpClientHandler();

@@ -26,7 +26,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 WriteByte(DataBytesDefinition.ByteArrayNull);
                 return;

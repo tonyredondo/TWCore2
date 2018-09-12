@@ -171,7 +171,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
-                if (attachment?.Stream == null) return null;
+                if (attachment?.Stream is null) return null;
                 var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
                 if (bytes.IsGzip())
                     return NBinarySerializer.Deserialize<SerializedObject>(bytes);
@@ -184,7 +184,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceXml").ConfigureAwait(false);
-                if (attachment?.Stream == null) return null;
+                if (attachment?.Stream is null) return null;
                 var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
                 if (bytes.IsGzip())
                 {
@@ -202,7 +202,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceJson").ConfigureAwait(false);
-                if (attachment?.Stream == null) return null;
+                if (attachment?.Stream is null) return null;
                 var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
                 if (bytes.IsGzip())
                 {

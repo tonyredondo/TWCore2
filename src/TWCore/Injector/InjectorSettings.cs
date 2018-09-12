@@ -160,7 +160,7 @@ namespace TWCore.Injector
                 return value;
 
             var interfaceType = GetInterfaceDefinition(type);
-            if (interfaceType == null)
+            if (interfaceType is null)
                 throw new KeyNotFoundException($"The Interface type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
             var className = name ?? interfaceType.DefaultClassName ?? interfaceType.ClassDefinitions.FirstOrDefault()?.Name;
             value = interfaceType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
@@ -183,7 +183,7 @@ namespace TWCore.Injector
                 return value;
 
             var abstractType = GetAbstractDefinition(type);
-            if (abstractType == null)
+            if (abstractType is null)
                 throw new KeyNotFoundException($"The Abstract type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
             var className = name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
             value = abstractType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
@@ -206,7 +206,7 @@ namespace TWCore.Injector
                 foreach (var type in Interfaces)
                 {
                     lst.Add(new TypeLoadResult(type.Type, Core.GetType(type.Type) != null));
-                    if (type.ClassDefinitions == null) continue;
+                    if (type.ClassDefinitions is null) continue;
                     foreach (var cDef in type.ClassDefinitions)
                         lst.Add(new TypeLoadResult(cDef.Type, Core.GetType(cDef.Type) != null));
                 }
@@ -216,7 +216,7 @@ namespace TWCore.Injector
                 foreach (var type in Abstracts)
                 {
                     lst.Add(new TypeLoadResult(type.Type, Core.GetType(type.Type) != null));
-                    if (type.ClassDefinitions == null) continue;
+                    if (type.ClassDefinitions is null) continue;
                     foreach (var cDef in type.ClassDefinitions)
                         lst.Add(new TypeLoadResult(cDef.Type, Core.GetType(cDef.Type) != null));
                 }

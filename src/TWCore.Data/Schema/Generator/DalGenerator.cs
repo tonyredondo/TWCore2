@@ -104,7 +104,7 @@ namespace TWCore.Data.Schema.Generator
             {
                 Core.Log.Write(LogLevel.Warning, ex);
             }
-            if (_dataAccessGenerator == null)
+            if (_dataAccessGenerator is null)
                 GeneratorType = DalGeneratorType.StoredProcedure;
             CreateEntities(directory);
             CreateInterfaces(directory);
@@ -186,7 +186,7 @@ namespace TWCore.Data.Schema.Generator
         private (string, string) CreateEntity(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault((t, tName) => t.Name == tName, tableName);
-            if (table == null) return (null, null);
+            if (table is null) return (null, null);
 
             const string header = DalGeneratorConsts.FormatEntityHeader;
             const string entityWrapper = DalGeneratorConsts.FormatEntityWrapper;
@@ -205,7 +205,7 @@ namespace TWCore.Data.Schema.Generator
                     {
                         var fkTable = _schema.Tables.FirstOrDefault((t, fTable) => t.Name == fTable, fk.ForeignTable);
                         var fkColumn = fkTable?.Columns.FirstOrDefault((c, cName) => c.Name == cName, column.Name);
-                        if (fkColumn == null) continue;
+                        if (fkColumn is null) continue;
                         var isPk = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
                         if (!isPk) continue;
                         
@@ -266,7 +266,7 @@ namespace TWCore.Data.Schema.Generator
         private (string, string) CreateInterface(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault((t, tName) => t.Name == tName, tableName);
-            if (table == null) return (null, null);
+            if (table is null) return (null, null);
 
             const string header = DalGeneratorConsts.FormatDalInterfaceHeader;
             const string interfaceWrapper = DalGeneratorConsts.FormatDalInterfaceWrapper;
@@ -383,7 +383,7 @@ namespace TWCore.Data.Schema.Generator
         private (string, string) CreateClass(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault((t, tName) => t.Name == tName, tableName);
-            if (table == null) return (null, null);
+            if (table is null) return (null, null);
 
             const string header = DalGeneratorConsts.FormatDalHeader;
             const string dalWrapper = DalGeneratorConsts.FormatDalWrapper;
@@ -619,7 +619,7 @@ namespace TWCore.Data.Schema.Generator
                     {
                         var fkTable = _schema.Tables.FirstOrDefault((t, fTable) => t.Name == fTable, fk.ForeignTable);
                         var fkColumn = fkTable?.Columns.FirstOrDefault((c, cName) => c.Name == cName, column.Name);
-                        if (fkColumn == null) continue;
+                        if (fkColumn is null) continue;
                         var isPk = fkColumn.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase));
                         if (!isPk) continue;
                             
@@ -682,7 +682,7 @@ namespace TWCore.Data.Schema.Generator
                     {
                         var fkTable = _schema.Tables.FirstOrDefault((t, fTable) => t.Name == fTable, fk.ForeignTable);
                         var fkColumn = fkTable?.Columns.FirstOrDefault((c, cName) => c.Name == cName, column.Name);
-                        if (fkColumn == null) continue;
+                        if (fkColumn is null) continue;
                         var isPk = fkColumn.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase));
                         if (!isPk) continue;
                                 
@@ -734,7 +734,7 @@ namespace TWCore.Data.Schema.Generator
         {
             var container = new GeneratorSelectionContainer();
             var table = _schema.Tables.FirstOrDefault((t, tName) => t.Name == tName, tableName);
-            if (table == null) return container;
+            if (table is null) return container;
             container.From = table.Name;
 
             foreach (var column in table.Columns.OrderBy(c => c.Position))
@@ -749,7 +749,7 @@ namespace TWCore.Data.Schema.Generator
                     {
                         var fkTable = _schema.Tables.FirstOrDefault((t, fTable) => t.Name == fTable, fk.ForeignTable);
                         var fkColumn = fkTable?.Columns.FirstOrDefault((c, cName) => c.Name == cName, column.Name);
-                        if (fkColumn == null) continue;
+                        if (fkColumn is null) continue;
                         var isPk = fkColumn.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase));
                         if (!isPk) continue;
                                 
@@ -823,7 +823,7 @@ namespace TWCore.Data.Schema.Generator
                 foreach (var column in index.Columns.OrderBy(c => c.ColumnPosition))
                 {
                     var tColumn = container.Columns.FirstOrDefault((c, cName) => c.Column == cName, column.ColumnName);
-                    if (tColumn == null) continue;
+                    if (tColumn is null) continue;
                     names.Add(tColumn.Column);
                     whereIdx.Fields.Add(new GeneratorWhereField
                     {

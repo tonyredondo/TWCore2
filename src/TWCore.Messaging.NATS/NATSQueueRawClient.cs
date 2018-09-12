@@ -184,7 +184,7 @@ namespace TWCore.Messaging.NATS
                 _senders.Clear();
                 _senders = null;
             }
-            if (_receiver == null) return;
+            if (_receiver is null) return;
             if (UseSingleResponseQueue)
             {
                 _receiver.Unsubscribe();
@@ -207,7 +207,7 @@ namespace TWCore.Messaging.NATS
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
-            if (_senderOptions == null)
+            if (_senderOptions is null)
                 throw new NullReferenceException("SenderOptions is null.");
 
             var recvQueue = _clientQueues.RecvQueue;
@@ -240,7 +240,7 @@ namespace TWCore.Messaging.NATS
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (_receiver == null && UseSingleResponseQueue)
+            if (_receiver is null && UseSingleResponseQueue)
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();

@@ -79,7 +79,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
             var length = eachObject.Count;
             for (var i = 0; i < length; i++) action(eachObject[i]);
@@ -95,7 +95,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
             var length = eachObject.Count;
             for (var i = 0; i < length; i++)
@@ -115,7 +115,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
             var length = eachObject.Count;
             for (var i = 0; i < length; i++) action(eachObject[i], i);
@@ -131,7 +131,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
             var length = eachObject.Count;
             for (var i = 0; i < length; i++)
@@ -152,7 +152,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable EachObject<TArg>(this IEnumerable enumerable, Action<object, int, TArg> action, in TArg state)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
             var length = eachObject.Count;
             for (var i = 0; i < length; i++) action(eachObject[i], i, state);
@@ -169,7 +169,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable EachObject<TArg>(this IEnumerable enumerable, Action<object, int, TArg> action, in TArg state, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
             var length = eachObject.Count;
             for (var i = 0; i < length; i++)
@@ -192,7 +192,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
             var length = objs.Count;
             for (var i = 0; i < length; i++)
@@ -209,7 +209,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
             var length = objs.Count;
             for (var i = 0; i < length; i++)
@@ -229,7 +229,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
             var length = objs.Count;
             for (var i = 0; i < length; i++)
@@ -246,7 +246,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
             var length = objs.Count;
             for (var i = 0; i < length; i++)
@@ -267,7 +267,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, Action<T, int, TArg> action, in TArg state)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
             var length = innerObjs.Count;
             for (var i = 0; i < length; i++)
@@ -285,7 +285,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, Action<T, int, TArg> action, in TArg state, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
             var length = innerObjs.Count;
             for (var i = 0; i < length; i++)
@@ -308,7 +308,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var objs = enumerable as T[] ?? enumerable.ToArray();
             for (var i = 0; i < objs.Length; i++)
                 action(ref objs[i]);
@@ -324,7 +324,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T> action, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var objs = enumerable as T[] ?? enumerable.ToArray();
             for (var i = 0; i < objs.Length; i++)
             {
@@ -343,7 +343,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var objs = enumerable as T[] ?? enumerable.ToArray();
             for (var i = 0; i < objs.Length; i++)
                 action(ref objs[i], i);
@@ -359,7 +359,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int> action, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var objs = enumerable as T[] ?? enumerable.ToArray();
             for (var i = 0; i < objs.Length; i++)
             {
@@ -379,7 +379,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, ActionRef<T, int, TArg> action, in TArg state)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var innerObjs = enumerable as T[] ?? enumerable.ToArray();
             for (var i = 0; i < innerObjs.Length; i++)
                 action(ref innerObjs[i], i, state);
@@ -396,7 +396,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, ActionRef<T, int, TArg> action, in TArg state, CancellationToken token)
         {
-            if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
             var innerObjs = enumerable as T[] ?? enumerable.ToArray();
             for (var i = 0; i < innerObjs.Length; i++)
             {
@@ -417,11 +417,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable Enumerate(this IEnumerable linqExpression)
         {
-            if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
+            if (linqExpression is null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
             var lqType = linqExpression.GetType();
             if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
             var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-            if (ienumerable == null) return linqExpression;
+            if (ienumerable is null) return linqExpression;
             var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
             return (IList) Activator.CreateInstance(type, linqExpression);
         }
@@ -434,11 +434,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> Enumerate<T>(this IEnumerable<T> linqExpression)
         {
-            if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
+            if (linqExpression is null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
             var lqType = linqExpression.GetType();
             if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
             var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-            if (ienumerable == null) return linqExpression;
+            if (ienumerable is null) return linqExpression;
             var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
             return (IList<T>)Activator.CreateInstance(type, linqExpression);
         }
@@ -479,7 +479,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> RemoveNulls<T>(this IEnumerable<T> enumerable) where T : class
         {
-            if (enumerable == null) return null;
+            if (enumerable is null) return null;
             if (enumerable is IList<T> enumList)
             {
                 var noNullValues = new List<T>();
@@ -505,7 +505,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> RemoveDefaults<T>(this IEnumerable<T> enumerable)
         {
-            if (enumerable == null) return null;
+            if (enumerable is null) return null;
             var comparer = EqualityComparer<T>.Default;
             var defaultValue = default(T);
             if (enumerable is IList<T> enumList)
@@ -542,7 +542,7 @@ namespace TWCore
         public static (T[], T[]) Split<T>(this IEnumerable<T> enumerable,
             Predicate<T> separatorPredicate)
         {
-            if (enumerable == null) return (new T[0], new T[0]);
+            if (enumerable is null) return (new T[0], new T[0]);
             var pool = ReferencePool<List<T>>.Shared;
             var firstList = pool.New();
             var secondList = pool.New();
@@ -653,9 +653,9 @@ namespace TWCore
         /// <returns>true if the value enumerable contains the same elements; otherwise, false.</returns>
         public static bool SetEquals<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
         {
-            if (enumerable == null && value == null)
+            if (enumerable is null && value is null)
                 return true;
-            if (enumerable == null || value == null)
+            if (enumerable is null || value is null)
                 return false;
             var hSet = new HashSet<T>(enumerable);
             return hSet.SetEquals(value);
@@ -675,7 +675,7 @@ namespace TWCore
 
             IEnumerable<T> DistinctByInner(IEnumerable<T> mEnumerable, Func<T, TK> mKeySelector, IEqualityComparer<TK> mComparer = null)
             {
-                var hSet = mComparer == null ? new HashSet<TK>() : new HashSet<TK>(mComparer);
+                var hSet = mComparer is null ? new HashSet<TK>() : new HashSet<TK>(mComparer);
                 foreach (var element in mEnumerable)
                     if (hSet.Add(mKeySelector(element)))
                         yield return element;
@@ -798,7 +798,7 @@ namespace TWCore
         public static IEnumerable<TItem> Combine<TItem, TKey>(this IEnumerable<TItem> lastEnumerable, IEnumerable<TItem> initialEnumerable, Func<TItem, TKey> keySelector, Func<TItem, TItem, TItem> finalItemFunc)
         {
             var lst = new List<TItem>(initialEnumerable);
-            if (lastEnumerable == null) return lst;
+            if (lastEnumerable is null) return lst;
             var lastArray = lastEnumerable as TItem[] ?? lastEnumerable.ToArray();
             if (lastArray.Any())
             {
@@ -921,7 +921,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RemoveCollection<T>(this ICollection<T> collection, Predicate<T> predicate)
         {
-            if (collection == null) return;
+            if (collection is null) return;
             var pool = ReferencePool<List<T>>.Shared;
             var lstWithPredicate = pool.New();
             foreach (var item in collection)
@@ -939,7 +939,7 @@ namespace TWCore
         /// </summary>
         /// <param name="collection">Collection object source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RemoveCollectionNulls<T>(this ICollection<T> collection) where T : class => RemoveCollection(collection, item => item == null);
+        public static void RemoveCollectionNulls<T>(this ICollection<T> collection) where T : class => RemoveCollection(collection, item => item is null);
         #endregion
 
         #region Others
@@ -973,7 +973,7 @@ namespace TWCore
         /// <param name="separator">string separator used to join the IEnumerable object</param>
         /// <returns>A string that consists of the members of <paramref name="enumerable"/> delimited by the <paramref name="separator"/> string. If values has no members, the method returns null.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string Join<T>(this IEnumerable<T> enumerable, string separator) => enumerable == null ? null : string.Join(separator, enumerable);
+        public static string Join<T>(this IEnumerable<T> enumerable, string separator) => enumerable is null ? null : string.Join(separator, enumerable);
         /// <summary>
         /// Yields an object to a IEnumerable
         /// </summary>
@@ -993,7 +993,7 @@ namespace TWCore
         /// <returns>IEnumerable of items</returns>
         public static IEnumerable<T> Append<T>(this IEnumerable<T> enumerable, T item)
         {
-            if (enumerable == null)
+            if (enumerable is null)
                 throw new ArgumentNullException("enumerable");
 
             return InternalAppend(enumerable, item);
@@ -1014,7 +1014,7 @@ namespace TWCore
         /// <returns>IEnumerable of items</returns>
         public static IEnumerable<T> Prepend<T>(this IEnumerable<T> enumerable, T item)
         {
-            if (enumerable == null)
+            if (enumerable is null)
                 throw new ArgumentNullException("enumerable");
 
             return InternalPrepend(enumerable, item);
@@ -1037,7 +1037,7 @@ namespace TWCore
         /// <returns>True if both enumerables has the same count and keys</returns>
         public static bool SequenceEqual<TSource, TSourceKey>(this IEnumerable<TSource> first, IEnumerable<TSource> second, Func<TSource, TSourceKey> keySelector)
         {
-            if (keySelector == null)
+            if (keySelector is null)
                 throw new ArgumentNullException("keySelector");
             var comparer = new SequenceEqualFuncComparer<TSource, TSourceKey>(keySelector);
             return Enumerable.SequenceEqual(first, second, comparer);
@@ -1056,13 +1056,13 @@ namespace TWCore
         public static bool SequenceEqual<TSourceFirst, TSourceSecond, TSourceKey>(this IEnumerable<TSourceFirst> first, IEnumerable<TSourceSecond> second, 
             Func<TSourceFirst, TSourceKey> firstKeySelector, Func<TSourceSecond, TSourceKey> secondKeySelector)
         {
-            if (first == null)
+            if (first is null)
                 throw new ArgumentNullException("first");
-            if (second == null)
+            if (second is null)
                 throw new ArgumentNullException("second");
-            if (firstKeySelector == null)
+            if (firstKeySelector is null)
                 throw new ArgumentNullException("firstKeySelector");
-            if (secondKeySelector == null)
+            if (secondKeySelector is null)
                 throw new ArgumentNullException("secondKeySelector");
 
             var firstEnumerator = first.GetEnumerator();
@@ -1122,17 +1122,17 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<IEnumerable<T>> GetCombination<T>(this IEnumerable<IEnumerable<T>> enumerable)
         {
-            if (enumerable == null) yield break;
+            if (enumerable is null) yield break;
             var enumerableArray = enumerable as IEnumerable<T>[] ?? enumerable.ToArray();
             var singCol = enumerableArray.FirstOrDefault();
-            if (singCol == null) yield break;
+            if (singCol is null) yield break;
             foreach (var item in singCol)
             {
                 var innerCol = enumerableArray.Skip(1).ToArray();
                 if (innerCol.Length > 0)
                 {
                     var innerCombination = innerCol.GetCombination();
-                    if (innerCombination == null) continue;
+                    if (innerCombination is null) continue;
                     foreach (var combination in innerCombination)
                         yield return new[] { item }.Concat(combination).ToArray();
                 }
@@ -1151,7 +1151,7 @@ namespace TWCore
             var response = new List<string>();
             var coll = enumerable?.Select(item => item.ToArray()).ToArray();
             var singCol = coll?.FirstOrDefault();
-            if (singCol == null) return response;
+            if (singCol is null) return response;
             for (var i = 0; i < singCol.Length; i++)
             {
                 var item = singCol[i];
@@ -1180,8 +1180,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this IEnumerable<T> enumerable, Predicate<T> predicate)
         {
-            if (enumerable == null) return -1;
-            if (predicate == null) return -1;
+            if (enumerable is null) return -1;
+            if (predicate is null) return -1;
             var idx = 0;
             foreach (var item in enumerable)
             {
@@ -1239,7 +1239,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             Parallel.ForEach(parallelEach, action);
             return parallelEach;
@@ -1254,7 +1254,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelSimpleExecutor<T>(action, token);
             Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
@@ -1269,7 +1269,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelExecutor<T>(action);
             Parallel.ForEach(parallelEach, new ParallelOptions(), executor.Execute);
@@ -1285,7 +1285,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action, CancellationToken token)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelExecutor<T>(action, token);
             Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
@@ -1301,7 +1301,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelEach<T, TArg>(this IEnumerable<T> enumerable, Action<T, long, TArg> action, in TArg state)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelStateExecutor<T, TArg>(state, action);
             Parallel.ForEach(parallelEach, new ParallelOptions(), executor.ExecuteWithState);
@@ -1318,7 +1318,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelEach<T, TArg>(this IEnumerable<T> enumerable, Action<T, long, TArg> action, in TArg state, CancellationToken token)
         {
-            if (enumerable == null || action == null) return enumerable;
+            if (enumerable is null || action is null) return enumerable;
             var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelStateExecutor<T, TArg>(state, action, token);
             Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithStateAndCancellationToken);
@@ -1421,7 +1421,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs)
         {
-            if (funcs == null) return null;
+            if (funcs is null) return null;
             var funcsArray = funcs as IList<Func<T>> ?? funcs.ToArray();
             var executor = new ParallelInvokeExecutor<T>(funcsArray.Count);
             Parallel.ForEach(funcsArray, executor.Execute);
@@ -1436,7 +1436,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs, CancellationToken token)
         {
-            if (funcs == null) return null;
+            if (funcs is null) return null;
             var funcsArray = funcs as IList<Func<T>> ?? funcs.ToArray();
             var executor = new ParallelInvokeExecutor<T>(funcsArray.Count, token);
             Parallel.ForEach(funcsArray, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
@@ -1534,7 +1534,7 @@ namespace TWCore
         public static (double Average, double StandardDeviation) GetAverageAndStdDev(this IEnumerable<double> values)
         {
             var valArray = values?.ToArray();
-            if (valArray == null || valArray.Length <= 1) return (0, 0);
+            if (valArray is null || valArray.Length <= 1) return (0, 0);
             var avg = valArray.Average();
             var sum = valArray.Sum(d => Math.Pow(d - avg, 2));
             var res = Math.Sqrt((sum) / (valArray.Length - 1));
@@ -1549,7 +1549,7 @@ namespace TWCore
         public static double GetStdDev(this IEnumerable<double> values)
         {
             var valArray = values?.ToArray();
-            if (valArray == null || valArray.Length <= 1) return 0;
+            if (valArray is null || valArray.Length <= 1) return 0;
             var avg = valArray.Average();
             var sum = valArray.Sum(d => Math.Pow(d - avg, 2));
             var res = Math.Sqrt((sum) / (valArray.Length - 1));
@@ -1602,8 +1602,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddRange<TKey, TItem>(this KeyedCollection<TKey, TItem> keyedCollection, IEnumerable<TItem> col)
         {
-            if (keyedCollection == null) return;
-            if (col == null) return;
+            if (keyedCollection is null) return;
+            if (col is null) return;
             foreach (var i in col)
                 keyedCollection.Add(i);
         }
@@ -1661,7 +1661,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T FirstOf<T>(this IEnumerable<T> source, params Predicate<T>[] predicates)
         {
-            if (predicates == null) return default;
+            if (predicates is null) return default;
             var comparer = EqualityComparer<T>.Default;
             var pool = ReferencePool<List<T>>.Shared;
             var foundArray = pool.New();
@@ -1703,7 +1703,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T FirstOf<T, TArg>(this IEnumerable<T> source, Func<T, TArg, bool>[] predicates, in TArg state)
         {
-            if (predicates == null) return default;
+            if (predicates is null) return default;
             var comparer = EqualityComparer<T>.Default;
             var pool = ReferencePool<List<T>>.Shared;
             var foundArray = pool.New();
@@ -1746,8 +1746,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source == null) return -1;
-            if (predicate == null) return -1;
+            if (source is null) return -1;
+            if (predicate is null) return -1;
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -1837,7 +1837,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource First<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -1865,7 +1865,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource FirstOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -1895,7 +1895,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource FirstOrDefault<TSource, TArg, TArg2>(this IEnumerable<TSource> source, Func<TSource, TArg, TArg2, bool> predicate, TArg arg0, TArg2 arg1)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -1927,7 +1927,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource FirstOrDefault<TSource, TArg, TArg2, TArg3>(this IEnumerable<TSource> source, Func<TSource, TArg, TArg2, TArg3, bool> predicate, TArg arg0, TArg2 arg1, TArg3 arg2)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -1955,7 +1955,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource Last<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -1983,7 +1983,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource LastOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
             {
                 var length = sourceList.Count;
@@ -2010,7 +2010,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2034,7 +2034,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2047,7 +2047,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2071,7 +2071,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2084,7 +2084,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2108,7 +2108,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2121,7 +2121,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2145,7 +2145,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2158,7 +2158,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2182,7 +2182,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2195,7 +2195,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2204,7 +2204,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
                     maxValue = value;
                     resItem = sourceList[i];
@@ -2215,13 +2215,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
                     maxValue = value;
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2234,7 +2234,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2243,7 +2243,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
                     maxValue = value;
                     resItem = sourceList[i];
@@ -2254,13 +2254,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
                     maxValue = value;
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2273,7 +2273,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2282,7 +2282,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
                     maxValue = value;
                     resItem = sourceList[i];
@@ -2293,13 +2293,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
                     maxValue = value;
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2312,7 +2312,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2321,7 +2321,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
                     maxValue = value;
                     resItem = sourceList[i];
@@ -2332,13 +2332,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
                     maxValue = value;
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2351,7 +2351,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? maxValue = null;
             if (source is IList<TSource> sourceList)
@@ -2360,7 +2360,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
                     maxValue = value;
                     resItem = sourceList[i];
@@ -2371,13 +2371,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
                     maxValue = value;
                     resItem = item;
                 }
             }
-            if (maxValue == null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException();
             return resItem;
         }
 
@@ -2391,7 +2391,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2415,7 +2415,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2428,7 +2428,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2452,7 +2452,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2465,7 +2465,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2489,7 +2489,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2502,7 +2502,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2526,7 +2526,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2539,7 +2539,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2563,7 +2563,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2576,7 +2576,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2585,7 +2585,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && minValue.Value <= value.Value) continue;
                     minValue = value;
                     resItem = sourceList[i];
@@ -2596,13 +2596,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && minValue.Value <= value.Value) continue;
                     minValue = value;
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2615,7 +2615,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2624,7 +2624,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && minValue.Value <= value.Value) continue;
                     minValue = value;
                     resItem = sourceList[i];
@@ -2635,13 +2635,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && minValue.Value <= value.Value) continue;
                     minValue = value;
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2654,7 +2654,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2663,7 +2663,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
                     minValue = value;
                     resItem = sourceList[i];
@@ -2674,13 +2674,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
                     minValue = value;
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2693,7 +2693,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2702,7 +2702,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
                     minValue = value;
                     resItem = sourceList[i];
@@ -2713,13 +2713,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
                     minValue = value;
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
         /// <summary>
@@ -2732,7 +2732,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? minValue = null;
             if (source is IList<TSource> sourceList)
@@ -2741,7 +2741,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     var value = selector(sourceList[i]);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && minValue.Value <= value.Value) continue;
                     minValue = value;
                     resItem = sourceList[i];
@@ -2752,13 +2752,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     var value = selector(item);
-                    if (value == null) continue;
+                    if (value is null) continue;
                     if (minValue.HasValue && minValue.Value <= value.Value) continue;
                     minValue = value;
                     resItem = item;
                 }
             }
-            if (minValue == null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException();
             return resItem;
         }
 
@@ -2774,7 +2774,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource Single<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var @default = default(TSource);
             var found = false;
             if (source is IList<TSource> sourceList)
@@ -2813,7 +2813,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TSource SingleOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is null) throw new ArgumentNullException(nameof(source));
             var @default = default(TSource);
             var found = false;
             if (source is IList<TSource> sourceList)

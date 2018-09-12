@@ -292,7 +292,7 @@ namespace TWCore.Object.Api.Controllers
         public bool UnloadFile()
         {
             var sessionData = HttpContext.Session.GetSessionData();
-            if (sessionData.FilePath == null && sessionData.FileObject == null) return false;
+            if (sessionData.FilePath is null && sessionData.FileObject is null) return false;
             var oldFile = sessionData.FilePath;
             sessionData.FilePath = null;
             sessionData.FileObject = null;
@@ -554,7 +554,7 @@ namespace TWCore.Object.Api.Controllers
                     if (!wChildren) continue;
                     if (!(srv.Data.GetValue() is Dictionary<string, object> data)) continue;
                     if (!data.TryGetValue("Port", out var port)) continue;
-                    if (srv.Addresses == null || srv.Addresses.Length == 0) continue;
+                    if (srv.Addresses is null || srv.Addresses.Length == 0) continue;
                     var ipAddress = srv.Addresses[0];
                     var strPort = ipAddress + "/"+ port.ToString();
                     if (srvPe.Entries.All((c, aPort) => c.Path != aPort, strPort))

@@ -92,7 +92,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(T[] array, int offset, int count)
         {
-            if (array == null)
+            if (array is null)
                 throw new ArgumentNullException(nameof(array));
             if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset should be a positive number.");
@@ -313,9 +313,9 @@ namespace TWCore
             if (obj._offset != _offset) return false;
             if (obj._count != _count) return false;
             if (obj._segmentsLength != _segmentsLength) return false;
-            if (obj.ListOfArrays == null && ListOfArrays != null) return false;
-            if (obj.ListOfArrays != null && ListOfArrays == null) return false;
-            if (obj.ListOfArrays == null && ListOfArrays == null) return true;
+            if (obj.ListOfArrays is null && ListOfArrays != null) return false;
+            if (obj.ListOfArrays != null && ListOfArrays is null) return false;
+            if (obj.ListOfArrays is null && ListOfArrays is null) return true;
             return obj.ListOfArrays.SequenceEqual(ListOfArrays);
         }
         
@@ -449,7 +449,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySequence<T> AsReadOnlySequence()
         {
-            if (ListOfArrays == null) return ReadOnlySequence<T>.Empty;
+            if (ListOfArrays is null) return ReadOnlySequence<T>.Empty;
             if (ListOfArrays.Count == 0) return ReadOnlySequence<T>.Empty;
             ReadOnlySequence<T> sequence;
             if (ListOfArrays.Count == 1)

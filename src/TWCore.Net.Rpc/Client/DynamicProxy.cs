@@ -63,13 +63,13 @@ namespace TWCore.Net.RPC.Client
             var name = binder.Name;
             var descriptor = _client.GetMethodDescriptor(_descriptor.Name, name, args);
             var asyncAdapter = false;
-            if (descriptor == null && name.EndsWith("Async", StringComparison.Ordinal))
+            if (descriptor is null && name.EndsWith("Async", StringComparison.Ordinal))
             {
                 name = name.Substring(0, name.Length - 5);
                 descriptor = _client.GetMethodDescriptor(_descriptor.Name, name, args);
                 asyncAdapter = true;
             }
-            if (descriptor == null)
+            if (descriptor is null)
                 throw new Exception("Method not found");
 
             var returnType = descriptor.TypeOfReturnType;

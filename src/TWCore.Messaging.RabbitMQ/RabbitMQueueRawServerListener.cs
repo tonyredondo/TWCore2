@@ -108,7 +108,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_receiver == null) return;
+            if (_receiver is null) return;
             if (!string.IsNullOrEmpty(_receiverConsumerTag))
                 _receiver.Channel?.BasicCancel(_receiverConsumerTag);
             _receiver.Close();
@@ -168,7 +168,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(RabbitMessage message)
         {
-            if (message.Body == null) return;
+            if (message.Body is null) return;
             try
             {
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);

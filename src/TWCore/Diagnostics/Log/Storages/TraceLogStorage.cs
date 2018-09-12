@@ -76,7 +76,7 @@ namespace TWCore.Diagnostics.Log.Storages
             while (true)
             {
                 sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
-                if (itemEx.InnerException == null) break;
+                if (itemEx.InnerException is null) break;
                 itemEx = itemEx.InnerException;
             }
         }

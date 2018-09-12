@@ -148,7 +148,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
             {
-                if (_client == null || !_client.Connected || _isDisposing) return;
+                if (_client is null || !_client.Connected || _isDisposing) return;
                 _serializer.Serialize(message, _writeStream);
                 try
                 {
@@ -166,7 +166,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
-            if (_receiveTask == null || _receiveTask.IsCompleted)
+            if (_receiveTask is null || _receiveTask.IsCompleted)
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

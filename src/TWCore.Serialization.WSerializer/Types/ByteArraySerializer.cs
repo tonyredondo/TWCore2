@@ -102,7 +102,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteValue(BinaryWriter writer, byte[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.Write(DataType.ByteArrayNull);
                 return;

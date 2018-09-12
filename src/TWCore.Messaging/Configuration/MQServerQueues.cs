@@ -52,7 +52,7 @@ namespace TWCore.Messaging.Configuration
         {
             get
             {
-                if (_recvQueues == null) _recvQueues = new List<MQConnection>();
+                if (_recvQueues is null) _recvQueues = new List<MQConnection>();
                 if (!_recvQueuesProcessed)
                 {
                     _recvQueuesProcessed = true;
@@ -87,7 +87,7 @@ namespace TWCore.Messaging.Configuration
         {
             get
             {
-                if (_additionalSendQueues == null) _additionalSendQueues = new List<MQConnection>();
+                if (_additionalSendQueues is null) _additionalSendQueues = new List<MQConnection>();
                 if (!_additionalSendQueuesProcessed)
                 {
                     _additionalSendQueuesProcessed = true;

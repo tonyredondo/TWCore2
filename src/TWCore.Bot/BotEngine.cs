@@ -97,7 +97,7 @@ namespace TWCore.Bot
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrackChat(BotChat chat)
         {
-			if (chat == null) return false;
+			if (chat is null) return false;
             lock (TrackedChats)
             {
 				if (TrackedChats.Contains(chat.Id)) return false;
@@ -116,7 +116,7 @@ namespace TWCore.Bot
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool UnTrackChat(BotChat chat)
         {
-			if (chat == null) return false;
+			if (chat is null) return false;
             lock (TrackedChats)
             {
 				if (!TrackedChats.Contains(chat.Id)) return false;

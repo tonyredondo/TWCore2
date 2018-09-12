@@ -120,7 +120,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
-            if (config == null) return;
+            if (config is null) return;
 
             Config = config;
 
@@ -214,7 +214,7 @@ namespace TWCore.Messaging.Client
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var rsMsg = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
-            if (rsMsg == null) return default(T);
+            if (rsMsg is null) return default(T);
 
             rsMsg.Header.Response.ApplicationReceivedTime = Core.Now;
             Counters.IncrementMessagesReceived();
@@ -229,7 +229,7 @@ namespace TWCore.Messaging.Client
                     await MQueueClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
             }
 
-            if (rsMsg.Body == null) return default(T);
+            if (rsMsg.Body is null) return default(T);
 
             var res = default(T);
             try
@@ -374,7 +374,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ResponseMessage GetCompleteMessage(object messageBody)
         {
-            if (messageBody == null)
+            if (messageBody is null)
                 return null;
             if (_receivedMessagesCache.TryGetValue(messageBody, out var _out))
                 return (ResponseMessage)_out;

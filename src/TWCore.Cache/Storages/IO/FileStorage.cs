@@ -87,7 +87,7 @@ namespace TWCore.Cache.Storages.IO
                 collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Ok : NumberOfSubFolders > 2 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
                 collection.Add(nameof(SlowDownWriteThreshold), SlowDownWriteThreshold);
-                if (_handlers == null) return;
+                if (_handlers is null) return;
                 foreach (var hnd in _handlers)
                     Core.Status.AttachChild(hnd, this);
             }, this);
@@ -218,7 +218,7 @@ namespace TWCore.Cache.Storages.IO
         {
             value = null;
             if (!_metas.TryGetValue(key, out var metaValue)) return false;
-            if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
+            if (metaValue != null && !metaValue.IsExpired && (condition is null || condition(metaValue)))
             {
                 value = metaValue;
                 return true;
@@ -231,7 +231,7 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_handlers == null) return;
+            if (_handlers is null) return;
             Core.Log.InfoBasic("Disposing...");
             Task.WaitAll(_handlers.Select(hnd => hnd.DisposeAsync(true)).ToArray());
             _metas.Clear();

@@ -93,7 +93,7 @@ namespace TWCore.Triggers
                 var tSource = (CancellationTokenSource)obj;
                 if (tSource.Token.IsCancellationRequested) return;
                 Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
-                if (OnEventTriggerCheck == null) return;
+                if (OnEventTriggerCheck is null) return;
                 try
                 {
                     var shouldUpdate = OnEventTriggerCheck(Core.EnvironmentName, Core.ApplicationName, Core.MachineName, _triggerName);
@@ -114,7 +114,7 @@ namespace TWCore.Triggers
         {
             Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
             _tokenSource?.Cancel();
-            if (_timer == null) return;
+            if (_timer is null) return;
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
             _timer.Dispose();
             _timer = null;

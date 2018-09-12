@@ -140,7 +140,7 @@ namespace TWCore.Cache
             var extensions = Core.Injector.GetAllInstances<IStorageExtension>();
             foreach (var ext in extensions)
             {
-                if (ext.ExtensionName == null) continue;
+                if (ext.ExtensionName is null) continue;
                 var extName = ext.ExtensionName.ToLowerInvariant();
                 Core.Log.InfoBasic("Adding Extension: {0}", extName);
                 ext.Init(this);
@@ -153,8 +153,8 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private TR ReturnFromStack<TR, TA1>(ref TA1 arg1, RefFunc<IStorage, TA1, TR> functionValueToLook, RefAction<IStorage, TA1, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, TR defaultValue = default)
 		{
-		    if (_storages == null) throw new Exception("There are not storages on the stack");
-		    if (functionValueToLook == null) throw new ArgumentException("The function to compare value is null");
+		    if (_storages is null) throw new Exception("There are not storages on the stack");
+		    if (functionValueToLook is null) throw new ArgumentException("The function to compare value is null");
 			ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
 			var actionToPrevious = actionOnPreviousStorages != null;
@@ -168,7 +168,7 @@ namespace TWCore.Cache
             for (var i = 0; i < _storages.Length; i++)
             {
                 var storage = _storages[i];
-			    if (storage == null)
+			    if (storage is null)
 			    {
 			        Core.Log.Warning("A Storage in the stack is null.");
 			        continue;
@@ -184,7 +184,7 @@ namespace TWCore.Cache
 				}
 			    if (actionToPrevious)
 			    {
-			        if (noDataStack == null)
+			        if (noDataStack is null)
 			            throw new Exception("The data stack is null.");
 			        noDataStack.Push(storage);
 			    }
@@ -214,8 +214,8 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private TR ReturnFromStack<TR, TA1, TA2>(ref TA1 arg1, ref TA2 arg2, RefFunc<IStorage, TA1, TA2, TR> functionValueToLook, RefAction<IStorage, TA1, TA2, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, TR defaultValue = default)
 		{
-		    if (_storages == null) throw new Exception("There are not storages on the stack");
-		    if (functionValueToLook == null) throw new ArgumentException("The function to compare value is null");
+		    if (_storages is null) throw new Exception("There are not storages on the stack");
+		    if (functionValueToLook is null) throw new ArgumentException("The function to compare value is null");
             ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
 			var actionToPrevious = actionOnPreviousStorages != null;
@@ -229,7 +229,7 @@ namespace TWCore.Cache
             for (var i = 0; i < _storages.Length; i++)
             {
                 var storage = _storages[i];
-                if (storage == null)
+                if (storage is null)
                 {
                     Core.Log.Warning("A Storage in the stack is null.");
                     continue;
@@ -245,7 +245,7 @@ namespace TWCore.Cache
 				}
                 if (actionToPrevious)
                 {
-                    if (noDataStack == null)
+                    if (noDataStack is null)
                         throw new Exception("The data stack is null.");
                     noDataStack.Push(storage);
                 }
@@ -421,7 +421,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Push(IStorage item)
         {
-			if (item == null) return;
+			if (item is null) return;
             _storageStack.Push(item);
             _storages = _storageStack.ToArray();
             if (item is StorageBase sBase)
@@ -465,7 +465,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, bool> ExistKey(string[] keys)
         {
-            if (keys == null) return null;
+            if (keys is null) return null;
             var dictionary = new Dictionary<string, bool>();
             for (var i = 0; i < keys.Length; i++)
                     dictionary[keys[i]] = ReturnFromStack(ref keys[i], ExistLook);
@@ -679,7 +679,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, StorageItem> Get(string[] keys)
         {
-            if (keys == null) return null;
+            if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
                 dictionary[keys[i]] = ReturnFromStack(ref keys[i], GetLook, GetSetAction);
@@ -695,7 +695,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, StorageItem> Get(string[] keys, TimeSpan lastTime)
         {
-            if (keys == null) return null;
+            if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
                     dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref lastTime, GetLook, GetSetAction);
@@ -711,7 +711,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, StorageItem> Get(string[] keys, DateTime comparer)
         {
-            if (keys == null) return null;
+            if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
                 dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref comparer, GetLook, GetSetAction);
@@ -928,7 +928,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data)
         {
-	        if (keys == null) return false;
+	        if (keys is null) return false;
 	        var res = true;
 	        foreach (var key in keys)
 		        res &= Set(key, data);
@@ -945,7 +945,7 @@ namespace TWCore.Cache
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
 	    {
-		    if (keys == null) return false;
+		    if (keys is null) return false;
 		    var res = true;
 		    foreach (var key in keys)
 			    res &= Set(key, data, expirationDate);
@@ -964,7 +964,7 @@ namespace TWCore.Cache
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
 	    {
-		    if (keys == null) return false;
+		    if (keys is null) return false;
 		    var res = true;
 		    foreach (var key in keys)
 			    res &= Set(key, data, expirationDate, tags);
@@ -982,7 +982,7 @@ namespace TWCore.Cache
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
 	    {
-		    if (keys == null) return false;
+		    if (keys is null) return false;
 		    var res = true;
 		    foreach (var key in keys)
 			    res &= Set(key, data, expirationDate);
@@ -1001,7 +1001,7 @@ namespace TWCore.Cache
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
 	    {
-		    if (keys == null) return false;
+		    if (keys is null) return false;
 		    var res = true;
 		    foreach (var key in keys)
 			    res &= Set(key, data, expirationDate, tags);
@@ -1144,7 +1144,7 @@ namespace TWCore.Cache
         /// <returns>Command response</returns>
         public object ExecuteExtension(string extensionName, string command, object[] args)
         {
-            if (extensionName == null) return null;
+            if (extensionName is null) return null;
             var extName = extensionName.ToLowerInvariant();
             if (_extensions.TryGetValue(extName, out var extension))
                 return extension.Execute(command, args);
@@ -1159,7 +1159,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string[] IndexGetKeys(string[] tags, bool containingAll)
         {
-            if (tags == null || tags.Length == 0) return null;
+            if (tags is null || tags.Length == 0) return null;
             if (tags.Length == 1 && _indexes.TryGetValue(tags[0], out var tagIndexes))
             {
                 Core.Log.LibVerbose("Getting keys from indexed tags");
@@ -1206,7 +1206,7 @@ namespace TWCore.Cache
         {
             Task.Run(() =>
             {
-                if (tags == null) return;
+                if (tags is null) return;
                 if (tags.Length == 0) return;
                 foreach(var tag in tags)
                 {

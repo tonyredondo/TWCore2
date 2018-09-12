@@ -68,14 +68,14 @@ namespace TWCore.Diagnostics.Status.Transports
             });
             _httpServer.AddGetHandler("/xml", ctx =>
             {
-                if (OnFetchStatus == null) return;
+                if (OnFetchStatus is null) return;
                 var statuses = OnFetchStatus.Invoke();
                 ctx.Response.ContentType = SerializerMimeTypes.Xml;
                 xmlSerializer.Serialize(statuses, ctx.Response.OutputStream);
             });
             _httpServer.AddGetHandler("/json", ctx =>
             {
-                if (OnFetchStatus == null) return;
+                if (OnFetchStatus is null) return;
                 var statuses = OnFetchStatus.Invoke();
                 ctx.Response.ContentType = SerializerMimeTypes.Json;
                 jsonSerializer.Serialize(statuses, ctx.Response.OutputStream);

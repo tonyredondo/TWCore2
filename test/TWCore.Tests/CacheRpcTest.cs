@@ -60,7 +60,7 @@ namespace TWCore.Tests
 				Console.ReadLine();
 
 	            var asto = await cachePool.GetAsync("test").ConfigureAwait(false);
-	            if (asto == null)
+	            if (asto is null)
 	            {
 		            await cachePool.SetAsync("test", "value").ConfigureAwait(false);
 		            asto = await cachePool.GetAsync("test").ConfigureAwait(false);

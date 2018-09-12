@@ -56,7 +56,7 @@ namespace TWCore.Net.RPC.Server.Transports
             get => _queueServer?.SenderSerializer;
             set
             {
-                if (_queueServer == null) return;
+                if (_queueServer is null) return;
                 _queueServer.SenderSerializer = value;
                 _queueServer.ReceiverSerializer = value;
             }

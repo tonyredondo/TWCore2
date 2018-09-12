@@ -156,7 +156,7 @@ namespace TWCore.Object.Descriptor
                 {
                     var members = new List<Member>();
                     var vType = (Type)value;
-                    if (vType == null) break;
+                    if (vType is null) break;
                     var props = vType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => !p.IsSpecialName && p.GetIndexParameters().Length == 0);
                     foreach (var prop in props)
                     {

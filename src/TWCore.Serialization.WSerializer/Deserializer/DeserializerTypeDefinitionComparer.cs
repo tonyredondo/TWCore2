@@ -24,11 +24,11 @@ namespace TWCore.Serialization.WSerializer.Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(DeserializerTypeDefinition x, DeserializerTypeDefinition y)
         {
-            if (x?.Type == null && y?.Type != null)
+            if (x?.Type is null && y?.Type != null)
                 return false;
-            if (x?.Type != null && y?.Type == null)
+            if (x?.Type != null && y?.Type is null)
                 return false;
-            if (x?.Type == null && y?.Type == null)
+            if (x?.Type is null && y?.Type is null)
                 return true;
             return x?.Type != null && x.Type == y?.Type;
         }

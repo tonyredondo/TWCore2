@@ -243,7 +243,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TypeSerializer GetSerializerByValueType(Type type)
         {
-            if (type == null)
+            if (type is null)
                 return null;
             if (_typesCache.TryGetValue(type, out var tSer))
                 return tSer;

@@ -126,7 +126,7 @@ namespace TWCore.Net.Multicast
                 if (nic.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
                 var nicProp = nic.GetIPProperties();
                 var nicPropv4 = nicProp?.GetIPv4Properties();
-                if (nicPropv4 == null) continue;
+                if (nicPropv4 is null) continue;
                 var addresses = nicProp.UnicastAddresses
                     .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
                     .Select(a => a.Address)
@@ -322,7 +322,7 @@ namespace TWCore.Net.Multicast
                         return;
                     var udpReceiveResult = clientTask.Result;
                     var rcvEndpoint = udpReceiveResult.RemoteEndPoint;
-                    if (rcvEndpoint == null)
+                    if (rcvEndpoint is null)
                         continue;
                     var datagram = udpReceiveResult.Buffer;
                     if (datagram.Length < 22)
@@ -381,7 +381,7 @@ namespace TWCore.Net.Multicast
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnlySequence<byte> GetMessage()
             {
-                if (Datagrams == null) return ReadOnlySequence<byte>.Empty;
+                if (Datagrams is null) return ReadOnlySequence<byte>.Empty;
                 if (Datagrams.Length == 0) return ReadOnlySequence<byte>.Empty;
                 ReadOnlySequence<byte> sequence;
                 if (Datagrams.Length == 1)

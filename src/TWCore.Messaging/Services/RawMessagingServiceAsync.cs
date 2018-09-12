@@ -87,10 +87,10 @@ namespace TWCore.Services
                 _cTokenSource = new CancellationTokenSource();
                 OnInit(args);
                 QueueServer = GetQueueServer();
-                if (QueueServer == null)
+                if (QueueServer is null)
                     throw new Exception("The queue server is null, please check the configuration file and ensure the Types assemblies are on the assembly folder.");
                 Processor = GetMessageProcessorAsync(QueueServer);
-                if (Processor == null)
+                if (Processor is null)
                     throw new Exception("The message processor is null, please check your GetMessageProcessor method implementation.");
                 if (QueueServer.ResponseServer)
                 {

@@ -51,7 +51,7 @@ namespace TWCore.Serialization
                 foreach(var mime in DefaultBinarySerializerMimeTypes)
                 {
                     var serializer = GetByMimeType(mime);
-                    if (serializer == null) continue;
+                    if (serializer is null) continue;
                     if (mime == SerializerMimeTypes.BinaryFormatter && DefaultBinarySerializerMimeTypes.Last() == mime)
                         Core.Log.Warning("The BinaryFormatter serializer was loaded and this probably is not what you want. Please check the nuget package references for other serializer. If this is intented, ignore the message.");
                     return serializer;
@@ -173,7 +173,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Deregister(ISerializer serializer)
         {
-            if (serializer == null) return;
+            if (serializer is null) return;
             
             var key = serializer.GetType();
             if (Serializers.Contains(key))
@@ -196,7 +196,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ISerializer GetByMimeType(string mimeType)
         {
-            if (mimeType == null)
+            if (mimeType is null)
                 return null;
             var ser = Serializers.FirstOrDefault((i, mType) => 
                 i.MimeTypes.Any((m, mime) => string.Equals(m, mime, StringComparison.OrdinalIgnoreCase), mType), mimeType);
@@ -299,7 +299,7 @@ namespace TWCore.Serialization
                 try
                 {
                     var ov = p.GetValue(item);
-                    if (ov == null) return;
+                    if (ov is null) return;
                     var ovType = ov.GetType();
                     if (ovType.IsConstructedGenericType)
                         ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
@@ -318,7 +318,7 @@ namespace TWCore.Serialization
                 try
                 {
                     var ov = f.GetValue(item);
-                    if (ov == null) return;
+                    if (ov is null) return;
                     var ovType = ov.GetType();
                     if (ovType.IsConstructedGenericType)
                         ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));

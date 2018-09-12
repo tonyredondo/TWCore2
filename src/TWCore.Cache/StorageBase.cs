@@ -313,7 +313,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, bool> ExistKey(string[] keys)
         {
-            if (!Ready || keys == null) return null;
+            if (!Ready || keys is null) return null;
             var dictionary = new Dictionary<string, bool>();
             foreach (var key in keys)
                 dictionary[key] = OnExistKey(key);
@@ -419,11 +419,11 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta[] GetMetaByTag(string[] tags, bool containingAll)
         {
-            if (!Ready || tags == null) return null;
+            if (!Ready || tags is null) return null;
             if (tags.Length == 0) return EmptyMeta;
             return Metas.AsParallel().Where(item =>
             {
-                if (item.Tags == null) return false;
+                if (item.Tags is null) return false;
                 var iLst = item.Tags.Intersect(tags);
                 return containingAll ? iLst.Count() == tags.Length : iLst.Any();
             }).ToArray();
@@ -488,11 +488,11 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem[] GetByTag(string[] tags, bool containingAll)
         {
-            if (!Ready || tags == null) return null;
+            if (!Ready || tags is null) return null;
             if (tags.Length == 0) return EmptyItem;
             return Metas.AsParallel().Where(item =>
             {
-                if (item.Tags == null) return false;
+                if (item.Tags is null) return false;
                 var iLst = item.Tags.Intersect(tags).ToArray();
                 return containingAll ? iLst.Length == tags.Length : iLst.Length > 0;
             }).Select(s => OnTryGet(s.Key, out var item) ? item : null).RemoveNulls().ToArray();
@@ -506,7 +506,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, StorageItem> Get(string[] keys)
         {
-            if (!Ready || keys == null) return null;
+            if (!Ready || keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             foreach (var key in keys)
                 dictionary[key] = OnTryGet(key, out var item) ? item : null;
@@ -522,7 +522,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, StorageItem> Get(string[] keys, TimeSpan lastTime)
         {
-            if (!Ready || keys == null) return null;
+            if (!Ready || keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             foreach (var key in keys)
                 dictionary[key] = OnTryGet(key, out var item, i => (Core.Now - i.CreationDate) <= lastTime) ? item : null;
@@ -538,7 +538,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Dictionary<string, StorageItem> Get(string[] keys, DateTime comparer)
         {
-            if (!Ready || keys == null) return null;
+            if (!Ready || keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             foreach (var key in keys)
                 dictionary[key] = OnTryGet(key, out var item, i => i.CreationDate >= comparer) ? item : null;
@@ -555,7 +555,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(StorageItem item)
         {
-            if (!Ready || item == null) return false;
+            if (!Ready || item is null) return false;
             item.Meta.OnExpire = null;
             if (!OnSet(item.Meta, item.Data)) return false;
             item.Meta.OnExpire = OnItemExpire;
@@ -571,7 +571,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(StorageItemMeta meta, SerializedObject data)
         {
-            if (!Ready || meta == null) return false;
+            if (!Ready || meta is null) return false;
             meta.OnExpire = null;
             if (!OnSet(meta, data)) return false;
             meta.OnExpire = OnItemExpire;
@@ -674,7 +674,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(StorageItem[] items)
         {
-            if (!Ready || items == null) return false;
+            if (!Ready || items is null) return false;
             foreach (var item in items)
                 Set(item);
             return true;
@@ -689,7 +689,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data)
         {
-            if (!Ready || keys == null) return false;
+            if (!Ready || keys is null) return false;
             foreach (var key in keys)
                 Set(key, data);
             return true;
@@ -705,7 +705,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
         {
-            if (!Ready || keys == null) return false;
+            if (!Ready || keys is null) return false;
             foreach (var key in keys)
                 Set(key, data, expirationDate);
             return true;
@@ -722,7 +722,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
         {
-            if (!Ready || keys == null) return false;
+            if (!Ready || keys is null) return false;
             foreach (var key in keys)
                 Set(key, data, expirationDate, tags);
             return true;
@@ -738,7 +738,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
         {
-            if (!Ready || keys == null) return false;
+            if (!Ready || keys is null) return false;
             foreach (var key in keys)
                 Set(key, data, expirationDate);
             return true;
@@ -755,7 +755,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
         {
-            if (!Ready || keys == null) return false;
+            if (!Ready || keys is null) return false;
             foreach (var key in keys)
                 Set(key, data, expirationDate, tags);
             return true;
@@ -815,7 +815,7 @@ namespace TWCore.Cache
         {
             if (!Ready) return null;
             var stoMetas = GetMetaByTag(tags, containingAll);
-            if (stoMetas == null || stoMetas.Length == 0) return null;
+            if (stoMetas is null || stoMetas.Length == 0) return null;
             return stoMetas.Select(s =>
             {
                 if (!OnRemove(s.Key, out var meta)) return null;

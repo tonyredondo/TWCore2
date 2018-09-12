@@ -37,7 +37,7 @@ namespace TWCore
         public static Stream GetResourceStream(this Assembly assembly, string resourceName)
         {
             var currentAssembly = assembly;
-            if (currentAssembly == null || resourceName.IsNullOrEmpty()) return null;
+            if (currentAssembly is null || resourceName.IsNullOrEmpty()) return null;
             var asmNames = currentAssembly.GetManifestResourceNames();
             var validResourceName = asmNames.FirstOrDefault((name, res) => name.EndsWith(res), resourceName);
             return validResourceName != null ? 

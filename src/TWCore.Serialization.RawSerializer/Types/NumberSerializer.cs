@@ -135,67 +135,67 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
     }

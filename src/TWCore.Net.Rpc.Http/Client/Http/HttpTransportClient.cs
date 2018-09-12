@@ -67,7 +67,7 @@ namespace TWCore.Net.RPC.Client.Transports
 			set 
 			{
 				_descriptors = value;
-				if (_descriptors == null) return;
+				if (_descriptors is null) return;
 				_methods.Clear();
 				foreach(var descriptor in _descriptors.Items.Values)
 				{

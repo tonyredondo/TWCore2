@@ -78,7 +78,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WaitAsync(CancellationToken cancellationToken)
         {
-            if (_mTcs == null) return DisposedExceptionTask;
+            if (_mTcs is null) return DisposedExceptionTask;
             if (_mTcs.Task.IsCompleted) return Task.CompletedTask;
             if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
             var cTask = CTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
@@ -93,7 +93,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> WaitAsync(int milliseconds)
         {
-            if (_mTcs == null) return false;
+            if (_mTcs is null) return false;
             if (_mTcs.Task.IsCompleted) return true;
             if (_mTcs.Task.IsCanceled) return false;
             if (_mTcs.Task.IsFaulted) return false;
@@ -122,7 +122,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
-            if (_mTcs == null) return false;
+            if (_mTcs is null) return false;
             if (cancellationToken.IsCancellationRequested) return false;
             if (_mTcs.Task.IsCompleted) return true;
             if (_mTcs.Task.IsCanceled) return false;
@@ -156,7 +156,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set()
         {
-            if (_mTcs == null) return;
+            if (_mTcs is null) return;
             var tcs = _mTcs;
             if (tcs.Task.IsCompleted) return;
             tcs.TrySetResult(true);
@@ -167,7 +167,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task SetAsync()
         {
-            if (_mTcs == null) return Task.CompletedTask;
+            if (_mTcs is null) return Task.CompletedTask;
             var tcs = _mTcs;
             if (tcs.Task.IsCompleted) return Task.CompletedTask;
             Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None);
@@ -182,7 +182,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
-            if (_mTcs == null) return;
+            if (_mTcs is null) return;
             while (true)
             {
                 var tcs = _mTcs;

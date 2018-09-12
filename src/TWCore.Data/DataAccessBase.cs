@@ -147,7 +147,7 @@ namespace TWCore.Data
         protected virtual IDictionary<string, object> GetCommandParameters(object parameters)
         {
             var propertyInfos = parameters?.GetType().GetRuntimeProperties().Where(p => p.CanRead && !p.GetCustomAttributes<IgnoreParameterAttribute>().Any());
-            if (propertyInfos == null) return null;
+            if (propertyInfos is null) return null;
             var dctParameters = new Dictionary<string, object>();
             foreach (var prop in propertyInfos)
             {
@@ -422,7 +422,7 @@ namespace TWCore.Data
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
                     Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
-                    if (fillMethod == null)
+                    if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
 
@@ -620,7 +620,7 @@ namespace TWCore.Data
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
                     Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
-                    if (fillMethod == null)
+                    if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
 
@@ -1300,7 +1300,7 @@ namespace TWCore.Data
         protected virtual void OnSelectElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue)
         {
             returnValue = null;
-            if (resultSets == null) return;
+            if (resultSets is null) return;
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1498,7 +1498,7 @@ namespace TWCore.Data
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
                     EntityBinder.PrepareEntity(typeof(T));
-                    if (fillMethod == null)
+                    if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
 
@@ -1641,7 +1641,7 @@ namespace TWCore.Data
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
                     EntityBinder.PrepareEntity(typeof(T));
-                    if (fillMethod == null)
+                    if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
 
@@ -2286,7 +2286,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task OnSelectElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
         {
-            if (resultSets == null) return;
+            if (resultSets is null) return;
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;

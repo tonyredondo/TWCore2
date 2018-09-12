@@ -33,7 +33,7 @@ namespace TWCore.Services
         {
             var entryAssembly = Assembly.GetEntryAssembly();
             var bannerText = entryAssembly.GetResourceString(BannerFilePath);
-            if (bannerText == null)
+            if (bannerText is null)
             {
                 if (!File.Exists(BannerFilePath)) return;
                 if (ServiceContainer.BannerText != null) return;

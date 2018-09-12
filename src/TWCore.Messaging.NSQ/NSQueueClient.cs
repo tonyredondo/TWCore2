@@ -181,7 +181,7 @@ namespace TWCore.Messaging.NSQ
                 _senders.Clear();
                 _senders = null;
             }
-            if (_receiver == null) return;
+            if (_receiver is null) return;
             if (UseSingleResponseQueue)
                 _receiver.Stop();
             _receiver = null;
@@ -199,10 +199,10 @@ namespace TWCore.Messaging.NSQ
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
-            if (_senderOptions == null)
+            if (_senderOptions is null)
                 throw new NullReferenceException("SenderOptions is null.");
 
-            if (message.Header.ResponseQueue == null)
+            if (message.Header.ResponseQueue is null)
             {
                 var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
@@ -247,7 +247,7 @@ namespace TWCore.Messaging.NSQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (_receiver == null)
+            if (_receiver is null)
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();

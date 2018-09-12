@@ -59,7 +59,7 @@ namespace TWCore.Serialization.NSerializer
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
             var des = _deserializer;
-            if (des == null)
+            if (des is null)
             {
                 des = new DeserializersTable();
                 _deserializer = des;
@@ -79,7 +79,7 @@ namespace TWCore.Serialization.NSerializer
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
             var ser = _serializer;
-            if (ser == null)
+            if (ser is null)
             {
                 ser = new SerializersTable();
                 _serializer = ser;

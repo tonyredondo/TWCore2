@@ -214,7 +214,7 @@ namespace TWCore.Serialization.PWSerializer
                     scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                     continue;
                 }
-                if (item == null) continue;
+                if (item is null) continue;
                 #endregion
 
                 #region Switch Plan Type
@@ -232,7 +232,7 @@ namespace TWCore.Serialization.PWSerializer
                     #region TypeStart
 
                     case SerializerPlanItemType.TypeStart:
-                        if (scope.Value == null)
+                        if (scope.Value is null)
                         {
                             bw.Write(DataType.TypeStart);
                             numberSerializer.WriteValue(bw, 0);
@@ -318,7 +318,7 @@ namespace TWCore.Serialization.PWSerializer
                                     for (var i = 0; i < iListCount; i++)
                                     {
                                         var itemList = iList[i];
-                                        if (itemList == null)
+                                        if (itemList is null)
                                             bw.Write(DataType.ValueNull);
                                         else
                                             valueTypeSerializer.Write(bw, itemList);
@@ -326,7 +326,7 @@ namespace TWCore.Serialization.PWSerializer
                                 }
                                 else if (iListCount == 1)
                                 {
-                                    if (iList[0] == null)
+                                    if (iList[0] is null)
                                         bw.Write(DataType.ValueNull);
                                     else
                                     {
@@ -374,7 +374,7 @@ namespace TWCore.Serialization.PWSerializer
                                             for (var i = 0; i < iListCount; i++)
                                             {
                                                 var itemList = iList[i];
-                                                if (itemList == null)
+                                                if (itemList is null)
                                                     bw.Write(DataType.ValueNull);
                                                 else
                                                     valueTypeSerializer.Write(bw, itemList);
@@ -450,13 +450,13 @@ namespace TWCore.Serialization.PWSerializer
                                 {
                                     foreach (var keyValue in iDictio.Keys)
                                     {
-                                        if (keyValue == null)
+                                        if (keyValue is null)
                                             bw.Write(DataType.ValueNull);
                                         else
                                             serializersTable.Write(dictioItem.KeySerializerType, bw, keyValue);
 
                                         var valueValue = iDictio[keyValue];
-                                        if (valueValue == null)
+                                        if (valueValue is null)
                                             bw.Write(DataType.ValueNull);
                                         else
                                             serializersTable.Write(dictioItem.ValueSerializerType, bw, valueValue);
@@ -513,7 +513,7 @@ namespace TWCore.Serialization.PWSerializer
                     case SerializerPlanItemType.PropertyReference:
                         var rItem = (SerializerPlanItem.PropertyReference)item;
                         var rVal = rItem.Property.GetValue(scope.Value);
-                        if (rVal == null)
+                        if (rVal is null)
                             bw.Write(DataType.ValueNull);
                         else
                         {
@@ -530,7 +530,7 @@ namespace TWCore.Serialization.PWSerializer
 
                     case SerializerPlanItemType.Value:
                         var vItem = (SerializerPlanItem.ValueItem)item;
-                        if (scope.Value == null)
+                        if (scope.Value is null)
                             bw.Write(DataType.ValueNull);
                         else if (vItem.SerializerType != null)
                             serializersTable.Write(vItem.SerializerType, bw, scope.Value);
@@ -548,7 +548,7 @@ namespace TWCore.Serialization.PWSerializer
 
                     case SerializerPlanItemType.RuntimeValue:
                         var rvItem = (SerializerPlanItem.RuntimeValue)item;
-                        if (rvItem.Value == null)
+                        if (rvItem.Value is null)
                             bw.Write(DataType.ValueNull);
                         else if (rvItem.SerializerType != null)
                             serializersTable.Write(rvItem.SerializerType, bw, rvItem.Value);
@@ -652,7 +652,7 @@ namespace TWCore.Serialization.PWSerializer
                             propType = Nullable.GetUnderlyingType(propType);
                         var serType = serializerTable.GetSerializerByValueType(propType)?.GetType();
                         propNames.Add(prop.Name);
-                        if (serType == null)
+                        if (serType is null)
                         {
                             plan.Add(new SerializerPlanItem.PropertyReference(prop));
                             if (!currentSerializerPlanTypes.Contains(propType))
@@ -715,9 +715,9 @@ namespace TWCore.Serialization.PWSerializer
                             var valueIsNullable = valueTypeInfo.IsGenericType && valueTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
                             var valueSer = valueIsNullable ? serializerTable.GetSerializerByValueType(Nullable.GetUnderlyingType(valueType)) : serializerTable.GetSerializerByValueType(valueType);
 
-                            if (keySer == null && !currentSerializerPlanTypes.Contains(keyType))
+                            if (keySer is null && !currentSerializerPlanTypes.Contains(keyType))
                                 GetSerializerPlan(currentSerializerPlanTypes, serializerTable, keyType);
-                            if (valueSer == null && !currentSerializerPlanTypes.Contains(valueType))
+                            if (valueSer is null && !currentSerializerPlanTypes.Contains(valueType))
                                 GetSerializerPlan(currentSerializerPlanTypes, serializerTable, valueType);
 
                             plan.Add(new SerializerPlanItem.DictionaryStart(type, keyType, keySer?.GetType(), keyIsNullable, valueType, valueSer?.GetType(), valueIsNullable));
@@ -761,7 +761,7 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream, Type type)
         {
-            if (type == null)
+            if (type is null)
                 return Deserialize(stream);
             var br = new BinaryReader(stream, DefaultUtf8Encoding, true);
             var fStart = br.ReadByte();

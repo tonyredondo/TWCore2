@@ -83,7 +83,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsUpperCase(this string value)
         {
-            if (value == null) return false;
+            if (value is null) return false;
             for (var i = 0; i < value.Length; i++)
                 if (char.IsLetter(value[i]) && !char.IsUpper(value[i]))
                     return false;
@@ -97,7 +97,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsLowerCase(this string value)
         {
-            if (value == null) return false;
+            if (value is null) return false;
             for (var i = 0; i < value.Length; i++)
                 if (char.IsLetter(value[i]) && !char.IsLower(value[i]))
                     return false;
@@ -111,7 +111,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Capitalize(this string value)
         {
-            if (value == null) return null;
+            if (value is null) return null;
             if (value.Length > 1)
                 return char.ToUpperInvariant(value[0]) + value.Substring(1).ToLowerInvariant();
             if (value.Length == 1)
@@ -165,7 +165,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Reverse(this string value)
         {
-            if (value == null) return null;
+            if (value is null) return null;
             var charArray = value.ToCharArray();
             Array.Reverse(charArray);
             return new string(charArray);
@@ -569,7 +569,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FastIndexOf(this string source, string pattern, int startIndex = 0)
         {
-            if (pattern == null) throw new ArgumentNullException();
+            if (pattern is null) throw new ArgumentNullException();
             switch (pattern.Length)
             {
                 case 0:

@@ -35,7 +35,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(char? value)
         {
-            if (value == null)
+            if (value is null)
                 WriteByte(DataBytesDefinition.ValueNull);
             else if (value == default(char))
                 WriteByte(DataBytesDefinition.CharDefault);

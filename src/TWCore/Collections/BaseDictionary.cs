@@ -221,7 +221,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Copy<T>(ICollection<T> source, T[] array, int arrayIndex)
         {
-            if (array == null)
+            if (array is null)
                 throw new ArgumentNullException("array");
 
             if (arrayIndex < 0 || arrayIndex > array.Length)

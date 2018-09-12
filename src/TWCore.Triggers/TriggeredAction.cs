@@ -121,7 +121,7 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void AddTrigger(TriggerBase trigger)
         {
-            if (trigger == null) return;
+            if (trigger is null) return;
             if (_triggers.Contains(trigger)) return;
             trigger.OnTriggered += OnTriggerExecute;
             trigger.Init();
@@ -133,7 +133,7 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void RemoveTrigger(TriggerBase trigger)
         {
-            if (trigger == null) return;
+            if (trigger is null) return;
             if (!_triggers.Contains(trigger)) return;
             trigger.OnTriggered -= OnTriggerExecute;
             trigger.Dispose();
@@ -156,7 +156,7 @@ namespace TWCore.Triggers
         {
             lock (ParentSync)
             {
-                if (_triggers == null) return;
+                if (_triggers is null) return;
                 foreach (var trigger in _triggers)
                 {
                     trigger.OnTriggered -= OnTriggerExecute;
@@ -170,7 +170,7 @@ namespace TWCore.Triggers
         #region Private Methods
         private void OnTriggerExecute(TriggerBase trigger)
         {
-            if (Action == null) return;
+            if (Action is null) return;
             lock (_localSync)
             {
                 _tokenSource = new CancellationTokenSource();

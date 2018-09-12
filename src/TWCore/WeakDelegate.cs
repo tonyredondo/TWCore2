@@ -165,7 +165,7 @@ namespace TWCore
         public bool TryInvoke(object[] parameters, out object result)
         {
             result = null;
-            if (Method == null)
+            if (Method is null)
                 return false;
             if (_isStatic)
             {
@@ -188,7 +188,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryInvokeAction(params object[] parameters)
         {
-            if (Method == null)
+            if (Method is null)
                 return false;
             if (_isStatic)
             {

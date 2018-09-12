@@ -86,7 +86,7 @@ namespace TWCore.Cache.Configuration
             foreach(var stoconfig in Storages)
             {
                 var sto = stoconfig.CreateInstance<StorageBase>();
-                if (sto == null) continue;
+                if (sto is null) continue;
                 sto.ExpirationCheckTimeInMinutes = stoMng.ExpirationCheckTimeInMinutes;
                 sto.MaximumItemDuration = stoMng.MaximumItemDuration;
                 sto.ItemsExpirationDateOverwrite = stoMng.ItemsExpirationDateOverwrite;

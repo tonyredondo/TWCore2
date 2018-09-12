@@ -66,7 +66,7 @@ namespace TWCore.Net.RPC.Client
                 if (_transport != null)
                     _transport.OnEventReceived -= Transport_OnEventReceived;
                 _transport = value;
-                if (_transport == null) return;
+                if (_transport is null) return;
                 _transport.OnEventReceived += Transport_OnEventReceived;
                 InitTransportAsync().WaitAsync();
             }
@@ -89,9 +89,9 @@ namespace TWCore.Net.RPC.Client
             {
                 if (x.ServiceName != y.ServiceName) return false;
                 if (x.Method != y.Method) return false;
-                if (x.Types == null && y.Types == null) return true;
-                if (x.Types == null) return false;
-                if (y.Types == null) return false;
+                if (x.Types is null && y.Types is null) return true;
+                if (x.Types is null) return false;
+                if (y.Types is null) return false;
                 if (x.Types.Length != y.Types.Length) return false;
                 for(var i = 0; i < x.Types.Length; i++)
                     if (x.Types[i] != y.Types[i]) return false;
@@ -158,7 +158,7 @@ namespace TWCore.Net.RPC.Client
         {
             var typeInterfaces = typeof(T).GetInterfaces();
             var typeInterface = typeInterfaces.FirstOrDefault(i => i != typeof(IDisposable) && i != typeof(IEnumerable<>) && i != typeof(IDictionary<,>));
-            if (typeInterface == null)
+            if (typeInterface is null)
                 throw new ArgumentException("The type of the proxy should implement a service interface.");
             var rpcClient = new T();
             await InitTransportAsync().ConfigureAwait(false);
@@ -201,11 +201,11 @@ namespace TWCore.Net.RPC.Client
         public async Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args)
         {
             var request = CreateRequest(serviceName, method, args, null, false);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -237,11 +237,11 @@ namespace TWCore.Net.RPC.Client
         public async Task<object> ServerInvokeAsync(string serviceName, string method, object[] args, CancellationToken cancellationToken)
         {
             var request = CreateRequest(serviceName, method, args, null, true);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -261,13 +261,13 @@ namespace TWCore.Net.RPC.Client
         public async Task<TReturn> ServerInvokeNoArgumentsAsync<TReturn>(string serviceName, string method, CancellationToken? cancellationToken = null)
         {
             var request = CreateRequest(serviceName, method, null, null, cancellationToken != null);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -357,7 +357,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item1[0] = arg1;
             arrayArgs.Item2[0] = typeof(TArg1);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
@@ -365,7 +365,7 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             arrayArgs.Item1[0] = null;
             ServiceInvokeArgs1Pool.Store(arrayArgs);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -392,7 +392,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item2[0] = typeof(TArg1);
             arrayArgs.Item2[1] = typeof(TArg2);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
@@ -401,7 +401,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item1[0] = null;
             arrayArgs.Item1[1] = null;
             ServiceInvokeArgs2Pool.Store(arrayArgs);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -432,7 +432,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item2[1] = typeof(TArg2);
             arrayArgs.Item2[2] = typeof(TArg3);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
@@ -442,7 +442,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item1[1] = null;
             arrayArgs.Item1[2] = null;
             ServiceInvokeArgs3Pool.Store(arrayArgs);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -477,7 +477,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item2[2] = typeof(TArg3);
             arrayArgs.Item2[3] = typeof(TArg4);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors == null)
+            if (Transport.Descriptors is null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
@@ -488,7 +488,7 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item1[2] = null;
             arrayArgs.Item1[3] = null;
             ServiceInvokeArgs4Pool.Store(arrayArgs);
-            if (response == null)
+            if (response is null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
                 throw response.Exception.GetException();
@@ -536,7 +536,7 @@ namespace TWCore.Net.RPC.Client
         private async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
             if (_descriptors != null) return _descriptors;
-            if (_serverDescriptors == null && UseServerDescriptor)
+            if (_serverDescriptors is null && UseServerDescriptor)
                 _serverDescriptors = await Transport.GetDescriptorsAsync().ConfigureAwait(false);
             lock (this)
             {
@@ -569,7 +569,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args, Type[] types, bool useCancellationToken)
         {
-            if (types == null && args != null)
+            if (types is null && args != null)
             {
                 types = new Type[args.Length];
                 for (var i = 0; i < args.Length; i++)
@@ -584,10 +584,10 @@ namespace TWCore.Net.RPC.Client
                 var methodDescriptorCreator = new MethodDescriptorCreator(args, Descriptors);
                 mDesc = _methodDescriptorCache.GetOrAdd(key, methodDescriptorCreator.Create);
             }
-            if (mDesc == null)
+            if (mDesc is null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
-            if (mDesc.Parameters?.Length == 1 && (args == null || args.Length == 0))
+            if (mDesc.Parameters?.Length == 1 && (args is null || args.Length == 0))
                 args = _nullItemArgs;
 
             return RPCRequestMessage.Retrieve(mDesc.Id, args, useCancellationToken);

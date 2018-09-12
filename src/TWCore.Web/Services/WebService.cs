@@ -94,7 +94,7 @@ namespace TWCore.Services
         /// <returns>WebService default instance</returns>
         public static WebService Create<TStartUp>(Func<IWebHostBuilder, IWebHostBuilder> builder) where TStartUp : class
         {
-            if (builder == null)
+            if (builder is null)
                 return Create<TStartUp>();
             if (Settings?.Urls?.Any() == true)
                 return new WebService(args =>

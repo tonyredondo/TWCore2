@@ -192,7 +192,7 @@ namespace TWCore.Messaging
         /// <returns>True if the queue was created, otherwise; false.</returns>
         public bool CreateQueue(MQConnection queue)
         {
-            if (_admin == null) return true;
+            if (_admin is null) return true;
             if (queue.IsSkippingRoute()) return false;
             var exist = _admin.Exist(queue);
             if (!exist)

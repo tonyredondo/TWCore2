@@ -225,7 +225,7 @@ namespace TWCore.Collections
         /// </summary>
         public void Clear()
         {
-            if (_entries == null) throw new ObjectDisposedException(GetType().Name);
+            if (_entries is null) throw new ObjectDisposedException(GetType().Name);
             foreach (var item in this)
                 Remove(item.Key);
         }
@@ -237,7 +237,7 @@ namespace TWCore.Collections
         /// <returns>true if the table contains the key; otherwise, false.</returns>
         public bool ContainsKey(TKey key)
         {
-            if (_entries == null) throw new ObjectDisposedException(GetType().Name);
+            if (_entries is null) throw new ObjectDisposedException(GetType().Name);
             return TryGetValue(key, out var _);
         }
 
@@ -523,7 +523,7 @@ namespace TWCore.Collections
 
         private bool MoveNext(ref EnumState state)
         {
-            if (_entries == null) throw new ObjectDisposedException(GetType().Name);
+            if (_entries is null) throw new ObjectDisposedException(GetType().Name);
 
             if (state.Current > 0)
                 state.Current = state.Next;
@@ -592,7 +592,7 @@ namespace TWCore.Collections
                     var index = _state.Current;
                     if (index <= 0)
                         throw new InvalidOperationException();
-                    if (_owner._entries == null)
+                    if (_owner._entries is null)
                         throw new ObjectDisposedException(GetType().Name);
 
                     return new KeyValuePair<TKey, TValue>
@@ -721,7 +721,7 @@ namespace TWCore.Collections
                         var index = _state.Current;
                         if (index <= 0)
                             throw new InvalidOperationException();
-                        if (_owner._entries == null)
+                        if (_owner._entries is null)
                             throw new ObjectDisposedException(GetType().Name);
                         return _owner._entries[index >> _owner._shift][index & _owner._shiftMask].Key;
                     }
@@ -879,7 +879,7 @@ namespace TWCore.Collections
                         int index = _state.Current;
                         if (index <= 0)
                             throw new InvalidOperationException();
-                        if (_owner._entries == null)
+                        if (_owner._entries is null)
                             throw new ObjectDisposedException(GetType().Name);
                         return _owner._entries[index >> _owner._shift][index & _owner._shiftMask].Value;
                     }
@@ -958,7 +958,7 @@ namespace TWCore.Collections
         {
             if (_ordering == LurchTableOrder.None)
                 throw new InvalidOperationException();
-            if (_entries == null)
+            if (_entries is null)
                 throw new ObjectDisposedException(GetType().Name);
 
             while (true)
@@ -1000,7 +1000,7 @@ namespace TWCore.Collections
         {
             if (_ordering == LurchTableOrder.None)
                 throw new InvalidOperationException();
-            if (_entries == null)
+            if (_entries is null)
                 throw new ObjectDisposedException(GetType().Name);
             KeyValuePair<TKey, TValue> value;
             while (!TryDequeue(out value))
@@ -1032,7 +1032,7 @@ namespace TWCore.Collections
         {
             if (_ordering == LurchTableOrder.None)
                 throw new InvalidOperationException();
-            if (_entries == null)
+            if (_entries is null)
                 throw new ObjectDisposedException(GetType().Name);
 
             while (true)
@@ -1118,7 +1118,7 @@ namespace TWCore.Collections
 
         bool InternalGetValue(int hash, TKey key, out TValue value)
         {
-            if (_entries == null)
+            if (_entries is null)
                 throw new ObjectDisposedException(GetType().Name);
 
             int bucket = hash % _hsize;
@@ -1151,7 +1151,7 @@ namespace TWCore.Collections
 
         InsertResult Insert<T>(TKey key, ref T value) where T : ICreateOrUpdateValue<TKey, TValue>
         {
-            if (_entries == null)
+            if (_entries is null)
                 throw new ObjectDisposedException(GetType().Name);
             InsertResult result = InternalInsert(_comparer.GetHashCode(key) & int.MaxValue, key, out int added, ref value);
 
@@ -1224,7 +1224,7 @@ namespace TWCore.Collections
 
         bool Delete<T>(TKey key, ref T value) where T : IRemoveValue<TKey, TValue>
         {
-            if (_entries == null)
+            if (_entries is null)
                 throw new ObjectDisposedException(GetType().Name);
 
             int hash = _comparer.GetHashCode(key) & int.MaxValue;
@@ -1424,7 +1424,7 @@ namespace TWCore.Collections
 
             public void Unlock()
             {
-                if (_locked == null) return;
+                if (_locked is null) return;
                 Monitor.Exit(_locked);
                 _locked = null;
             }
@@ -1458,7 +1458,7 @@ namespace TWCore.Collections
 
                 if (_hasTestValue && !EqualityComparer<TValue>.Default.Equals(_testValue, value))
                     return false;
-                return Condition == null || Condition(key, value);
+                return Condition is null || Condition(key, value);
             }
         }
 
@@ -1517,7 +1517,7 @@ namespace TWCore.Collections
 
             public bool UpdateValue(TKey key, ref TValue value)
             {
-                if (Update == null)
+                if (Update is null)
                 {
                     Value = value;
                     return false;

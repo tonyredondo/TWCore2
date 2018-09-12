@@ -77,8 +77,8 @@ namespace TWCore.Threading
         /// <returns>AsyncEvent instance</returns>
         public static AsyncEvent<TEventArgs> operator +(AsyncEvent<TEventArgs> e, Func<object, TEventArgs, Task> callback)
         {
-            if (callback == null) throw new NullReferenceException("callback is null");
-            if (e == null) e = new AsyncEvent<TEventArgs>();
+            if (callback is null) throw new NullReferenceException("callback is null");
+            if (e is null) e = new AsyncEvent<TEventArgs>();
 			lock (e._locker)
 			{
 				e._invocationList.Add(callback);
@@ -94,8 +94,8 @@ namespace TWCore.Threading
         /// <returns>AsyncEvent instance</returns>
         public static AsyncEvent<TEventArgs> operator -(AsyncEvent<TEventArgs> e, Func<object, TEventArgs, Task> callback)
         {
-            if (callback == null) throw new NullReferenceException("callback is null");
-            if (e == null) return null;
+            if (callback is null) throw new NullReferenceException("callback is null");
+            if (e is null) return null;
 			lock (e._locker)
 			{
 				e._invocationList.Remove(callback);

@@ -103,7 +103,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             BasePath = basePath;
             FileName = Path.Combine(basePath, "Trace.txt");
             Serializer = serializer;
-            if (Serializer == null)
+            if (Serializer is null)
             {
                 Serializer = (ISerializer)Activator.CreateInstance(Core.GlobalSettings.TraceSerializerType);
                 if (Serializer != null)
@@ -117,7 +117,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             _traceWriter = new NonBlockingTraceWriter(this);
             _flushTimer = new Timer(obj =>
             {
-                if (_sWriter == null) return;
+                if (_sWriter is null) return;
                 try
                 {
                     if (Interlocked.CompareExchange(ref _shouldFlush, 0, 1) == 1)
@@ -323,7 +323,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         public async Task WriteAsync(TraceItem item)
         {
             EnsureTraceFile(FileName);
-            if (_sWriter == null) return;
+            if (_sWriter is null) return;
             var traceFilePath = GetObjectFilePath(item);
             _traceWriter?.WriteTrace(traceFilePath, item.TraceObject);
             var line = string.Format("{0} ({1, 15}) {2}: {3}", 

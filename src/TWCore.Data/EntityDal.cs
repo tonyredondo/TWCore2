@@ -69,7 +69,7 @@ namespace TWCore.Data
         protected EntityDal()
         {
             var poolKey = Settings.GetHashSHA1();
-            if (Settings?.ConnectionString == null)
+            if (Settings?.ConnectionString is null)
                 throw new ArgumentException("The ConnectionString is null.");
             var pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pl => OnGetDataAccess(Settings)));
 			var poolAsync = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pl => OnGetDataAccessAsync(Settings)));

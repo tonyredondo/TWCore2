@@ -89,7 +89,7 @@ namespace TWCore.Diagnostics.Status
         public StatusItemValue(string key, object value, StatusItemValueStatus status, bool plot)
         {
             Key = key;
-            if (value == null)
+            if (value is null)
             {
                 Value = null;
                 RawValue = null;
@@ -189,7 +189,7 @@ namespace TWCore.Diagnostics.Status
         public StatusItemValue(string key, params StatusItemValueItem[] values)
         {
             Key = key;
-            if (values == null)
+            if (values is null)
             {
                 Value = null;
                 Type = StatusItemValueType.Text;

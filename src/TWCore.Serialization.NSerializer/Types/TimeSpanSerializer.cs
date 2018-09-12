@@ -41,7 +41,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
+            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
     }

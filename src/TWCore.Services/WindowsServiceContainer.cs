@@ -97,7 +97,7 @@ namespace TWCore.Services
                         return;
                 }
             }
-            if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase) && Service == null)
+            if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase) && Service is null)
             {
                 Core.Log.Error("THERE IS NO SERVICE TO START.");
                 return;
@@ -141,7 +141,7 @@ namespace TWCore.Services
         #region Install/Uninstall Service
         private void Init()
         {
-            if (Service == null) return;
+            if (Service is null) return;
             _settings = Core.GetSettings<WindowsServiceSettings>();
             RegisterParametersHandler("service-install", "Install Windows Service", InstallService);
             RegisterParametersHandler("service-uninstall", "Uninstall Windows Service", UninstallService);

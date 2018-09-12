@@ -144,7 +144,9 @@ namespace TWCore.Bot.Telegram
                                 PhotoName = photoFileInfo.FilePath,
                                 PhotoStream = new Lazy<Stream>(() =>
                                 {
-                                    return _bot.DownloadFileAsync(photoFileInfo.FilePath).WaitAndResults();
+                                    var ms = new MemoryStream();
+                                    _bot.DownloadFileAsync(photoFileInfo.FilePath, ms).WaitAsync();
+                                    return ms;
                                 }),
                                 Chat = new TelegramBotChat
                                 {

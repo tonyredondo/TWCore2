@@ -269,7 +269,6 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             var tokenTask = _token.WhenCanceledAsync();
             var retries = 5;
-            var withExceptions = false;
             while (!_token.IsCancellationRequested)
             {
                 try
@@ -284,13 +283,11 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     Core.Log.Write(ex);
                     if (Interlocked.Decrement(ref retries) == 0)
                     {
-                        withExceptions = true;
+                        Core.Log.Error("The connection listener has been stopped. Too many exceptions.");
                         break;
                     }
                 }
             }
-            if (withExceptions)
-                Core.Log.Error("The connection listener has been stopped. Too many exceptions");
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

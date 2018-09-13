@@ -36,6 +36,7 @@ namespace TWCore.Diagnostics.Status.Transports
         private readonly Timer _timer;
         private volatile bool _processing;
         private IMQueueClient _queueClient;
+        private bool _enabled = true;
 
         #region Events
         /// <inheritdoc />
@@ -86,6 +87,12 @@ namespace TWCore.Diagnostics.Status.Transports
                     Core.Status.AttachChild(_queueClient, this);
                 }
                 _queueClient.SendAsync(statusData).WaitAndResults();
+            }
+            catch (UriFormatException fException)
+            {
+                Core.Log.Warning($"Disabling {nameof(MessagingStatusTransport)}. Reason: {fException.Message}");
+                _enabled = false;
+                _timer.Dispose();
             }
             catch (Exception ex)
             {

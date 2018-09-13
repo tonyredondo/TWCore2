@@ -45,7 +45,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         private readonly BlockingCollection<MessagingTraceItem> _traceItems;
         private IMQueueClient _queueClient;
         private readonly IPool<List<MessagingTraceItem>> _pool;
-
+        private bool _enabled = true;
 
         #region .ctor
         /// <summary>
@@ -80,6 +80,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="item">Trace item</param>
         public Task WriteAsync(TraceItem item)
         {
+            if (!_enabled) return Task.CompletedTask;
             if (Interlocked.Increment(ref _count) < 1_000)
                 _traceItems.Add(new MessagingTraceItem
                 {
@@ -138,6 +139,12 @@ namespace TWCore.Diagnostics.Trace.Storages
 
                 itemsToSend.Clear();
                 _pool.Store(itemsToSend);
+            }
+            catch (UriFormatException fException)
+            {
+                Core.Log.Warning($"Disabling {nameof(MessagingTraceStorage)}. Reason: {fException.Message}");
+                _enabled = false;
+                _timer.Dispose();
             }
             catch (Exception ex)
             {

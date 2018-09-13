@@ -146,6 +146,8 @@ namespace TWCore.Messaging.NSQ
                     if (UseSingleResponseQueue)
                     {
                         _receiver.AddHandler(MessageHandler);
+                        if (string.IsNullOrEmpty(_receiverConnection.Route))
+                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
                         Extensions.InvokeWithRetry(() =>
                         {
                             _receiver.ConnectToNsqd(_receiverConnection.Route);

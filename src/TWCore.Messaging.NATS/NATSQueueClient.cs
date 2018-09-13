@@ -132,6 +132,8 @@ namespace TWCore.Messaging.NATS
                         {
                             Core.Log.LibVerbose("New Producer from QueueClient");
                             IConnection connection = null;
+                            if (string.IsNullOrEmpty(queue.Route))
+                                throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
                             Extensions.InvokeWithRetry(() =>
                             {
                                 connection = _factory.CreateConnection(queue.Route);
@@ -145,6 +147,8 @@ namespace TWCore.Messaging.NATS
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (UseSingleResponseQueue)
                     {
+                        if (string.IsNullOrEmpty(_receiverConnection.Route))
+                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
                         Extensions.InvokeWithRetry(() =>
                         {
                             _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);

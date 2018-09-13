@@ -111,6 +111,8 @@ namespace TWCore.Messaging.NSQ
 			_token = token;
             _receiver = new Consumer(Connection.Name, Connection.Name);
             _receiver.AddHandler(new NSQMessageHandler(this));
+            if (string.IsNullOrEmpty(Connection.Route))
+                throw new UriFormatException($"The route for the connection to {Connection.Name} is null.");
             await Extensions.InvokeWithRetry(() =>
             {
                 _receiver.ConnectToNsqd(Connection.Route);

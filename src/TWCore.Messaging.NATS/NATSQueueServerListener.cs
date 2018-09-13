@@ -103,6 +103,8 @@ namespace TWCore.Messaging.NATS
         protected override async Task OnListenerTaskStartAsync(CancellationToken token)
         {
             _token = token;
+            if (string.IsNullOrEmpty(Connection.Route))
+                throw new UriFormatException($"The route for the connection to {Connection.Name} is null.");
             await Extensions.InvokeWithRetry(() =>
             {
                 _connection = _factory.CreateConnection(Connection.Route);

@@ -268,13 +268,29 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private async Task ConnectionListenerAsync()
         {
             var tokenTask = _token.WhenCanceledAsync();
+            var retries = 5;
+            var withExceptions = false;
             while (!_token.IsCancellationRequested)
             {
-                var listenerTask = _listener.AcceptTcpClientAsync();
-                var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
-                if (rTask == tokenTask) break;
-                Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
+                try
+                {
+                    var listenerTask = _listener.AcceptTcpClientAsync();
+                    var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
+                    if (rTask == tokenTask) break;
+                    Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
+                }
+                catch(Exception ex)
+                {
+                    Core.Log.Write(ex);
+                    if (Interlocked.Decrement(ref retries) == 0)
+                    {
+                        withExceptions = true;
+                        break;
+                    }
+                }
             }
+            if (withExceptions)
+                Core.Log.Error("The connection listener has been stopped. Too many exceptions");
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -48,6 +48,10 @@ namespace TWCore.Services
         private static bool _hasConsole = true;
 
         /// <summary>
+        /// Bar Text Separation
+        /// </summary>
+        public static string BarSeparation = new string('═', 120);
+        /// <summary>
         /// Gets if the Console is available
         /// </summary>
         public static bool HasConsole
@@ -257,19 +261,13 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowHeader()
         {
+            var strArgs = _currentArgs.Join(" ");
             Console.ForegroundColor = ConsoleColor.DarkCyan;
-            if (!string.IsNullOrWhiteSpace(ServiceName))
-                Console.WriteLine("Service Name: {0}", ServiceName);
-            if (!string.IsNullOrWhiteSpace(Core.EnvironmentName))
-                Console.WriteLine("Environment Name: {0}", Core.EnvironmentName);
-            if (!string.IsNullOrWhiteSpace(Core.MachineName))
-                Console.WriteLine("Machine Name: {0}", Core.MachineName);
-            if (!string.IsNullOrWhiteSpace(Core.ApplicationName))
-                Console.WriteLine("Application Name: {0}", Core.ApplicationName);
-            if (Core.ApplicationDisplayName != Core.ApplicationName)
-                Console.WriteLine("Application Display: {0}", Core.ApplicationDisplayName);
-            Console.WriteLine("TWCore Version: {0}", Core.FrameworkVersion);
-            Console.ResetColor();
+            Console.WriteLine(string.Format(" Service Name: {0}", ServiceName).PadRight(54) + "      " + string.Format("Environment Name: {0}", Core.EnvironmentName).PadRight(55));
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.WriteLine(string.Format(" Application Name: {0}", Core.ApplicationName).PadRight(54) + "      " + string.Format("Application Display: {0}", Core.ApplicationDisplayName).PadRight(55));
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.WriteLine(string.Format(" Machine Name: {0}", Core.MachineName).PadRight(54) + "      " + string.Format("TWCore Version: {0}", Core.FrameworkVersion).PadRight(55));
             Console.WriteLine();
         }
         /// <summary>
@@ -280,31 +278,20 @@ namespace TWCore.Services
         protected internal virtual void ShowFullHeader(bool showSettings = true)
         {
             var strArgs = _currentArgs.Join(" ");
+            Core.Log.InfoBasic(BarSeparation);
+            Core.Log.InfoBasic(" Arguments: {0}", strArgs);
+            Core.Log.InfoBasic(string.Format(" Service Name: {0}", ServiceName).PadRight(54) + "      " + string.Format("Environment Name: {0}", Core.EnvironmentName).PadRight(55));
+            Core.Log.InfoBasic(string.Format(" Application Name: {0}", Core.ApplicationName).PadRight(54) + "      " + string.Format("Application Display: {0}", Core.ApplicationDisplayName).PadRight(55));
+            Core.Log.InfoBasic(string.Format(" Machine Name: {0}", Core.MachineName).PadRight(54) + "      " + string.Format("TWCore Version: {0}", Core.FrameworkVersion).PadRight(55));
+            Core.Log.InfoBasic(BarSeparation);
 
-            Core.Log.InfoBasic("**************************************************************************************");
-            if (!string.IsNullOrWhiteSpace(strArgs))
-                Core.Log.InfoBasic("Arguments: {0}", strArgs);
-            if (!string.IsNullOrWhiteSpace(ServiceName))
-                Core.Log.InfoBasic("Service Name: {0}", ServiceName);
-            if (!string.IsNullOrWhiteSpace(Core.EnvironmentName))
-                Core.Log.InfoBasic("Environment Name: {0}", Core.EnvironmentName);
-            if (!string.IsNullOrWhiteSpace(Core.MachineName))
-                Core.Log.InfoBasic("Machine Name: {0}", Core.MachineName);
-            if (!string.IsNullOrWhiteSpace(Core.ApplicationName))
-                Core.Log.InfoBasic("Application Name: {0}", Core.ApplicationName);
-            if (!string.IsNullOrWhiteSpace(Core.ApplicationDisplayName))
-                Core.Log.InfoBasic("Application Display: {0}", Core.ApplicationDisplayName);
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Core.Log.InfoBasic("TWCore Version: {0}", Core.FrameworkVersion);
-            Console.ResetColor();
             if (showSettings && Core.Settings?.Any() == true)
             {
-                Core.Log.InfoBasic("Settings for this app:");
-                Core.Log.InfoBasic("======================");
+                Core.Log.InfoBasic(" Settings for this app:");
+                Core.Log.InfoBasic(" ─────────────────────");
                 foreach (var setting in Core.Settings.OrderBy(i => i.Key))
-                    Core.Log.InfoBasic("     {0} = {1}", setting.Key, setting.Value);
+                    Core.Log.InfoBasic("\t » {0} = {1}", setting.Key, setting.Value);
             }
-            Core.Log.InfoBasic("**************************************************************************************");
         }
         /// <summary>
         /// Show help
@@ -313,6 +300,7 @@ namespace TWCore.Services
         protected internal virtual void ShowHelp()
         {
             ShowHeader();
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Parameters:");
             Console.WriteLine("  {0,-30}  : {1}", "/help | /?", "This Help.");
             Console.WriteLine("  {0,-30}  : {1}", "/showsettings | /w", "Show all loaded settings from app.config and settings.xml file.");
@@ -331,14 +319,15 @@ namespace TWCore.Services
         protected internal virtual void ShowVersion()
         {
             ShowHeader();
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("All assemblies versions:");
-            Console.WriteLine("========================");
+            Console.WriteLine("───────────────────────");
             var assemblies = Factory.GetAllAssemblies();
             foreach (var assembly in assemblies)
             {
                 var name = assembly.GetName()?.Name;
                 var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
-                Console.WriteLine("{0} = {1}", name, version);
+                Console.WriteLine("  » {0} = {1}", name, version);
             }
         }
         /// <summary>
@@ -348,12 +337,13 @@ namespace TWCore.Services
         protected internal virtual void ShowSettings()
         {
             ShowHeader();
+            Console.ForegroundColor = ConsoleColor.Gray;
             if (Core.Settings?.Any() == true)
             {
                 Console.WriteLine("Settings for this app:");
-                Console.WriteLine("======================");
+                Console.WriteLine("─────────────────────");
                 foreach (var setting in Core.Settings)
-                    Console.WriteLine("{0} = {1}", setting.Key, setting.Value);
+                    Console.WriteLine("  » {0} = {1}", setting.Key, setting.Value);
             }
             else
             {
@@ -367,7 +357,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void InternalRun(string[] args)
         {
-            Core.Log.LibDebug("Starting...");
+            Core.Log.LibDebug("««« Starting Service »»»");
             InitAction?.Invoke();
             if (!string.IsNullOrWhiteSpace(BannerText))
             {
@@ -401,14 +391,19 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ServiceStartWithConsole()
         {
-            Core.Log.InfoBasic("Available Console Commands:");
-            Core.Log.InfoBasic("\t ESC = Stop the service.");
+            Core.Log.InfoBasic(string.Empty);
+            Core.Log.InfoBasic(" Available Console Commands:");
+            Core.Log.InfoBasic(" ──────────────────────────");
+            Core.Log.InfoBasic("\t » ESC = Stop the service.");
             if (Service.CanPauseAndContinue)
             {
-                Core.Log.InfoBasic("\t P = Pause a running service.");
-                Core.Log.InfoBasic("\t C = Continue a paused service.");
+                Core.Log.InfoBasic("\t » P = Pause a running service.");
+                Core.Log.InfoBasic("\t » C = Continue a paused service.");
             }
-            Core.Log.InfoBasic("**************************************************************************************");
+            Core.Log.InfoBasic(BarSeparation);
+            if (_discovery)
+                Core.Log.InfoDetail("Registering Discovery Services (ReceiveThread={0})", !Core.GlobalSettings.DiscoveryDisableReceive);
+            
             Service.OnStart(null);
 
             try
@@ -422,16 +417,16 @@ namespace TWCore.Services
                         switch (key)
                         {
                             case ConsoleKey.P when !paused:
-                                Core.Log.InfoBasic("*** Pausing Service ***");
+                                Core.Log.InfoBasic("««« Pausing Service »»»");
                                 Service.OnPause();
                                 paused = true;
-                                Core.Log.InfoBasic("*** Service Paused ***");
+                                Core.Log.InfoBasic("««« Service Paused »»»");
                                 break;
                             case ConsoleKey.C when paused:
-                                Core.Log.InfoBasic("*** Restoring Service ***");
+                                Core.Log.InfoBasic("««« Restoring Service »»»");
                                 Service.OnContinue();
                                 paused = false;
-                                Core.Log.InfoBasic("*** Service Restored ***");
+                                Core.Log.InfoBasic("««« Service Restored »»»");
                                 break;
                         }
                     }
@@ -447,14 +442,14 @@ namespace TWCore.Services
                 var mres = new ManualResetEventSlim(false);
                 AppDomain.CurrentDomain.ProcessExit += (s, e) => mres.Set();
                 Core.Log.InfoBasic("Running without a Console, Capturing the ProcessExit for AppDomain to Stop.");
-                Core.Log.InfoBasic("**************************************************************************************");
+                Core.Log.InfoBasic(BarSeparation);
                 mres.Wait();
             }
 
-            Core.Log.InfoBasic("*** Stopping Service ***");
+            Core.Log.InfoBasic("««« Stopping Service »»»");
             Service.OnStop();
-            Core.Log.InfoBasic("*** Service Stopped ***");
-            Core.Log.InfoBasic("**************************************************************************************");
+            Core.Log.InfoBasic("««« Service Stopped »»»");
+            Core.Log.InfoBasic(BarSeparation);
             if (!_serviceEndAfterStart)
             {
                 Core.Log.WriteEmptyLine();
@@ -471,13 +466,13 @@ namespace TWCore.Services
                 Core.Log.InfoBasic("Running inside a Container, Capturing the ProcessExit event to Stop.");
             else
                 Core.Log.InfoBasic("Running without a Console, Capturing the ProcessExit event to Stop.");
-            Core.Log.InfoBasic("**************************************************************************************");
+            Core.Log.InfoBasic(BarSeparation);
             Service.OnStart(null);
             mres.Wait();
-            Core.Log.InfoBasic("*** Stopping Service ***");
+            Core.Log.InfoBasic("««« Stopping Service »»»");
             Service.OnStop();
-            Core.Log.InfoBasic("*** Service Stopped ***");
-            Core.Log.InfoBasic("**************************************************************************************");
+            Core.Log.InfoBasic("««« Service Stopped »»»");
+            Core.Log.InfoBasic(BarSeparation);
             if (!_serviceEndAfterStart)
                 Core.Log.WriteEmptyLine();
         }
@@ -493,7 +488,6 @@ namespace TWCore.Services
         {
             if (_discovery) return;
             if (!Core.GlobalSettings.EnableDiscovery) return;
-            Core.Log.InfoDetail("Registering Discovery services. (ReceiveThread={0})", !Core.GlobalSettings.DiscoveryDisableReceive);
             Task.Run(() =>
             {
                 _discovery = true;

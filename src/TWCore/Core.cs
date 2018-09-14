@@ -342,10 +342,9 @@ namespace TWCore
             }
             Log.Start();
 
-            Task.Delay(25).WaitAsync();
-
-            var dlog = (Log as DefaultLogEngine);
-            dlog?.LogDoneTask.WaitAsync();
+            //Task.Delay(25).WaitAsync();
+            //if (Log is DefaultLogEngine dlog)
+            //    dlog.LogDoneTask.WaitAsync();
 
             if (onError)
                 throw new Exception("Error initializing the application.");

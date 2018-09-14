@@ -50,7 +50,7 @@ namespace TWCore.Services
         /// <summary>
         /// Bar Text Separation
         /// </summary>
-        public static string BarSeparation = new string('═', 120);
+        public static string BarSeparation = new string('═', 118);
         /// <summary>
         /// Gets if the Console is available
         /// </summary>

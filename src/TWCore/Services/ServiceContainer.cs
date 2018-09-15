@@ -274,6 +274,7 @@ namespace TWCore.Services
         /// </summary>
         /// <param name="showSettings">Show current settings</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackFrameLog("")]
         protected internal virtual void ShowFullHeader(bool showSettings = true)
         {
             var strArgs = _currentArgs.Join(" ");
@@ -361,6 +362,7 @@ namespace TWCore.Services
         /// </summary>
         /// <param name="args">Run arguments</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackFrameLog("")]
         protected internal virtual void InternalRun(string[] args)
         {
             Core.Log.LibDebug("««« Starting Service »»»");
@@ -395,6 +397,7 @@ namespace TWCore.Services
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackFrameLog("")]
         private void ServiceStartWithConsole()
         {
             Core.Log.InfoBasic(string.Empty);
@@ -462,6 +465,7 @@ namespace TWCore.Services
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackFrameLog("")]
         private void ServiceStartNoConsole()
         {
             var mres = new ManualResetEventSlim(false);

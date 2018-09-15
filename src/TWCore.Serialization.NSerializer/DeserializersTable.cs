@@ -53,6 +53,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerStringCache _stringCache32 = new DeserializerStringCache();
         private readonly DeserializerStringCache _stringCache = new DeserializerStringCache();
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
+        private readonly HashSet<string> _serErrors = new HashSet<string>();
         protected Stream Stream;
 
 
@@ -115,6 +116,7 @@ namespace TWCore.Serialization.NSerializer
                 _timespanCache.Clear();
                 ObjectCache.Clear();
                 _typeCache.Clear();
+                _serErrors.Clear();
                 Stream = null;
             }
             return value;
@@ -297,11 +299,17 @@ namespace TWCore.Serialization.NSerializer
                         {
                             var metaProperties = metadata.Properties.Join(", ");
                             var typeProperties = descriptor.Metadata.Properties?.Join(", ");
-                            Core.Log.Error(ex, $"Error trying to fill the property '{name}' of the object type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}].");
+                            var strMsg = $"Error trying to fill the property '{name}' of the object type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}].";
+                            if (_serErrors.Add(strMsg))
+                                Core.Log.Error(ex, strMsg);
                         }
                     }
                     else
-                        Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type?.FullName);
+                    {
+                        var strMsg = string.Format("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type?.FullName);
+                        if (_serErrors.Add(strMsg))
+                            Core.Log.Warning(strMsg);                        
+                    }
                 }
 
                 StreamReadByte();

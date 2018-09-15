@@ -261,7 +261,6 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowHeader()
         {
-            var strArgs = _currentArgs.Join(" ");
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine(string.Format(" Service Name: {0}", ServiceName).PadRight(54) + "      " + string.Format("Environment Name: {0}", Core.EnvironmentName).PadRight(55));
             Console.ForegroundColor = ConsoleColor.DarkCyan;
@@ -279,12 +278,19 @@ namespace TWCore.Services
         {
             var strArgs = _currentArgs.Join(" ");
             Core.Log.InfoBasic(BarSeparation);
-            Core.Log.InfoBasic(" Arguments: {0}", strArgs);
+            if (!string.IsNullOrEmpty(strArgs))
+                Core.Log.InfoBasic(" Arguments: {0}", strArgs);
             Core.Log.InfoBasic(string.Format(" Service Name: {0}", ServiceName).PadRight(54) + "      " + string.Format("Environment Name: {0}", Core.EnvironmentName).PadRight(55));
             Core.Log.InfoBasic(string.Format(" Application Name: {0}", Core.ApplicationName).PadRight(54) + "      " + string.Format("Application Display: {0}", Core.ApplicationDisplayName).PadRight(55));
             Core.Log.InfoBasic(string.Format(" Machine Name: {0}", Core.MachineName).PadRight(54) + "      " + string.Format("TWCore Version: {0}", Core.FrameworkVersion).PadRight(55));
-            Core.Log.InfoBasic(BarSeparation);
 
+            if (_discovery)
+                Core.Log.InfoDetail(" Discovery Services: True [ReceiveThread = {0}]", !Core.GlobalSettings.DiscoveryDisableReceive);
+            else
+                Core.Log.InfoDetail(" Discovery Services: False");
+            
+            Core.Log.InfoBasic(BarSeparation);
+            
             if (showSettings && Core.Settings?.Any() == true)
             {
                 Core.Log.InfoBasic(" Settings for this app:");
@@ -401,8 +407,6 @@ namespace TWCore.Services
                 Core.Log.InfoBasic("\t » C = Continue a paused service.");
             }
             Core.Log.InfoBasic(BarSeparation);
-            if (_discovery)
-                Core.Log.InfoDetail("Registering Discovery Services (ReceiveThread={0})", !Core.GlobalSettings.DiscoveryDisableReceive);
             
             Service.OnStart(null);
 

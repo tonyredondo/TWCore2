@@ -52,6 +52,7 @@ namespace TWCore.Diagnostics.Log.Storages
 <html>
 <head>
     <title>Log File</title>
+    <meta charset='UTF-8'>
 	<script src='https://code.jquery.com/jquery-3.2.1.slim.min.js' integrity='sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=' crossorigin='anonymous'></script>
     <style>
         html { background-color: #000; }

@@ -286,9 +286,9 @@ namespace TWCore.Services
             Core.Log.InfoBasic(string.Format(" Machine Name: {0}", Core.MachineName).PadRight(54) + "      " + string.Format("TWCore Version: {0}", Core.FrameworkVersion).PadRight(55));
 
             if (_discovery)
-                Core.Log.InfoDetail(" Discovery Services: True [ReceiveThread = {0}]", !Core.GlobalSettings.DiscoveryDisableReceive);
+                Core.Log.InfoBasic(" Discovery Services: True [ReceiveThread = {0}]", !Core.GlobalSettings.DiscoveryDisableReceive);
             else
-                Core.Log.InfoDetail(" Discovery Services: False");
+                Core.Log.InfoBasic(" Discovery Services: False");
             
             Core.Log.InfoBasic(BarSeparation);
             

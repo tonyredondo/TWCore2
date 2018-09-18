@@ -185,7 +185,8 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                         UnderlyingType = p.PropertyType.GetUnderlyingType()
                     }).ToDictionary(k => k.Property.Name, v => v)
                 };
-                var constructor = typeInfo.DeclaredConstructors.First();
+                var constructor = typeInfo.DeclaredConstructors.FirstOrDefault(c => c.GetParameters().Length == 0) ??
+                                  typeInfo.DeclaredConstructors.First();
                 tinfo.Activator = Factory.Accessors.CreateActivator(constructor);
                 tinfo.ActivatorParametersTypes = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
                 tinfo.IsArray = valueType.IsArray;

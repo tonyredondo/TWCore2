@@ -215,7 +215,7 @@ namespace TWCore.Data
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private EntityInfo(Type type)
             {
-                Activator = Factory.Accessors.CreateActivator(type.GetTypeInfo().DeclaredConstructors.First());
+                Activator = Factory.Accessors.CreateActivator(type);
                 Properties = type.GetRuntimeProperties().Where(p => p.CanWrite).Select(p => p.GetFastPropertyInfo()).ToArray();
             }
 

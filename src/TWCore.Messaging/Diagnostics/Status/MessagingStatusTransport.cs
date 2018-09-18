@@ -71,6 +71,7 @@ namespace TWCore.Diagnostics.Status.Transports
         private void TimerCallback(object state)
         {
             if (_processing) return;
+            if (!_enabled) return;
             _processing = true;
             try
             {

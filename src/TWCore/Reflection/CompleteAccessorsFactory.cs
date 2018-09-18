@@ -70,7 +70,9 @@ namespace TWCore.Reflection
         {
             Ensure.ArgumentNotNull(type);
             var ctors = type.GetConstructors();
-            var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ?? ctors[0];
+            var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ??
+                       ctors.FirstOrDefault(c => c.GetParameters().All(p => p.HasDefaultValue)) ??
+                       ctors[0];
             return CreateActivator(ctor);
         }
         /// <inheritdoc />

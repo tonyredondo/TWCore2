@@ -1506,7 +1506,8 @@ namespace TWCore.Serialization.WSerializer
                         return p.GetIndexParameters().Length <= 0;
                     }).Select(p => p.GetFastPropertyInfo()).ToDictionary(k => k.Name, v => v)
                 };
-                var constructor = typeInfo.DeclaredConstructors.First();
+                var constructor = typeInfo.DeclaredConstructors.FirstOrDefault(c => c.GetParameters().Length == 0) ??
+                    typeInfo.DeclaredConstructors.First();
                 tinfo.Activator = Factory.Accessors.CreateActivator(constructor);
                 tinfo.ActivatorParametersTypes = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
                 tinfo.IsArray = valueType.IsArray;

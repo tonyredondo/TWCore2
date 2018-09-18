@@ -41,7 +41,8 @@ namespace TWCore.Cache.Storages.IO
         private const string DataExtension = ".data";
         private static readonly List<StorageItemMeta> EmptyMetaList = new List<StorageItemMeta>();
         private static readonly ReferencePool<FileStorageMetaLog> FileStoragePool = new ReferencePool<FileStorageMetaLog>();
-        
+        private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
+
         #region Fields
         private readonly FileStorage _storage;
         private readonly BinarySerializer _indexSerializer;
@@ -493,7 +494,20 @@ namespace TWCore.Cache.Storages.IO
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private string GetDataPath(string key) => _dataPathPattern.Replace("$FILE$", key);
+        private string GetDataPath(string key)
+        {
+            foreach (var invalidChar in InvalidPathChars)
+            {
+                if (key.IndexOf(invalidChar) > -1)
+                    key = key.Replace(invalidChar, '-');
+            }
+            if (key.IndexOf('\\') > -1)
+                key = key.Replace('\\', '-');
+            if (key.IndexOf('/') > -1)
+                key = key.Replace('/', '-');
+
+            return _dataPathPattern.Replace("$FILE$", key);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WorkerProcess(FileStorageMetaLog workerItem)
         {

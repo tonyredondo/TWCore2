@@ -287,7 +287,7 @@ namespace TWCore.Diagnostics.Status
                                 lstWithSlashName.Add((value, slashIdx));
 
                             if (!dctByName.TryGetValue(name, out var currentValue))
-                                dctByName.TryAdd(name, value);
+                                dctByName[name] = value;
                         }
                     } while (_weakValues.Count != initialCount);
                     #endregion

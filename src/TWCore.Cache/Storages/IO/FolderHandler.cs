@@ -506,6 +506,8 @@ namespace TWCore.Cache.Storages.IO
             if (key.IndexOf('/') > -1)
                 key = key.Replace('/', '-');
 
+            key = key.TruncateTo(200);
+
             return _dataPathPattern.Replace("$FILE$", key);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

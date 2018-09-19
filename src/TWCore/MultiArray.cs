@@ -728,7 +728,11 @@ namespace TWCore
             /// </summary>
             /// <param name="buffer">Span buffer to fill</param>
             /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+#if NETSTANDARD2_0
+            public int Read(Span<byte> buffer)
+#else
             public override int Read(Span<byte> buffer)
+#endif
             {
                 if (_position == _source._count)
                     return 0;
@@ -810,6 +814,6 @@ namespace TWCore
                 return segment;
             }
         }
-        #endregion
+#endregion
     }
 }

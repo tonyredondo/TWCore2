@@ -68,6 +68,20 @@ namespace TWCore.Object.Api
             });
 
             DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "OBJECT.API", "TWCore Object Api", new SerializedObject(Core.Settings["WebService.Urls"]));
+
+            DiscoveryService.OnNewServiceReceived += DiscoveryService_OnNewServiceReceived;
+            DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
+        }
+
+        private void DiscoveryService_OnNewServiceReceived(object sender, EventArgs<DiscoveryService.ReceivedService> e)
+        {
+            var rcvSrv = e.Item1;
+            Core.Log.InfoBasic($"New Service: Machine={rcvSrv.MachineName}, Application={rcvSrv.ApplicationName}, Environment={rcvSrv.EnvironmentName}, Name={rcvSrv.Name}, Category={rcvSrv.Category}");
+        }
+        private void DiscoveryService_OnServiceExpired(object sender, EventArgs<DiscoveryService.ReceivedService> e)
+        {
+            var rcvSrv = e.Item1;
+            Core.Log.InfoBasic($"Expired Service: Machine={rcvSrv.MachineName}, Application={rcvSrv.ApplicationName}, Environment={rcvSrv.EnvironmentName}, Name={rcvSrv.Name}, Category={rcvSrv.Category}");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

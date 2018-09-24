@@ -285,9 +285,15 @@ namespace TWCore.Messaging.NSQ
             var nameLength = Encoding.GetByteCount(name);
             var body = new byte[16 + 4 + nameLength + message.Count];
             var bodySpan = body.AsSpan();
+#if NETSTANDARD2_0
+            correlationId.ToByteArray().CopyTo(body, 0);
+            BitConverter.GetBytes(nameLength).CopyTo(bodySpan.Slice(16, 4));
+            Encoding.GetBytes(name).CopyTo(bodySpan.Slice(20, nameLength));
+#else
             correlationId.TryWriteBytes(bodySpan.Slice(0, 16));
             BitConverter.TryWriteBytes(bodySpan.Slice(16, 4), nameLength);
             Encoding.GetBytes(name, bodySpan.Slice(20, nameLength));
+#endif
             message.CopyTo(body, 20 + nameLength);
             return body;
         }
@@ -295,7 +301,11 @@ namespace TWCore.Messaging.NSQ
         internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
         {
             var body = new MultiArray<byte>(message);
+#if NETSTANDARD2_0
+            var correlationId = new Guid(body.Slice(0, 16).ToArray());
+#else
             var correlationId = new Guid(body.Slice(0, 16).AsSpan());
+#endif
             var nameLength = BitConverter.ToInt32(message, 16);
             var name = Encoding.GetString(message, 20, nameLength);
             var messageBody = body.Slice(20 + nameLength);

@@ -841,6 +841,86 @@ namespace TWCore.Serialization.NSerializer
             return (byte)res;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected sbyte StreamReadSByte()
+        {
+            return (sbyte)Stream.ReadByte();
+        }
+
+#if NETSTANDARD2_0
+        byte[] _buffer = new byte[16];
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ushort StreamReadUShort()
+        {
+            Stream.ReadExact(_buffer, 0, 2);
+            return BitConverter.ToUInt16(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected int StreamReadInt()
+        {
+            Stream.ReadExact(_buffer, 0, 4);
+            return BitConverter.ToInt32(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected double StreamReadDouble()
+        {
+            Stream.ReadExact(_buffer, 0, 8);
+            return BitConverter.ToDouble(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected float StreamReadFloat()
+        {
+            Stream.ReadExact(_buffer, 0, 4);
+            return BitConverter.ToSingle(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long StreamReadLong()
+        {
+            Stream.ReadExact(_buffer, 0, 8);
+            return BitConverter.ToInt64(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ulong StreamReadULong()
+        {
+            Stream.ReadExact(_buffer, 0, 8);
+            return BitConverter.ToUInt64(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected uint StreamReadUInt()
+        {
+            Stream.ReadExact(_buffer, 0, 4);
+            return BitConverter.ToUInt32(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected short StreamReadShort()
+        {
+            Stream.ReadExact(_buffer, 0, 2);
+            return BitConverter.ToInt16(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected char StreamReadChar()
+        {
+            Stream.ReadExact(_buffer, 0, 2);
+            return BitConverter.ToChar(_buffer, 0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected decimal StreamReadDecimal()
+        {
+            Stream.ReadExact(_buffer, 0, 16);
+            var bits = new int[4];
+            for (var i = 0; i < 4; i++)
+                bits[i] = BitConverter.ToInt32(_buffer, i * 4);
+            return new decimal(bits);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Guid StreamReadGuid()
+        {
+            Stream.ReadExact(_buffer, 0, 16);
+            return new Guid(_buffer.AsSpan(0, 16).ToArray());
+        }
+
+#else
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected ushort StreamReadUShort()
         {
             Span<byte> buffer = stackalloc byte[2];
@@ -914,17 +994,15 @@ namespace TWCore.Serialization.NSerializer
             return new decimal(bits);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected sbyte StreamReadSByte()
-        {
-            return (sbyte)Stream.ReadByte();
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Guid StreamReadGuid()
         {
             Span<byte> buffer = stackalloc byte[16];
             Stream.Fill(buffer);
             return new Guid(buffer);
         }
+
+#endif
+
         #endregion
     }
 }

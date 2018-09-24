@@ -342,19 +342,19 @@ namespace TWCore.Net.Multicast
             {
                 foreach (var srv in LocalServices)
                 {
-                    if (srv.DataToSend.IsEmpty)
+                    if (srv.Service.GetDataFunc != null)
                     {
-                        if (srv.Serializer != Serializer)
+                        srv.Service.Data = srv.Service.GetDataFunc();
+                        ServicesBytesList.Add(new SerializedObject(srv.Service, Serializer).ToMultiArray());
+                    }
+                    else
+                    {
+                        if (srv.DataToSend.IsEmpty || srv.Serializer != Serializer)
                         {
                             srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToMultiArray();
                             srv.Serializer = Serializer;
                         }
                         ServicesBytesList.Add(srv.DataToSend);
-                    }
-                    else if (srv.Service.GetDataFunc != null)
-                    {
-                        srv.Service.Data = srv.Service.GetDataFunc();
-                        ServicesBytesList.Add(new SerializedObject(srv.Service, Serializer).ToMultiArray());
                     }
                 }
                 

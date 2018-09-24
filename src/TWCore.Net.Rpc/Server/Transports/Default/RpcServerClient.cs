@@ -190,7 +190,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 }
                 catch (Exception ex)
                 {
-                    if (!_tokenSource.Token.IsCancellationRequested && _client.Connected && !_isDisposing)
+                    if (_tokenSource?.IsCancellationRequested != true && _client.Connected && !_isDisposing)
                         Core.Log.Write(ex);
                     break;
                 }

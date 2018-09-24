@@ -35,6 +35,7 @@ namespace TWCore.Triggers
     /// </summary>
     /// <typeparam name="T">Type of instance</typeparam>
     [StatusName("Updatable Object")]
+    [StackFrameLog("UpdatableObject")]
 	public class UpdatableObject<T> : IDisposable where T : class
     {
         /// <summary>

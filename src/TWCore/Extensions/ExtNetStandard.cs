@@ -17,6 +17,7 @@ limitations under the License.
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -66,116 +67,6 @@ namespace TWCore
             return str.IndexOf(value.ToString(), comparisonType);
         }
         /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, bool value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, char value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, double value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, short value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, int value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, long value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, float value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, ushort value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, uint value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
-        /// Try to write the value to the span
-        /// </summary>
-        /// <param name="destination">Span destination</param>
-        /// <param name="value">Value to write</param>
-        /// <returns>True if the value was copied to the destination; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryWriteBytes(Span<byte> destination, ulong value)
-        {
-            return BitConverter.GetBytes(value).AsSpan().TryCopyTo(destination);
-        }
-        /// <summary>
         /// Write ReadOnlySpan buffer to the stream
         /// </summary>
         /// <param name="stream">Stream instance</param>
@@ -183,8 +74,16 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
         {
-            var bytes = buffer.ToArray();
-            stream.Write(bytes, 0, bytes.Length);
+            var bufferByte = ArrayPool<byte>.Shared.Rent(buffer.Length);
+            try
+            {
+                buffer.CopyTo(bufferByte.AsSpan(0, buffer.Length));
+                stream.Write(bufferByte, 0, buffer.Length);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bufferByte);
+            }
         }
     }
 #endif

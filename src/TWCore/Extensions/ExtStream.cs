@@ -305,12 +305,31 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Fill(this Stream stream, Span<byte> span)
         {
+#if NETSTANDARD2_0
+            var rbyte = ArrayPool<byte>.Shared.Rent(span.Length);
+            try
+            {
+                while (span.Length > 0)
+                {
+                    var consumed = stream.Read(rbyte, 0, span.Length);
+                    if (consumed < 0) break;
+                    var tSpan = rbyte.AsSpan(0, consumed);
+                    tSpan.CopyTo(span);
+                    span = span.Slice(consumed);
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rbyte);
+            }
+#else
             while (span.Length > 0)
             {
                 var consumed = stream.Read(span);
                 if (consumed < 0 || consumed == span.Length) break;
                 span = span.Slice(consumed);
             }
+#endif
         }
 
         /// <summary>
@@ -322,12 +341,31 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task FillAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken = default)
         {
+#if NETSTANDARD2_0
+            var rbyte = ArrayPool<byte>.Shared.Rent(memory.Length);
+            try
+            {
+                while (memory.Length > 0)
+                {
+                    var consumed = await stream.ReadAsync(rbyte, 0, memory.Length, cancellationToken).ConfigureAwait(false);
+                    if (consumed < 0) break;
+                    var tMem = rbyte.AsMemory(0, consumed);
+                    tMem.CopyTo(memory);
+                    memory = memory.Slice(consumed);
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rbyte);
+            }
+#else
             while (memory.Length > 0)
             {
                 var consumed = await stream.ReadAsync(memory, cancellationToken).ConfigureAwait(false);
                 if (consumed < 0 || consumed == memory.Length) break;
                 memory = memory.Slice(consumed);
             }
+#endif
         }
         #endregion
 

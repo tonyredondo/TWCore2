@@ -314,9 +314,48 @@ namespace TWCore.Serialization
         {
             if (sequence.IsEmpty) return null;
             var length = sequence.Length;
-            Span<byte> lengthSpan = stackalloc byte[4];
+            byte[] dataArray = null;
             string dataType = null;
             string mimeType = null;
+
+#if NETSTANDARD2_0
+            var lengthBytes = new byte[4];
+
+            sequence.Slice(0, 4).CopyTo(lengthBytes);
+            var dtLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (dtLength < -1 || dtLength > length) return null;
+            if (dtLength != -1)
+            {
+                var buffer = new byte[dtLength];
+                sequence.Slice(4, dtLength).CopyTo(buffer);
+                dataType = Encoding.UTF8.GetString(buffer);
+                length -= dtLength;
+                sequence = sequence.Slice(4 + dtLength);
+            }
+
+            sequence.Slice(0, 4).CopyTo(lengthBytes);
+            var smtLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (smtLength < -1 || smtLength > length) return null;
+            if (smtLength != -1)
+            {
+                var buffer = new byte[smtLength];
+                sequence.Slice(4, smtLength).CopyTo(buffer);
+                mimeType = Encoding.UTF8.GetString(buffer);
+                length -= smtLength;
+                sequence = sequence.Slice(4 + smtLength);
+            }
+
+            sequence.Slice(0, 4).CopyTo(lengthBytes);
+            var dataLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (dataLength < -1 || dataLength > length) return null;
+            if (dataLength != -1)
+            {
+                dataArray = new byte[dataLength];
+                var dSpan = dataArray.AsSpan();
+                sequence.Slice(4, dataLength).CopyTo(dSpan);
+            }
+#else
+            Span<byte> lengthSpan = stackalloc byte[4];
 
             sequence.Slice(0, 4).CopyTo(lengthSpan);
             var dtLength = BitConverter.ToInt32(lengthSpan);
@@ -345,13 +384,13 @@ namespace TWCore.Serialization
             sequence.Slice(0, 4).CopyTo(lengthSpan);
             var dataLength = BitConverter.ToInt32(lengthSpan);
             if (dataLength < -1 || dataLength > length) return null;
-            byte[] dataArray = null;
             if (dataLength != -1)
             {
                 dataArray = new byte[dataLength];
                 var dSpan = dataArray.AsSpan();
                 sequence.Slice(4, dataLength).CopyTo(dSpan);
             }
+#endif
 
             return new SerializedObject(dataArray, dataType, mimeType);
         }

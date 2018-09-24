@@ -173,6 +173,20 @@ namespace TWCore
         /// Instance identifier
         /// </summary>
         public static Guid InstanceId { get; } = Guid.NewGuid();
+        /// <summary>
+        /// Get if the optimized version is loaded
+        /// </summary>
+        public static bool IsOptimizedVersion
+        {
+            get
+            {
+#if NETSTANDARD2_0
+                return false;
+#else
+                return true;
+#endif
+            }
+        }
 		#endregion
 
 		#region Init

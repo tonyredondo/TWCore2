@@ -38,8 +38,20 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
 
+#if NETSTANDARD2_0
             var length = Encoding.UTF8.GetByteCount(value);
-            if (length <= 32768)
+
+            var bufferLength = length + 5;
+            var buffer = ArrayPool<byte>.Shared.Rent(bufferLength);
+            var bufferSpan = buffer.AsSpan(0, bufferLength);
+            buffer[0] = DataBytesDefinition.StringLength;
+            BitConverter.GetBytes(length).CopyTo(bufferSpan.Slice(1, 4));
+            Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 5);
+            Stream.Write(buffer, 0, bufferLength);
+            ArrayPool<byte>.Shared.Return(buffer);
+#else
+            var length = Encoding.UTF8.GetByteCount(value);
+            if (length <= 16384)
             {
                 Span<byte> bufferSpan = stackalloc byte[length + 5];
                 bufferSpan[0] = DataBytesDefinition.StringLength;
@@ -57,6 +69,7 @@ namespace TWCore.Serialization.RawSerializer
                 Stream.Write(bufferSpan);
                 ArrayPool<byte>.Shared.Return(buffer);
             }
+#endif
         }
     }
 
@@ -87,7 +100,23 @@ namespace TWCore.Serialization.RawSerializer
 
             string strValue = null;
 
-            if (length <= 32768)
+#if NETSTANDARD2_0
+            var buffer = ArrayPool<byte>.Shared.Rent(length);
+            try
+            {
+                Stream.ReadExact(buffer, 0, length);
+                strValue = Encoding.UTF8.GetString(buffer, 0, length);
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+#else
+            if (length <= 16384)
             {
                 Span<byte> bufferSpan = stackalloc byte[length];
                 Stream.Fill(bufferSpan);
@@ -110,6 +139,7 @@ namespace TWCore.Serialization.RawSerializer
                     ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
+#endif
 
             return strValue;
         }

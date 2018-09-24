@@ -210,6 +210,32 @@ namespace TWCore.Serialization
             var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
             var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
 
+#if NETSTANDARD2_0
+            byte[] buffer;
+
+            //DataType
+            buffer = BitConverter.GetBytes(hasDataType ? dataTypeLength : -1);
+            stream.WriteBytes(buffer);
+            if (hasDataType)
+            {
+                buffer = Encoding.UTF8.GetBytes(DataType);
+                stream.Write(buffer);
+            }
+
+            //MimeType
+            buffer = BitConverter.GetBytes(hasMimeType ? serializerMimeTypeLength : -1);
+            stream.WriteBytes(buffer);
+            if (hasMimeType)
+            {
+                buffer = Encoding.UTF8.GetBytes(SerializerMimeType);
+                stream.Write(buffer);
+            }
+
+            //Data
+            buffer = BitConverter.GetBytes(Data.Count);
+            stream.WriteBytes(buffer);
+            Data.CopyTo(stream);
+#else
             Span<byte> intBuffer = stackalloc byte[4];
 
             //DataType
@@ -236,6 +262,7 @@ namespace TWCore.Serialization
             BitConverter.TryWriteBytes(intBuffer, Data.Count);
             stream.Write(intBuffer);
             Data.CopyTo(stream);
+#endif
         }
         /// <summary>
         /// Write the SerializedObject to a file

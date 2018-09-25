@@ -35,7 +35,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static CompressorManager()
         {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
 #else
             Register(new BrotliCompressor());
 #endif

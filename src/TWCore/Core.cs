@@ -180,7 +180,7 @@ namespace TWCore
         {
             get
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 return false;
 #else
                 return true;

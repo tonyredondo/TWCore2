@@ -304,7 +304,7 @@ namespace TWCore.Messaging.NSQ
         internal static byte[] CreateMessageBody(MultiArray<byte> message, Guid correlationId)
         {
             var body = new byte[16 + message.Count];
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             correlationId.ToByteArray().CopyTo(body, 0);
 #else
             correlationId.TryWriteBytes(body.AsSpan(0, 16));
@@ -316,7 +316,7 @@ namespace TWCore.Messaging.NSQ
         internal static (MultiArray<byte>, Guid) GetFromMessageBody(byte[] message)
         {
             var body = new MultiArray<byte>(message);
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var correlationId = new Guid(body.Slice(0, 16).ToArray());
 #else
             var correlationId = new Guid(body.Slice(0, 16).AsSpan());

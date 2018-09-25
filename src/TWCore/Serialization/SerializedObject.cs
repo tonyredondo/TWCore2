@@ -210,7 +210,7 @@ namespace TWCore.Serialization
             var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
             var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             byte[] buffer;
 
             //DataType
@@ -318,7 +318,7 @@ namespace TWCore.Serialization
             string dataType = null;
             string mimeType = null;
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var lengthBytes = new byte[4];
 
             sequence.Slice(0, 4).CopyTo(lengthBytes);
@@ -406,7 +406,7 @@ namespace TWCore.Serialization
             string serializerMimeType = null;
             MultiArray<byte> data = MultiArray<byte>.Empty;
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var intBuffer = new byte[4];
 
             stream.ReadExact(intBuffer, 0, 4);
@@ -502,7 +502,7 @@ namespace TWCore.Serialization
             string serializerMimeType = null;
             MultiArray<byte> data = MultiArray<byte>.Empty;
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var intBuffer = new byte[4];
 
             await stream.ReadExactAsync(intBuffer, 0, 4).ConfigureAwait(false);

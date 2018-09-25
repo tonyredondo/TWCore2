@@ -30,7 +30,7 @@ namespace TWCore.Serialization.RawSerializer
                 WriteByte(DataBytesDefinition.GuidDefault);
             else
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 var bytes = new byte[17];
                 bytes[0] = DataBytesDefinition.Guid;
                 value.ToByteArray().CopyTo(bytes, 1);

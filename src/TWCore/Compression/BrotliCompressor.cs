@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Compression
 {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
 #else
     /// <inheritdoc />
     /// <summary>

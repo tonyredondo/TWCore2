@@ -357,7 +357,7 @@ namespace TWCore
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 byte[] tmpArray;
                 int offset, length;
                 if (rowIndex == fromRowIndex)
@@ -404,7 +404,7 @@ namespace TWCore
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 byte[] tmpArray;
                 int offset, length;
                 if (rowIndex == fromRowIndex)
@@ -776,7 +776,7 @@ namespace TWCore
             /// </summary>
             /// <param name="buffer">Span buffer to fill</param>
             /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             public int Read(Span<byte> buffer)
 #else
             public override int Read(Span<byte> buffer)

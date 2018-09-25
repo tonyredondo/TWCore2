@@ -108,7 +108,7 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Guid GetGuid(MultiArray<byte> bytes) 
 		{
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             return new Guid(GetBytes(bytes).Slice(0, 16).AsArray());
 #else
             return new Guid(GetBytes(bytes).Slice(0, 16).AsSpan());

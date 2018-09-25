@@ -846,7 +846,7 @@ namespace TWCore.Serialization.NSerializer
             return (sbyte)Stream.ReadByte();
         }
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
         byte[] _buffer = new byte[16];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

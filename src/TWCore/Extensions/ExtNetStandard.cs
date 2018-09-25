@@ -24,7 +24,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore
 {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
     /// <summary>
     /// Extension for NetStandard Compatibility
     /// </summary>

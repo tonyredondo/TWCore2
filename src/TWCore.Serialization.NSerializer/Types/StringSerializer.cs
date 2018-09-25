@@ -75,7 +75,7 @@ namespace TWCore.Serialization.NSerializer
                 }
             }
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var length = Encoding.UTF8.GetByteCount(value);
 
             var bufferLength = length + 5;
@@ -149,7 +149,7 @@ namespace TWCore.Serialization.NSerializer
 
             string strValue = null;
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var buffer = ArrayPool<byte>.Shared.Rent(length);
             try
             {

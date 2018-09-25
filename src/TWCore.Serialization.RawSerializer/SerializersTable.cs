@@ -839,7 +839,7 @@ namespace TWCore.Serialization.RawSerializer
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefObject;
                 BitConverter.GetBytes(oIdx).CopyTo(_buffer, 1);
                 Stream.Write(_buffer, 0, 5);
@@ -855,7 +855,7 @@ namespace TWCore.Serialization.RawSerializer
             var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefType;
                 BitConverter.GetBytes(tIdx).CopyTo(_buffer, 1);
                 Stream.Write(_buffer, 0, 5);
@@ -889,7 +889,7 @@ namespace TWCore.Serialization.RawSerializer
             var vType = value.GetType();
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefObject;
                 BitConverter.GetBytes(oIdx).CopyTo(_buffer, 1);
                 Stream.Write(_buffer, 0, 5);
@@ -905,7 +905,7 @@ namespace TWCore.Serialization.RawSerializer
             var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefType;
                 BitConverter.GetBytes(tIdx).CopyTo(_buffer, 1);
                 Stream.Write(_buffer, 0, 5);
@@ -936,7 +936,7 @@ namespace TWCore.Serialization.RawSerializer
             Stream.WriteByte(value);
         }
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
         byte[] _buffer = new byte[17];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

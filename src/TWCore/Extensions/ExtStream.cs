@@ -305,7 +305,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Fill(this Stream stream, Span<byte> span)
         {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var rbyte = ArrayPool<byte>.Shared.Rent(span.Length);
             try
             {
@@ -341,7 +341,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task FillAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken = default)
         {
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var rbyte = ArrayPool<byte>.Shared.Rent(memory.Length);
             try
             {

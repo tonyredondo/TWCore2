@@ -285,7 +285,7 @@ namespace TWCore.Messaging.NSQ
             var nameLength = Encoding.GetByteCount(name);
             var body = new byte[16 + 4 + nameLength + message.Count];
             var bodySpan = body.AsSpan();
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             correlationId.ToByteArray().CopyTo(body, 0);
             BitConverter.GetBytes(nameLength).CopyTo(bodySpan.Slice(16, 4));
             Encoding.GetBytes(name).CopyTo(bodySpan.Slice(20, nameLength));
@@ -301,7 +301,7 @@ namespace TWCore.Messaging.NSQ
         internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
         {
             var body = new MultiArray<byte>(message);
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var correlationId = new Guid(body.Slice(0, 16).ToArray());
 #else
             var correlationId = new Guid(body.Slice(0, 16).AsSpan());

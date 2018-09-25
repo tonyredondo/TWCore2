@@ -223,7 +223,7 @@ namespace TWCore.Net.Multicast
             var remain = count;
             var datagram = DatagramPool.New();
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var guidBytes = guid.ToByteArray();
             var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
             for (var i = 0; i < numMsgs; i++)
@@ -304,7 +304,7 @@ namespace TWCore.Net.Multicast
             var remain = buffer.Count;
             var datagram = DatagramPool.New();
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
             var guidBytes = guid.ToByteArray();
             var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
             for (var i = 0; i < numMsgs; i++)
@@ -400,7 +400,7 @@ namespace TWCore.Net.Multicast
                     if (datagram.Length < 22)
                         continue;
 
-#if NETSTANDARD2_0
+#if COMPATIBILITY
                     var guid = new Guid(datagram.AsSpan(0, 16).ToArray());
 #else
                     var guid = new Guid(datagram.AsSpan(0, 16));

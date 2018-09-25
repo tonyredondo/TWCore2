@@ -278,6 +278,7 @@ namespace TWCore
                    assemblyName.Equals("NETStandard", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.Equals("System", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("WindowsBase", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SOS.NETCore", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SQLitePCLRaw.", StringComparison.OrdinalIgnoreCase) ||
@@ -285,6 +286,9 @@ namespace TWCore
                    assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.Equals("mscorlib", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Eto.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Xceed.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("api-ms-", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

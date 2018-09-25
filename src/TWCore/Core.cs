@@ -293,32 +293,35 @@ namespace TWCore
             try
             {
                 var allAssemblies = Factory.GetAllAssemblies();
-                var types = allAssemblies.SelectMany(a =>
+                foreach(var asm in allAssemblies)
                 {
                     try
                     {
-                        return a.DefinedTypes;
+                        if (asm.IsDynamic) continue;
+                        if (asm.ReflectionOnly) continue;
+                        foreach(var type in asm.ExportedTypes.AsParallel())
+                        {
+                            if (type.IsAbstract) continue;
+                            if (!type.IsClass) continue;
+                            if (!type.IsPublic) continue;
+                            if (!type.IsVisible) continue;
+                            var cStart = type.GetInterface(nameof(ICoreStart));
+                            if (cStart == null) continue;
+                            try
+                            {
+                                var instance = (ICoreStart)Activator.CreateInstance(type);
+                                Log.LibDebug("Loading CoreStart from: {0}", instance);
+                                instance.CoreInit(factories);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Write(ex);
+                            }
+                        }
                     }
                     catch
                     {
                         // ignored
-                    }
-                    return new TypeInfo[0];
-                }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
-                if (types?.Any() == true)
-                {
-                    foreach (var type in types)
-                    {
-                        try
-                        {
-                            var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
-                            Log.LibDebug("Loading CoreStart from: {0}", instance);
-                            instance.CoreInit(factories);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Write(ex);
-                        }
                     }
                 }
             }
@@ -355,10 +358,6 @@ namespace TWCore
                 }
             }
             Log.Start();
-
-            //Task.Delay(25).WaitAsync();
-            //if (Log is DefaultLogEngine dlog)
-            //    dlog.LogDoneTask.WaitAsync();
 
             if (onError)
                 throw new Exception("Error initializing the application.");

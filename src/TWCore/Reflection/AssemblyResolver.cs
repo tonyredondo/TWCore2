@@ -309,7 +309,10 @@ namespace TWCore.Reflection
                    assemblyName.StartsWith("mscor", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase) ||
-                   assemblyName.StartsWith("api-ms-", StringComparison.OrdinalIgnoreCase);
+                   assemblyName.StartsWith("Eto.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Xceed.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("api-ms-", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
         #endregion
 

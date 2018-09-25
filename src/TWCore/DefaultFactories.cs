@@ -439,6 +439,7 @@ namespace TWCore
         private static Lazy<StatusItemValueItem[]> CoreFrameworkStatusItems = new Lazy<StatusItemValueItem[]>(() => new[]
         {
             new StatusItemValueItem("Version", Core.FrameworkVersion),
+            new StatusItemValueItem("Optimized", Core.IsOptimizedVersion),
             new StatusItemValueItem("Debug Mode", Core.DebugMode),
             new StatusItemValueItem("Environment", Core.EnvironmentName),
             new StatusItemValueItem("MachineName", Core.MachineName),

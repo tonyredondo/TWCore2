@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net472;net461</TargetFrameworks>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -290,7 +291,7 @@ namespace TWCore.Messaging.NATS
             var bodySpan = body.AsSpan();
 #if COMPATIBILITY
             correlationId.ToByteArray().CopyTo(body, 0);
-            BitConverter.GetBytes(nameLength).CopyTo(bodySpan.Slice(16, 4));
+            MemoryMarshal.Write(bodySpan.Slice(16, 4), ref nameLength);
             Encoding.GetBytes(name).CopyTo(bodySpan.Slice(20, nameLength));
 #else
             correlationId.TryWriteBytes(bodySpan.Slice(0, 16));

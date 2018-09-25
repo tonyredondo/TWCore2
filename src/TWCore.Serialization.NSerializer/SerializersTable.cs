@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using TWCore.Reflection;
 // ReSharper disable UnusedMember.Local
 #pragma warning disable 1591
@@ -868,7 +869,7 @@ namespace TWCore.Serialization.NSerializer
             {
 #if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefObject;
-                BitConverter.GetBytes(oIdx).CopyTo(_buffer, 1);
+                MemoryMarshal.Write(_buffer.AsSpan(1), ref oIdx);
                 Stream.Write(_buffer, 0, 5);
 #else
                 Span<byte> buffer = stackalloc byte[5];
@@ -884,7 +885,7 @@ namespace TWCore.Serialization.NSerializer
             {
 #if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefType;
-                BitConverter.GetBytes(tIdx).CopyTo(_buffer, 1);
+                MemoryMarshal.Write(_buffer.AsSpan(1), ref tIdx);
                 Stream.Write(_buffer, 0, 5);
 #else
                 Span<byte> buffer = stackalloc byte[5];
@@ -918,7 +919,7 @@ namespace TWCore.Serialization.NSerializer
             {
 #if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefObject;
-                BitConverter.GetBytes(oIdx).CopyTo(_buffer, 1);
+                MemoryMarshal.Write(_buffer.AsSpan(1), ref oIdx);
                 Stream.Write(_buffer, 0, 5);
 #else
                 Span<byte> buffer = stackalloc byte[5];
@@ -934,7 +935,7 @@ namespace TWCore.Serialization.NSerializer
             {
 #if COMPATIBILITY
                 _buffer[0] = DataBytesDefinition.RefType;
-                BitConverter.GetBytes(tIdx).CopyTo(_buffer, 1);
+                MemoryMarshal.Write(_buffer.AsSpan(1), ref tIdx);
                 Stream.Write(_buffer, 0, 5);
 #else
                 Span<byte> buffer = stackalloc byte[5];
@@ -978,63 +979,63 @@ namespace TWCore.Serialization.NSerializer
         protected void WriteDefUshort(byte type, ushort value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefInt(byte type, int value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefDouble(byte type, double value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 9);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefFloat(byte type, float value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefLong(byte type, long value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 9);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefULong(byte type, ulong value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 9);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefUInt(byte type, uint value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefShort(byte type, short value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefChar(byte type, char value)
         {
             _buffer[0] = type;
-            BitConverter.GetBytes(value).CopyTo(_buffer, 1);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
             Stream.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1043,61 +1044,61 @@ namespace TWCore.Serialization.NSerializer
             _buffer[0] = type;
             var bits = decimal.GetBits(value);
             for (var i = 0; i < 4; i++)
-                BitConverter.GetBytes(bits[i]).CopyTo(_buffer, (i * 4) + 1);
+                MemoryMarshal.Write(_buffer.AsSpan((i * 4) + 1), ref bits[i]);
             Stream.Write(_buffer, 0, 17);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteUshort(ushort value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteInt(int value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDouble(double value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteFloat(float value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteLong(long value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteULong(ulong value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteUInt(uint value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteShort(short value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteChar(char value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1105,14 +1106,13 @@ namespace TWCore.Serialization.NSerializer
         {
             var bits = decimal.GetBits(value);
             for (var i = 0; i < 4; i++)
-                BitConverter.GetBytes(bits[i]).CopyTo(_buffer, i * 4);
+                MemoryMarshal.Write(_buffer.AsSpan(i * 4), ref bits[i]);
             Stream.Write(_buffer, 0, 16);
-
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteSByte(sbyte value)
         {
-            BitConverter.GetBytes(value).CopyTo(_buffer, 0);
+            MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 1);
         }
 #else

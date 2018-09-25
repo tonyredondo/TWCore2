@@ -23,6 +23,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -232,8 +233,10 @@ namespace TWCore.Net.Multicast
                 var dGram = new Memory<byte>(datagram);
                 guidBytes.CopyTo(datagram, 0);
                 numMsgsBytes.CopyTo(datagram, 16);
-                BitConverter.GetBytes((ushort)i).CopyTo(datagram, 18);
-                BitConverter.GetBytes((ushort)csize).CopyTo(datagram, 20);
+                var ui = (ushort)i;
+                var ucsize = (ushort)csize;
+                MemoryMarshal.Write(datagram.AsSpan(18), ref ui);
+                MemoryMarshal.Write(datagram.AsSpan(20), ref ucsize);
                 buffer.AsSpan(offset, csize).CopyTo(dGram.Span.Slice(22));
                 dGram.Span.Slice(csize + 22).Clear();
 
@@ -313,8 +316,10 @@ namespace TWCore.Net.Multicast
                 var dGram = new Memory<byte>(datagram);
                 guidBytes.CopyTo(datagram, 0);
                 numMsgsBytes.CopyTo(datagram, 16);
-                BitConverter.GetBytes((ushort)i).CopyTo(datagram, 18);
-                BitConverter.GetBytes((ushort)csize).CopyTo(datagram, 20);
+                var ui = (ushort)i;
+                var ucsize = (ushort)csize;
+                MemoryMarshal.Write(datagram.AsSpan(18), ref ui);
+                MemoryMarshal.Write(datagram.AsSpan(20), ref ucsize);
                 buffer.Slice(offset, csize).CopyTo(dGram.Span.Slice(22));
                 dGram.Span.Slice(csize + 22).Clear();
 

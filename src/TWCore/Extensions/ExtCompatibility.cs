@@ -21,14 +21,15 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace TWCore
 {
 #if COMPATIBILITY
     /// <summary>
-    /// Extension for NetStandard Compatibility
+    /// Extension for Compatibility
     /// </summary>
-    public static class ExtNetStandard
+    public static class ExtCompatibility
     {
         /// <summary>
         /// Adds a key/value pair to the <see cref="ConcurrentDictionary{TKey,TValue}"/>
@@ -74,6 +75,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
         {
+            if (buffer.IsEmpty) return;
+            if (buffer.Length == 1)
+            {
+                stream.WriteByte(buffer[0]);
+                return;
+            }
+
             var bufferByte = ArrayPool<byte>.Shared.Rent(buffer.Length);
             try
             {

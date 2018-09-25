@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 #pragma warning disable 1591
 
@@ -45,7 +46,7 @@ namespace TWCore.Serialization.RawSerializer
             var buffer = ArrayPool<byte>.Shared.Rent(bufferLength);
             var bufferSpan = buffer.AsSpan(0, bufferLength);
             buffer[0] = DataBytesDefinition.StringLength;
-            BitConverter.GetBytes(length).CopyTo(bufferSpan.Slice(1, 4));
+            MemoryMarshal.Write(bufferSpan.Slice(1, 4), ref length);
             Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 5);
             Stream.Write(buffer, 0, bufferLength);
             ArrayPool<byte>.Shared.Return(buffer);

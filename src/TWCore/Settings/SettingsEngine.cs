@@ -49,10 +49,11 @@ namespace TWCore.Settings
             string shortContainer = null;
             if (container.EndsWith("Settings"))
                 shortContainer = container.Substring(0, container.LastIndexOf("Settings", StringComparison.Ordinal));
-            var props = type.GetProperties().Where(p => p.CanRead && p.CanWrite && !p.IsSpecialName);
             var provider = System.Globalization.CultureInfo.InvariantCulture;
-            props.Each(p =>
+            foreach(var p in type.GetProperties())
             {
+                if (!p.CanRead || !p.CanWrite || p.IsSpecialName) continue;
+
                 var sKeys = p.GetAttribute<SettingsKeyAttribute>();
                 var attribute = p.GetAttribute<SettingsDataFormatAttribute>();
                 var arrayAttribute = p.GetAttribute<SettingsArrayAttribute>();
@@ -130,7 +131,7 @@ namespace TWCore.Settings
 
                     p.SetValue(instance, isDefaultValue ? p.GetValue(instance) : myValueArray);
                 }
-            });
+            }
         }
     }
 }

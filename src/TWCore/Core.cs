@@ -337,7 +337,8 @@ namespace TWCore
                 {
                     Name = "Application Information\\Settings"
                 };
-                Settings.OrderBy(i => i.Key).Each(i => sItem.Values.Add(i.Key, i.Value));
+                foreach (var i in Settings.OrderBy(i => i.Key))
+                    sItem.Values.Add(i.Key, i.Value);
                 return sItem;
             });
 

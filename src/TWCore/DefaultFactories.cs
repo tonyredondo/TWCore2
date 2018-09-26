@@ -154,12 +154,17 @@ namespace TWCore
         private Assembly[] DefaultGetAssemblies()
         {
             if (_assemblies != null) return _assemblies;
-            _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
+            var hashLocation = new HashSet<string>();
+            var assemblies = new List<Assembly>();
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                if (d.IsDynamic) return false;
-                var assemblyName = d.GetName();
-                return !IsExcludedAssembly(assemblyName.Name);
-            }).DistinctBy(i => i.Location).ToArray();
+                if (asm.IsDynamic) continue;
+                var asmName = asm.GetName();
+                if (IsExcludedAssembly(asmName.Name)) continue;
+                if (hashLocation.Add(asm.Location))
+                    assemblies.Add(asm);
+            }
+            _assemblies = assemblies.ToArray();
             return _assemblies;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,15 +179,15 @@ namespace TWCore
                 }
                 else
                 {
-                    var loaded = AppDomain.CurrentDomain.GetAssemblies();
-                    foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
+                    var loaded = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().FullName));
+                    foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly).AsParallel())
                     {
                         try
                         {
                             var name = AssemblyName.GetAssemblyName(file);
+                            if (loaded.Contains(name.FullName)) continue;
                             if (IsExcludedAssembly(name.Name)) continue;
-                            if (loaded.All((l, fullName) => l.FullName != fullName, name.FullName))
-                                AppDomain.CurrentDomain.Load(name);
+                            AppDomain.CurrentDomain.Load(name);
                         }
                         catch
                         {

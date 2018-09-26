@@ -29,7 +29,9 @@ namespace TWCore.Services
     public sealed class BannerCoreStart : ICoreStart
     {
         private const string BannerFilePath = "banner.bnn";
-        void ICoreStart.CoreInit(Factories factories)
+        void ICoreStart.BeforeInit() { }
+        void ICoreStart.AfterFactoryInit(Factories factories) { }
+        void ICoreStart.FinalizingInit(Factories factories)
         {
             var entryAssembly = Assembly.GetEntryAssembly();
             var bannerText = entryAssembly.GetResourceString(BannerFilePath);

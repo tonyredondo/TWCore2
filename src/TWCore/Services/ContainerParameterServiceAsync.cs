@@ -60,8 +60,9 @@ namespace TWCore.Services
         private void OnHandler(ParameterHandlerInfo info) 
             => OnHandlerAsync(info).WaitAsync();
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ICoreStart.CoreInit(Factories factories)
+        void ICoreStart.BeforeInit() { }
+        void ICoreStart.AfterFactoryInit(Factories factories) { }
+        void ICoreStart.FinalizingInit(Factories factories)
             => ServiceContainer.RegisterParametersHandler(Name, Description, OnHandler);
     }
 }

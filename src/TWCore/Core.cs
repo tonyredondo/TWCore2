@@ -201,6 +201,22 @@ namespace TWCore
             if (_initialized) return;
             _initialized = true;
             UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
+            var coreInits = GetCoreInits();
+
+            #region CoreStart.BeforeInit
+            foreach(var ci in coreInits)
+            {
+                try
+                {
+                    ci.BeforeInit();
+                }
+                catch
+                {
+                    //
+                }
+            }
+            #endregion
+
             Factory.SetFactories(factories);
             Status = Factory.CreateStatusEngine();
             Log = Factory.CreateLogEngine();
@@ -214,6 +230,22 @@ namespace TWCore
                 Log.InfoBasic("Directory: {0}", Directory.GetCurrentDirectory());
             }
             AssemblyResolverManager.RegisterDomain();
+
+            #region CoreStart.AfterFactoryInit
+            foreach (var ci in coreInits)
+            {
+                try
+                {
+                    Log.LibDebug("CoreStart AfterFactoryInit from: {0}", ci);
+                    ci.AfterFactoryInit(factories);
+                }
+                catch
+                {
+                    //
+                }
+            }
+            #endregion
+
             if (ServiceContainer.HasConsole)
                 Log.AddConsoleStorage();
 
@@ -290,45 +322,20 @@ namespace TWCore
                 Status.Enabled = GlobalSettings.StatusEnabled;
             }
 
-            try
+            #region CoreStart.FinalizingInit
+            foreach (var ci in coreInits)
             {
-                var allAssemblies = Factory.GetAllAssemblies();
-                foreach(var asm in allAssemblies)
+                try
                 {
-                    try
-                    {
-                        if (asm.IsDynamic) continue;
-                        if (asm.ReflectionOnly) continue;
-                        foreach(var type in asm.ExportedTypes.AsParallel())
-                        {
-                            if (type.IsAbstract) continue;
-                            if (!type.IsClass) continue;
-                            if (!type.IsPublic) continue;
-                            if (!type.IsVisible) continue;
-                            var cStart = type.GetInterface(nameof(ICoreStart));
-                            if (cStart == null) continue;
-                            try
-                            {
-                                var instance = (ICoreStart)Activator.CreateInstance(type);
-                                Log.LibDebug("Loading CoreStart from: {0}", instance);
-                                instance.CoreInit(factories);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Write(ex);
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    Log.LibDebug("CoreStart FinalizingInit from: {0}", ci);
+                    ci.FinalizingInit(factories);
+                }
+                catch
+                {
+                    //
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Write(ex);
-            }
+            #endregion
 
             Status.Attach(() =>
             {
@@ -365,6 +372,7 @@ namespace TWCore
 
             Log.LibDebug("Core has been initialized.");
         }
+
         /// <summary>
         /// Initialize with the default factories.
         /// </summary>
@@ -399,6 +407,51 @@ namespace TWCore
             var factories = new DefaultFactories();
             defaultFactoryAction(factories);
             Init(factories);
+        }
+        #endregion
+
+        #region Private Methods
+        private static List<ICoreStart> GetCoreInits()
+        {
+            var lst = new List<ICoreStart>();
+            try
+            {
+                var allAssemblies = Factory.GetAllAssemblies();
+                foreach (var asm in allAssemblies)
+                {
+                    try
+                    {
+                        if (asm.IsDynamic) continue;
+                        if (asm.ReflectionOnly) continue;
+                        foreach (var type in asm.ExportedTypes.AsParallel())
+                        {
+                            if (type.IsAbstract) continue;
+                            if (!type.IsClass) continue;
+                            if (!type.IsPublic) continue;
+                            if (!type.IsVisible) continue;
+                            var cStart = type.GetInterface(nameof(ICoreStart));
+                            if (cStart == null) continue;
+                            try
+                            {
+                                lst.Add((ICoreStart)Activator.CreateInstance(type));
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+            return lst;
         }
         #endregion
 

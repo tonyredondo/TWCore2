@@ -410,8 +410,10 @@ namespace TWCore.Serialization
         #endregion
 
         #region CoreStart
-        void ICoreStart.CoreInit(Factories factories)
+        void ICoreStart.BeforeInit() { }
+        void ICoreStart.AfterFactoryInit(Factories factories)
             => SerializerManager.Register(this);
+        void ICoreStart.FinalizingInit(Factories factories) { }
         #endregion
     }
 }

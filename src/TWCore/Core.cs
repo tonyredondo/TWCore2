@@ -337,16 +337,19 @@ namespace TWCore
             }
             #endregion
 
-            Status.Attach(() =>
+            Task.Run(() =>
             {
-                if (Settings is null) return null;
-                var sItem = new StatusItem
+                Status.Attach(() =>
                 {
-                    Name = "Application Information\\Settings"
-                };
-                foreach (var i in Settings.OrderBy(i => i.Key))
-                    sItem.Values.Add(i.Key, i.Value);
-                return sItem;
+                    if (Settings is null) return null;
+                    var sItem = new StatusItem
+                    {
+                        Name = "Application Information\\Settings"
+                    };
+                    foreach (var i in Settings.OrderBy(i => i.Key))
+                        sItem.Values.Add(i.Key, i.Value);
+                    return sItem;
+                });
             });
 
             var onError = false;

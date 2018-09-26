@@ -201,6 +201,7 @@ namespace TWCore
             if (_initialized) return;
             _initialized = true;
             UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
+            Factory.SetFactories(factories);
             var coreInits = GetCoreInits();
 
             #region CoreStart.BeforeInit
@@ -217,7 +218,6 @@ namespace TWCore
             }
             #endregion
 
-            Factory.SetFactories(factories);
             Status = Factory.CreateStatusEngine();
             Log = Factory.CreateLogEngine();
             Trace = Factory.CreateTraceEngine();

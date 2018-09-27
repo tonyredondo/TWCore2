@@ -20,6 +20,8 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Compression
 {
+#if COMPATIBILITY
+#else
     /// <inheritdoc />
     /// <summary>
     /// Implements a Brotli Compresor
@@ -53,4 +55,5 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Stream GetDecompressionStream(Stream source) => new BrotliStream(source, CompressionMode.Decompress, true);
     }
+#endif
 }

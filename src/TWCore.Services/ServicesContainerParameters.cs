@@ -23,10 +23,25 @@ namespace TWCore.Services
     public class ServicesContainerParameters : ICoreStart
     {
         /// <summary>
-        /// TWCore initialization
+        /// Before Init
         /// </summary>
-        /// <param name="factories">Factories</param>
-        public void CoreInit(Factories factories)
+        public void BeforeInit()
+        {
+        }
+
+        /// <summary>
+        /// After Factory Init
+        /// </summary>
+        /// <param name="factories">Factory instance</param>
+        public void AfterFactoryInit(Factories factories)
+        {
+        }
+
+        /// <summary>
+        /// Finalizing Init
+        /// </summary>
+        /// <param name="factories">Factory instance</param>
+        public void FinalizingInit(Factories factories)
         {
             switch (factories.PlatformType)
             {

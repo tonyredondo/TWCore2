@@ -775,7 +775,7 @@ namespace TWCore
             dateData[20] = (char)(millisecond / 100 + 48);
             dateData[21] = (char)(millisecond / 10 % 10 + 48);
             dateData[22] = (char)(millisecond % 10 + 48);
-            return new string(dateData);
+            return dateData.ToString();
         }
         #endregion
 

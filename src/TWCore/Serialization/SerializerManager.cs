@@ -108,49 +108,49 @@ namespace TWCore.Serialization
             Register(new JsonTextSerializer());
             Register(new XmlTextSerializer());
             Register(new BinaryFormatterSerializer());
-            Core.RunOnInit(() =>
-            {
-                if (Factory.GetAllAssemblies != null)
-                {
-                    var assemblies = Factory.GetAllAssemblies();
-                    foreach (var assembly in assemblies)
-                    {
-                        try
-                        {
-                            foreach (var type in assembly.DefinedTypes)
-                            {
-                                if (type.IsInterface || type.IsAbstract || type.ImplementedInterfaces.All(i => i != typeof(ISerializer))) continue;
-                                var serType = type.AsType();
-                                if (serType == typeof(JsonTextSerializer)) continue;
-                                if (serType == typeof(XmlTextSerializer)) continue;
-                                if (serType == typeof(BinaryFormatterSerializer)) continue;
-                                try
-                                {
-                                    Register((ISerializer)Activator.CreateInstance(serType));
-                                }
-                                catch (Exception ex)
-                                {
-                                    Core.Log.Write(LogLevel.Warning, $"Error registering the '{serType.FullName}' serializer, the type was ignored.", ex);
-                                }
-                            }
-                        }
-                        catch (ReflectionTypeLoadException rtlEx)
-                        {
-                            if (rtlEx.LoaderExceptions != null)
-                            {
-                                Core.Log.Warning($"An error occurs when loading the types for '{assembly.FullName}', the following errors occurs:");
+            //Core.RunOnInit(() =>
+            //{
+            //    if (Factory.GetAllAssemblies != null)
+            //    {
+            //        var assemblies = Factory.GetAllAssemblies();
+            //        foreach (var assembly in assemblies)
+            //        {
+            //            try
+            //            {
+            //                foreach (var type in assembly.DefinedTypes)
+            //                {
+            //                    if (type.IsInterface || type.IsAbstract || type.ImplementedInterfaces.All(i => i != typeof(ISerializer))) continue;
+            //                    var serType = type.AsType();
+            //                    if (serType == typeof(JsonTextSerializer)) continue;
+            //                    if (serType == typeof(XmlTextSerializer)) continue;
+            //                    if (serType == typeof(BinaryFormatterSerializer)) continue;
+            //                    try
+            //                    {
+            //                        Register((ISerializer)Activator.CreateInstance(serType));
+            //                    }
+            //                    catch (Exception ex)
+            //                    {
+            //                        Core.Log.Write(LogLevel.Warning, $"Error registering the '{serType.FullName}' serializer, the type was ignored.", ex);
+            //                    }
+            //                }
+            //            }
+            //            catch (ReflectionTypeLoadException rtlEx)
+            //            {
+            //                if (rtlEx.LoaderExceptions != null)
+            //                {
+            //                    Core.Log.Warning($"An error occurs when loading the types for '{assembly.FullName}', the following errors occurs:");
 
-                                foreach (var ex in rtlEx.LoaderExceptions)
-                                    Core.Log.Write(LogLevel.Warning, "\t" + ex.Message);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(LogLevel.Warning, $"An error occurs when loading the types for '{assembly.FullName}' assembly, the assembly was ignored.", ex);
-                        }
-                    }
-                }
-            });
+            //                    foreach (var ex in rtlEx.LoaderExceptions)
+            //                        Core.Log.Write(LogLevel.Warning, "\t" + ex.Message);
+            //                }
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                Core.Log.Write(LogLevel.Warning, $"An error occurs when loading the types for '{assembly.FullName}' assembly, the assembly was ignored.", ex);
+            //            }
+            //        }
+            //    }
+            //});
         }
         #endregion
 

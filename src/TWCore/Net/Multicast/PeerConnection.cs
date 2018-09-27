@@ -23,6 +23,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -222,6 +223,42 @@ namespace TWCore.Net.Multicast
             var guid = Guid.NewGuid();
             var remain = count;
             var datagram = DatagramPool.New();
+
+#if COMPATIBILITY
+            var guidBytes = guid.ToByteArray();
+            var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
+            for (var i = 0; i < numMsgs; i++)
+            {
+                var csize = remain >= dtsize ? dtsize : remain;
+                var dGram = new Memory<byte>(datagram);
+                guidBytes.CopyTo(datagram, 0);
+                numMsgsBytes.CopyTo(datagram, 16);
+                var ui = (ushort)i;
+                var ucsize = (ushort)csize;
+                MemoryMarshal.Write(datagram.AsSpan(18), ref ui);
+                MemoryMarshal.Write(datagram.AsSpan(20), ref ucsize);
+                buffer.AsSpan(offset, csize).CopyTo(dGram.Span.Slice(22));
+                dGram.Span.Slice(csize + 22).Clear();
+
+                foreach (var c in _sendClients)
+                {
+                    if (_token.IsCancellationRequested) break;
+                    if (_endpointErrors.Contains(c.Client.LocalEndPoint)) continue;
+                    try
+                    {
+                        await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        if (_endpointErrors.Add(c.Client.LocalEndPoint))
+                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
+                    }
+                }
+
+                remain -= dtsize;
+                offset += csize;
+            }
+#else
             for (var i = 0; i < numMsgs; i++)
             {
                 var csize = remain >= dtsize ? dtsize : remain;
@@ -251,6 +288,8 @@ namespace TWCore.Net.Multicast
                 remain -= dtsize;
                 offset += csize;
             }
+#endif
+
             DatagramPool.Store(datagram);
         }
         /// <summary>
@@ -267,6 +306,42 @@ namespace TWCore.Net.Multicast
             var offset = buffer.Offset;
             var remain = buffer.Count;
             var datagram = DatagramPool.New();
+
+#if COMPATIBILITY
+            var guidBytes = guid.ToByteArray();
+            var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
+            for (var i = 0; i < numMsgs; i++)
+            {
+                var csize = remain >= dtsize ? dtsize : remain;
+                var dGram = new Memory<byte>(datagram);
+                guidBytes.CopyTo(datagram, 0);
+                numMsgsBytes.CopyTo(datagram, 16);
+                var ui = (ushort)i;
+                var ucsize = (ushort)csize;
+                MemoryMarshal.Write(datagram.AsSpan(18), ref ui);
+                MemoryMarshal.Write(datagram.AsSpan(20), ref ucsize);
+                buffer.Slice(offset, csize).CopyTo(dGram.Span.Slice(22));
+                dGram.Span.Slice(csize + 22).Clear();
+
+                foreach (var c in _sendClients)
+                {
+                    if (_token.IsCancellationRequested) break;
+                    if (_endpointErrors.Contains(c.Client.LocalEndPoint)) continue;
+                    try
+                    {
+                        await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        if (_endpointErrors.Add(c.Client.LocalEndPoint))
+                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
+                    }
+                }
+
+                remain -= dtsize;
+                offset += csize;
+            }
+#else
             for (var i = 0; i < numMsgs; i++)
             {
                 var csize = remain >= dtsize ? dtsize : remain;
@@ -296,6 +371,8 @@ namespace TWCore.Net.Multicast
                 remain -= dtsize;
                 offset += csize;
             }
+#endif
+
             DatagramPool.Store(datagram);
         }
         /// <summary>
@@ -328,7 +405,12 @@ namespace TWCore.Net.Multicast
                     if (datagram.Length < 22)
                         continue;
 
+#if COMPATIBILITY
+                    var guid = new Guid(datagram.AsSpan(0, 16).ToArray());
+#else
                     var guid = new Guid(datagram.AsSpan(0, 16));
+#endif
+
                     var numMsgs = BitConverter.ToUInt16(datagram, 16);
                     var currentMsg = BitConverter.ToUInt16(datagram, 18);
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
@@ -412,8 +494,10 @@ namespace TWCore.Net.Multicast
 
             public Segment<T> Add(ReadOnlyMemory<T> mem)
             {
-                var segment = new Segment<T>(mem);
-                segment.RunningIndex = RunningIndex + Memory.Length;
+                var segment = new Segment<T>(mem)
+                {
+                    RunningIndex = RunningIndex + Memory.Length
+                };
                 Next = segment;
                 return segment;
             }

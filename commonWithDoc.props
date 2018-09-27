@@ -3,4 +3,8 @@
   <PropertyGroup>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net461'  Or '$(TargetFramework)' == 'net462'">
+    <DefineConstants>COMPATIBILITY</DefineConstants>
+  </PropertyGroup>
 </Project>

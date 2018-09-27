@@ -154,12 +154,17 @@ namespace TWCore
         private Assembly[] DefaultGetAssemblies()
         {
             if (_assemblies != null) return _assemblies;
-            _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
+            var hashLocation = new HashSet<string>();
+            var assemblies = new List<Assembly>();
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                if (d.IsDynamic) return false;
-                var assemblyName = d.GetName();
-                return !IsExcludedAssembly(assemblyName.Name);
-            }).DistinctBy(i => i.Location).ToArray();
+                if (asm.IsDynamic) continue;
+                var asmName = asm.GetName();
+                if (IsExcludedAssembly(asmName.Name)) continue;
+                if (hashLocation.Add(asm.Location))
+                    assemblies.Add(asm);
+            }
+            _assemblies = assemblies.ToArray();
             return _assemblies;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,15 +179,15 @@ namespace TWCore
                 }
                 else
                 {
-                    var loaded = AppDomain.CurrentDomain.GetAssemblies();
-                    foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
+                    var loaded = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().FullName));
+                    foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly).AsParallel())
                     {
                         try
                         {
                             var name = AssemblyName.GetAssemblyName(file);
+                            if (loaded.Contains(name.FullName)) continue;
                             if (IsExcludedAssembly(name.Name)) continue;
-                            if (loaded.All((l, fullName) => l.FullName != fullName, name.FullName))
-                                AppDomain.CurrentDomain.Load(name);
+                            AppDomain.CurrentDomain.Load(name);
                         }
                         catch
                         {
@@ -201,6 +206,27 @@ namespace TWCore
         {
             //https://blogs.msdn.microsoft.com/dbrowne/2012/07/03/how-to-generate-sequential-guids-for-sql-server-in-net/
             UuidCreateSequential(out var guid);
+#if COMPATIBILITY
+            var t = new byte[16];
+            var s = guid.ToByteArray();
+            t[3] = s[0];
+            t[2] = s[1];
+            t[1] = s[2];
+            t[0] = s[3];
+            t[5] = s[4];
+            t[4] = s[5];
+            t[7] = s[6];
+            t[6] = s[7];
+            t[8] = s[8];
+            t[9] = s[9];
+            t[10] = s[10];
+            t[11] = s[11];
+            t[12] = s[12];
+            t[13] = s[13];
+            t[14] = s[14];
+            t[15] = s[15];
+            return new Guid(t);
+#else
             Span<byte> s = stackalloc byte[16];
             Span<byte> t = stackalloc byte[16];
             if (!guid.TryWriteBytes(s)) return guid;
@@ -221,6 +247,7 @@ namespace TWCore
             t[14] = s[14];
             t[15] = s[15];
             return new Guid(t);
+#endif
         }
 
         #endregion
@@ -256,6 +283,7 @@ namespace TWCore
                    assemblyName.Equals("NETStandard", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.Equals("System", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("WindowsBase", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SOS.NETCore", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SQLitePCLRaw.", StringComparison.OrdinalIgnoreCase) ||
@@ -263,6 +291,9 @@ namespace TWCore
                    assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.Equals("mscorlib", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Eto.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Xceed.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("api-ms-", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -417,6 +448,7 @@ namespace TWCore
         private static Lazy<StatusItemValueItem[]> CoreFrameworkStatusItems = new Lazy<StatusItemValueItem[]>(() => new[]
         {
             new StatusItemValueItem("Version", Core.FrameworkVersion),
+            new StatusItemValueItem("Optimized", Core.IsOptimizedVersion),
             new StatusItemValueItem("Debug Mode", Core.DebugMode),
             new StatusItemValueItem("Environment", Core.EnvironmentName),
             new StatusItemValueItem("MachineName", Core.MachineName),

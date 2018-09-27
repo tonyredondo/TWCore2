@@ -357,6 +357,29 @@ namespace TWCore
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
+#if COMPATIBILITY
+                byte[] tmpArray;
+                int offset, length;
+                if (rowIndex == fromRowIndex)
+                {
+                    offset = fromPosition;
+                    length = fromRowIndex != toRowIndex ? _segmentsLength - fromPosition : (toPosition - fromPosition) + 1;
+                    tmpArray = arrays[rowIndex];
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    offset = 0;
+                    length = toPosition + 1;
+                    tmpArray = arrays[rowIndex];
+                }
+                else
+                {
+                    offset = 0;
+                    length = _segmentsLength;
+                    tmpArray = arrays[rowIndex];
+                }
+                stream.Write(tmpArray, offset, length);
+#else
                 Span<byte> span;
                 if (rowIndex == fromRowIndex)
                     span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentsLength - fromPosition : (toPosition - fromPosition) + 1);
@@ -365,6 +388,7 @@ namespace TWCore
                 else
                     span = arrays[rowIndex].AsSpan(0, _segmentsLength);
                 stream.Write(span);
+#endif
             }
         }
         /// <summary>
@@ -380,6 +404,29 @@ namespace TWCore
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
+#if COMPATIBILITY
+                byte[] tmpArray;
+                int offset, length;
+                if (rowIndex == fromRowIndex)
+                {
+                    offset = fromPosition;
+                    length = fromRowIndex != toRowIndex ? _segmentsLength - fromPosition : (toPosition - fromPosition) + 1;
+                    tmpArray = arrays[rowIndex];
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    offset = 0;
+                    length = toPosition + 1;
+                    tmpArray = arrays[rowIndex];
+                }
+                else
+                {
+                    offset = 0;
+                    length = _segmentsLength;
+                    tmpArray = arrays[rowIndex];
+                }
+                await stream.WriteAsync(tmpArray, offset, length).ConfigureAwait(false);
+#else
                 Memory<byte> memory;
                 if (rowIndex == fromRowIndex)
                     memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentsLength - fromPosition : (toPosition - fromPosition) + 1);
@@ -388,6 +435,7 @@ namespace TWCore
                 else
                     memory = arrays[rowIndex].AsMemory(0, _segmentsLength);
                 await stream.WriteAsync(memory).ConfigureAwait(false);
+#endif
             }
         }
         /// <summary>
@@ -728,7 +776,11 @@ namespace TWCore
             /// </summary>
             /// <param name="buffer">Span buffer to fill</param>
             /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+#if COMPATIBILITY
+            public int Read(Span<byte> buffer)
+#else
             public override int Read(Span<byte> buffer)
+#endif
             {
                 if (_position == _source._count)
                     return 0;
@@ -804,12 +856,14 @@ namespace TWCore
             
             public SequenceSegment Add(T[] segmentItem)
             {
-                var segment = new SequenceSegment(segmentItem);
-                segment.RunningIndex = RunningIndex + Memory.Length;
+                var segment = new SequenceSegment(segmentItem)
+                {
+                    RunningIndex = RunningIndex + Memory.Length
+                };
                 Next = segment;
                 return segment;
             }
         }
-        #endregion
+#endregion
     }
 }

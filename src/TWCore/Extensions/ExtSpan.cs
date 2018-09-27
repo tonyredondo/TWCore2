@@ -147,11 +147,11 @@ namespace TWCore
                     break;
                 var value = span.Slice(0, idx);
                 if (options == StringSplitOptions.None || value.Length > 0)
-                    result.Add(new string(value));
+                    result.Add(value.ToString());
                 span = span.Slice(idx + 1);
             }
             if (options == StringSplitOptions.None || span.Length > 0)
-                result.Add(new string(span));
+                result.Add(span.ToString());
             return result;
         }
         /// <summary>
@@ -172,11 +172,11 @@ namespace TWCore
                     break;
                 var value = span.Slice(0, idx);
                 if (options == StringSplitOptions.None || value.Length > 0)
-                    result.Add(new string(value));
+                    result.Add(value.ToString());
                 span = span.Slice(idx + separator.Length);
             }
             if (options == StringSplitOptions.None || span.Length > 0)
-                result.Add(new string(span));
+                result.Add(span.ToString());
             return result;
         }
     }

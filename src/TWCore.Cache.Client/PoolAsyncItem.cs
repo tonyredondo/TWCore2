@@ -225,7 +225,7 @@ namespace TWCore.Cache.Client
                     Core.Log.Write(ex);
                 }
             }
-            Core.Log.Warning("Ping Task for Pool item node: {0} was terminated.", Name);
+            Core.Log.InfoDetail("Ping Task for Pool item node: {0} was terminated.", Name);
         }
         #endregion
     }

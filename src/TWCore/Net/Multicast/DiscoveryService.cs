@@ -129,7 +129,7 @@ namespace TWCore.Net.Multicast
         public static void Disconnect()
         {
             if (!_connected) return;
-            _sendTimer.Dispose();
+            _sendTimer?.Dispose();
             _sendTimer = null;
             PeerConnection.Disconnect();
             _connected = false;

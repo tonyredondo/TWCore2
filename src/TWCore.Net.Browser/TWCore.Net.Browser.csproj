@@ -1,7 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;netstandard2.0;net461;net462</TargetFrameworks>
     <Title>TWCore.Net.Browser</Title>
   </PropertyGroup>
+
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net462' ">
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <Reference Include="System.Net.Http">
+      <HintPath>..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\net461\lib\System.Net.Http.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

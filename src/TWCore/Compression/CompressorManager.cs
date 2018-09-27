@@ -35,7 +35,10 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static CompressorManager()
         {
+#if COMPATIBILITY
+#else
             Register(new BrotliCompressor());
+#endif
             Register(new GZipCompressor());
             Register(new DeflateCompressor());
         }

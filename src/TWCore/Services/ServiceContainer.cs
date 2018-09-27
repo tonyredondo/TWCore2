@@ -283,7 +283,7 @@ namespace TWCore.Services
                 Core.Log.InfoBasic(" Arguments: {0}", strArgs);
             Core.Log.InfoBasic(string.Format(" Service Name: {0}", ServiceName).PadRight(54) + "      " + string.Format("Environment Name: {0}", Core.EnvironmentName).PadRight(55));
             Core.Log.InfoBasic(string.Format(" Application Name: {0}", Core.ApplicationName).PadRight(54) + "      " + string.Format("Application Display: {0}", Core.ApplicationDisplayName).PadRight(55));
-            Core.Log.InfoBasic(string.Format(" Machine Name: {0}", Core.MachineName).PadRight(54) + "      " + string.Format("TWCore Version: {0}", Core.FrameworkVersion).PadRight(55));
+            Core.Log.InfoBasic(string.Format(" Machine Name: {0}", Core.MachineName).PadRight(54) + "      " + string.Format("TWCore Version: {0} {1}", Core.FrameworkVersion, Core.IsOptimizedVersion ? "[O]" : string.Empty).PadRight(55));
 
             if (_discovery)
                 Core.Log.InfoBasic(" Discovery Services: True [ReceiveThread = {0}]", !Core.GlobalSettings.DiscoveryDisableReceive);

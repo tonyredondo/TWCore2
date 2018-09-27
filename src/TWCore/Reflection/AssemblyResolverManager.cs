@@ -48,6 +48,7 @@ namespace TWCore.Reflection
         {
             if (Core.Settings[SettingsKey].IsNullOrWhitespace()) return;
             var paths = Core.Settings[SettingsKey].SplitAndTrim(',').ToArray();
+            if (paths == null || paths.Length == 0) return;
             RegisterDomain(paths, domain);
         }
         /// <summary>
@@ -58,6 +59,7 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RegisterDomain(string[] paths, AppDomain domain = null)
         {
+            if (paths == null || paths.Length == 0) return;
             if (Resolvers.Contains(domain ?? AppDomain.CurrentDomain)) return;
             var resolver = new AssemblyResolver(domain ?? AppDomain.CurrentDomain, paths);
             resolver.LoadAssembliesInfo();

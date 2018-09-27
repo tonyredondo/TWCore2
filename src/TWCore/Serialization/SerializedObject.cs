@@ -24,7 +24,6 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;
 
@@ -36,10 +35,9 @@ namespace TWCore.Serialization
     [DataContract, Serializable]
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
-        private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerCache = new ConcurrentDictionary<(string, string), ISerializer>();
-        private static readonly TimeoutDictionary<MultiArray<byte>, object> DesCache = new TimeoutDictionary<MultiArray<byte>, object>(MultiArrayBytesComparer.Instance);
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
-
+        private static readonly ConcurrentDictionary<string, ISerializer> SerializerCache = new ConcurrentDictionary<string, ISerializer>();
+        private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(32768);
+        
         /// <summary>
         /// Serialized Object File Extension
         /// </summary>
@@ -113,7 +111,7 @@ namespace TWCore.Serialization
                 SerializerMimeType = serMimeType;
                 if (serCompressor != null)
                     SerializerMimeType += ":" + serCompressor;
-                var cSerializer = SerializerCache.GetOrAdd((serMimeType, serCompressor), vTuple => CreateSerializer(vTuple));
+                var cSerializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
                 Data = cSerializer.Serialize(data, type);
             }
         }
@@ -145,13 +143,16 @@ namespace TWCore.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ISerializer CreateSerializer((string, string) vTuple)
+        private static ISerializer CreateSerializer(string serMimeType)
         {
-            var ser = SerializerManager.GetByMimeType(vTuple.Item1);
+            var idx = serMimeType.IndexOf(':');
+            var serMime = idx < 0 ? serMimeType : serMimeType.Substring(0, idx);
+            var serComp = idx < 0 ? null : serMimeType.Substring(idx + 1);
+            var ser = SerializerManager.GetByMimeType(serMime);
             if (ser is null)
-                throw new FormatException($"The serializer with MimeType = {vTuple.Item1} wasn't found.");
-            if (!string.IsNullOrWhiteSpace(vTuple.Item2))
-                ser.Compressor = CompressorManager.GetByEncodingType(vTuple.Item2);
+                throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
+            if (!string.IsNullOrWhiteSpace(serComp))
+                ser.Compressor = CompressorManager.GetByEncodingType(serComp);
             return ser;
         }
         #endregion
@@ -173,15 +174,9 @@ namespace TWCore.Serialization
                 if (type == typeof(MultiArray<byte>))
                     return Data;
                 return null;
-            }
-            var idx = SerializerMimeType.IndexOf(':');
-            var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
-            var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
-            var serializer = SerializerCache.GetOrAdd((serMime, serComp), vTuple => CreateSerializer(vTuple));
-            if (DesCache.TryGetValue(Data, out var cachedValue))
-                return cachedValue.DeepClone();
+            }            
+            var serializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
             var value = serializer.Deserialize(Data, type);
-            DesCache.TryAdd(Data, value, Timeout);
             return value;
         }
         /// <summary>
@@ -210,6 +205,32 @@ namespace TWCore.Serialization
             var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
             var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
 
+#if COMPATIBILITY
+            byte[] buffer;
+
+            //DataType
+            buffer = BitConverter.GetBytes(hasDataType ? dataTypeLength : -1);
+            stream.WriteBytes(buffer);
+            if (hasDataType)
+            {
+                buffer = Encoding.UTF8.GetBytes(DataType);
+                stream.Write(buffer);
+            }
+
+            //MimeType
+            buffer = BitConverter.GetBytes(hasMimeType ? serializerMimeTypeLength : -1);
+            stream.WriteBytes(buffer);
+            if (hasMimeType)
+            {
+                buffer = Encoding.UTF8.GetBytes(SerializerMimeType);
+                stream.Write(buffer);
+            }
+
+            //Data
+            buffer = BitConverter.GetBytes(Data.Count);
+            stream.WriteBytes(buffer);
+            Data.CopyTo(stream);
+#else
             Span<byte> intBuffer = stackalloc byte[4];
 
             //DataType
@@ -236,6 +257,7 @@ namespace TWCore.Serialization
             BitConverter.TryWriteBytes(intBuffer, Data.Count);
             stream.Write(intBuffer);
             Data.CopyTo(stream);
+#endif
         }
         /// <summary>
         /// Write the SerializedObject to a file
@@ -247,10 +269,14 @@ namespace TWCore.Serialization
         {
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
+
+            using (await FileLockerAsync.GetLockAsync(filepath).LockAsync().ConfigureAwait(false))
             {
-                CopyTo(fs);
-                await fs.FlushAsync().ConfigureAwait(false);
+                using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                {
+                    CopyTo(fs);
+                    await fs.FlushAsync().ConfigureAwait(false);
+                }
             }
         }
         /// <summary>
@@ -263,8 +289,11 @@ namespace TWCore.Serialization
         {
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
-                CopyTo(fs);
+            FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
+            {
+                using (var fs = new FileStream(fpath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                    CopyTo(fs);
+            }, filepath);
         }
         /// <summary>
         /// Get SerializedObject instance from the MultiArray representation.
@@ -287,9 +316,48 @@ namespace TWCore.Serialization
         {
             if (sequence.IsEmpty) return null;
             var length = sequence.Length;
-            Span<byte> lengthSpan = stackalloc byte[4];
+            byte[] dataArray = null;
             string dataType = null;
             string mimeType = null;
+
+#if COMPATIBILITY
+            var lengthBytes = new byte[4];
+
+            sequence.Slice(0, 4).CopyTo(lengthBytes);
+            var dtLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (dtLength < -1 || dtLength > length) return null;
+            if (dtLength != -1)
+            {
+                var buffer = new byte[dtLength];
+                sequence.Slice(4, dtLength).CopyTo(buffer);
+                dataType = Encoding.UTF8.GetString(buffer);
+                length -= dtLength;
+                sequence = sequence.Slice(4 + dtLength);
+            }
+
+            sequence.Slice(0, 4).CopyTo(lengthBytes);
+            var smtLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (smtLength < -1 || smtLength > length) return null;
+            if (smtLength != -1)
+            {
+                var buffer = new byte[smtLength];
+                sequence.Slice(4, smtLength).CopyTo(buffer);
+                mimeType = Encoding.UTF8.GetString(buffer);
+                length -= smtLength;
+                sequence = sequence.Slice(4 + smtLength);
+            }
+
+            sequence.Slice(0, 4).CopyTo(lengthBytes);
+            var dataLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (dataLength < -1 || dataLength > length) return null;
+            if (dataLength != -1)
+            {
+                dataArray = new byte[dataLength];
+                var dSpan = dataArray.AsSpan();
+                sequence.Slice(4, dataLength).CopyTo(dSpan);
+            }
+#else
+            Span<byte> lengthSpan = stackalloc byte[4];
 
             sequence.Slice(0, 4).CopyTo(lengthSpan);
             var dtLength = BitConverter.ToInt32(lengthSpan);
@@ -318,13 +386,13 @@ namespace TWCore.Serialization
             sequence.Slice(0, 4).CopyTo(lengthSpan);
             var dataLength = BitConverter.ToInt32(lengthSpan);
             if (dataLength < -1 || dataLength > length) return null;
-            byte[] dataArray = null;
             if (dataLength != -1)
             {
                 dataArray = new byte[dataLength];
                 var dSpan = dataArray.AsSpan();
                 sequence.Slice(4, dataLength).CopyTo(dSpan);
             }
+#endif
 
             return new SerializedObject(dataArray, dataType, mimeType);
         }
@@ -336,10 +404,52 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromStream(Stream stream)
         {
-            Span<byte> intBuffer = stackalloc byte[4];
             string dataType = null;
             string serializerMimeType = null;
             MultiArray<byte> data = MultiArray<byte>.Empty;
+
+#if COMPATIBILITY
+            var intBuffer = new byte[4];
+
+            stream.ReadExact(intBuffer, 0, 4);
+            var dataTypeByteLength = BitConverter.ToInt32(intBuffer, 0);
+            if (dataTypeByteLength > -1)
+            {
+                var bytes = new byte[dataTypeByteLength];
+                stream.ReadExact(bytes, 0, dataTypeByteLength);
+                dataType = Encoding.UTF8.GetString(bytes);
+            }
+
+            stream.ReadExact(intBuffer, 0, 4);
+            var serializerMimeTypeByteLength = BitConverter.ToInt32(intBuffer, 0);
+            if (serializerMimeTypeByteLength > -1)
+            {
+                var bytes = new byte[serializerMimeTypeByteLength];
+                stream.ReadExact(bytes, 0, serializerMimeTypeByteLength);
+                serializerMimeType = Encoding.UTF8.GetString(bytes);
+            }
+
+            stream.ReadExact(intBuffer, 0, 4);
+            var dataLength = BitConverter.ToInt32(intBuffer, 0);
+            if (dataLength > -1)
+            {
+                const int segmentLength = 1024;
+                var rows = dataLength / segmentLength;
+                var pos = dataLength % segmentLength;
+                if (pos > 0)
+                    rows++;
+
+                var bytes = new byte[rows][];
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = new byte[segmentLength];
+                    stream.ReadExact(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength);
+                }
+
+                data = new MultiArray<byte>(bytes, 0, dataLength);
+            }
+#else
+            Span<byte> intBuffer = stackalloc byte[4];
 
             stream.Fill(intBuffer);
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
@@ -378,6 +488,7 @@ namespace TWCore.Serialization
 
                 data = new MultiArray<byte>(bytes, 0, dataLength);
             }
+#endif
 
             return new SerializedObject(data, dataType, serializerMimeType);
         }
@@ -389,10 +500,52 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SerializedObject> FromStreamAsync(Stream stream)
         {
-            var intBuffer = new byte[4];
             string dataType = null;
             string serializerMimeType = null;
             MultiArray<byte> data = MultiArray<byte>.Empty;
+
+#if COMPATIBILITY
+            var intBuffer = new byte[4];
+
+            await stream.ReadExactAsync(intBuffer, 0, 4).ConfigureAwait(false);
+            var dataTypeByteLength = BitConverter.ToInt32(intBuffer, 0);
+            if (dataTypeByteLength > -1)
+            {
+                var bytes = new byte[dataTypeByteLength];
+                await stream.ReadExactAsync(bytes, 0, dataTypeByteLength).ConfigureAwait(false);
+                dataType = Encoding.UTF8.GetString(bytes);
+            }
+
+            await stream.ReadExactAsync(intBuffer, 0, 4).ConfigureAwait(false);
+            var serializerMimeTypeByteLength = BitConverter.ToInt32(intBuffer, 0);
+            if (serializerMimeTypeByteLength > -1)
+            {
+                var bytes = new byte[serializerMimeTypeByteLength];
+                await stream.ReadExactAsync(bytes, 0, serializerMimeTypeByteLength).ConfigureAwait(false);
+                serializerMimeType = Encoding.UTF8.GetString(bytes);
+            }
+
+            await stream.ReadExactAsync(intBuffer, 0, 4).ConfigureAwait(false);
+            var dataLength = BitConverter.ToInt32(intBuffer, 0);
+            if (dataLength > -1)
+            {
+                const int segmentLength = 1024;
+                var rows = dataLength / segmentLength;
+                var pos = dataLength % segmentLength;
+                if (pos > 0)
+                    rows++;
+
+                var bytes = new byte[rows][];
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = new byte[segmentLength];
+                    await stream.ReadExactAsync(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength).ConfigureAwait(false);
+                }
+
+                data = new MultiArray<byte>(bytes, 0, dataLength);
+            }
+#else
+            var intBuffer = new byte[4];
 
             stream.Fill(intBuffer);
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
@@ -430,6 +583,7 @@ namespace TWCore.Serialization
                 }
                 data = new MultiArray<byte>(bytes, 0, dataLength);
             }
+#endif
 
             return new SerializedObject(data, dataType, serializerMimeType);
         }
@@ -443,8 +597,11 @@ namespace TWCore.Serialization
         {
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                return await FromStreamAsync(fs).ConfigureAwait(false);
+            using (await FileLockerAsync.GetLockAsync(filepath).LockAsync().ConfigureAwait(false))
+            {
+                using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    return await FromStreamAsync(fs).ConfigureAwait(false);
+            }
         }
         /// <summary>
         /// Read the SerializedObject from a file
@@ -456,8 +613,12 @@ namespace TWCore.Serialization
         {
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                return FromStream(fs);
+            
+            return FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
+            {
+                using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    return FromStream(fs);
+            }, filepath);
         }
         #endregion
         

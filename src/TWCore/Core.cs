@@ -173,6 +173,20 @@ namespace TWCore
         /// Instance identifier
         /// </summary>
         public static Guid InstanceId { get; } = Guid.NewGuid();
+        /// <summary>
+        /// Get if the optimized version is loaded
+        /// </summary>
+        public static bool IsOptimizedVersion
+        {
+            get
+            {
+#if COMPATIBILITY
+                return false;
+#else
+                return true;
+#endif
+            }
+        }
 		#endregion
 
 		#region Init
@@ -188,6 +202,22 @@ namespace TWCore
             _initialized = true;
             UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
             Factory.SetFactories(factories);
+            var (coreInits, coreInitsExceptions) = GetCoreInits();
+
+            #region CoreStart.BeforeInit
+            foreach(var ci in coreInits)
+            {
+                try
+                {
+                    ci.BeforeInit();
+                }
+                catch
+                {
+                    //
+                }
+            }
+            #endregion
+
             Status = Factory.CreateStatusEngine();
             Log = Factory.CreateLogEngine();
             Trace = Factory.CreateTraceEngine();
@@ -200,9 +230,26 @@ namespace TWCore
                 Log.InfoBasic("Directory: {0}", Directory.GetCurrentDirectory());
             }
             AssemblyResolverManager.RegisterDomain();
+
+            #region CoreStart.AfterFactoryInit
+            foreach (var ci in coreInits)
+            {
+                try
+                {
+                    Log.LibDebug("CoreStart AfterFactoryInit from: {0}", ci);
+                    ci.AfterFactoryInit(factories);
+                }
+                catch
+                {
+                    //
+                }
+            }
+            #endregion
+
             if (ServiceContainer.HasConsole)
                 Log.AddConsoleStorage();
 
+            #region Log, Trace and Status Injector Load
             if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
             {
                 //Init Log
@@ -220,7 +267,7 @@ namespace TWCore
                             Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
                             continue;
                         }
-                        if (lSto.GetType() == typeof(ConsoleLogStorage))
+                        if (lSto is ConsoleLogStorage)
                         {
                             Log.LibDebug("Console log storage already added, ignoring.");
                             continue;
@@ -275,55 +322,44 @@ namespace TWCore
                 }
                 Status.Enabled = GlobalSettings.StatusEnabled;
             }
-
-            try
+            #endregion
+            
+            #region CoreStart.FinalizingInit
+            foreach (var ci in coreInits)
             {
-                var allAssemblies = Factory.GetAllAssemblies();
-                var types = allAssemblies.SelectMany(a =>
+                try
                 {
-                    try
-                    {
-                        return a.DefinedTypes;
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                    return new TypeInfo[0];
-                }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
-                if (types?.Any() == true)
+                    Log.LibDebug("CoreStart FinalizingInit from: {0}", ci);
+                    ci.FinalizingInit(factories);
+                }
+                catch
                 {
-                    foreach (var type in types)
-                    {
-                        try
-                        {
-                            var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
-                            Log.LibDebug("Loading CoreStart from: {0}", instance);
-                            instance.CoreInit(factories);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Write(ex);
-                        }
-                    }
+                    //
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Write(ex);
-            }
+            #endregion
 
-            Status.Attach(() =>
+            #region CoreStart Exceptions
+            foreach (var ex in coreInitsExceptions)
+                Log.Write(LogLevel.Warning, ex);
+            #endregion
+            
+            Task.Run(() =>
             {
-                if (Settings is null) return null;
-                var sItem = new StatusItem
+                Status.Attach(() =>
                 {
-                    Name = "Application Information\\Settings"
-                };
-                Settings.OrderBy(i => i.Key).Each(i => sItem.Values.Add(i.Key, i.Value));
-                return sItem;
+                    if (Settings is null) return null;
+                    var sItem = new StatusItem
+                    {
+                        Name = "Application Information\\Settings"
+                    };
+                    foreach (var i in Settings.OrderBy(i => i.Key))
+                        sItem.Values.Add(i.Key, i.Value);
+                    return sItem;
+                });
             });
 
+            #region Run On Init Actions
             var onError = false;
             lock (OninitActions)
             {
@@ -340,17 +376,16 @@ namespace TWCore
                     }
                 }
             }
+            #endregion
+            
             Log.Start();
-
-            //Task.Delay(25).WaitAsync();
-            //if (Log is DefaultLogEngine dlog)
-            //    dlog.LogDoneTask.WaitAsync();
 
             if (onError)
                 throw new Exception("Error initializing the application.");
 
             Log.LibDebug("Core has been initialized.");
         }
+
         /// <summary>
         /// Initialize with the default factories.
         /// </summary>
@@ -385,6 +420,49 @@ namespace TWCore
             var factories = new DefaultFactories();
             defaultFactoryAction(factories);
             Init(factories);
+        }
+        #endregion
+
+        #region Private Methods
+        private static (List<ICoreStart>, List<Exception>) GetCoreInits()
+        {
+            var lst = new List<ICoreStart>();
+            var exs = new List<Exception>();
+            try
+            {
+                var allAssemblies = Factory.GetAllAssemblies();
+                foreach (var asm in allAssemblies)
+                {
+                    try
+                    {
+                        if (asm.IsDynamic) continue;
+                        if (asm.ReflectionOnly) continue;
+                        foreach (var type in asm.ExportedTypes.AsParallel())
+                        {
+                            if (type.IsAbstract || !type.IsClass || !type.IsPublic || !type.IsVisible) continue;
+                            var cStart = type.GetInterface(nameof(ICoreStart));
+                            if (cStart == null) continue;
+                            try
+                            {
+                                lst.Add((ICoreStart)Activator.CreateInstance(type));
+                            }
+                            catch (Exception ex)
+                            {
+                                exs.Add(ex);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                exs.Add(ex);
+            }
+            return (lst, exs);
         }
         #endregion
 

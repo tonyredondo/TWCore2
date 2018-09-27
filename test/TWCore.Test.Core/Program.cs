@@ -70,8 +70,6 @@ namespace TWCore.Test.Core
         {
             Console.WriteLine("MAIN");
 
-            SerializerManager.DefaultBinarySerializer = new NBinarySerializer();
-
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>
             {

@@ -108,8 +108,12 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Guid GetGuid(MultiArray<byte> bytes) 
 		{
-			return new Guid(GetBytes(bytes).Slice(0, 16).AsSpan());
-		}
+#if COMPATIBILITY
+            return new Guid(GetBytes(bytes).Slice(0, 16).AsArray());
+#else
+            return new Guid(GetBytes(bytes).Slice(0, 16).AsSpan());
+#endif
+        }
 
         /// <inheritdoc />
         /// <summary>

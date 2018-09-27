@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 #pragma warning disable 1591
 
@@ -75,6 +76,18 @@ namespace TWCore.Serialization.NSerializer
                 }
             }
 
+#if COMPATIBILITY
+            var length = Encoding.UTF8.GetByteCount(value);
+
+            var bufferLength = length + 5;
+            var buffer = ArrayPool<byte>.Shared.Rent(bufferLength);
+            var bufferSpan = buffer.AsSpan(0, bufferLength);
+            buffer[0] = DataBytesDefinition.StringLength;
+            MemoryMarshal.Write(bufferSpan.Slice(1, 4), ref length);
+            Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 5);
+            Stream.Write(buffer, 0, bufferLength);
+            ArrayPool<byte>.Shared.Return(buffer);
+#else
             var length = Encoding.UTF8.GetByteCount(value);
             if (length <= 16384)
             {
@@ -94,6 +107,7 @@ namespace TWCore.Serialization.NSerializer
                 Stream.Write(bufferSpan);
                 ArrayPool<byte>.Shared.Return(buffer);
             }
+#endif
         }
     }
 
@@ -136,6 +150,22 @@ namespace TWCore.Serialization.NSerializer
 
             string strValue = null;
 
+#if COMPATIBILITY
+            var buffer = ArrayPool<byte>.Shared.Rent(length);
+            try
+            {
+                Stream.ReadExact(buffer, 0, length);
+                strValue = Encoding.UTF8.GetString(buffer, 0, length);
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+#else
             if (length <= 16384)
             {
                 Span<byte> bufferSpan = stackalloc byte[length];
@@ -159,6 +189,7 @@ namespace TWCore.Serialization.NSerializer
                     ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
+#endif
 
             var sLength = strValue.Length;
 

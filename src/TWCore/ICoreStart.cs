@@ -22,8 +22,16 @@ namespace TWCore
     public interface ICoreStart
     {
         /// <summary>
+        /// Before Core Init
+        /// </summary>
+        void BeforeInit();
+        /// <summary>
+        /// After Factory Init
+        /// </summary>
+        void AfterFactoryInit(Factories factories);
+        /// <summary>
         /// Core Init method
         /// </summary>
-        void CoreInit(Factories factories);
+        void FinalizingInit(Factories factories);
     }
 }

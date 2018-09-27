@@ -40,9 +40,9 @@ namespace TWCore
         private static readonly char[] Space = { ' ' };
         private static readonly Lazy<LevenshteinStringDistance> LevenshteinStringDistance = new Lazy<LevenshteinStringDistance>();
         private static readonly Lazy<DamerauLevenshteinStringDistance> DamerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
-        private static readonly Lazy<Regex> ShrinkRegex = new Lazy<Regex>(new Regex(@"[ ]{2,}", RegexOptions.Compiled));
-        private static readonly Lazy<Regex> InvalidXmlChars = new Lazy<Regex>(new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled));
-        private static readonly Lazy<Encoding> DefaultEncoding = new Lazy<Encoding>(new UTF8Encoding(false));
+        private static readonly Lazy<Regex> ShrinkRegex = new Lazy<Regex>(() => new Regex(@"[ ]{2,}", RegexOptions.Compiled));
+        private static readonly Lazy<Regex> InvalidXmlChars = new Lazy<Regex>(() => new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled));
+        private static readonly Lazy<Encoding> DefaultEncoding = new Lazy<Encoding>(() => new UTF8Encoding(false));
 
         #region Is? conditionals
         /// <summary>

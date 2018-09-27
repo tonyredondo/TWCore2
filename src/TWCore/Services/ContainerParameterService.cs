@@ -49,8 +49,9 @@ namespace TWCore.Services
         /// <param name="info">Parameter handler info</param>
         protected abstract void OnHandler(ParameterHandlerInfo info);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ICoreStart.CoreInit(Factories factories)
+        void ICoreStart.BeforeInit() { }
+        void ICoreStart.AfterFactoryInit(Factories factories) { }
+        void ICoreStart.FinalizingInit(Factories factories)
             => ServiceContainer.RegisterParametersHandler(Name, Description, OnHandler);
     }
 }

@@ -202,7 +202,7 @@ namespace TWCore
             _initialized = true;
             UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
             Factory.SetFactories(factories);
-            var coreInits = GetCoreInits();
+            var (coreInits, coreInitsExceptions) = GetCoreInits();
 
             #region CoreStart.BeforeInit
             foreach(var ci in coreInits)
@@ -249,6 +249,7 @@ namespace TWCore
             if (ServiceContainer.HasConsole)
                 Log.AddConsoleStorage();
 
+            #region Log, Trace and Status Injector Load
             if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
             {
                 //Init Log
@@ -266,7 +267,7 @@ namespace TWCore
                             Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
                             continue;
                         }
-                        if (lSto.GetType() == typeof(ConsoleLogStorage))
+                        if (lSto is ConsoleLogStorage)
                         {
                             Log.LibDebug("Console log storage already added, ignoring.");
                             continue;
@@ -321,7 +322,8 @@ namespace TWCore
                 }
                 Status.Enabled = GlobalSettings.StatusEnabled;
             }
-
+            #endregion
+            
             #region CoreStart.FinalizingInit
             foreach (var ci in coreInits)
             {
@@ -337,6 +339,11 @@ namespace TWCore
             }
             #endregion
 
+            #region CoreStart Exceptions
+            foreach (var ex in coreInitsExceptions)
+                Log.Write(LogLevel.Warning, ex);
+            #endregion
+            
             Task.Run(() =>
             {
                 Status.Attach(() =>
@@ -352,6 +359,7 @@ namespace TWCore
                 });
             });
 
+            #region Run On Init Actions
             var onError = false;
             lock (OninitActions)
             {
@@ -368,6 +376,8 @@ namespace TWCore
                     }
                 }
             }
+            #endregion
+            
             Log.Start();
 
             if (onError)
@@ -414,9 +424,10 @@ namespace TWCore
         #endregion
 
         #region Private Methods
-        private static List<ICoreStart> GetCoreInits()
+        private static (List<ICoreStart>, List<Exception>) GetCoreInits()
         {
             var lst = new List<ICoreStart>();
+            var exs = new List<Exception>();
             try
             {
                 var allAssemblies = Factory.GetAllAssemblies();
@@ -428,33 +439,30 @@ namespace TWCore
                         if (asm.ReflectionOnly) continue;
                         foreach (var type in asm.ExportedTypes.AsParallel())
                         {
-                            if (type.IsAbstract) continue;
-                            if (!type.IsClass) continue;
-                            if (!type.IsPublic) continue;
-                            if (!type.IsVisible) continue;
+                            if (type.IsAbstract || !type.IsClass || !type.IsPublic || !type.IsVisible) continue;
                             var cStart = type.GetInterface(nameof(ICoreStart));
                             if (cStart == null) continue;
                             try
                             {
                                 lst.Add((ICoreStart)Activator.CreateInstance(type));
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                // ignored
+                                exs.Add(ex);
                             }
                         }
                     }
                     catch
                     {
-                        // ignored
+                        //
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                exs.Add(ex);
             }
-            return lst;
+            return (lst, exs);
         }
         #endregion
 

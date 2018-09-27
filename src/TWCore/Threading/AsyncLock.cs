@@ -79,6 +79,74 @@ namespace TWCore.Threading
         }
 
         /// <summary>
+        /// Locks the <see cref="AsyncLock"/>.
+        /// </summary>
+        /// <param name="action">Action to execute in the lock</param>
+        public void Lock(Action action)
+        {
+            _semaphore.Wait();
+            try
+            {
+                action();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+        /// <summary>
+        /// Locks the <see cref="AsyncLock"/>.
+        /// </summary>
+        /// <param name="action">Action to execute in the lock</param>
+        /// <param name="state">State instance</param>
+        public void Lock<T>(Action<T> action, T state)
+        {
+            _semaphore.Wait();
+            try
+            {
+                action(state);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+        
+        /// <summary>
+        /// Locks the <see cref="AsyncLock"/>.
+        /// </summary>
+        /// <param name="func">Func to execute in the lock</param>
+        public TResult Lock<TResult>(Func<TResult> func)
+        {
+            _semaphore.Wait();
+            try
+            {
+                return func();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+        /// <summary>
+        /// Locks the <see cref="AsyncLock"/>.
+        /// </summary>
+        /// <param name="func">Func to execute in the lock</param>
+        /// <param name="state">State instance</param>
+        public TResult Lock<T, TResult>(Func<T, TResult> func, T state)
+        {
+            _semaphore.Wait();
+            try
+            {
+                return func(state);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+        
+        /// <summary>
         /// <see cref="T:TWCore.AsyncLock.Releaser" /> enables holding an <see cref="T:TWCore.AsyncLock" /> with a using scope.
         /// </summary>
         public struct Releaser : IDisposable

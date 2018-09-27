@@ -24,7 +24,6 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;
 
@@ -36,10 +35,9 @@ namespace TWCore.Serialization
     [DataContract, Serializable]
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
-        private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerCache = new ConcurrentDictionary<(string, string), ISerializer>();
-        private static readonly TimeoutDictionary<MultiArray<byte>, object> DesCache = new TimeoutDictionary<MultiArray<byte>, object>(MultiArrayBytesComparer.Instance);
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
-
+        private static readonly ConcurrentDictionary<string, ISerializer> SerializerCache = new ConcurrentDictionary<string, ISerializer>();
+        private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(32768);
+        
         /// <summary>
         /// Serialized Object File Extension
         /// </summary>
@@ -113,7 +111,7 @@ namespace TWCore.Serialization
                 SerializerMimeType = serMimeType;
                 if (serCompressor != null)
                     SerializerMimeType += ":" + serCompressor;
-                var cSerializer = SerializerCache.GetOrAdd((serMimeType, serCompressor), vTuple => CreateSerializer(vTuple));
+                var cSerializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
                 Data = cSerializer.Serialize(data, type);
             }
         }
@@ -145,13 +143,16 @@ namespace TWCore.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ISerializer CreateSerializer((string, string) vTuple)
+        private static ISerializer CreateSerializer(string serMimeType)
         {
-            var ser = SerializerManager.GetByMimeType(vTuple.Item1);
+            var idx = serMimeType.IndexOf(':');
+            var serMime = idx < 0 ? serMimeType : serMimeType.Substring(0, idx);
+            var serComp = idx < 0 ? null : serMimeType.Substring(idx + 1);
+            var ser = SerializerManager.GetByMimeType(serMime);
             if (ser is null)
-                throw new FormatException($"The serializer with MimeType = {vTuple.Item1} wasn't found.");
-            if (!string.IsNullOrWhiteSpace(vTuple.Item2))
-                ser.Compressor = CompressorManager.GetByEncodingType(vTuple.Item2);
+                throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
+            if (!string.IsNullOrWhiteSpace(serComp))
+                ser.Compressor = CompressorManager.GetByEncodingType(serComp);
             return ser;
         }
         #endregion
@@ -173,15 +174,9 @@ namespace TWCore.Serialization
                 if (type == typeof(MultiArray<byte>))
                     return Data;
                 return null;
-            }
-            var idx = SerializerMimeType.IndexOf(':');
-            var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
-            var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
-            var serializer = SerializerCache.GetOrAdd((serMime, serComp), vTuple => CreateSerializer(vTuple));
-            if (DesCache.TryGetValue(Data, out var cachedValue))
-                return cachedValue.DeepClone();
+            }            
+            var serializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
             var value = serializer.Deserialize(Data, type);
-            DesCache.TryAdd(Data, value, Timeout);
             return value;
         }
         /// <summary>
@@ -274,10 +269,14 @@ namespace TWCore.Serialization
         {
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
+
+            using (await FileLockerAsync.GetLockAsync(filepath).LockAsync().ConfigureAwait(false))
             {
-                CopyTo(fs);
-                await fs.FlushAsync().ConfigureAwait(false);
+                using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                {
+                    CopyTo(fs);
+                    await fs.FlushAsync().ConfigureAwait(false);
+                }
             }
         }
         /// <summary>
@@ -290,8 +289,11 @@ namespace TWCore.Serialization
         {
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
-                CopyTo(fs);
+            FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
+            {
+                using (var fs = new FileStream(fpath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                    CopyTo(fs);
+            }, filepath);
         }
         /// <summary>
         /// Get SerializedObject instance from the MultiArray representation.
@@ -595,8 +597,11 @@ namespace TWCore.Serialization
         {
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                return await FromStreamAsync(fs).ConfigureAwait(false);
+            using (await FileLockerAsync.GetLockAsync(filepath).LockAsync().ConfigureAwait(false))
+            {
+                using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    return await FromStreamAsync(fs).ConfigureAwait(false);
+            }
         }
         /// <summary>
         /// Read the SerializedObject from a file
@@ -608,8 +613,12 @@ namespace TWCore.Serialization
         {
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
-            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                return FromStream(fs);
+            
+            return FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
+            {
+                using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    return FromStream(fs);
+            }, filepath);
         }
         #endregion
         

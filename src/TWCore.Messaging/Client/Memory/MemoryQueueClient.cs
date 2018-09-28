@@ -127,7 +127,6 @@ namespace TWCore.Messaging
             foreach (var sender in _clientQueues.SendQueues)
             {
                 var sQueue = MemoryQueueManager.GetQueue(sender.Route, sender.Name);
-                Core.Log.LibVerbose("Sending message to the memory Queue '{0}' with CorrelationId={1}", sender.Route + "/" + sender.Name, message.CorrelationId);
                 sQueue.Enqueue(message.CorrelationId, message);
             }
 

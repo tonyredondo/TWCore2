@@ -17,6 +17,7 @@ limitations under the License.
 // ReSharper disable CheckNamespace
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging
 {
@@ -33,6 +34,7 @@ namespace TWCore.Messaging
         /// <param name="route">Route pair</param>
         /// <param name="name">Name pair</param>
         /// <returns>MemoryQueue instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MemoryQueue GetQueue(string route, string name)
             => QueuesDictionary.GetOrAdd((route, name), _ => new MemoryQueue());
     }

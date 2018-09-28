@@ -258,6 +258,7 @@ namespace TWCore
         public sealed class WItem : IDisposable
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem, ItemPoolAllocator> ItemPools = new ObjectPool<WItem, ItemPoolAllocator>();
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ReferencePool<LogStatItem> LogStatItemPool = new ReferencePool<LogStatItem>();
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(action: WorkerMethod);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(100);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
@@ -283,7 +284,11 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void WorkerMethod(LogStatItem item)
             {
-                if (!Core.Log.MaxLogLevel.HasFlag(item.Level)) return;
+                if (!Core.Log.MaxLogLevel.HasFlag(item.Level))
+                {
+                    LogStatItemPool.Store(item);
+                    return;
+                }
 
                 StatusCounter counter = null;
                 if (!string.IsNullOrEmpty(item.CounterKey))
@@ -319,6 +324,7 @@ namespace TWCore
                         counter?.Register(counter.Name == CounterPrefix + item.Message ? "Total" : item.Message, gTime);
                         break;
                 }
+                LogStatItemPool.Store(item);
             }
 
             static WItem()
@@ -352,19 +358,19 @@ namespace TWCore
             #endregion
 
             #region Nested Types
-            private struct LogStatItem
+            private class LogStatItem
             {
-                public readonly int Id;
-                public readonly double GlobalTicks;
-                public readonly double LastTapTicks;
-                public readonly string Message;
-                public readonly int Type;
-                public readonly LogLevel Level;
-                public readonly string Group;
-                public readonly string CounterKey;
+                public int Id;
+                public double GlobalTicks;
+                public double LastTapTicks;
+                public string Message;
+                public int Type;
+                public LogLevel Level;
+                public string Group;
+                public string CounterKey;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, string group, string counterKey, int type)
+                public void SetData(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, string group, string counterKey, int type)
                 {
                     Id = id;
                     Level = level;
@@ -503,7 +509,9 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 1));
+                var lsi = LogStatItemPool.New();
+                lsi.SetData(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 1);
+                LogStatsWorker.Enqueue(lsi);
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -516,7 +524,11 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null)
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 0));
+                {
+                    var lsi = LogStatItemPool.New();
+                    lsi.SetData(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 0);
+                    LogStatsWorker.Enqueue(lsi);
+                }
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -529,7 +541,11 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null)
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 2));
+                {
+                    var lsi = LogStatItemPool.New();
+                    lsi.SetData(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counterKey, 2);
+                    LogStatsWorker.Enqueue(lsi);
+                }
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>

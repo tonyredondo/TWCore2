@@ -60,7 +60,6 @@ namespace TWCore.Messaging
 				try
 				{
 					var memQueue = MemoryQueueManager.GetQueue(queue.Route, queue.Name);
-					Core.Log.LibVerbose("Enqueue message to the memory '{0}' with CorrelationId={1}", queue.Route + "/" + queue.Name, message.CorrelationId);
 					memQueue.Enqueue(message.CorrelationId, message);
 				}
 				catch (Exception ex)
@@ -147,7 +146,6 @@ namespace TWCore.Messaging
                 if (message is null) return;
 				try
 				{
-					Core.Log.LibVerbose("Received message from the memory queue '{0}/{1}'", Connection.Route, Connection.Name);
 					var messageBody = message.Value;
 					switch (messageBody)
 					{

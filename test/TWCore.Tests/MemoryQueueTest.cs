@@ -51,7 +51,7 @@ namespace TWCore.Tests
                 RequestOptions = new MQRequestOptions
                 {
                     SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
-                    CompressorEncodingType = "gzip",
+                    CompressorEncodingType = string.Empty, // "gzip",
                     ClientSenderOptions = new MQClientSenderOptions
                     {
                         Label = "TEST REQUEST",
@@ -69,7 +69,7 @@ namespace TWCore.Tests
                 ResponseOptions = new MQResponseOptions
                 {
                     SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
-                    CompressorEncodingType = "gzip",
+                    CompressorEncodingType = string.Empty, // "gzip",
                     ClientReceiverOptions = new MQClientReceiverOptions(60,
                         new KeyValue<string, string>("SingleResponseQueue", "true")
                     ),

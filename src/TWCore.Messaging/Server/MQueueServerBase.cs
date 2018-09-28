@@ -280,7 +280,7 @@ namespace TWCore.Messaging.Server
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
                 e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
-                //Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, iMessages);
+                Core.Log.LibDebug("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, iMessages);
                 if (RequestReceived != null)
                     await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
@@ -334,7 +334,7 @@ namespace TWCore.Messaging.Server
             try
             {
                 Counters.IncrementReceivingTime(e.Message.Header.Response.TotalTime);
-                //Core.Log.InfoDetail("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.Message.CorrelationId, iMessages);
+                Core.Log.LibDebug("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.Message.CorrelationId, iMessages);
                 if (ResponseReceived != null)
                     await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 if (MQueueServerEvents.ResponseReceived != null)

@@ -70,11 +70,11 @@ namespace TWCore
         /// Get the Worker status.
         /// </summary>
         public WorkerStatus Status => _status;
-		/// <summary>
-		/// Enable the wait timeout
-		/// </summary>
-		/// <value><c>true</c> if enable wait timeout; otherwise, <c>false</c>.</value>
-		public bool EnableWaitTimeout { get; set; } = true;
+        /// <summary>
+        /// Enable the wait timeout
+        /// </summary>
+        /// <value><c>true</c> if enable wait timeout; otherwise, <c>false</c>.</value>
+        public bool EnableWaitTimeout { get; set; } = true;
         /// <summary>
         /// Cancellation Token
         /// </summary>
@@ -184,7 +184,7 @@ namespace TWCore
         private void Init()
         {
             _tokenSource = new CancellationTokenSource();
-            _processThread = _precondition is null ? 
+            _processThread = _precondition is null ?
                 (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThread, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThread()) :
                 (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThreadWithPrecondition, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThreadWithPrecondition());
         }
@@ -272,21 +272,36 @@ namespace TWCore
         {
             var token = _tokenSource.Token;
             var workDone = false;
+            var useOwnThread = UseOwnThread;
             while (!token.IsCancellationRequested)
             {
                 if (Interlocked.Read(ref _queueCount) == 0)
-                    await _semaphore.WaitAsync(token).ConfigureAwait(false);
+                {
+                    var smTask = _semaphore.WaitAsync(token);
+                    if (useOwnThread)
+                        await smTask;
+                    else
+                        await smTask.ConfigureAwait(false);
+                }
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
                     Interlocked.Decrement(ref _queueCount);
                     if (_precondition?.Invoke() == false)
-                        await TaskHelper.SleepUntil(_precondition, token).ConfigureAwait(false);
+                    {
+                        if (useOwnThread)
+                            await TaskHelper.SleepUntil(_precondition, token);
+                        else
+                            await TaskHelper.SleepUntil(_precondition, token).ConfigureAwait(false);
+                    }
                     if (token.IsCancellationRequested)
                         break;
                     try
                     {
-                        await _func(item).ConfigureAwait(false);
+                        if (useOwnThread)
+                            await _func(item);
+                        else
+                            await _func(item).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -325,17 +340,27 @@ namespace TWCore
         {
             var token = _tokenSource.Token;
             var workDone = false;
+            var useOwnThread = UseOwnThread;
             while (!token.IsCancellationRequested)
             {
                 if (Interlocked.Read(ref _queueCount) == 0)
-                    await _semaphore.WaitAsync(token).ConfigureAwait(false);
+                {
+                    var smTask = _semaphore.WaitAsync(token);
+                    if (useOwnThread)
+                        await smTask;
+                    else
+                        await smTask.ConfigureAwait(false);
+                }
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
                     Interlocked.Decrement(ref _queueCount);
                     try
                     {
-                        await _func(item).ConfigureAwait(false);
+                        if (useOwnThread)
+                            await _func(item);
+                        else
+                            await _func(item).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -399,7 +424,7 @@ namespace TWCore
     /// <summary>
     /// WorkerStatus enum
     /// </summary>
-    public enum WorkerStatus 
+    public enum WorkerStatus
     {
         /// <summary>
         /// Worker stopped

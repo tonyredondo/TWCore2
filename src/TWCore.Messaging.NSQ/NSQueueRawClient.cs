@@ -48,7 +48,7 @@ namespace TWCore.Messaging.NSQ
         private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields
-        private List<(MQConnection, ObjectPool<Producer>)> _senders;
+        private List<(MQConnection, Producer)> _senders;
         private Consumer _receiver;
         private MQConnection _receiverConnection;
         private MQClientQueues _clientQueues;
@@ -93,17 +93,6 @@ namespace TWCore.Messaging.NSQ
         }
         #endregion
 
-        #region .ctor
-        /// <inheritdoc />
-        /// <summary>
-        /// NSQ Queue Client
-        /// </summary>
-        public NSQueueRawClient()
-        {
-            System.Net.ServicePointManager.DefaultConnectionLimit = 200;
-        }
-        #endregion
-
 
         #region Init and Dispose Methods
         /// <inheritdoc />
@@ -114,7 +103,7 @@ namespace TWCore.Messaging.NSQ
         protected override void OnInit()
         {
             OnDispose();
-            _senders = new List<(MQConnection, ObjectPool<Producer>)>();
+            _senders = new List<(MQConnection, Producer)>();
             _receiver = null;
 
 
@@ -137,11 +126,8 @@ namespace TWCore.Messaging.NSQ
                 {
                     foreach (var queue in _clientQueues.SendQueues)
                     {
-                        _senders.Add((queue, new ObjectPool<Producer>(pool =>
-                        {
-                            Core.Log.LibVerbose("New Producer from QueueClient");
-                            return new Producer(queue.Route);
-                        }, null, 1)));
+                        Core.Log.LibVerbose("New Producer from QueueClient");
+                        _senders.Add((queue, new Producer(queue.Route)));
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
@@ -179,10 +165,8 @@ namespace TWCore.Messaging.NSQ
         {
             if (_senders != null)
             {
-                var producers = _senders.SelectMany(i => i.Item2.GetCurrentObjects()).ToArray();
+                var producers = _senders.Select(i => i.Item2).ToArray();
                 Parallel.ForEach(producers, p => p.Stop());
-                foreach (var sender in _senders)
-                    sender.Item2.Clear();
                 _senders.Clear();
                 _senders = null;
             }
@@ -215,12 +199,10 @@ namespace TWCore.Messaging.NSQ
 
             var body = CreateRawMessageBody(message, correlationId, name);
 
-            foreach ((var queue, var nsqProducerPool) in _senders)
+            foreach ((var queue, var nsqProducer) in _senders)
             {
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, correlationId);
-                var nsqProducer = nsqProducerPool.New();
                 await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
-                nsqProducerPool.Store(nsqProducer);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
             return true;
@@ -261,7 +243,7 @@ namespace TWCore.Messaging.NSQ
                 pro.DeleteTopic(message.Name);
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-                
+
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();

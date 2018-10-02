@@ -31,17 +31,7 @@ namespace TWCore.Messaging.NSQ
     /// </summary>
     public class NSQueueRawServer : MQueueRawServerBase
     {
-        private readonly ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
-
-        #region .ctor
-        /// <summary>
-        /// NSQ Server Implementation
-        /// </summary>
-        public NSQueueRawServer()
-        {
-            System.Net.ServicePointManager.DefaultConnectionLimit = 500;
-        }
-        #endregion
+        private readonly ConcurrentDictionary<string, Producer> _rQueue = new ConcurrentDictionary<string, Producer>();
 
         /// <inheritdoc />
         /// <summary>
@@ -80,12 +70,11 @@ namespace TWCore.Messaging.NSQ
             {
                 try
                 {
-                    var nsqProducerPool = _rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(pool =>
+                    var nsqProducer = _rQueue.GetOrAdd(queue.Route, qRoute =>
                     {
                         Core.Log.LibVerbose("New Producer from RawQueueServer");
-                        return new Producer(q);
-                    }, null, 1));
-                    var nsqProducer = nsqProducerPool.New();
+                        return new Producer(qRoute);
+                    });
 
                     if (!string.IsNullOrEmpty(replyTo))
                     {
@@ -105,8 +94,6 @@ namespace TWCore.Messaging.NSQ
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
                         await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
                     }
-
-                    nsqProducerPool.Store(nsqProducer);
                 }
                 catch (Exception ex)
                 {
@@ -123,10 +110,8 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         protected override void OnDispose()
         {
-            var producers = _rQueue.SelectMany(i => i.Value.GetCurrentObjects()).ToArray();
+            var producers = _rQueue.Select(i => i.Value).ToArray();
             Parallel.ForEach(producers, p => p.Stop());
-            foreach (var sender in _rQueue)
-                sender.Value.Clear();
             _rQueue.Clear();
         }
     }

@@ -93,7 +93,9 @@ namespace TWCore.Messaging.Configuration
                 client.Init(this);
                 return client;
             }
-            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Client);
+            var typeName = Types?.Client;
+            if (!string.IsNullOrWhiteSpace(typeName))
+                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", typeName);
             return null;
         }
         /// <summary>
@@ -109,7 +111,9 @@ namespace TWCore.Messaging.Configuration
                 client.Init(this);
                 return client;
             }
-            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", RawTypes?.Client);
+            var typeName = RawTypes?.Client;
+            if (!string.IsNullOrWhiteSpace(typeName))
+                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", typeName);
             return null;
         }
         /// <summary>
@@ -127,7 +131,9 @@ namespace TWCore.Messaging.Configuration
                 server.ResponseServer = responseServer;
                 return server;
             }
-            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Server);
+            var typeName = Types?.Server;
+            if (!string.IsNullOrWhiteSpace(typeName))
+                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", typeName);
             return null;
         }
         /// <summary>
@@ -145,7 +151,9 @@ namespace TWCore.Messaging.Configuration
                 server.ResponseServer = responseServer;
                 return server;
             }
-            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", RawTypes?.Server);
+            var typeName = RawTypes?.Server;
+            if (!string.IsNullOrWhiteSpace(typeName))
+                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", typeName);
             return null;
         }
         /// <summary>
@@ -160,7 +168,9 @@ namespace TWCore.Messaging.Configuration
                 var admin = (IMQueueAdmin)Activator.CreateInstance(type);
                 return admin;
             }
-            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Admin ?? RawTypes?.Admin);
+            var typeName = Types?.Admin ?? RawTypes?.Admin;
+            if (!string.IsNullOrWhiteSpace(typeName))
+                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", typeName);
             return null;
         }
         /// <summary>

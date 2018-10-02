@@ -124,7 +124,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAsync();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -175,7 +175,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAsync();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));

@@ -233,7 +233,7 @@ namespace TWCore.Messaging.NATS
 
             foreach ((var queue, var producer) in _senders)
             {
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, message.Header.CorrelationId);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, message.Header.CorrelationId);
                 producer.Publish(queue.Name, body);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);

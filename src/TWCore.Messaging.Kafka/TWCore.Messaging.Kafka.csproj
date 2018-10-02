@@ -5,7 +5,7 @@
     <Title>TWCore.Messaging.Kafka</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="kafka-net" Version="0.9.0.65" />
+    <PackageReference Include="Confluent.Kafka" Version="1.0.0-beta" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Messaging\TWCore.Messaging.csproj" />

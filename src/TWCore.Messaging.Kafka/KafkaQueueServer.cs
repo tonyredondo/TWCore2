@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using NATS.Client;
+using KafkaNet;
+using KafkaNet.Model;
+using KafkaNet.Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -25,26 +27,15 @@ using TWCore.Threading;
 
 // ReSharper disable InconsistentNaming
 
-namespace TWCore.Messaging.NATS
+namespace TWCore.Messaging.Kafka
 {
     /// <inheritdoc />
     /// <summary>
-    /// NATS Server Implementation
+    /// Kafka Server Implementation
     /// </summary>
-    public class NATSQueueServer : MQueueServerBase
+    public class KafkaQueueServer : MQueueServerBase
     {
-        private readonly ConcurrentDictionary<string, IConnection> _rQueue = new ConcurrentDictionary<string, IConnection>();
-        private readonly ConnectionFactory _factory;
-
-        #region .ctor
-        /// <summary>
-        /// NSQ Server Implementation
-        /// </summary>
-        public NATSQueueServer()
-        {
-            _factory = new ConnectionFactory();
-        }
-        #endregion
+        private readonly ConcurrentDictionary<string, Producer> _rQueue = new ConcurrentDictionary<string, Producer>();
 
         /// <inheritdoc />
         /// <summary>
@@ -54,7 +45,7 @@ namespace TWCore.Messaging.NATS
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         /// <returns>IMQueueServerListener</returns>
         protected override IMQueueServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
-            => new NATSQueueServerListener(connection, this, responseServer);
+            => new KafkaQueueServerListener(connection, this, responseServer);
 
         /// <inheritdoc />
         /// <summary>
@@ -62,35 +53,38 @@ namespace TWCore.Messaging.NATS
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
+        protected override async Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return TaskHelper.CompleteValueMinus1;
+                return -1;
 
             var senderOptions = Config.ResponseOptions.ServerSenderOptions;
             if (senderOptions is null)
                 throw new NullReferenceException("ServerSenderOptions is null.");
 
             var data = SenderSerializer.Serialize(message);
-            var body = NATSQueueClient.CreateMessageBody(data, message.CorrelationId);
 
             var response = true;
             foreach (var queue in e.ResponseQueues)
             {
                 try
                 {
-                    var producer = _rQueue.GetOrAdd(queue.Route, qRoute => 
+                    var producer = _rQueue.GetOrAdd(queue.Route, qRoute =>
                     {
-                        Core.Log.LibVerbose("New Producer from QueueServer");
-                        IConnection connection = null;
+                        Core.Log.LibVerbose("New Producer from QueueClient");
+                        Producer connection = null;
+                        if (string.IsNullOrEmpty(qRoute))
+                            throw new UriFormatException($"The route for the connection to {qRoute} is null.");
+                        var options = new KafkaOptions(new Uri(qRoute));
+                        var router = new BrokerRouter(options);
                         Extensions.InvokeWithRetry(() =>
                         {
-                            connection = _factory.CreateConnection(qRoute);
+                            connection = new Producer(router);
                         }, 5000, int.MaxValue).WaitAsync();
                         return connection;
                     });
                     Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
-                    producer.Publish(queue.Name, body);
+                    await producer.SendMessageAsync(queue.Name, new[] { new Message { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() } }).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -98,19 +92,7 @@ namespace TWCore.Messaging.NATS
                     Core.Log.Write(ex);
                 }
             }
-            return response ? Task.FromResult(data.Count) : TaskHelper.CompleteValueMinus1;
+            return response ? data.Count : -1;
         }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// On Dispose
-        /// </summary>
-        protected override void OnDispose()
-        {
-            var producers = _rQueue.Select(i => i.Value).ToArray();
-            Parallel.ForEach(producers, p => p.Close());
-            _rQueue.Clear();
-        }
-
     }
 }

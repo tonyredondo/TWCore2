@@ -45,11 +45,18 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Nested Type
-        private struct RabbitMessage
+        private readonly struct RabbitMessage
         {
-            public Guid CorrelationId;
-            public IBasicProperties Properties;
-            public byte[] Body;
+            public readonly Guid CorrelationId;
+            public readonly IBasicProperties Properties;
+            public readonly byte[] Body;
+
+            public RabbitMessage(Guid correlationId, IBasicProperties properties, byte[] body)
+            {
+                CorrelationId = correlationId;
+                Properties = properties;
+                Body = body;
+            }
         }
         #endregion
 
@@ -89,13 +96,8 @@ namespace TWCore.Messaging.RabbitMQ
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>
             {
-                var message = new RabbitMessage
-                {
-                    CorrelationId = Guid.Parse(ea.BasicProperties.CorrelationId),
-                    Properties = ea.BasicProperties,
-                    Body = ea.Body
-                };
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, message));
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, 
+                    new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body)));
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);

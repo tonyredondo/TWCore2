@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
-using TWCore.Messaging.NATS;
+using TWCore.Messaging.Kafka;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable ConvertToConstant.Local
@@ -17,27 +17,27 @@ using TWCore.Services;
 namespace TWCore.Tests
 {
     /// <inheritdoc />
-    public class NATSTest : ContainerParameterService
+    public class KafkaTest : ContainerParameterService
     {
-        public NATSTest() : base("natstest", "NATS Test") { }
+        public KafkaTest() : base("kafkatest", "Kafka Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting NATS Test");
+            Core.Log.Warning("Starting Kafka Test");
 
             #region Set Config
             var mqConfig = new MQPairConfig
             {
                 Name = "QueueTest",
-                Types = new MQObjectTypes { ClientType = typeof(NATSQueueClient), ServerType = typeof(NATSQueueServer) },
-                RawTypes = new MQObjectTypes { ClientType = typeof(NATSQueueRawClient), ServerType = typeof(NATSQueueRawServer) },
+                Types = new MQObjectTypes { ClientType = typeof(KafkaQueueClient), ServerType = typeof(KafkaQueueServer) },
+                RawTypes = new MQObjectTypes { ClientType = typeof(KafkaQueueRawClient), ServerType = typeof(KafkaQueueRawServer) },
                 ClientQueues = new List<MQClientQueues>
                 {
                     new MQClientQueues
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						SendQueues = new List<MQConnection> { new MQConnection("localhost:4222", "TEST_RQ", null) },
-						RecvQueue = new MQConnection("localhost:4222", "TEST_RS", null)
+						SendQueues = new List<MQConnection> { new MQConnection("http://172.27.205.114:9092", "TEST_RQ", null) },
+						RecvQueue = new MQConnection("http://172.27.205.114:9092", "TEST_RS", null)
                     }
                 },
                 ServerQueues = new List<MQServerQueues>
@@ -46,7 +46,7 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						RecvQueues = new List<MQConnection> { new MQConnection("localhost:4222", "TEST_RQ", null) }
+						RecvQueues = new List<MQConnection> { new MQConnection("http://172.27.205.114:9092", "TEST_RQ", null) }
                     }
                 },
                 RequestOptions = new MQRequestOptions
@@ -87,8 +87,8 @@ namespace TWCore.Tests
 
             JsonTextSerializerExtensions.Serializer.Indent = true;
 
-            mqConfig.SerializeToXmlFile("natsConfig.xml");
-            mqConfig.SerializeToJsonFile("natsConfig.json");
+            mqConfig.SerializeToXmlFile("kafkaConfig.xml");
+            mqConfig.SerializeToJsonFile("kafkaConfig.json");
 
             var manager = mqConfig.GetQueueManager();
             manager.CreateClientQueues();

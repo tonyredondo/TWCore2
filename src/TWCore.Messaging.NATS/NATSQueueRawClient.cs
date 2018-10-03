@@ -47,7 +47,7 @@ namespace TWCore.Messaging.NATS
 
         #region Fields
         private ConnectionFactory _factory;
-        private List<(MQConnection, ObjectPool<IConnection>)> _senders;
+        private List<(MQConnection, IConnection)> _senders;
         private IConnection _receiverNASTConnection;
         private IAsyncSubscription _receiver;
         private MQConnection _receiverConnection;
@@ -71,10 +71,6 @@ namespace TWCore.Messaging.NATS
             public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
-            public IConnection Connection;
-            public IAsyncSubscription Consumer;
-            public string Route;
-            public string Name;
         }
         private static void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
@@ -94,7 +90,6 @@ namespace TWCore.Messaging.NATS
         public NATSQueueRawClient()
         {
             _factory = new ConnectionFactory();
-            System.Net.ServicePointManager.DefaultConnectionLimit = 500;
         }
         #endregion
 
@@ -108,7 +103,7 @@ namespace TWCore.Messaging.NATS
         protected override void OnInit()
         {
             OnDispose();
-            _senders = new List<(MQConnection, ObjectPool<IConnection>)>();
+            _senders = new List<(MQConnection, IConnection)>();
             _receiver = null;
 
 
@@ -131,18 +126,15 @@ namespace TWCore.Messaging.NATS
                 {
                     foreach (var queue in _clientQueues.SendQueues)
                     {
-                        _senders.Add((queue, new ObjectPool<IConnection>(pool =>
+                        Core.Log.LibVerbose("New Producer from QueueClient");
+                        IConnection connection = null;
+                        if (string.IsNullOrEmpty(queue.Route))
+                            throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
+                        Extensions.InvokeWithRetry(() =>
                         {
-                            Core.Log.LibVerbose("New Producer from QueueClient");
-                            IConnection connection = null;
-                            if (string.IsNullOrEmpty(queue.Route))
-                                throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                            Extensions.InvokeWithRetry(() =>
-                            {
-                                connection = _factory.CreateConnection(queue.Route);
-                            }, 5000, int.MaxValue).WaitAsync();
-                            return connection;
-                        }, null, 1)));
+                            connection = _factory.CreateConnection(queue.Route);
+                        }, 5000, int.MaxValue).WaitAsync();
+                        _senders.Add((queue, connection));
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
@@ -181,10 +173,8 @@ namespace TWCore.Messaging.NATS
             {
                 foreach (var sender in _senders)
                 {
-                    var pool = sender.Item2;
-                    foreach (var conn in pool.GetCurrentObjects())
-                        conn.Dispose();
-                    sender.Item2.Clear();
+                    var conn = sender.Item2;
+                    conn.Dispose();
                 }
                 _senders.Clear();
                 _senders = null;
@@ -222,12 +212,10 @@ namespace TWCore.Messaging.NATS
 
             var body = CreateRawMessageBody(message, correlationId, name);
 
-            foreach ((var queue, var producerPool) in _senders)
+            foreach ((var queue, var producer) in _senders)
             {
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, correlationId);
-                var producer = producerPool.New();
                 producer.Publish(queue.Name, body);
-                producerPool.Store(producer);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
             return TaskHelper.CompleteTrue;
@@ -253,15 +241,16 @@ namespace TWCore.Messaging.NATS
 
             if (!UseSingleResponseQueue)
             {
-                message.Name = _receiverConnection.Name + "_" + correlationId;
-                message.Route = _receiverConnection.Route;
-                message.Connection = _factory.CreateConnection(message.Route);
-                message.Consumer = message.Connection.SubscribeAsync(message.Name, MessageHandler);
-                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                message.Consumer.Unsubscribe();
-                message.Connection.Close();
-                message.Consumer = null;
-                message.Consumer = null;
+                var name = _receiverConnection.Name + "_" + correlationId;
+                var route = _receiverConnection.Route;
+                var waitResult = false;
+                using (var connection = _factory.CreateConnection(route))
+                {
+                    using (var consumer = connection.SubscribeAsync(name, MessageHandler))
+                    {
+                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
+                    }
+                }
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

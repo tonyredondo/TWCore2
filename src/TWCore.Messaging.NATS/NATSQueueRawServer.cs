@@ -34,7 +34,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueRawServer : MQueueRawServerBase
     {
-        private readonly ConcurrentDictionary<string, ObjectPool<IConnection>> _rQueue = new ConcurrentDictionary<string, ObjectPool<IConnection>>();
+        private readonly ConcurrentDictionary<string, IConnection> _rQueue = new ConcurrentDictionary<string, IConnection>();
         private readonly ConnectionFactory _factory;
 
         #region .ctor
@@ -44,7 +44,6 @@ namespace TWCore.Messaging.NATS
         public NATSQueueRawServer()
         {
             _factory = new ConnectionFactory();
-            System.Net.ServicePointManager.DefaultConnectionLimit = 500;
         }
         #endregion
 
@@ -85,12 +84,16 @@ namespace TWCore.Messaging.NATS
             {
                 try
                 {
-                    var producerPool = _rQueue.GetOrAdd(queue.Route, q => new ObjectPool<IConnection>(pool =>
+                    var producer = _rQueue.GetOrAdd(queue.Route, qRoute => 
                     {
-                        Core.Log.LibVerbose("New Producer from RawQueueServer");
-                        return _factory.CreateConnection(queue.Route);
-                    }, null, 1));
-                    var producer = producerPool.New();
+                        Core.Log.LibVerbose("New Producer from QueueServer");
+                        IConnection connection = null;
+                        Extensions.InvokeWithRetry(() =>
+                        {
+                            connection = _factory.CreateConnection(qRoute);
+                        }, 5000, int.MaxValue).WaitAsync();
+                        return connection;
+                    });
 
                     if (!string.IsNullOrEmpty(replyTo))
                     {
@@ -110,8 +113,6 @@ namespace TWCore.Messaging.NATS
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
                         producer.Publish(queue.Name, body);
                     }
-
-                    producerPool.Store(producer);
                 }
                 catch (Exception ex)
                 {
@@ -128,10 +129,8 @@ namespace TWCore.Messaging.NATS
         /// </summary>
         protected override void OnDispose()
         {
-            var producers = _rQueue.SelectMany(i => i.Value.GetCurrentObjects()).ToArray();
+            var producers = _rQueue.Select(i => i.Value).ToArray();
             Parallel.ForEach(producers, p => p.Close());
-            foreach (var sender in _rQueue)
-                sender.Value.Clear();
             _rQueue.Clear();
         }
     }

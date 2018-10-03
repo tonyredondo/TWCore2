@@ -180,11 +180,14 @@ namespace TWCore
         {
             if (task is null)
                 return default;
+            SynchronizationContext currentSyncContext = null;
             try
             {
                 if (task.IsCompleted)
                     return task.Result;
-                return task.GetAwaiter().GetResult();
+                currentSyncContext = SynchronizationContext.Current;
+                SynchronizationContext.SetSynchronizationContext(null);
+                return task.Result;
             }
             catch (AggregateException ex)
             {
@@ -193,13 +196,12 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
                 throw;
             }
-            catch (Exception ex)
+            finally
             {
-                Core.Log.Write(ex);
-                throw;
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(currentSyncContext);
             }
         }
         /// <summary>
@@ -214,10 +216,13 @@ namespace TWCore
         {
             if (task is null)
                 return default;
+            SynchronizationContext currentSyncContext = null;
             try
             {
                 if (task.IsCompleted)
                     return task.Result;
+                currentSyncContext = SynchronizationContext.Current;
+                SynchronizationContext.SetSynchronizationContext(null);
                 return task.Wait(millisecondsTimeout) ? task.Result : default;
             }
             catch (AggregateException ex)
@@ -227,13 +232,12 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
                 throw;
             }
-            catch (Exception ex)
+            finally
             {
-                Core.Log.Write(ex);
-                throw;
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(currentSyncContext);
             }
         }
         /// <summary>
@@ -248,10 +252,13 @@ namespace TWCore
         {
             if (task is null)
                 return default;
+            SynchronizationContext currentSyncContext = null;
             try
             {
                 if (task.IsCompleted)
                     return task.Result;
+                currentSyncContext = SynchronizationContext.Current;
+                SynchronizationContext.SetSynchronizationContext(null);
                 return task.Wait(timeout) ? task.Result : default;
             }
             catch (AggregateException ex)
@@ -261,13 +268,12 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
                 throw;
             }
-            catch (Exception ex)
+            finally
             {
-                Core.Log.Write(ex);
-                throw;
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(currentSyncContext);
             }
         }
         /// <summary>
@@ -282,11 +288,17 @@ namespace TWCore
         {
             if (task is null)
                 return default;
+            SynchronizationContext currentSyncContext = null;
             try
             {
                 if (task.IsCompleted)
                     return task.Result;
+
+                currentSyncContext = SynchronizationContext.Current;
+                SynchronizationContext.SetSynchronizationContext(null);
                 task.Wait(cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
+                    return default;
                 return task.Result;
             }
             catch (AggregateException ex)
@@ -296,13 +308,12 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
                 throw;
             }
-            catch (Exception ex)
+            finally
             {
-                Core.Log.Write(ex);
-                throw;
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(currentSyncContext);
             }
         }
         /// <summary>
@@ -316,20 +327,26 @@ namespace TWCore
         {
             if (task.IsCompleted)
                 return task.Result;
-            var wait = new ManualResetEventSlim(false);
-            var continuation = task.ContinueWith(WaitAsyncContinuation, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
-            wait.Wait();
-            if (continuation.Result is ExceptionDispatchInfo edi)
-                edi.Throw();
-            return (T)continuation.Result;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object WaitAsyncContinuation<T>(Task<T> oldTask, object state)
-        {
-            var ex = oldTask.Exception;
-            var result = (ex != null) ? ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex) : (object)oldTask.Result;
-            ((ManualResetEventSlim)state).Set();
-            return result;
+
+            var currentSyncContext = SynchronizationContext.Current;
+            try
+            {
+                SynchronizationContext.SetSynchronizationContext(null);
+                return task.Result;
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                throw;
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(currentSyncContext);
+            }
         }
         /// <summary>
         /// Wait for task avoiding deadlocks
@@ -341,18 +358,26 @@ namespace TWCore
         {
             if (task.IsCompleted)
                 return;
-            var wait = new ManualResetEventSlim(false);
-            var continuation = task.ContinueWith((oldTask, state) =>
+
+            var currentSyncContext = SynchronizationContext.Current;
+            try
             {
-                ExceptionDispatchInfo tEx = null;
-                var ex = oldTask.Exception;
-                if (ex != null)
-                    tEx = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
-                ((ManualResetEventSlim)state).Set();
-                return tEx;
-            }, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
-            wait.Wait();
-            continuation.Result?.Throw();
+                SynchronizationContext.SetSynchronizationContext(null);
+                task.Wait();
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                throw;
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(currentSyncContext);
+            }
         }
         /// <summary>
         /// Handles a cancellation Token for a task without support

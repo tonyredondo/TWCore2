@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using Confluent.Kafka;
+using KafkaNet;
+using KafkaNet.Model;
+using KafkaNet.Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -43,7 +45,7 @@ namespace TWCore.Messaging.Kafka
         private static readonly ConcurrentDictionary<Guid, KafkaQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, KafkaQueueMessage>();
 
         #region Fields
-        private List<(MQConnection, Producer<byte[], byte[]>)> _senders;
+        private List<(MQConnection, Producer)> _senders;
         private CancellationTokenSource _tokenSource;
         private MQConnection _receiverConnection;
         private MQClientQueues _clientQueues;
@@ -80,7 +82,7 @@ namespace TWCore.Messaging.Kafka
         protected override void OnInit()
         {
             OnDispose();
-            _senders = new List<(MQConnection, Producer<byte[], byte[]>)>();
+            _senders = new List<(MQConnection, Producer)>();
             _tokenSource = new CancellationTokenSource();
 
             if (Config != null)
@@ -103,13 +105,14 @@ namespace TWCore.Messaging.Kafka
                     foreach (var queue in _clientQueues.SendQueues)
                     {
                         Core.Log.LibVerbose("New Producer from QueueClient");
-                        Producer<byte[], byte[]> connection = null;
+                        Producer connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        var config = new ProducerConfig { BootstrapServers = queue.Route };
+                        var options = new KafkaOptions(new Uri(queue.Route));
+                        var router = new BrokerRouter(options);
                         Extensions.InvokeWithRetry(() =>
                         {
-                            connection = new Producer<byte[], byte[]>(config);
+                            connection = new Producer(router);
                         }, 5000, int.MaxValue).WaitAsync();
                         _senders.Add((queue, connection));
                     }
@@ -125,33 +128,23 @@ namespace TWCore.Messaging.Kafka
                         var cancellationToken = _tokenSource.Token;
                         var consumerTask = Task.Factory.StartNew(() =>
                         {
-                            var config = new ConsumerConfig
-                            {
-                                BootstrapServers = _receiverConnection.Route,
-                                GroupId = _receiverConnection.Name + "Consumer",
-                                EnableAutoCommit = true,
-                                StatisticsIntervalMs = 0,
-                                SessionTimeoutMs = 6000,
-                                AutoOffsetReset = AutoOffsetResetType.Latest
-                            };
-
-                            Consumer<byte[], byte[]> consumer = null;
+                            var options = new KafkaOptions(new Uri(_receiverConnection.Route));
+                            var router = new BrokerRouter(options);
+                            Consumer consumer = null;
                             Extensions.InvokeWithRetry(() =>
                             {
-                                consumer = new Consumer<byte[], byte[]>(config);
-                                consumer.Subscribe(_receiverConnection.Name);
+                                new Consumer(new ConsumerOptions(_receiverConnection.Name, router));
                             }, 5000, int.MaxValue).WaitAsync();
                             using (consumer)
                             {
-                                while (!cancellationToken.IsCancellationRequested)
+                                foreach(var cRes in consumer.Consume(cancellationToken))
                                 {
-                                    var cRes = consumer.Consume(cancellationToken);
+                                    if (cancellationToken.IsCancellationRequested) break;
                                     var correlationId = new Guid(cRes.Key);
                                     var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
                                     message.CorrelationId = correlationId;
                                     message.Body = cRes.Value;
                                     message.WaitHandler.Set();
-                                    consumer.Commit(cRes);
                                 }
                             }
                         }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
@@ -237,7 +230,7 @@ namespace TWCore.Messaging.Kafka
             foreach ((var queue, var producer) in _senders)
             {
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, queue.Route, queue.Name, message.Header.CorrelationId);
-                await producer.ProduceAsync(queue.Name, new Message<byte[], byte[]> { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() }).ConfigureAwait(false);
+                await producer.SendMessageAsync(queue.Name, new[] { new Message { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() } }).ConfigureAwait(false);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
             return true;
@@ -268,24 +261,17 @@ namespace TWCore.Messaging.Kafka
 
                 var consumerTask = Task.Factory.StartNew(() =>
                 {
-                    var config = new ConsumerConfig
+                    var options = new KafkaOptions(new Uri(message.Route));
+                    var router = new BrokerRouter(options);
+                    using (var consumer = new Consumer(new ConsumerOptions(message.Name, router)))
                     {
-                        BootstrapServers = message.Route,
-                        GroupId = message.Name + "Consumer",
-                        EnableAutoCommit = true,
-                        StatisticsIntervalMs = 0,
-                        SessionTimeoutMs = 6000,
-                        AutoOffsetReset = AutoOffsetResetType.Latest
-                    };
-
-                    using (var consumer = new Consumer<byte[], byte[]>(config))
-                    {
-                        consumer.Subscribe(message.Name);
-                        var cRes = consumer.Consume(cancellationToken);
-                        message.CorrelationId = new Guid(cRes.Key);
-                        message.Body = cRes.Value;
-                        message.WaitHandler.Set();
-                        consumer.Commit(cRes);
+                        foreach (var cRes in consumer.Consume(cancellationToken))
+                        {
+                            message.CorrelationId = new Guid(cRes.Key);
+                            message.Body = cRes.Value;
+                            message.WaitHandler.Set();
+                            break;
+                        }
                     }
                 }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 

@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using Confluent.Kafka;
+using KafkaNet;
+using KafkaNet.Model;
+using KafkaNet.Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -33,7 +35,7 @@ namespace TWCore.Messaging.Kafka
     /// </summary>
     public class KafkaQueueServer : MQueueServerBase
     {
-        private readonly ConcurrentDictionary<string, Producer<byte[], byte[]>> _rQueue = new ConcurrentDictionary<string, Producer<byte[], byte[]>>();
+        private readonly ConcurrentDictionary<string, Producer> _rQueue = new ConcurrentDictionary<string, Producer>();
 
         /// <inheritdoc />
         /// <summary>
@@ -69,19 +71,20 @@ namespace TWCore.Messaging.Kafka
                 {
                     var producer = _rQueue.GetOrAdd(queue.Route, qRoute =>
                     {
-                        Core.Log.LibVerbose("New Producer from QueueServer");
-                        Producer<byte[], byte[]> connection = null;
-                        if (string.IsNullOrEmpty(queue.Route))
-                            throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        var config = new ProducerConfig { BootstrapServers = qRoute };
+                        Core.Log.LibVerbose("New Producer from QueueClient");
+                        Producer connection = null;
+                        if (string.IsNullOrEmpty(qRoute))
+                            throw new UriFormatException($"The route for the connection to {qRoute} is null.");
+                        var options = new KafkaOptions(new Uri(qRoute));
+                        var router = new BrokerRouter(options);
                         Extensions.InvokeWithRetry(() =>
                         {
-                            connection = new Producer<byte[], byte[]>(config);
+                            connection = new Producer(router);
                         }, 5000, int.MaxValue).WaitAsync();
                         return connection;
                     });
                     Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
-                    await producer.ProduceAsync(queue.Name, new Message<byte[], byte[]> { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() }).ConfigureAwait(false);
+                    await producer.SendMessageAsync(queue.Name, new[] { new Message { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() } }).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

@@ -36,8 +36,8 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						SendQueues = new List<MQConnection> { new MQConnection("172.27.205.114:9092", "TEST_RQ", null) },
-						RecvQueue = new MQConnection("172.27.205.114:9092", "TEST_RS", null)
+						SendQueues = new List<MQConnection> { new MQConnection("http://172.27.205.114:9092", "TEST_RQ", null) },
+						RecvQueue = new MQConnection("http://172.27.205.114:9092", "TEST_RS", null)
                     }
                 },
                 ServerQueues = new List<MQServerQueues>
@@ -46,7 +46,7 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						RecvQueues = new List<MQConnection> { new MQConnection("172.27.205.114:9092", "TEST_RQ", null) }
+						RecvQueues = new List<MQConnection> { new MQConnection("http://172.27.205.114:9092", "TEST_RQ", null) }
                     }
                 },
                 RequestOptions = new MQRequestOptions

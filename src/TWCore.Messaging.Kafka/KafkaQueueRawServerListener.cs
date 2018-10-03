@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using Confluent.Kafka;
+using KafkaNet;
+using KafkaNet.Model;
+using KafkaNet.Protocol;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -70,31 +72,20 @@ namespace TWCore.Messaging.Kafka
 
             await Task.Factory.StartNew(() =>
             {
-                var config = new ConsumerConfig
-                {
-                    BootstrapServers = Connection.Route,
-                    GroupId = Connection.Name + "Consumer",
-                    EnableAutoCommit = true,
-                    StatisticsIntervalMs = 0,
-                    SessionTimeoutMs = 6000,
-                    AutoOffsetReset = AutoOffsetResetType.Latest
-                };
-
-                Consumer<byte[], byte[]> consumer = null;
+                var options = new KafkaOptions(new Uri(Connection.Route));
+                var router = new BrokerRouter(options);
+                Consumer consumer = null;
                 Extensions.InvokeWithRetry(() =>
                 {
-                    consumer = new Consumer<byte[], byte[]>(config);
-                    consumer.Subscribe(Connection.Name);
+                    new Consumer(new ConsumerOptions(Connection.Name, router));
                 }, 5000, int.MaxValue).WaitAsync();
 
                 using (consumer)
                 {
-                    while (!_token.IsCancellationRequested)
+                    foreach (var cRes in consumer.Consume(_token))
                     {
-                        var cRes = consumer.Consume(_token);
-                        if (_token.IsCancellationRequested) return;
+                        if (_token.IsCancellationRequested) break;
                         Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, cRes));
-                        consumer.Commit(cRes);
                     }
                 }
             }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Current);
@@ -117,14 +108,14 @@ namespace TWCore.Messaging.Kafka
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="result">Message instance</param>
+        /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(ConsumeResult<byte[], byte[]> result)
+        private async Task ProcessingTaskAsync(Message message)
         {
             try
             {
-                var (correlationId, name) = KafkaQueueRawClient.GetFromRawMessageHeader(result.Key);
-                var body = result.Value;
+                var (correlationId, name) = KafkaQueueRawClient.GetFromRawMessageHeader(message.Key);
+                var body = message.Value;
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Length, Connection.Route, Connection.Name);
                 Counters.IncrementTotalReceivingBytes(body.Length);

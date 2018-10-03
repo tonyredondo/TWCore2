@@ -142,12 +142,14 @@ namespace TWCore.Messaging.Kafka
                             Extensions.InvokeWithRetry(() =>
                             {
                                 consumer = new Consumer<byte[], byte[]>(config);
+                                consumer.Subscribe(_receiverConnection.Name);
                             }, 5000, int.MaxValue).WaitAsync();
                             using (consumer)
                             {
                                 while (!cancellationToken.IsCancellationRequested)
                                 {
                                     var cRes = consumer.Consume(cancellationToken);
+                                    if (cancellationToken.IsCancellationRequested) return;
                                     var correlationId = new Guid(cRes.Key);
                                     var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
                                     message.CorrelationId = correlationId;
@@ -269,6 +271,7 @@ namespace TWCore.Messaging.Kafka
 
                     using (var consumer = new Consumer<byte[], byte[]>(config))
                     {
+                        consumer.Subscribe(message.Name);
                         var cRes = consumer.Consume(cancellationToken);
                         message.CorrelationId = new Guid(cRes.Key);
                         message.Body = cRes.Value;

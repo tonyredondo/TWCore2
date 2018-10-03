@@ -100,6 +100,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.Utf8Js
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.RawSerializer", "src\TWCore.Serialization.RawSerializer\TWCore.Serialization.RawSerializer.csproj", "{FA99AABC-F38D-452D-81E1-8E525D2FA59F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging.Kafka", "src\TWCore.Messaging.Kafka\TWCore.Messaging.Kafka.csproj", "{98999118-4F8D-4C81-BA14-DBAF046B2904}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -266,6 +268,10 @@ Global
 		{FA99AABC-F38D-452D-81E1-8E525D2FA59F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA99AABC-F38D-452D-81E1-8E525D2FA59F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA99AABC-F38D-452D-81E1-8E525D2FA59F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98999118-4F8D-4C81-BA14-DBAF046B2904}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98999118-4F8D-4C81-BA14-DBAF046B2904}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98999118-4F8D-4C81-BA14-DBAF046B2904}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98999118-4F8D-4C81-BA14-DBAF046B2904}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -311,6 +317,7 @@ Global
 		{7D503B8C-524A-4A54-9D36-219C93F283E5} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{23E21872-6306-40D9-BD45-1763BC1DB70B} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{FA99AABC-F38D-452D-81E1-8E525D2FA59F} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{98999118-4F8D-4C81-BA14-DBAF046B2904} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

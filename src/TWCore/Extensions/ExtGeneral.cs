@@ -196,12 +196,6 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
                 throw;
             }
             finally
@@ -238,12 +232,6 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
                 throw;
             }
             finally
@@ -280,12 +268,6 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
                 throw;
             }
             finally
@@ -326,12 +308,6 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
                 throw;
             }
             finally
@@ -358,6 +334,15 @@ namespace TWCore
                 SynchronizationContext.SetSynchronizationContext(null);
                 return task.Result;
             }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                throw;
+            }
             finally
             {
                 SynchronizationContext.SetSynchronizationContext(currentSyncContext);
@@ -379,6 +364,15 @@ namespace TWCore
             {
                 SynchronizationContext.SetSynchronizationContext(null);
                 task.Wait();
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                throw;
             }
             finally
             {

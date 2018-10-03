@@ -21,12 +21,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
-using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
+using TWCore.Messaging.RawClient;
 using TWCore.Threading;
 
 // ReSharper disable NotAccessedField.Local
@@ -36,11 +38,12 @@ namespace TWCore.Messaging.Kafka
 {
     /// <inheritdoc />
     /// <summary>
-    /// Kafka Queue Client
+    /// Kafka Queue Raw Client
     /// </summary>
-    public class KafkaQueueClient : MQueueClientBase
+    public class KafkaQueueRawClient : MQueueRawClientBase
     {
         private static readonly ConcurrentDictionary<Guid, KafkaQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, KafkaQueueMessage>();
+        private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields
         private List<(MQConnection, Producer<byte[], byte[]>)> _senders;
@@ -204,41 +207,28 @@ namespace TWCore.Messaging.Kafka
         /// On Send message data
         /// </summary>
         /// <param name="message">Request message instance</param>
+        /// <param name="correlationId">Message CorrelationId</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override async Task<bool> OnSendAsync(RequestMessage message)
+        protected override async Task<bool> OnSendAsync(byte[] message, Guid correlationId)
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
             if (_senderOptions is null)
                 throw new NullReferenceException("SenderOptions is null.");
 
-            if (message.Header.ResponseQueue is null)
-            {
-                var recvQueue = _clientQueues.RecvQueue;
-                if (recvQueue != null)
-                {
-                    message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
-                    message.Header.ResponseExpected = true;
-                    message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
-                    if (!UseSingleResponseQueue)
-                    {
-                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
-                    }
-                }
-                else
-                {
-                    message.Header.ResponseExpected = false;
-                    message.Header.ResponseTimeoutInSeconds = -1;
-                }
-            }
-            var data = SenderSerializer.Serialize(message);
+            var recvQueue = _clientQueues.RecvQueue;
+            var name = recvQueue.Name;
+            if (!UseSingleResponseQueue)
+                name += "_" + correlationId;
+
+            var key = CreateRawMessageHeader(correlationId, name);
 
             foreach ((var queue, var producer) in _senders)
             {
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, queue.Route, queue.Name, message.Header.CorrelationId);
-                await producer.ProduceAsync(queue.Name, new Message<byte[], byte[]> { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() }).ConfigureAwait(false);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Length, queue.Route, queue.Name, correlationId);
+                await producer.ProduceAsync(queue.Name, new Message<byte[], byte[]> { Key = key, Value = message }).ConfigureAwait(false);
             }
-            Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
+            Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
             return true;
         }
         #endregion
@@ -252,7 +242,7 @@ namespace TWCore.Messaging.Kafka
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
+        protected override async Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_tokenSource is null && UseSingleResponseQueue)
                 throw new NullReferenceException("There is not receiver queue.");
@@ -294,11 +284,10 @@ namespace TWCore.Messaging.Kafka
                     throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 ReceivedMessages.TryRemove(correlationId, out _);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                return response;
+                return message.Body.AsArray();
             }
 
             if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
@@ -308,11 +297,43 @@ namespace TWCore.Messaging.Kafka
                 throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-            var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
             ReceivedMessages.TryRemove(correlationId, out _);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
-            return rs;
+            return message.Body.AsArray();
+        }
+        #endregion
+
+        #region Static Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static byte[] CreateRawMessageHeader(Guid correlationId, string name)
+        {
+            var nameLength = Encoding.GetByteCount(name);
+            var body = new byte[16 + 4 + nameLength];
+            var bodySpan = body.AsSpan();
+#if COMPATIBILITY
+            correlationId.ToByteArray().CopyTo(body, 0);
+            MemoryMarshal.Write(bodySpan.Slice(16, 4), ref nameLength);
+            Encoding.GetBytes(name).CopyTo(bodySpan.Slice(20, nameLength));
+#else
+            correlationId.TryWriteBytes(bodySpan.Slice(0, 16));
+            BitConverter.TryWriteBytes(bodySpan.Slice(16, 4), nameLength);
+            Encoding.GetBytes(name, bodySpan.Slice(20, nameLength));
+#endif
+            return body;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static (Guid, string) GetFromRawMessageHeader(byte[] message)
+        {
+            var header = new MultiArray<byte>(message);
+#if COMPATIBILITY
+            var correlationId = new Guid(header.Slice(0, 16).ToArray());
+#else
+            var correlationId = new Guid(header.Slice(0, 16).AsSpan());
+#endif
+            var nameLength = BitConverter.ToInt32(message, 16);
+            var name = Encoding.GetString(message, 20, nameLength);
+            return (correlationId, name);
         }
         #endregion
     }

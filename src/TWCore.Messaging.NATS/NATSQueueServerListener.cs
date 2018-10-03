@@ -46,24 +46,12 @@ namespace TWCore.Messaging.NATS
         #endregion
 
         #region Nested Type
-        private struct NATSQMessage
-        {
-            public Guid CorrelationId;
-            public MultiArray<byte> Body;
-        }
         private void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
             Core.Log.LibVerbose("Message received");
-
             try
             {
-                (var body, var correlationId) = NATSQueueClient.GetFromMessageBody(e.Message.Data);
-                var rMsg = new NATSQMessage
-                {
-                    CorrelationId = correlationId,
-                    Body = body
-                };
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg));
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data));
             }
             catch (Exception ex)
             {
@@ -188,14 +176,16 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="message">Message instance</param>
+        /// <param name="data">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(NATSQMessage message)
+        private async Task ProcessingTaskAsync(byte[] data)
         {
             try
             {
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
-                var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
+                (var body, var correlationId) = NATSQueueClient.GetFromMessageBody(data);
+
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Count, Connection.Route, Connection.Name);
+                var messageBody = ReceiverSerializer.Deserialize(body, _messageType);
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
@@ -203,7 +193,7 @@ namespace TWCore.Messaging.NATS
                         Counters.IncrementReceivingTime(request.Header.TotalTime);
                         if (request.Header.ClientName != Config.Name)
                             Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                        var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count, SenderSerializer);
+                        var evArgs = new RequestReceivedEventArgs(_name, Connection, request, body.Count, SenderSerializer);
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
@@ -211,7 +201,7 @@ namespace TWCore.Messaging.NATS
                     case ResponseMessage response when response.Header != null:
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                        var evArgs2 = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
+                        var evArgs2 = new ResponseReceivedEventArgs(_name, response, body.Count);
                         await OnResponseReceivedAsync(evArgs2).ConfigureAwait(false);
                         break;
                 }

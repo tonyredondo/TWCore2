@@ -68,10 +68,6 @@ namespace TWCore.Messaging.NATS
             public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
-            public IConnection Connection;
-            public IAsyncSubscription Consumer;
-            public string Route;
-            public string Name;
         }
         private static void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
@@ -156,7 +152,7 @@ namespace TWCore.Messaging.NATS
 
             Core.Status.Attach(collection =>
             {
-                if (_senders != null) 
+                if (_senders != null)
                 {
                     for (var i = 0; i < _senders.Count; i++)
                     {
@@ -260,17 +256,16 @@ namespace TWCore.Messaging.NATS
 
             if (!UseSingleResponseQueue)
             {
-                message.Name = _receiverConnection.Name + "_" + correlationId;
-                message.Route = _receiverConnection.Route;
-                message.Connection = _factory.CreateConnection(message.Route);
-                message.Consumer = message.Connection.SubscribeAsync(message.Name, MessageHandler);
-                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                message.Consumer.Unsubscribe();
-                message.Consumer.Dispose();
-                message.Connection.Close();
-                message.Connection.Dispose();
-                message.Consumer = null;
-                message.Connection = null;
+                var name = _receiverConnection.Name + "_" + correlationId;
+                var route = _receiverConnection.Route;
+                var waitResult = false;
+                using (var connection = _factory.CreateConnection(route))
+                {
+                    using (var consumer = connection.SubscribeAsync(name, MessageHandler))
+                    {
+                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
+                    }
+                }
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

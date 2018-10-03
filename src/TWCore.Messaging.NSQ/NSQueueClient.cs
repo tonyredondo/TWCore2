@@ -68,9 +68,6 @@ namespace TWCore.Messaging.NSQ
             public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
-            public Consumer Consumer;
-            public string Route;
-            public string Name;
         }
         private class NSQMessageHandler : IHandler
         {
@@ -239,20 +236,17 @@ namespace TWCore.Messaging.NSQ
 
             if (!UseSingleResponseQueue)
             {
-                message.Name = _receiverConnection.Name + "_" + correlationId;
-                message.Route = _receiverConnection.Route;
-                message.Consumer = new Consumer(message.Name, message.Name);
-                message.Consumer.AddHandler(MessageHandler);
-                message.Consumer.ConnectToNsqd(message.Route);
-
+                var name = _receiverConnection.Name + "_" + correlationId;
+                var route = _receiverConnection.Route;
+                var consumer = new Consumer(name, name);
+                consumer.AddHandler(MessageHandler);
+                consumer.ConnectToNsqd(route);
                 var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-
-                message.Consumer.Stop();
-                message.Consumer.DisconnectFromNsqd(message.Route);
-                message.Consumer = null;
-                var pro = new NsqdHttpClient(message.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                pro.DeleteChannel(message.Name, message.Name);
-                pro.DeleteTopic(message.Name);
+                consumer.Stop();
+                consumer.DisconnectFromNsqd(route);
+                var pro = new NsqdHttpClient(route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
+                pro.DeleteChannel(name, name);
+                pro.DeleteTopic(name);
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

@@ -32,27 +32,19 @@ namespace TWCore.Messaging.NSQ
     /// NSQ raw server listener implementation
     /// </summary>
     public class NSQueueRawServerListener : MQueueRawServerListenerBase
-	{
-		#region Fields
-		private readonly string _name;
-		private Consumer _receiver;
-		private CancellationToken _token;
-		private Task _monitorTask;
-		private int _exceptionSleep;
-		#endregion
+    {
+        #region Fields
+        private readonly string _name;
+        private Consumer _receiver;
+        private CancellationToken _token;
+        private Task _monitorTask;
+        private int _exceptionSleep;
+        #endregion
 
-		#region Nested Type
-
-	    private struct NSQMessage
-		{
-			public Guid CorrelationId;
-            public string Name;
-			public MultiArray<byte> Body;
-		}
-
-	    private class NSQMessageHandler : IHandler
+        #region Nested Type
+        private class NSQMessageHandler : IHandler
         {
-	        private readonly NSQueueRawServerListener _listener;
+            private readonly NSQueueRawServerListener _listener;
             public NSQMessageHandler(NSQueueRawServerListener listener)
             {
                 _listener = listener;
@@ -62,14 +54,7 @@ namespace TWCore.Messaging.NSQ
                 Core.Log.LibVerbose("Message received");
                 try
                 {
-                    (var body, var correlationId, var name) = NSQueueRawClient.GetFromRawMessageBody(message.Body);
-                    var rMsg = new NSQMessage
-                    {
-                        CorrelationId = correlationId,
-                        Body = body,
-                        Name = name
-                    };
-                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg));
+                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, message.Body));
                     Try.Do(message.Finish, false);
                 }
                 catch (Exception ex)
@@ -93,22 +78,22 @@ namespace TWCore.Messaging.NSQ
         /// <param name="server">Message queue server instance</param>
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NSQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
-		{
-			_name = server.Name;
-		}
-		#endregion
+        public NSQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
+        {
+            _name = server.Name;
+        }
+        #endregion
 
-		#region Override Methods
-		/// <inheritdoc />
-		/// <summary>
-		/// Start the queue listener for request messages
-		/// </summary>
-		/// <param name="token">Cancellation token</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override async Task OnListenerTaskStartAsync(CancellationToken token)
-		{
-			_token = token;
+        #region Override Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Start the queue listener for request messages
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override async Task OnListenerTaskStartAsync(CancellationToken token)
+        {
+            _token = token;
             _receiver = new Consumer(Connection.Name, Connection.Name);
             _receiver.AddHandler(new NSQMessageHandler(this));
             if (string.IsNullOrEmpty(Connection.Route))
@@ -118,122 +103,123 @@ namespace TWCore.Messaging.NSQ
                 _receiver.ConnectToNsqd(Connection.Route);
             }, 5000, int.MaxValue).ConfigureAwait(false);
             _monitorTask = Task.Run(MonitorProcess, _token);
-			await token.WhenCanceledAsync().ConfigureAwait(false);
-			OnDispose();
-		    await _monitorTask.ConfigureAwait(false);
-		}
+            await token.WhenCanceledAsync().ConfigureAwait(false);
+            OnDispose();
+            await _monitorTask.ConfigureAwait(false);
+        }
         /// <inheritdoc />
         /// <summary>
         /// On Dispose
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override void OnDispose()
-		{
-			if (_receiver is null) return;
-			try
-			{
-				_receiver.Stop();
-			}
-			catch
-			{
-				// ignored
-			}
-			_receiver = null;
-		}
-		#endregion
+        protected override void OnDispose()
+        {
+            if (_receiver is null) return;
+            try
+            {
+                _receiver.Stop();
+            }
+            catch
+            {
+                // ignored
+            }
+            _receiver = null;
+        }
+        #endregion
 
-		#region Private Methods
-		/// <summary>
-		/// Monitors the maximum concurrent message allowed for the listener
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private async Task MonitorProcess()
-		{
-			while (!_token.IsCancellationRequested)
-			{
-				try
-				{
-					if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
-					{
-						OnDispose();
-						Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
-						await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
+        #region Private Methods
+        /// <summary>
+        /// Monitors the maximum concurrent message allowed for the listener
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task MonitorProcess()
+        {
+            while (!_token.IsCancellationRequested)
+            {
+                try
+                {
+                    if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
+                    {
+                        OnDispose();
+                        Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+                        await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
-					    Core.Log.Warning("The listener has been resumed.");
+                        Core.Log.Warning("The listener has been resumed.");
                     }
 
-					if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
-					{
-						OnDispose();
-						Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
+                    if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
+                    {
+                        OnDispose();
+                        Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
 
-						while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
-							await Task.Delay(500, _token).ConfigureAwait(false);
+                        while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
+                            await Task.Delay(500, _token).ConfigureAwait(false);
 
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
-					    Core.Log.Warning("The listener has been resumed.");
+                        Core.Log.Warning("The listener has been resumed.");
                     }
 
-					await Task.Delay(1000, _token).ConfigureAwait(false);
-				}
-				catch (TaskCanceledException) { }
-				catch (Exception ex)
-				{
-					Core.Log.Write(ex);
-					if (!_token.IsCancellationRequested)
-						await Task.Delay(2000, _token).ConfigureAwait(false);
-				}
-			}
-		}
+                    await Task.Delay(1000, _token).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException) { }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                    if (!_token.IsCancellationRequested)
+                        await Task.Delay(2000, _token).ConfigureAwait(false);
+                }
+            }
+        }
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="message">Message instance</param>
+        /// <param name="data">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private async Task ProcessingTaskAsync(NSQMessage message)
-		{
-			try
-			{
-				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
-				Counters.IncrementTotalReceivingBytes(message.Body.Count);
+        private async Task ProcessingTaskAsync(byte[] data)
+        {
+            try
+            {
+                (var body, var correlationId, var name) = NSQueueRawClient.GetFromRawMessageBody(data);
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Count, Connection.Route, Connection.Name);
+                Counters.IncrementTotalReceivingBytes(body.Count);
 
-				if (ResponseServer)
-				{
-				    var evArgs =
-				        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Count)
-				        {
-				            Metadata =
-				            {
-					            ["ReplyTo"] = message.Name
-				            }
-				        };
-				    await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
-				}
-				else
-				{
-				    var evArgs =
-				        new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId, message.Body.Count)
-				        {
-				            Metadata =
-				            {
-					            ["ReplyTo"] = message.Name
-				            }
-				        };
-				    await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
-				}
-				Counters.IncrementTotalMessagesProccesed();
-			}
-			catch (Exception ex)
-			{
-				Counters.IncrementTotalExceptions();
-				Core.Log.Write(ex);
-			    Interlocked.Exchange(ref _exceptionSleep, 1);
-			}
-		}
-		#endregion
-	}
+                if (ResponseServer)
+                {
+                    var evArgs =
+                        new RawResponseReceivedEventArgs(_name, body, correlationId, body.Count)
+                        {
+                            Metadata =
+                            {
+                                ["ReplyTo"] = name
+                            }
+                        };
+                    await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
+                }
+                else
+                {
+                    var evArgs =
+                        new RawRequestReceivedEventArgs(_name, Connection, body, correlationId, body.Count)
+                        {
+                            Metadata =
+                            {
+                                ["ReplyTo"] = name
+                            }
+                        };
+                    await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
+                }
+                Counters.IncrementTotalMessagesProccesed();
+            }
+            catch (Exception ex)
+            {
+                Counters.IncrementTotalExceptions();
+                Core.Log.Write(ex);
+                Interlocked.Exchange(ref _exceptionSleep, 1);
+            }
+        }
+        #endregion
+    }
 }

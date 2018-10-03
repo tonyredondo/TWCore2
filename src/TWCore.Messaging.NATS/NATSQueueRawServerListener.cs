@@ -44,26 +44,12 @@ namespace TWCore.Messaging.NATS
         #endregion
 
         #region Nested Type
-        private struct NATSQMessage
-        {
-            public Guid CorrelationId;
-            public string Name;
-            public MultiArray<byte> Body;
-        }
         private void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
             Core.Log.LibVerbose("Message received");
-
             try
             {
-                (var body, var correlationId, var name) = NATSQueueRawClient.GetFromRawMessageBody(e.Message.Data);
-                var rMsg = new NATSQMessage
-                {
-                    CorrelationId = correlationId,
-                    Body = body,
-                    Name = name
-                };
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg));
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data));
             }
             catch (Exception ex)
             {
@@ -183,23 +169,25 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="message">Message instance</param>
+        /// <param name="data">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(NATSQMessage message)
+        private async Task ProcessingTaskAsync(byte[] data)
         {
             try
             {
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
-                Counters.IncrementTotalReceivingBytes(message.Body.Count);
+                (var body, var correlationId, var name) = NATSQueueRawClient.GetFromRawMessageBody(data);
+
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Count, Connection.Route, Connection.Name);
+                Counters.IncrementTotalReceivingBytes(body.Count);
 
                 if (ResponseServer)
                 {
                     var evArgs =
-                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Count)
+                        new RawResponseReceivedEventArgs(_name, body, correlationId, body.Count)
                         {
                             Metadata =
                             {
-                                ["ReplyTo"] = message.Name
+                                ["ReplyTo"] = name
                             }
                         };
                     await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
@@ -207,11 +195,11 @@ namespace TWCore.Messaging.NATS
                 else
                 {
                     var evArgs =
-                        new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId, message.Body.Count)
+                        new RawRequestReceivedEventArgs(_name, Connection, body, correlationId, body.Count)
                         {
                             Metadata =
                             {
-                                ["ReplyTo"] = message.Name
+                                ["ReplyTo"] = name
                             }
                         };
                     await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);

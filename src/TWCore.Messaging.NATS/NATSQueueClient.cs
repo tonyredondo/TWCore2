@@ -266,9 +266,11 @@ namespace TWCore.Messaging.NATS
                 message.Consumer = message.Connection.SubscribeAsync(message.Name, MessageHandler);
                 var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
                 message.Consumer.Unsubscribe();
+                message.Consumer.Dispose();
                 message.Connection.Close();
+                message.Connection.Dispose();
                 message.Consumer = null;
-                message.Consumer = null;
+                message.Connection = null;
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

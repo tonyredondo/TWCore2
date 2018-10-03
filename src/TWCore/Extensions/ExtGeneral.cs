@@ -372,12 +372,6 @@ namespace TWCore
                     Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
                 throw;
             }
             finally

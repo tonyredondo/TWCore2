@@ -96,8 +96,8 @@ namespace TWCore.Messaging.RabbitMQ
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>
             {
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, 
-                    new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body)));
+                var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);

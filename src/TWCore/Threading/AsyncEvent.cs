@@ -26,10 +26,12 @@ namespace TWCore.Threading
     /// <typeparam name="TEventArgs">Event args instance</typeparam>
     public class AsyncEvent<TEventArgs> where TEventArgs : EventArgs
     {
-        private readonly List<Func<object, TEventArgs, Task>> _invocationList;
+        private readonly List<Func<object, TEventArgs, Task>> _funcsInvocationList;
+        private readonly List<Action<object, TEventArgs>> _actionsInvocationList;
         private readonly object _locker;
 		private bool _dirty;
-		private Func<object, TEventArgs, Task>[] _callArray;
+		private Func<object, TEventArgs, Task>[] _callFuncArray;
+		private Action<object, TEventArgs>[] _callActionArray;
 
         #region .ctor
         /// <summary>
@@ -37,7 +39,8 @@ namespace TWCore.Threading
         /// </summary>
         private AsyncEvent()
         {
-            _invocationList = new List<Func<object, TEventArgs, Task>>();
+            _funcsInvocationList = new List<Func<object, TEventArgs, Task>>();
+            _actionsInvocationList = new List<Action<object, TEventArgs>>();
             _dirty = true;
             _locker = new object();
         }
@@ -58,13 +61,16 @@ namespace TWCore.Threading
 				{
 					if (_dirty)
 					{
-						_callArray = _invocationList.ToArray();
+						_callFuncArray = _funcsInvocationList.ToArray();
+						_callActionArray = _actionsInvocationList.ToArray();
 						_dirty = false;
 					}
 				}
 			}
-            for(var i = 0; i < _callArray.Length; i++)
-				await _callArray[i](sender, eventArgs).ConfigureAwait(false);
+            for(var i = 0; i < _callFuncArray.Length; i++)
+				await _callFuncArray[i](sender, eventArgs).ConfigureAwait(false);
+            for (var i = 0; i < _callActionArray.Length; i++)
+                _callActionArray[i](sender, eventArgs);
         }
         #endregion
 
@@ -81,7 +87,7 @@ namespace TWCore.Threading
             if (e is null) e = new AsyncEvent<TEventArgs>();
 			lock (e._locker)
 			{
-				e._invocationList.Add(callback);
+				e._funcsInvocationList.Add(callback);
 				e._dirty = true;
 			}
             return e;
@@ -98,9 +104,43 @@ namespace TWCore.Threading
             if (e is null) return null;
 			lock (e._locker)
 			{
-				e._invocationList.Remove(callback);
+				e._funcsInvocationList.Remove(callback);
 				e._dirty = true;
 			}
+            return e;
+        }
+        /// <summary>
+        /// Add operator overwrite
+        /// </summary>
+        /// <param name="e">AsyncEvent instance</param>
+        /// <param name="callback">Callback delegate to add</param>
+        /// <returns>AsyncEvent instance</returns>
+        public static AsyncEvent<TEventArgs> operator +(AsyncEvent<TEventArgs> e, Action<object, TEventArgs> callback)
+        {
+            if (callback is null) throw new NullReferenceException("callback is null");
+            if (e is null) e = new AsyncEvent<TEventArgs>();
+            lock (e._locker)
+            {
+                e._actionsInvocationList.Add(callback);
+                e._dirty = true;
+            }
+            return e;
+        }
+        /// <summary>
+        /// Substract operator overwrite
+        /// </summary>
+        /// <param name="e">AsyncEvent instance</param>
+        /// <param name="callback">Callback delegate to substract</param>
+        /// <returns>AsyncEvent instance</returns>
+        public static AsyncEvent<TEventArgs> operator -(AsyncEvent<TEventArgs> e, Action<object, TEventArgs> callback)
+        {
+            if (callback is null) throw new NullReferenceException("callback is null");
+            if (e is null) return null;
+            lock (e._locker)
+            {
+                e._actionsInvocationList.Remove(callback);
+                e._dirty = true;
+            }
             return e;
         }
         #endregion

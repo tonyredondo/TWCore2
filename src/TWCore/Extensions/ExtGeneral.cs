@@ -658,6 +658,74 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConfiguredTaskAwaitable ConfigureAwait(this IEnumerable<Task> tasks, bool continueOnCapturedContext)
             => Task.WhenAll(tasks).ConfigureAwait(continueOnCapturedContext);
+        /// <summary>
+        /// Projects an item into a new form.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <typeparam name="TResult">The type of the value returned by selector.</typeparam>
+        /// <param name="source">A task to invoke a transform function on.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>A task with the result of invoking the transform function on each element of source.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async static Task<TResult> Select<T, TResult>(this Task<T> source, Func<T, TResult> selector)
+        {
+            var x = await source.ConfigureAwait(false);
+            return selector(x);
+        }
+        /// <summary>
+        /// Projects each element of a sequence into a new form.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <typeparam name="TResult">The type of the value returned by selector.</typeparam>
+        /// <param name="source">A sequence of values to invoke a transform function on.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>An IEnumerable whose elements are the result of invoking the transform function on each element of source.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async static Task<IEnumerable<TResult>> Select<T, TResult>(this Task<IEnumerable<T>> source, Func<T, TResult> selector)
+        {
+            var res = await source.ConfigureAwait(false);
+            return res.Select(selector);
+        }
+        /// <summary>
+        /// Projects each element of a sequence into a new form.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <typeparam name="TResult">The type of the value returned by selector.</typeparam>
+        /// <param name="source">A sequence of values to invoke a transform function on.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>An IEnumerable whose elements are the result of invoking the transform function on each element of source.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async static Task<IEnumerable<TResult>> Select<T, TResult>(this IEnumerable<Task<T>> source, Func<T, TResult> selector)
+        {
+            var res = await Task.WhenAll(source).ConfigureAwait(false);
+            return res.Select(selector);
+        }
+        /// <summary>
+        /// Filters a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to filter.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <returns>An IEnumerable that contains elements from the input sequence that satisfy the condition.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async static Task<IEnumerable<T>> Where<T>(this Task<IEnumerable<T>> source, Func<T, bool> predicate)
+        {
+            var res = await source.ConfigureAwait(false);
+            return res.Where(predicate);
+        }
+        /// <summary>
+        /// Filters a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to filter.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <returns>An IEnumerable that contains elements from the input sequence that satisfy the condition.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async static Task<IEnumerable<T>> Where<T>(this IEnumerable<Task<T>> source, Func<T, bool> predicate)
+        {
+            var res = await Task.WhenAll(source).ConfigureAwait(false);
+            return res.Where(predicate);
+        }
         #endregion
 
         #region ValueTask extensions

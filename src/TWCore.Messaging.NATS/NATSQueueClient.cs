@@ -135,14 +135,16 @@ namespace TWCore.Messaging.NATS
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
-                    if (string.IsNullOrEmpty(_receiverConnection.Route))
-                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                    Extensions.InvokeWithRetry(() =>
-                    {
-                        _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
-                    }, 5000, int.MaxValue).WaitAsync();
                     if (UseSingleResponseQueue)
+                    {
+                        if (string.IsNullOrEmpty(_receiverConnection.Route))
+                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+                        Extensions.InvokeWithRetry(() =>
+                        {
+                            _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
+                        }, 5000, int.MaxValue).WaitAsync();
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
+                    }
                 }
             }
 
@@ -254,7 +256,8 @@ namespace TWCore.Messaging.NATS
             {
                 var name = _receiverConnection.Name + "_" + correlationId;
                 var waitResult = false;
-                using (var consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler))
+                using (var connection = _factory.CreateConnection(_receiverConnection.Route))
+                using (var consumer = connection.SubscribeAsync(name, MessageHandler))
                     waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());

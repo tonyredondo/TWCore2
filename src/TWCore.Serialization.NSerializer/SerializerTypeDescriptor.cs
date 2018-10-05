@@ -196,7 +196,7 @@ namespace TWCore.Serialization.NSerializer
 				//TODO: The class is sealed, we have to do another optimization here.
 				if (itemType.IsSealed)
 				{
-					return Expression.Call(serTableExpression, SerializersTable.InternalWriteSealedObjectValueMInfo, itemGetExpression);
+					return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
 				}
     
                 return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);

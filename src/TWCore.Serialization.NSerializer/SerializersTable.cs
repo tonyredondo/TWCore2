@@ -35,7 +35,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo InternalSimpleWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalSimpleWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
-        internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
+		internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteIntMethodInfo = typeof(SerializersTable).GetMethod("WriteInt", BindingFlags.NonPublic | BindingFlags.Instance);
         //

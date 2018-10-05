@@ -34,6 +34,7 @@ namespace TWCore.Serialization.NSerializer
         public readonly bool IsNSerializable;
         public readonly byte[] Definition;
 		public readonly Type Type;
+		public readonly Expression SerializerExpression;
         public readonly SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -166,9 +167,9 @@ namespace TWCore.Serialization.NSerializer
                     serExpressions.Add(WriteExpression(prop.PropertyType, getExpression, serTable));
                 }
             }
-            //
-            var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
-            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_Serializer", new[] { obj, serTable });
+			//
+			SerializerExpression = Expression.Block(varExpressions, serExpressions).Reduce();
+            var lambda = Expression.Lambda<SerializeActionDelegate>(SerializerExpression, type.Name + "_Serializer", new[] { obj, serTable });
             SerializeAction = lambda.Compile();
             
             Expression WriteExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
@@ -191,10 +192,12 @@ namespace TWCore.Serialization.NSerializer
                     return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
                 if (itemType.IsAbstract || itemType.IsInterface || itemType == typeof(object))
                     return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
-                
-                //TODO: The class is sealed, we have to do another optimization here.
-                if (itemType.IsSealed)
-                    return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+
+				//TODO: The class is sealed, we have to do another optimization here.
+				if (itemType.IsSealed)
+				{
+					return Expression.Call(serTableExpression, SerializersTable.InternalWriteSealedObjectValueMInfo, itemGetExpression);
+				}
     
                 return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
             }

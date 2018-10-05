@@ -40,12 +40,30 @@ namespace TWCore.Messaging.Redis
 	/// </summary>
 	public class RedisQueueClient : MQueueClientBase
 	{
+        private static readonly ConcurrentDictionary<Guid, Message> ReceivedMessages = new ConcurrentDictionary<Guid, Message>();
 
+        #region Fields
+        private List<(MQConnection, ConnectionMultiplexer, ISubscriber)> _senders;
+        private MQConnection _receiverConnection;
+        private ConnectionMultiplexer _receiverMultiplexer;
+        private ISubscriber _receiverSubscriber;
+        private MQClientQueues _clientQueues;
+        private MQClientSenderOptions _senderOptions;
+        private MQClientReceiverOptions _receiverOptions;
+        private TimeSpan _receiverOptionsTimeout;
+        #endregion
 
-		#region Nested Type
-		private class Message
+        #region Properties
+        /// <summary>
+        /// Use Single Response Queue
+        /// </summary>
+        [StatusProperty]
+        public bool UseSingleResponseQueue { get; private set; }
+        #endregion
+
+        #region Nested Type
+        private class Message
 		{
-			public Guid CorrelationId;
 			public MultiArray<byte> Body;
 			public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
 			public string Route;
@@ -61,8 +79,76 @@ namespace TWCore.Messaging.Redis
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override void OnInit()
 		{
-			//new RedisClient();
-		}
+            OnDispose();
+            _senders = new List<(MQConnection, ConnectionMultiplexer, ISubscriber)>();
+
+            if (Config != null)
+            {
+                if (Config.ClientQueues != null)
+                {
+                    _clientQueues = Config.ClientQueues.FirstOf(
+                        c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                        c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                        c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                        c => c.EnvironmentName.IsNullOrWhitespace());
+                }
+                _senderOptions = Config.RequestOptions?.ClientSenderOptions;
+                _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
+                _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+
+                if (_clientQueues?.SendQueues?.Any() == true)
+                {
+                    foreach (var queue in _clientQueues.SendQueues)
+                    {
+                        Core.Log.LibVerbose("New Producer from QueueClient");
+                        ConnectionMultiplexer connection = null;
+                        if (string.IsNullOrEmpty(queue.Route))
+                            throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
+                        Extensions.InvokeWithRetry(async () =>
+                        {
+                            connection = await ConnectionMultiplexer.ConnectAsync(queue.Route).ConfigureAwait(false);
+                        }, 5000, int.MaxValue).WaitAsync();
+                        _senders.Add((queue, connection, connection.GetSubscriber()));
+                    }
+                }
+                if (_clientQueues?.RecvQueue != null)
+                {
+                    _receiverConnection = _clientQueues.RecvQueue;
+                    if (UseSingleResponseQueue)
+                    {
+                        if (string.IsNullOrEmpty(_receiverConnection.Route))
+                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+
+                        Extensions.InvokeWithRetry(async () =>
+                        {
+                            _receiverMultiplexer = await ConnectionMultiplexer.ConnectAsync(_receiverConnection.Route).ConfigureAwait(false);
+                        }, 5000, int.MaxValue).WaitAsync();
+                        _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
+                        _receiverSubscriber.Subscribe(_receiverConnection.Name, (channel, value) =>
+                        {
+                            (var body, var correlationId) = GetFromMessageBody(value);
+                            var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
+                            rMsg.Body = body;
+                            rMsg.WaitHandler.Set();
+                        });
+                    }
+                }
+            }
+
+            Core.Status.Attach(collection =>
+            {
+                if (_senders != null)
+                {
+                    for (var i = 0; i < _senders.Count; i++)
+                    {
+                        collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Item1.Route);
+                    }
+                }
+                if (_clientQueues?.RecvQueue != null)
+                    collection.Add("Receiver Path", _clientQueues.RecvQueue.Route);
+            });
+        }
 		/// <inheritdoc />
 		/// <summary>
 		/// On Dispose
@@ -70,8 +156,26 @@ namespace TWCore.Messaging.Redis
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override void OnDispose()
 		{
-			throw new NotImplementedException();
-		}
+            if (_senders != null)
+            {
+                foreach (var sender in _senders)
+                {
+                    sender.Item3.UnsubscribeAll();
+                    var conn = sender.Item2;
+                    conn.Close();
+                }
+                _senders.Clear();
+                _senders = null;
+            }
+            if (_receiverConnection is null) return;
+            if (UseSingleResponseQueue)
+            {
+                _receiverSubscriber.UnsubscribeAll();
+                _receiverMultiplexer.Close();
+            }
+            _receiverSubscriber = null;
+            _receiverMultiplexer = null;
+        }
 		#endregion
 
 		#region Send Method
@@ -81,10 +185,43 @@ namespace TWCore.Messaging.Redis
 		/// </summary>
 		/// <param name="message">Request message instance</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override Task<bool> OnSendAsync(RequestMessage message)
+		protected override async Task<bool> OnSendAsync(RequestMessage message)
 		{
-			throw new NotImplementedException();
-		}
+            if (_senders?.Any() != true)
+                throw new NullReferenceException("There aren't any senders queues.");
+            if (_senderOptions is null)
+                throw new NullReferenceException("SenderOptions is null.");
+
+            if (message.Header.ResponseQueue is null)
+            {
+                var recvQueue = _clientQueues.RecvQueue;
+                if (recvQueue != null)
+                {
+                    message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
+                    message.Header.ResponseExpected = true;
+                    message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
+                    if (!UseSingleResponseQueue)
+                    {
+                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
+                    }
+                }
+                else
+                {
+                    message.Header.ResponseExpected = false;
+                    message.Header.ResponseTimeoutInSeconds = -1;
+                }
+            }
+            var data = SenderSerializer.Serialize(message);
+            var body = CreateMessageBody(data, message.CorrelationId);
+
+            foreach ((var queue, var multiplexer, var subscriber) in _senders)
+            {
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, message.Header.CorrelationId);
+                await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
+            }
+            Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
+            return true;
+        }
 		#endregion
 
 		#region Receive Method
@@ -96,10 +233,88 @@ namespace TWCore.Messaging.Redis
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns>Response message instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
+		protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
-		}
-		#endregion
-	}
+            if (_receiverConnection is null && UseSingleResponseQueue)
+                throw new NullReferenceException("There is not receiver queue.");
+
+            var sw = Stopwatch.StartNew();
+            var message = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
+
+            if (!UseSingleResponseQueue)
+            {
+                var name = _receiverConnection.Name + "_" + correlationId;
+                var route = _receiverConnection.Route;
+                var multiPlex = await ConnectionMultiplexer.ConnectAsync(_receiverConnection.Route).ConfigureAwait(false);
+                var subscriber = multiPlex.GetSubscriber();
+                var subsChannel = subscriber.Subscribe(name);
+                var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                tokenSource.CancelAfter(_receiverOptionsTimeout);
+                var waitResult = false;
+                try
+                {
+                    var cnnMessage = await subsChannel.ReadAsync(tokenSource.Token).ConfigureAwait(false);
+                    (var body, _) = GetFromMessageBody(cnnMessage.Message);
+                    message.Body = body;
+                    message.WaitHandler.Set();
+                    waitResult = true;
+                }
+                finally
+                {
+                }
+
+                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+
+                if (message.Body == MultiArray<byte>.Empty)
+                   throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
+                var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+                Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+                sw.Stop();
+                return response;
+            }
+
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+
+            if (message.Body == MultiArray<byte>.Empty)
+                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+
+            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
+            var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+            ReceivedMessages.TryRemove(correlationId, out _);
+            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+            sw.Stop();
+            return rs;
+        }
+        #endregion
+
+        #region Static Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static byte[] CreateMessageBody(MultiArray<byte> message, Guid correlationId)
+        {
+            var body = new byte[16 + message.Count];
+#if COMPATIBILITY
+            correlationId.ToByteArray().CopyTo(body, 0);
+#else
+            correlationId.TryWriteBytes(body.AsSpan(0, 16));
+#endif
+            message.CopyTo(body, 16);
+            return body;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static (MultiArray<byte>, Guid) GetFromMessageBody(byte[] message)
+        {
+            var body = new MultiArray<byte>(message);
+#if COMPATIBILITY
+            var correlationId = new Guid(body.Slice(0, 16).ToArray());
+#else
+            var correlationId = new Guid(body.Slice(0, 16).AsSpan());
+#endif
+            var messageBody = body.Slice(16);
+            return (messageBody, correlationId);
+        }
+        #endregion
+    }
 }

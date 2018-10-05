@@ -65,7 +65,6 @@ namespace TWCore.Messaging.Kafka
         #region Nested Type
         private class KafkaQueueMessage
         {
-            public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
             public string Route;
@@ -133,7 +132,7 @@ namespace TWCore.Messaging.Kafka
                             Consumer consumer = null;
                             Extensions.InvokeWithRetry(() =>
                             {
-                                new Consumer(new ConsumerOptions(_receiverConnection.Name, router));
+                                consumer = new Consumer(new ConsumerOptions(_receiverConnection.Name, router));
                             }, 5000, int.MaxValue).WaitAsync();
                             using (consumer)
                             {
@@ -142,7 +141,6 @@ namespace TWCore.Messaging.Kafka
                                     if (cancellationToken.IsCancellationRequested) break;
                                     var correlationId = new Guid(cRes.Key);
                                     var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
-                                    message.CorrelationId = correlationId;
                                     message.Body = cRes.Value;
                                     message.WaitHandler.Set();
                                 }
@@ -267,7 +265,6 @@ namespace TWCore.Messaging.Kafka
                     {
                         foreach (var cRes in consumer.Consume(cancellationToken))
                         {
-                            message.CorrelationId = new Guid(cRes.Key);
                             message.Body = cRes.Value;
                             message.WaitHandler.Set();
                             break;

@@ -72,7 +72,6 @@ namespace TWCore.Messaging.RabbitMQ
         #region Nested Type
         private class RabbitResponseMessage
         {
-            public Guid CorrelationId;
             public IBasicProperties Properties;
             public byte[] Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
@@ -266,7 +265,6 @@ namespace TWCore.Messaging.RabbitMQ
                         return;
                     }
 
-                    rMessage.CorrelationId = crId;
                     rMessage.Body = ea.Body;
                     rMessage.Properties = ea.BasicProperties;
                     rMessage.WaitHandler.Set();
@@ -318,7 +316,6 @@ namespace TWCore.Messaging.RabbitMQ
                         return;
                     }
 
-                    message.CorrelationId = correlationId;
                     message.Body = ea.Body;
                     message.Properties = ea.BasicProperties;
                     message.WaitHandler.Set();

@@ -68,7 +68,6 @@ namespace TWCore.Messaging.NSQ
         #region Nested Type
         private class NSQueueMessage
         {
-            public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
         }
@@ -78,9 +77,7 @@ namespace TWCore.Messaging.NSQ
             {
                 (var body, var correlationId, var _) = GetFromRawMessageBody(message.Body);
                 Try.Do(message.Finish, false);
-
                 var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
-                rMsg.CorrelationId = correlationId;
                 rMsg.Body = body;
                 rMsg.WaitHandler.Set();
             }

@@ -65,7 +65,6 @@ namespace TWCore.Messaging.NATS
         #region Nested Type
         private class NATSQueueMessage
         {
-            public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
         }
@@ -73,7 +72,6 @@ namespace TWCore.Messaging.NATS
         {
             (var body, var correlationId) = GetFromMessageBody(e.Message.Data);
             var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
-            rMsg.CorrelationId = correlationId;
             rMsg.Body = body;
             rMsg.WaitHandler.Set();
         }

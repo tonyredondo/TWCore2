@@ -255,15 +255,9 @@ namespace TWCore.Messaging.NATS
             if (!UseSingleResponseQueue)
             {
                 var name = _receiverConnection.Name + "_" + correlationId;
-                var route = _receiverConnection.Route;
                 var waitResult = false;
-                using (var connection = _factory.CreateConnection(route))
-                {
-                    using (var consumer = connection.SubscribeAsync(name, MessageHandler))
-                    {
-                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    }
-                }
+                using (var consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler))
+                    waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
 
                 if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

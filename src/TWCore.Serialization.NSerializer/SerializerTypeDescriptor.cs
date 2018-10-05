@@ -33,11 +33,13 @@ namespace TWCore.Serialization.NSerializer
     {
         public readonly bool IsNSerializable;
         public readonly byte[] Definition;
+		public readonly Type Type;
         public readonly SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerTypeDescriptor(Type type)
         {
+			Type = type;
             var ifaces = type.GetInterfaces();
             var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
             var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -189,6 +191,8 @@ namespace TWCore.Serialization.NSerializer
                     return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
                 if (itemType.IsAbstract || itemType.IsInterface || itemType == typeof(object))
                     return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
+                
+                //TODO: The class is sealed, we have to do another optimization here.
                 if (itemType.IsSealed)
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
     

@@ -802,7 +802,7 @@ namespace TWCore.Serialization.NSerializer
                 }
                 _objectCache.Set(value);
                 var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
-                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                Stream.Write(descriptor.Definition);
                 _typeCache.Set(valueType);
                 if (descriptor.IsNSerializable)
                     ((INSerializable)value).Serialize(this);
@@ -867,36 +867,18 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
-#if COMPATIBILITY
-                _buffer[0] = DataBytesDefinition.RefObject;
-                MemoryMarshal.Write(_buffer.AsSpan(1), ref oIdx);
-                Stream.Write(_buffer, 0, 5);
-#else
-                Span<byte> buffer = stackalloc byte[5];
-                buffer[0] = DataBytesDefinition.RefObject;
-                BitConverter.TryWriteBytes(buffer.Slice(1), oIdx);
-                Stream.Write(buffer);
-#endif
+                WriteRefObject(oIdx);
                 return;
             }
             _objectCache.Set(value);
             var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-#if COMPATIBILITY
-                _buffer[0] = DataBytesDefinition.RefType;
-                MemoryMarshal.Write(_buffer.AsSpan(1), ref tIdx);
-                Stream.Write(_buffer, 0, 5);
-#else
-                Span<byte> buffer = stackalloc byte[5];
-                buffer[0] = DataBytesDefinition.RefType;
-                BitConverter.TryWriteBytes(buffer.Slice(1), tIdx);
-                Stream.Write(buffer);
-#endif
+                WriteRefType(tIdx);
             }
             else
             {
-                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                Stream.Write(descriptor.Definition);
                 _typeCache.Set(vType);
             }
             if (descriptor.IsNSerializable)
@@ -914,39 +896,22 @@ namespace TWCore.Serialization.NSerializer
                 Stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
-            var vType = value.GetType();
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
-#if COMPATIBILITY
-                _buffer[0] = DataBytesDefinition.RefObject;
-                MemoryMarshal.Write(_buffer.AsSpan(1), ref oIdx);
-                Stream.Write(_buffer, 0, 5);
-#else
-                Span<byte> buffer = stackalloc byte[5];
-                buffer[0] = DataBytesDefinition.RefObject;
-                BitConverter.TryWriteBytes(buffer.Slice(1), oIdx);
-                Stream.Write(buffer);
-#endif
+                WriteRefObject(oIdx);
                 return;
             }
             _objectCache.Set(value);
-            var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
+
+			var vType = value.GetType();
+			var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-#if COMPATIBILITY
-                _buffer[0] = DataBytesDefinition.RefType;
-                MemoryMarshal.Write(_buffer.AsSpan(1), ref tIdx);
-                Stream.Write(_buffer, 0, 5);
-#else
-                Span<byte> buffer = stackalloc byte[5];
-                buffer[0] = DataBytesDefinition.RefType;
-                BitConverter.TryWriteBytes(buffer.Slice(1), tIdx);
-                Stream.Write(buffer);
-#endif
+                WriteRefType(tIdx);
             }
             else
             {
-                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                Stream.Write(descriptor.Definition);
                 _typeCache.Set(vType);
             }
             if (descriptor.IsNSerializable)
@@ -955,10 +920,42 @@ namespace TWCore.Serialization.NSerializer
                 descriptor.SerializeAction(value, this);
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
-        #endregion
 
-        #region Private Write Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InternalWriteSealedObjectValue(object value, SerializerTypeDescriptor descriptor)
+        {
+			//This method should be declared as a <<ExpressionTree>>
+			if (value is null)
+			{
+				Stream.WriteByte(DataBytesDefinition.ValueNull);
+				return;
+			}
+			if (_objectCache.TryGetValue(value, out var oIdx))
+			{
+				WriteRefObject(oIdx);
+				return;
+			}
+			_objectCache.Set(value);
+
+			if (_typeCache.TryGetValue(descriptor.Type, out var tIdx))
+			{
+				WriteRefType(tIdx);
+			}
+			else
+			{
+				Stream.Write(descriptor.Definition);
+				_typeCache.Set(descriptor.Type);
+			}
+			if (descriptor.IsNSerializable)
+				((INSerializable)value).Serialize(this);
+			else
+				descriptor.SerializeAction(value, this);
+			Stream.WriteByte(DataBytesDefinition.TypeEnd);
+		}
+		#endregion
+
+		#region Private Write Methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteByte(byte value)
         {
             Stream.WriteByte(value);
@@ -1114,6 +1111,20 @@ namespace TWCore.Serialization.NSerializer
         {
             MemoryMarshal.Write(_buffer, ref value);
             Stream.Write(_buffer, 0, 1);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteRefType(int refType)
+        {
+            _buffer[0] = DataBytesDefinition.RefType;
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref tIdx);
+            Stream.Write(_buffer, 0, 5);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteRefObject(int refObject)
+        {
+            _buffer[0] = DataBytesDefinition.RefObject;
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref refObject);
+            Stream.Write(_buffer, 0, 5);
         }
 #else
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1285,6 +1296,22 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[1];
             BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteRefType(int refType)
+        {
+            Span<byte> buffer = stackalloc byte[5];
+            buffer[0] = DataBytesDefinition.RefType;
+            BitConverter.TryWriteBytes(buffer.Slice(1), refType);
+            Stream.Write(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteRefObject(int refObject)
+        {
+            Span<byte> buffer = stackalloc byte[5];
+            buffer[0] = DataBytesDefinition.RefObject;
+            BitConverter.TryWriteBytes(buffer.Slice(1), refObject);
             Stream.Write(buffer);
         }
 #endif

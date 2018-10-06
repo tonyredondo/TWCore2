@@ -81,12 +81,7 @@ namespace TWCore.Messaging.Kafka
             {
                 var options = new KafkaOptions(new Uri(Connection.Route));
                 var router = new BrokerRouter(options);
-                Consumer consumer = null;
-                Extensions.InvokeWithRetry(() =>
-                {
-                    new Consumer(new ConsumerOptions(Connection.Name, router));
-                }, 5000, int.MaxValue).WaitAsync();
-
+                var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(Connection.Name, router)), 5000, int.MaxValue).WaitAsync();
                 using (consumer)
                 {
                     foreach (var cRes in consumer.Consume(_token))

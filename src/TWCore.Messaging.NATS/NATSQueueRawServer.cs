@@ -87,12 +87,7 @@ namespace TWCore.Messaging.NATS
                     var producer = _rQueue.GetOrAdd(queue.Route, qRoute => 
                     {
                         Core.Log.LibVerbose("New Producer from QueueServer");
-                        IConnection connection = null;
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = _factory.CreateConnection(qRoute);
-                        }, 5000, int.MaxValue).WaitAsync();
-                        return connection;
+                        return Extensions.InvokeWithRetry(() => _factory.CreateConnection(qRoute), 5000, int.MaxValue).WaitAsync();
                     });
 
                     if (!string.IsNullOrEmpty(replyTo))

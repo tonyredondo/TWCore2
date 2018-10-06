@@ -82,12 +82,7 @@ namespace TWCore.Messaging.NATS
                     var producer = _rQueue.GetOrAdd(queue.Route, qRoute => 
                     {
                         Core.Log.LibVerbose("New Producer from QueueServer");
-                        IConnection connection = null;
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = _factory.CreateConnection(qRoute);
-                        }, 5000, int.MaxValue).WaitAsync();
-                        return connection;
+                        return Extensions.InvokeWithRetry(() => _factory.CreateConnection(qRoute), 5000, int.MaxValue).WaitAsync();
                     });
                     Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
                     producer.Publish(queue.Name, body);

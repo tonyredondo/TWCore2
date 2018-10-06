@@ -76,7 +76,7 @@ namespace TWCore.Messaging.Redis
             _token = token;
             if (string.IsNullOrEmpty(Connection.Route))
                 throw new UriFormatException($"The route for the connection to {Connection.Name} is null.");
-            _connection = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(Connection.Route), 5000, int.MaxValue).WaitAsync();
+            _connection = await Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(Connection.Route), 5000, int.MaxValue).ConfigureAwait(false);
             _receiver = _connection.GetSubscriber();
             _receiver.SubscribeAsync(Connection.Name, MessageHandler);
             _monitorTask = Task.Run(MonitorProcess, _token);

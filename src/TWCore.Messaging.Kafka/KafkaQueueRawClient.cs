@@ -100,7 +100,7 @@ namespace TWCore.Messaging.Kafka
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -112,10 +112,7 @@ namespace TWCore.Messaging.Kafka
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
                         var options = new KafkaOptions(new Uri(queue.Route));
                         var router = new BrokerRouter(options);
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = new Producer(router);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        connection = Extensions.InvokeWithRetry(() => new Producer(router), 5000, int.MaxValue).WaitAsync();
                         _senders.Add((queue, connection));
                     }
                 }
@@ -132,11 +129,7 @@ namespace TWCore.Messaging.Kafka
                         {
                             var options = new KafkaOptions(new Uri(_receiverConnection.Route));
                             var router = new BrokerRouter(options);
-                            Consumer consumer = null;
-                            Extensions.InvokeWithRetry(() =>
-                            {
-                                consumer = new Consumer(new ConsumerOptions(_receiverConnection.Name, router));
-                            }, 5000, int.MaxValue).WaitAsync();
+                            var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(_receiverConnection.Name, router)), 5000, int.MaxValue).WaitAsync();
                             using (consumer)
                             {
                                 foreach (var cRes in consumer.Consume(cancellationToken))

@@ -78,16 +78,11 @@ namespace TWCore.Messaging.Kafka
                     var producer = _rQueue.GetOrAdd(queue.Route, qRoute =>
                     {
                         Core.Log.LibVerbose("New Producer from QueueClient");
-                        Producer connection = null;
                         if (string.IsNullOrEmpty(qRoute))
                             throw new UriFormatException($"The route for the connection to {qRoute} is null.");
                         var options = new KafkaOptions(new Uri(qRoute));
                         var router = new BrokerRouter(options);
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = new Producer(router);
-                        }, 5000, int.MaxValue).WaitAsync();
-                        return connection;
+                        return Extensions.InvokeWithRetry(() => new Producer(router), 5000, int.MaxValue).WaitAsync();
                     });
 
                     if (!string.IsNullOrEmpty(replyTo))

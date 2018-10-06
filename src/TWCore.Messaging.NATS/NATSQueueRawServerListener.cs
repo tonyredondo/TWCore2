@@ -86,10 +86,7 @@ namespace TWCore.Messaging.NATS
             _token = token;
             if (string.IsNullOrEmpty(Connection.Route))
                 throw new UriFormatException($"The route for the connection to {Connection.Name} is null.");
-            await Extensions.InvokeWithRetry(() =>
-            {
-                _connection = _factory.CreateConnection(Connection.Route);
-            }, 5000, int.MaxValue).ConfigureAwait(false);
+            _connection = await Extensions.InvokeWithRetry(() => _factory.CreateConnection(Connection.Route), 5000, int.MaxValue).ConfigureAwait(false);
             _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);

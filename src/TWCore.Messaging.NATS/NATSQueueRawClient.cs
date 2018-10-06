@@ -118,7 +118,7 @@ namespace TWCore.Messaging.NATS
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -128,7 +128,7 @@ namespace TWCore.Messaging.NATS
                         IConnection connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        connection = _factory.CreateConnection(queue.Route);
+                        connection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(queue.Route), 5000, int.MaxValue).WaitAsync();
                         _senders.Add((queue, connection));
                     }
                 }
@@ -137,7 +137,7 @@ namespace TWCore.Messaging.NATS
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (string.IsNullOrEmpty(_receiverConnection.Route))
                         throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                    _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
+                    _receiverNASTConnection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
                     if (UseSingleResponseQueue)
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
                 }

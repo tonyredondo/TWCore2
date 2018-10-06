@@ -218,37 +218,43 @@ namespace TWCore.Messaging.NSQ
                 throw new NullReferenceException("There is not receiver queue.");
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
-
-            if (!UseSingleResponseQueue)
+            try
             {
-                var name = _receiverConnection.Name + "_" + correlationId;
-                var route = _receiverConnection.Route;
-                var consumer = new Consumer(name, name);
-                consumer.AddHandler(MessageHandler);
-                consumer.ConnectToNsqd(route);
-                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                consumer.Stop();
-                consumer.DisconnectFromNsqd(route);
-                var pro = new NsqdHttpClient(route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                pro.DeleteChannel(name, name);
-                pro.DeleteTopic(name);
+                if (!UseSingleResponseQueue)
+                {
+                    var name = _receiverConnection.Name + "_" + correlationId;
+                    var route = _receiverConnection.Route;
+                    var consumer = new Consumer(name, name);
+                    consumer.AddHandler(MessageHandler);
+                    consumer.ConnectToNsqd(route);
+                    var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
+                    consumer.Stop();
+                    consumer.DisconnectFromNsqd(route);
+                    var pro = new NsqdHttpClient(route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
+                    pro.DeleteChannel(name, name);
+                    pro.DeleteTopic(name);
 
-                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+                    if (!waitResult)
+                        throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+
+                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
+                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+                    sw.Stop();
+                    return message.Body.AsArray();
+                }
+
+                if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                    throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
                 return message.Body.AsArray();
             }
-
-            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-            ReceivedMessages.TryRemove(correlationId, out _);
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-            sw.Stop();
-            return message.Body.AsArray();
+            finally
+            {
+                ReceivedMessages.TryRemove(correlationId, out _);
+            }
         }
         #endregion
 

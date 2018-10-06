@@ -231,45 +231,50 @@ namespace TWCore.Messaging.NSQ
 
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
-
-            if (!UseSingleResponseQueue)
+            try
             {
-                var name = _receiverConnection.Name + "_" + correlationId;
-                var route = _receiverConnection.Route;
-                var consumer = new Consumer(name, name);
-                consumer.AddHandler(MessageHandler);
-                consumer.ConnectToNsqd(route);
-                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                consumer.Stop();
-                consumer.DisconnectFromNsqd(route);
-                var pro = new NsqdHttpClient(route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                pro.DeleteChannel(name, name);
-                pro.DeleteTopic(name);
+                if (!UseSingleResponseQueue)
+                {
+                    var name = _receiverConnection.Name + "_" + correlationId;
+                    var route = _receiverConnection.Route;
+                    var consumer = new Consumer(name, name);
+                    consumer.AddHandler(MessageHandler);
+                    consumer.ConnectToNsqd(route);
+                    var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
+                    consumer.Stop();
+                    consumer.DisconnectFromNsqd(route);
+                    var pro = new NsqdHttpClient(route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
+                    pro.DeleteChannel(name, name);
+                    pro.DeleteTopic(name);
 
-                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+                    if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+
+                    if (message.Body == MultiArray<byte>.Empty)
+                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+
+                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
+                    var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+                    sw.Stop();
+                    return response;
+                }
+
+                if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                    throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
                 if (message.Body == MultiArray<byte>.Empty)
-                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+                    throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+                var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                return response;
+                return rs;
             }
-
-            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-            if (message.Body == MultiArray<byte>.Empty)
-                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-            var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-            ReceivedMessages.TryRemove(correlationId, out _);
-            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-            sw.Stop();
-            return rs;
+            finally
+            {
+                ReceivedMessages.TryRemove(correlationId, out _);
+            }
         }
         #endregion
 

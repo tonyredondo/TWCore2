@@ -143,7 +143,7 @@ namespace TWCore.Messaging.Kafka
                                 {
                                     if (cancellationToken.IsCancellationRequested) break;
                                     var correlationId = new Guid(cRes.Key);
-                                    var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
+                                    var message = ReceivedMessages.GetOrAdd(correlationId, id => new KafkaQueueMessage());
                                     message.Body = cRes.Value;
                                     message.WaitHandler.Set();
                                 }
@@ -241,51 +241,55 @@ namespace TWCore.Messaging.Kafka
 
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
-
-            if (!UseSingleResponseQueue)
+            try
             {
-                message.Name = _receiverConnection.Name + "_" + correlationId;
-                message.Route = _receiverConnection.Route;
-
-                var consumerTask = Task.Factory.StartNew(() =>
+                if (!UseSingleResponseQueue)
                 {
-                    var options = new KafkaOptions(new Uri(message.Route));
-                    var router = new BrokerRouter(options);
-                    using (var consumer = new Consumer(new ConsumerOptions(message.Name, router)))
-                    {
-                        foreach (var cRes in consumer.Consume(cancellationToken))
-                        {
-                            message.Body = cRes.Value;
-                            message.WaitHandler.Set();
-                            break;
-                        }
-                    }
-                }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+                    message.Name = _receiverConnection.Name + "_" + correlationId;
+                    message.Route = _receiverConnection.Route;
 
-                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+                    var consumerTask = Task.Factory.StartNew(() =>
+                    {
+                        var options = new KafkaOptions(new Uri(message.Route));
+                        var router = new BrokerRouter(options);
+                        using (var consumer = new Consumer(new ConsumerOptions(message.Name, router)))
+                        {
+                            foreach (var cRes in consumer.Consume(cancellationToken))
+                            {
+                                message.Body = cRes.Value;
+                                message.WaitHandler.Set();
+                                break;
+                            }
+                        }
+                    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+
+                    if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                        throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+
+                    if (message.Body == MultiArray<byte>.Empty)
+                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+
+                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
+                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+                    sw.Stop();
+                    return message.Body.AsArray();
+                }
+
+                if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                    throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
                 if (message.Body == MultiArray<byte>.Empty)
-                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+                    throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                ReceivedMessages.TryRemove(correlationId, out _);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
                 return message.Body.AsArray();
             }
-
-            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-            if (message.Body == MultiArray<byte>.Empty)
-                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-            ReceivedMessages.TryRemove(correlationId, out _);
-            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-            sw.Stop();
-            return message.Body.AsArray();
+            finally
+            {
+                ReceivedMessages.TryRemove(correlationId, out _);
+            }
         }
         #endregion
 

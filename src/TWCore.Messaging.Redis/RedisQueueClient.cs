@@ -34,12 +34,12 @@ using TWCore.Threading;
 
 namespace TWCore.Messaging.Redis
 {
-	/// <inheritdoc />
-	/// <summary>
-	/// Redis Queue Client
-	/// </summary>
-	public class RedisQueueClient : MQueueClientBase
-	{
+    /// <inheritdoc />
+    /// <summary>
+    /// Redis Queue Client
+    /// </summary>
+    public class RedisQueueClient : MQueueClientBase
+    {
         private static readonly ConcurrentDictionary<Guid, Message> ReceivedMessages = new ConcurrentDictionary<Guid, Message>();
 
         #region Fields
@@ -63,22 +63,22 @@ namespace TWCore.Messaging.Redis
 
         #region Nested Type
         private class Message
-		{
-			public MultiArray<byte> Body;
-			public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
-			public string Route;
-			public string Name;
-		}
-		#endregion
+        {
+            public MultiArray<byte> Body;
+            public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
+            public string Route;
+            public string Name;
+        }
+        #endregion
 
-		#region Init and Dispose Methods
-		/// <inheritdoc />
-		/// <summary>
-		/// On client initialization
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override void OnInit()
-		{
+        #region Init and Dispose Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// On client initialization
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override void OnInit()
+        {
             OnDispose();
             _senders = new List<(MQConnection, ConnectionMultiplexer, ISubscriber)>();
 
@@ -105,10 +105,7 @@ namespace TWCore.Messaging.Redis
                         ConnectionMultiplexer connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        Extensions.InvokeWithRetry(async () =>
-                        {
-                            connection = await ConnectionMultiplexer.ConnectAsync(queue.Route).ConfigureAwait(false);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        connection = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(queue.Route), 5000, int.MaxValue).WaitAsync();
                         _senders.Add((queue, connection, connection.GetSubscriber()));
                     }
                 }
@@ -117,8 +114,7 @@ namespace TWCore.Messaging.Redis
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (string.IsNullOrEmpty(_receiverConnection.Route))
                         throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                    _receiverMultiplexer = ConnectionMultiplexer.ConnectAsync(_receiverConnection.Route).WaitAsync();
-
+                    _receiverMultiplexer = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
                     if (UseSingleResponseQueue)
                     {
                         _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
@@ -146,13 +142,13 @@ namespace TWCore.Messaging.Redis
                     collection.Add("Receiver Path", _clientQueues.RecvQueue.Route);
             });
         }
-		/// <inheritdoc />
-		/// <summary>
-		/// On Dispose
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override void OnDispose()
-		{
+        /// <inheritdoc />
+        /// <summary>
+        /// On Dispose
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override void OnDispose()
+        {
             if (_senders != null)
             {
                 foreach (var sender in _senders)
@@ -173,17 +169,17 @@ namespace TWCore.Messaging.Redis
             _receiverSubscriber = null;
             _receiverMultiplexer = null;
         }
-		#endregion
+        #endregion
 
-		#region Send Method
-		/// <inheritdoc />
-		/// <summary>
-		/// On Send message data
-		/// </summary>
-		/// <param name="message">Request message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override async Task<bool> OnSendAsync(RequestMessage message)
-		{
+        #region Send Method
+        /// <inheritdoc />
+        /// <summary>
+        /// On Send message data
+        /// </summary>
+        /// <param name="message">Request message instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override async Task<bool> OnSendAsync(RequestMessage message)
+        {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
             if (_senderOptions is null)
@@ -219,19 +215,19 @@ namespace TWCore.Messaging.Redis
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
             return true;
         }
-		#endregion
+        #endregion
 
-		#region Receive Method
-		/// <inheritdoc />
-		/// <summary>
-		/// On Receive message data
-		/// </summary>
-		/// <param name="correlationId">Correlation Id</param>
-		/// <param name="cancellationToken">Cancellation token</param>
-		/// <returns>Response message instance</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
-		{
+        #region Receive Method
+        /// <inheritdoc />
+        /// <summary>
+        /// On Receive message data
+        /// </summary>
+        /// <param name="correlationId">Correlation Id</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Response message instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
+        {
             if (_receiverConnection is null && UseSingleResponseQueue)
                 throw new NullReferenceException("There is not receiver queue.");
 

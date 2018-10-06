@@ -116,7 +116,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 5000;
+                    var totalQ = 2000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Unique Response Queue");
@@ -155,7 +155,7 @@ namespace TWCore.Tests
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 1000;
+                    var totalQ = 10;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Multiple Response Queue");
@@ -171,7 +171,7 @@ namespace TWCore.Tests
                     Console.ReadLine();
                     #endregion
 
-                    totalQ = 100;
+                    totalQ = 10;
 
                     #region Parallel Mode
                     Core.Log.Warning("Parallel Mode Test, using Multiple Response Queue");
@@ -208,7 +208,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetRawClient())
                 {
-                    var totalQ = 5000;
+                    var totalQ = 2000;
 
                     #region Sync Mode
                     Core.Log.Warning("RAW Sync Mode Test, using Unique Response Queue");
@@ -247,7 +247,7 @@ namespace TWCore.Tests
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetRawClient())
                 {
-                    var totalQ = 1000;
+                    var totalQ = 10;
 
                     #region Sync Mode
                     Core.Log.Warning("RAW Sync Mode Test, using Multiple Response Queue");
@@ -263,7 +263,7 @@ namespace TWCore.Tests
                     Console.ReadLine();
                     #endregion
 
-                    totalQ = 100;
+                    totalQ = 10;
 
                     #region Parallel Mode
                     Core.Log.Warning("RAW Parallel Mode Test, using Multiple Response Queue");

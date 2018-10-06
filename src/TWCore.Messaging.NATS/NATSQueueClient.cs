@@ -137,8 +137,6 @@ namespace TWCore.Messaging.NATS
                     _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
                     if (UseSingleResponseQueue)
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
-                    else
-                        _receiverNASTConnection.Opts.SubscriberDeliveryTaskCount = 2;
                 }
             }
 

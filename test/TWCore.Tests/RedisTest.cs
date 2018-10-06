@@ -152,6 +152,42 @@ namespace TWCore.Tests
                     #endregion
                 }
 
+                mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
+                using (var mqClient = mqConfig.GetClient())
+                {
+                    var totalQ = 50;
+
+                    #region Sync Mode
+                    Core.Log.Warning("Sync Mode Test, using Multiple Response Queue");
+                    using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
+                    {
+                        for (var i = 0; i < totalQ; i++)
+                        {
+                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                        }
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
+                    }
+                    Console.ReadLine();
+                    #endregion
+
+                    #region Parallel Mode
+                    Core.Log.Warning("Parallel Mode Test, using Multiple Response Queue");
+                    using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
+                    {
+                        Task.WaitAll(
+                            Enumerable.Range(0, totalQ).Select((i, mc) => (Task)mc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
+                        );
+                        //Parallel.For(0, totalQ, i =>
+                        //{
+                        //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                        //});
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
+                    }
+                    Console.ReadLine();
+                    #endregion
+                }
             }
         }
 

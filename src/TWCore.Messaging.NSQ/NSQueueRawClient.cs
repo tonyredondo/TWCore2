@@ -128,7 +128,10 @@ namespace TWCore.Messaging.NSQ
                     _receiverConnection = _clientQueues.RecvQueue;
                     var rcvName = _receiverConnection.Name;
                     if (!UseSingleResponseQueue)
+                    {
                         rcvName += "-" + Core.InstanceId;
+                        Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                    }
                     _receiver = new Consumer(rcvName, rcvName);
                     _receiver.AddHandler(MessageHandler);
                     if (string.IsNullOrEmpty(_receiverConnection.Route))

@@ -115,7 +115,10 @@ namespace TWCore.Messaging.Redis
                     _receiverMultiplexer = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
                     var rcvName = _receiverConnection.Name;
                     if (!UseSingleResponseQueue)
+                    {
                         rcvName += "-" + Core.InstanceId;
+                        Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                    }
                     _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
                     _receiverSubscriber.Subscribe(rcvName, (channel, value) =>
                     {

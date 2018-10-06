@@ -128,8 +128,10 @@ namespace TWCore.Messaging.Kafka
                         var router = new BrokerRouter(options);
                         var rcvName = _receiverConnection.Name;
                         if (!UseSingleResponseQueue)
+                        {
                             rcvName += "-" + Core.InstanceId;
-
+                            Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                        }
                         var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(rcvName, router)), 5000, int.MaxValue).WaitAsync();
                         using (consumer)
                         {

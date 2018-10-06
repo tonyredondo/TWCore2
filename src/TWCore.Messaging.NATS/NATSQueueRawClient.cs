@@ -91,7 +91,6 @@ namespace TWCore.Messaging.NATS
         }
         #endregion
 
-
         #region Init and Dispose Methods
         /// <inheritdoc />
         /// <summary>
@@ -138,8 +137,16 @@ namespace TWCore.Messaging.NATS
                     if (string.IsNullOrEmpty(_receiverConnection.Route))
                         throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
                     _receiverNASTConnection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
-                    if (UseSingleResponseQueue)
+                    if (!UseSingleResponseQueue)
+                    {
+                        var rcvName = _receiverConnection.Name + "-" + Core.InstanceId;
+                        Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                        _receiver = _receiverNASTConnection.SubscribeAsync(rcvName, MessageHandler);
+                    }
+                    else
+                    {
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
+                    }
                 }
             }
 
@@ -170,11 +177,8 @@ namespace TWCore.Messaging.NATS
                 _senders = null;
             }
             if (_receiver is null) return;
-            if (UseSingleResponseQueue)
-            {
-                _receiver.Unsubscribe();
-                _receiverNASTConnection.Dispose();
-            }
+            _receiver.Unsubscribe();
+            _receiverNASTConnection.Dispose();
             _receiver = null;
             _factory = null;
         }
@@ -198,8 +202,7 @@ namespace TWCore.Messaging.NATS
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "_" + correlationId;
-
+                name += "-" + Core.InstanceId;
             var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var producer) in _senders)
@@ -230,21 +233,6 @@ namespace TWCore.Messaging.NATS
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
             try
             {
-                if (!UseSingleResponseQueue)
-                {
-                    var name = _receiverConnection.Name + "_" + correlationId;
-                    var waitResult = false;
-                    using (var consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler))
-                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    if (!waitResult)
-                        throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-                    sw.Stop();
-                    return message.Body.AsArray();
-                }
-
                 if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
                     throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

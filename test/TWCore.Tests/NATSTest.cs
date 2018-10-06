@@ -171,6 +171,8 @@ namespace TWCore.Tests
                     Console.ReadLine();
                     #endregion
 
+                    totalQ = 100;
+
                     #region Parallel Mode
                     Core.Log.Warning("Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
@@ -260,6 +262,8 @@ namespace TWCore.Tests
                     }
                     Console.ReadLine();
                     #endregion
+
+                    totalQ = 100;
 
                     #region Parallel Mode
                     Core.Log.Warning("RAW Parallel Mode Test, using Multiple Response Queue");

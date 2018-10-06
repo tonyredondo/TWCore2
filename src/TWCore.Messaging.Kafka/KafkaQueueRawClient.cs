@@ -70,8 +70,6 @@ namespace TWCore.Messaging.Kafka
         {
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
-            public string Route;
-            public string Name;
         }
         #endregion
 
@@ -119,31 +117,32 @@ namespace TWCore.Messaging.Kafka
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
-                    if (UseSingleResponseQueue)
+
+                    if (string.IsNullOrEmpty(_receiverConnection.Route))
+                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+
+                    var cancellationToken = _tokenSource.Token;
+                    var consumerTask = Task.Factory.StartNew(() =>
                     {
-                        if (string.IsNullOrEmpty(_receiverConnection.Route))
-                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+                        var options = new KafkaOptions(new Uri(_receiverConnection.Route));
+                        var router = new BrokerRouter(options);
+                        var rcvName = _receiverConnection.Name;
+                        if (!UseSingleResponseQueue)
+                            rcvName += "-" + Core.InstanceId;
 
-                        var cancellationToken = _tokenSource.Token;
-                        var consumerTask = Task.Factory.StartNew(() =>
+                        var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(rcvName, router)), 5000, int.MaxValue).WaitAsync();
+                        using (consumer)
                         {
-                            var options = new KafkaOptions(new Uri(_receiverConnection.Route));
-                            var router = new BrokerRouter(options);
-                            var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(_receiverConnection.Name, router)), 5000, int.MaxValue).WaitAsync();
-                            using (consumer)
+                            foreach (var cRes in consumer.Consume(cancellationToken))
                             {
-                                foreach (var cRes in consumer.Consume(cancellationToken))
-                                {
-                                    if (cancellationToken.IsCancellationRequested) break;
-                                    var correlationId = new Guid(cRes.Key);
-                                    var message = ReceivedMessages.GetOrAdd(correlationId, id => new KafkaQueueMessage());
-                                    message.Body = cRes.Value;
-                                    message.WaitHandler.Set();
-                                }
+                                if (cancellationToken.IsCancellationRequested) break;
+                                var correlationId = new Guid(cRes.Key);
+                                var message = ReceivedMessages.GetOrAdd(correlationId, id => new KafkaQueueMessage());
+                                message.Body = cRes.Value;
+                                message.WaitHandler.Set();
                             }
-                        }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-
-                    }
+                        }
+                    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
                 }
             }
 
@@ -178,10 +177,7 @@ namespace TWCore.Messaging.Kafka
                 _senders = null;
             }
             if (_tokenSource is null) return;
-            if (UseSingleResponseQueue)
-            {
-                _tokenSource.Cancel();
-            }
+            _tokenSource.Cancel();
             _tokenSource = null;
         }
         #endregion
@@ -204,7 +200,7 @@ namespace TWCore.Messaging.Kafka
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "_" + correlationId;
+                name += "-" + Core.InstanceId;
 
             var key = CreateRawMessageHeader(correlationId, name);
 
@@ -236,38 +232,6 @@ namespace TWCore.Messaging.Kafka
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
             try
             {
-                if (!UseSingleResponseQueue)
-                {
-                    message.Name = _receiverConnection.Name + "_" + correlationId;
-                    message.Route = _receiverConnection.Route;
-
-                    var consumerTask = Task.Factory.StartNew(() =>
-                    {
-                        var options = new KafkaOptions(new Uri(message.Route));
-                        var router = new BrokerRouter(options);
-                        using (var consumer = new Consumer(new ConsumerOptions(message.Name, router)))
-                        {
-                            foreach (var cRes in consumer.Consume(cancellationToken))
-                            {
-                                message.Body = cRes.Value;
-                                message.WaitHandler.Set();
-                                break;
-                            }
-                        }
-                    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-
-                    if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
-                        throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-                    if (message.Body == MultiArray<byte>.Empty)
-                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-                    sw.Stop();
-                    return message.Body.AsArray();
-                }
-
                 if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
                     throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

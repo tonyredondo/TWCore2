@@ -123,17 +123,17 @@ namespace TWCore.Messaging.NSQ
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
-                    _receiver = new Consumer(_receiverConnection.Name, _receiverConnection.Name);
-                    if (UseSingleResponseQueue)
+                    var rcvName = _receiverConnection.Name;
+                    if (!UseSingleResponseQueue)
+                        rcvName += "-" + Core.InstanceId;
+                    _receiver = new Consumer(rcvName, rcvName);
+                    _receiver.AddHandler(MessageHandler);
+                    if (string.IsNullOrEmpty(_receiverConnection.Route))
+                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+                    Extensions.InvokeWithRetry(() =>
                     {
-                        _receiver.AddHandler(MessageHandler);
-                        if (string.IsNullOrEmpty(_receiverConnection.Route))
-                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            _receiver.ConnectToNsqd(_receiverConnection.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
-                    }
+                        _receiver.ConnectToNsqd(_receiverConnection.Route);
+                    }, 5000, int.MaxValue).WaitAsync();
                 }
             }
 
@@ -163,8 +163,7 @@ namespace TWCore.Messaging.NSQ
                 _senders = null;
             }
             if (_receiver is null) return;
-            if (UseSingleResponseQueue)
-                _receiver.Stop();
+            _receiver.Stop();
             _receiver = null;
         }
         #endregion
@@ -192,9 +191,7 @@ namespace TWCore.Messaging.NSQ
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
-                    {
-                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
-                    }
+                        message.Header.ResponseQueue.Name += "-" + Core.InstanceId;
                 }
                 else
                 {
@@ -233,32 +230,6 @@ namespace TWCore.Messaging.NSQ
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
             try
             {
-                if (!UseSingleResponseQueue)
-                {
-                    var name = _receiverConnection.Name + "_" + correlationId;
-                    var route = _receiverConnection.Route;
-                    var consumer = new Consumer(name, name);
-                    consumer.AddHandler(MessageHandler);
-                    consumer.ConnectToNsqd(route);
-                    var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    consumer.Stop();
-                    consumer.DisconnectFromNsqd(route);
-                    var pro = new NsqdHttpClient(route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                    pro.DeleteChannel(name, name);
-                    pro.DeleteTopic(name);
-
-                    if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-                    if (message.Body == MultiArray<byte>.Empty)
-                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                    var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-                    sw.Stop();
-                    return response;
-                }
-
                 if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
                     throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

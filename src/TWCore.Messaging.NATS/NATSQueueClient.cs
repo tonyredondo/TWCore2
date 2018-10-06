@@ -257,11 +257,11 @@ namespace TWCore.Messaging.NATS
                     var name = _receiverConnection.Name + "_" + correlationId;
                     var waitResult = false;
                     IAsyncSubscription consumer = null;
-                    using (await _multiQueueLock.LockAsync(cancellationToken).ConfigureAwait(false))
+                    //using (await _multiQueueLock.LockAsync(cancellationToken).ConfigureAwait(false))
                         consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler);
                     waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    using (await _multiQueueLock.LockAsync(cancellationToken).ConfigureAwait(false))
-                        consumer.Unsubscribe();
+                    //using (await _multiQueueLock.LockAsync(cancellationToken).ConfigureAwait(false))
+                    //    consumer.Unsubscribe();
 
                     if (!waitResult)
                         throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());

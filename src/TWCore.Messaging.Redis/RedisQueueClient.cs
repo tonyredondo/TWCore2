@@ -254,6 +254,7 @@ namespace TWCore.Messaging.Redis
                     }
                     catch (TaskCanceledException) { }
                     catch (OperationCanceledException) { }
+                    subsChannel.Unsubscribe();
 
                     if (!waitResult)
                         throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());

@@ -128,26 +128,20 @@ namespace TWCore.Messaging.NATS
                         IConnection connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = _factory.CreateConnection(queue.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        connection = _factory.CreateConnection(queue.Route);
                         _senders.Add((queue, connection));
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
+                    if (string.IsNullOrEmpty(_receiverConnection.Route))
+                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+                    _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
                     if (UseSingleResponseQueue)
-                    {
-                        if (string.IsNullOrEmpty(_receiverConnection.Route))
-                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
-                    }
+                    else
+                        _receiverNASTConnection.Opts.SubscriberDeliveryTaskCount = 2;
                 }
             }
 
@@ -242,12 +236,8 @@ namespace TWCore.Messaging.NATS
                 {
                     var name = _receiverConnection.Name + "_" + correlationId;
                     var waitResult = false;
-                    var connection = _factory.CreateConnection(_receiverConnection.Route);
-                    var consumer = connection.SubscribeAsync(name, MessageHandler);
-                    waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    consumer.Unsubscribe();
-                    connection.Close();
-
+                    using (var consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler))
+                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
                     if (!waitResult)
                         throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

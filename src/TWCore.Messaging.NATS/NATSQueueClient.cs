@@ -52,7 +52,6 @@ namespace TWCore.Messaging.NATS
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
         private TimeSpan _receiverOptionsTimeout;
-        private AsyncLock _multiQueueLock = new AsyncLock();
         #endregion
 
         #region Properties
@@ -126,10 +125,7 @@ namespace TWCore.Messaging.NATS
                         IConnection connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = _factory.CreateConnection(queue.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        connection = _factory.CreateConnection(queue.Route);
                         _senders.Add((queue, connection));
                     }
                 }
@@ -138,12 +134,11 @@ namespace TWCore.Messaging.NATS
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (string.IsNullOrEmpty(_receiverConnection.Route))
                         throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                    Extensions.InvokeWithRetry(() =>
-                    {
-                        _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
-                    }, 5000, int.MaxValue).WaitAsync();
+                    _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
                     if (UseSingleResponseQueue)
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
+                    else
+                        _receiverNASTConnection.Opts.SubscriberDeliveryTaskCount = 2;
                 }
             }
 
@@ -256,13 +251,8 @@ namespace TWCore.Messaging.NATS
                 {
                     var name = _receiverConnection.Name + "_" + correlationId;
                     var waitResult = false;
-                    IAsyncSubscription consumer = null;
-                    //using (await _multiQueueLock.LockAsync(cancellationToken).ConfigureAwait(false))
-                        consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler);
-                    waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    //using (await _multiQueueLock.LockAsync(cancellationToken).ConfigureAwait(false))
-                    //    consumer.Unsubscribe();
-
+                    using (var consumer = _receiverNASTConnection.SubscribeAsync(name, MessageHandler))
+                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
                     if (!waitResult)
                         throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 

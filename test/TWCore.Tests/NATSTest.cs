@@ -113,7 +113,7 @@ namespace TWCore.Tests
                     return Task.CompletedTask;
                 };
                 mqServer.StartListeners();
-                
+
                 using (var mqClient = mqConfig.GetClient())
                 {
                     var totalQ = 5000;

@@ -193,7 +193,6 @@ namespace TWCore
             {
                 if (ex.InnerExceptions.Count == 1)
                 {
-                    Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
                 throw;
@@ -229,7 +228,6 @@ namespace TWCore
             {
                 if (ex.InnerExceptions.Count == 1)
                 {
-                    Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
                 throw;
@@ -265,7 +263,6 @@ namespace TWCore
             {
                 if (ex.InnerExceptions.Count == 1)
                 {
-                    Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
                 throw;
@@ -305,7 +302,6 @@ namespace TWCore
             {
                 if (ex.InnerExceptions.Count == 1)
                 {
-                    Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
                 throw;
@@ -338,7 +334,6 @@ namespace TWCore
             {
                 if (ex.InnerExceptions.Count == 1)
                 {
-                    Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
                 throw;
@@ -369,7 +364,6 @@ namespace TWCore
             {
                 if (ex.InnerExceptions.Count == 1)
                 {
-                    Core.Log.Write(ex.InnerExceptions[0]);
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
                 throw;

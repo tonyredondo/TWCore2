@@ -136,16 +136,14 @@ namespace TWCore.Messaging.NATS
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
-                    if (UseSingleResponseQueue)
+                    if (string.IsNullOrEmpty(_receiverConnection.Route))
+                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+                    Extensions.InvokeWithRetry(() =>
                     {
-                        if (string.IsNullOrEmpty(_receiverConnection.Route))
-                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
+                    }, 5000, int.MaxValue).WaitAsync();
+                    if (UseSingleResponseQueue)
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
-                    }
                 }
             }
 

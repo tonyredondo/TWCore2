@@ -242,6 +242,43 @@ namespace TWCore.Tests
                     #endregion
                 }
 
+
+                mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
+                using (var mqClient = mqConfig.GetRawClient())
+                {
+                    var totalQ = 50000;
+
+                    #region Sync Mode
+                    Core.Log.Warning("RAW Sync Mode Test, using Multiple Response Queue");
+                    using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
+                    {
+                        for (var i = 0; i < totalQ; i++)
+                        {
+                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                        }
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
+                    }
+                    Console.ReadLine();
+                    #endregion
+
+                    #region Parallel Mode
+                    Core.Log.Warning("RAW Parallel Mode Test, using Multiple Response Queue");
+                    using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
+                    {
+                        Task.WaitAll(
+                            Enumerable.Range(0, totalQ).Select((i, vTuple) => (Task)vTuple.mqClient.SendAndReceiveAsync(vTuple.byteRequest), (mqClient, byteRequest)).ToArray()
+                        );
+                        //Parallel.For(0, totalQ, i =>
+                        //{
+                        //    var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                        //});
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
+                    }
+                    Console.ReadLine();
+                    #endregion
+                }
             }
         }
 

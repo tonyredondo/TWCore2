@@ -96,6 +96,7 @@ namespace TWCore.Messaging.Redis
                 // ignored
             }
             _receiver = null;
+            _connection = null;
         }
         #endregion
 

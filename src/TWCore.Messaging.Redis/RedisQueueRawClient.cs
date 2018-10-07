@@ -163,7 +163,7 @@ namespace TWCore.Messaging.Redis
                 _senders.Clear();
                 _senders = null;
             }
-            if (_receiverConnection is null) return;
+            if (_receiverMultiplexer is null) return;
             _receiverSubscriber.UnsubscribeAll();
             _receiverMultiplexer.Close();
             _receiverSubscriber = null;

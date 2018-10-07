@@ -136,8 +136,6 @@ namespace TWCore.Messaging.Redis
                         OnDispose();
                         Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
                         await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-                        _receiver.UnsubscribeAll();
-                        _connection.Close();
 
                         _connection = ConnectionMultiplexer.Connect(Connection.Route);
                         _receiver = _connection.GetSubscriber();
@@ -153,8 +151,6 @@ namespace TWCore.Messaging.Redis
                         while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
                             await Task.Delay(500, _token).ConfigureAwait(false);
 
-                        _receiver.UnsubscribeAll();
-                        _connection.Close();
                         _connection = ConnectionMultiplexer.Connect(Connection.Route);
                         _receiver = _connection.GetSubscriber();
                         _receiver.SubscribeAsync(Connection.Name, MessageHandler);

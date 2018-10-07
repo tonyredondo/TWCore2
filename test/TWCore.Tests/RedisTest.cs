@@ -99,8 +99,8 @@ namespace TWCore.Tests
             Core.Log.Warning("Starting with Normal Listener and Client");
             NormalTest(mqConfig);
             mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "true";
-            //Core.Log.Warning("Starting with RAW Listener and Client");
-            //RawTest(mqConfig);
+            Core.Log.Warning("Starting with RAW Listener and Client");
+            RawTest(mqConfig);
         }
 
         private static void NormalTest(MQPairConfig mqConfig)

@@ -35,7 +35,6 @@ namespace TWCore.Messaging.Redis
     public class RedisQueueRawServerListener : MQueueRawServerListenerBase
     {
         #region Fields
-        private readonly Type _messageType;
         private readonly string _name;
         private ConnectionMultiplexer _connection;
         private ISubscriber _receiver;
@@ -172,7 +171,7 @@ namespace TWCore.Messaging.Redis
         /// </summary>
         /// <param name="data">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(byte[] data)
+        private async Task ProcessingTaskAsync(RedisValue data)
         {
             try
             {

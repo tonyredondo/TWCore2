@@ -29,7 +29,7 @@ namespace TWCore.Tests
             {
                 Name = "QueueTest",
                 Types = new MQObjectTypes { ClientType = typeof(RedisQueueClient), ServerType = typeof(RedisQueueServer) },
-                //RawTypes = new MQObjectTypes { ClientType = typeof(NATSQueueRawClient), ServerType = typeof(NATSQueueRawServer) },
+                RawTypes = new MQObjectTypes { ClientType = typeof(RedisQueueRawClient), ServerType = typeof(RedisQueueRawServer) },
                 ClientQueues = new List<MQClientQueues>
                 {
                     new MQClientQueues

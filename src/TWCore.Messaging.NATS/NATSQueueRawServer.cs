@@ -94,18 +94,18 @@ namespace TWCore.Messaging.NATS
                     {
                         if (string.IsNullOrEmpty(queue.Name))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + replyTo, e.CorrelationId);
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, replyTo, e.CorrelationId);
                             producer.Publish(replyTo, body);
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name + "_" + replyTo, e.CorrelationId);
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name + "_" + replyTo, e.CorrelationId);
                             producer.Publish(queue.Name + "_" + replyTo, body);
                         }
                     }
                     else
                     {
-                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
+                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, e.CorrelationId);
                         producer.Publish(queue.Name, body);
                     }
                 }

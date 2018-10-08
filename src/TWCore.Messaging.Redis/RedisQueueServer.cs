@@ -72,7 +72,7 @@ namespace TWCore.Messaging.Redis
                         Core.Log.LibVerbose("New Producer from QueueServer");
                         return Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(qRoute), 5000, int.MaxValue).WaitAsync();
                     });
-                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
+                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, queue.Route, queue.Name, message.CorrelationId);
                     var prod = producer.GetSubscriber();
                     await prod.PublishAsync(queue.Name, body).ConfigureAwait(false);
                 }

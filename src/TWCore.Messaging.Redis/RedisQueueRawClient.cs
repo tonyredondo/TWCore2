@@ -195,7 +195,7 @@ namespace TWCore.Messaging.Redis
             
             foreach ((var queue, var multiplexer, var subscriber) in _senders)
             {
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, correlationId);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, correlationId);
                 await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
             }
 

@@ -82,20 +82,20 @@ namespace TWCore.Messaging.Redis
                     {
                         if (string.IsNullOrEmpty(queue.Name))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + replyTo, e.CorrelationId);
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, replyTo, e.CorrelationId);
                             await prod.PublishAsync(replyTo, body).ConfigureAwait(false);
 
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name + "_" + replyTo, e.CorrelationId);
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name + "_" + replyTo, e.CorrelationId);
                             await prod.PublishAsync(queue.Name + "_" + replyTo, body).ConfigureAwait(false);
 
                         }
                     }
                     else
                     {
-                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
+                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, e.CorrelationId);
                         await prod.PublishAsync(queue.Name, body).ConfigureAwait(false);
                     }
                 }

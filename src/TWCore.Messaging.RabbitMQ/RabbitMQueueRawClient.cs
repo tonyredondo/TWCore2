@@ -201,7 +201,7 @@ namespace TWCore.Messaging.RabbitMQ
                 props.ContentType = SenderSerializer.MimeTypes[0];
                 props.DeliveryMode = _deliveryMode;
                 props.Type = _senderOptions.Label;
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Length, sender.Route + "/" + sender.Name, correlationId);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Length, sender.Route, sender.Name, correlationId);
                 sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, message);
             }
             return TaskHelper.CompleteTrue;

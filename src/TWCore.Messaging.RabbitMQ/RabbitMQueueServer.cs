@@ -94,7 +94,7 @@ namespace TWCore.Messaging.RabbitMQ
                     props.ContentType = SenderSerializer.MimeTypes[0];
                     props.DeliveryMode = _deliveryMode;
                     props.Type = _label;
-                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, rabbitQueue.Route + "/" + queue.Name, correlationId);
+                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, rabbitQueue.Route, queue.Name, correlationId);
                     rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, data.AsArray());
                 }
                 catch (Exception ex)

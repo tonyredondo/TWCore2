@@ -195,7 +195,7 @@ namespace TWCore.Messaging.NSQ
 
             foreach ((var queue, var nsqProducer) in _senders)
             {
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, correlationId);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, correlationId);
                 await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);

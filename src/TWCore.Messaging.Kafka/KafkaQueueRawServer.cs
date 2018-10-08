@@ -89,18 +89,18 @@ namespace TWCore.Messaging.Kafka
                     {
                         if (string.IsNullOrEmpty(queue.Name))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + replyTo, e.CorrelationId);
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, replyTo, e.CorrelationId);
                             await producer.SendMessageAsync(replyTo, new[] { new Message { Key = header, Value = body } }).ConfigureAwait(false);
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name + "_" + replyTo, e.CorrelationId);
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name + "_" + replyTo, e.CorrelationId);
                             await producer.SendMessageAsync(queue.Name + "_" + replyTo, new[] { new Message { Key = header, Value = body } }).ConfigureAwait(false);
                         }
                     }
                     else
                     {
-                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
+                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, e.CorrelationId);
                         await producer.SendMessageAsync(queue.Name, new[] { new Message { Key = header, Value = body } }).ConfigureAwait(false);
                     }
                 }

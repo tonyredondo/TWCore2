@@ -95,7 +95,7 @@ namespace TWCore.Messaging.Kafka
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -126,7 +126,7 @@ namespace TWCore.Messaging.Kafka
                         var rcvName = _receiverConnection.Name;
                         if (!UseSingleResponseQueue)
                         {
-                            rcvName += "-" + Core.ProcessId;
+                            rcvName += "-" + Core.InstanceId;
                             Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                         }
                         
@@ -205,7 +205,7 @@ namespace TWCore.Messaging.Kafka
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
-                        message.Header.ResponseQueue.Name += "-" + Core.ProcessId;
+                        message.Header.ResponseQueue.Name += "-" + Core.InstanceId;
                 }
                 else
                 {

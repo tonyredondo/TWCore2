@@ -113,7 +113,7 @@ namespace TWCore.Messaging.NSQ
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -129,7 +129,7 @@ namespace TWCore.Messaging.NSQ
                     var rcvName = _receiverConnection.Name;
                     if (!UseSingleResponseQueue)
                     {
-                        rcvName += "-" + Core.ProcessId;
+                        rcvName += "-" + Core.InstanceId;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                     }
                     _receiver = new Consumer(rcvName, rcvName);
@@ -190,7 +190,7 @@ namespace TWCore.Messaging.NSQ
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.ProcessId;
+                name += "-" + Core.InstanceId;
             var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var nsqProducer) in _senders)

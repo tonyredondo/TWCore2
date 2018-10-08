@@ -117,7 +117,7 @@ namespace TWCore.Messaging.NATS
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -139,7 +139,7 @@ namespace TWCore.Messaging.NATS
                     _receiverNASTConnection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
                     if (!UseSingleResponseQueue)
                     {
-                        var rcvName = _receiverConnection.Name + "-" + Core.ProcessId;
+                        var rcvName = _receiverConnection.Name + "-" + Core.InstanceId;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                         _receiver = _receiverNASTConnection.SubscribeAsync(rcvName, MessageHandler);
                     }
@@ -202,7 +202,7 @@ namespace TWCore.Messaging.NATS
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.ProcessId;
+                name += "-" + Core.InstanceId;
             var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var producer) in _senders)

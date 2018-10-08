@@ -102,7 +102,7 @@ namespace TWCore.Messaging.RabbitMQ
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues != null)
                 {
@@ -185,7 +185,7 @@ namespace TWCore.Messaging.RabbitMQ
             var corrId = correlationId.ToString();
             var replyTo = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                replyTo += "-" + Core.ProcessId;
+                replyTo += "-" + Core.InstanceId;
 
             foreach (var sender in _senders)
             {
@@ -272,7 +272,7 @@ namespace TWCore.Messaging.RabbitMQ
                 var rcvName = _receiver.Name;
                 if (!UseSingleResponseQueue)
                 {
-                    rcvName += "-" + Core.ProcessId;
+                    rcvName += "-" + Core.InstanceId;
                     _receiver.Channel.QueueDeclare(rcvName, _receiver.Durable, false, false, null);
                 }
                 _receiverConsumerTag = _receiver.Channel.BasicConsume(rcvName, false, _receiverConsumer);

@@ -71,7 +71,7 @@ namespace TWCore.Messaging.NSQ
                         Core.Log.LibVerbose("New Producer from QueueServer");
                         return new Producer(qRoute);
                     });
-					Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
+					Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, queue.Route, queue.Name, message.CorrelationId);
 				    await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
 				}
 				catch (Exception ex)

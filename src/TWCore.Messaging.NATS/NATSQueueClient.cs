@@ -65,7 +65,6 @@ namespace TWCore.Messaging.NATS
         #region Nested Type
         private class NATSQueueMessage
         {
-            public Guid CorrelationId;
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
         }
@@ -73,7 +72,6 @@ namespace TWCore.Messaging.NATS
         {
             (var body, var correlationId) = GetFromMessageBody(e.Message.Data);
             var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
-            rMsg.CorrelationId = correlationId;
             rMsg.Body = body;
             rMsg.WaitHandler.Set();
         }
@@ -117,7 +115,7 @@ namespace TWCore.Messaging.NATS
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -127,24 +125,24 @@ namespace TWCore.Messaging.NATS
                         IConnection connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            connection = _factory.CreateConnection(queue.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        connection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(queue.Route), 5000, int.MaxValue).WaitAsync();
                         _senders.Add((queue, connection));
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
-                    if (UseSingleResponseQueue)
+                    if (string.IsNullOrEmpty(_receiverConnection.Route))
+                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
+                    _receiverNASTConnection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
+                    if (!UseSingleResponseQueue)
                     {
-                        if (string.IsNullOrEmpty(_receiverConnection.Route))
-                            throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                        Extensions.InvokeWithRetry(() =>
-                        {
-                            _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
-                        }, 5000, int.MaxValue).WaitAsync();
+                        var rcvName = _receiverConnection.Name + "-" + Core.InstanceId;
+                        Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                        _receiver = _receiverNASTConnection.SubscribeAsync(rcvName, MessageHandler);
+                    }
+                    else
+                    {
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
                     }
                 }
@@ -181,11 +179,8 @@ namespace TWCore.Messaging.NATS
                 _senders = null;
             }
             if (_receiver is null) return;
-            if (UseSingleResponseQueue)
-            {
-                _receiver.Unsubscribe();
-                _receiverNASTConnection.Dispose();
-            }
+            _receiver.Unsubscribe();
+            _receiverNASTConnection.Dispose();
             _receiver = null;
             _factory = null;
         }
@@ -214,9 +209,7 @@ namespace TWCore.Messaging.NATS
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
-                    {
-                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
-                    }
+                        message.Header.ResponseQueue.Name += "-" + Core.InstanceId;
                 }
                 else
                 {
@@ -253,44 +246,24 @@ namespace TWCore.Messaging.NATS
 
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
-
-            if (!UseSingleResponseQueue)
+            try
             {
-                var name = _receiverConnection.Name + "_" + correlationId;
-                var route = _receiverConnection.Route;
-                var waitResult = false;
-                using (var connection = _factory.CreateConnection(route))
-                {
-                    using (var consumer = connection.SubscribeAsync(name, MessageHandler))
-                    {
-                        waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
-                    }
-                }
-
-                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+                if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                    throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
                 if (message.Body == MultiArray<byte>.Empty)
-                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+                    throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+                var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                return response;
+                return rs;
             }
-
-            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-            if (message.Body == MultiArray<byte>.Empty)
-                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-            var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-            ReceivedMessages.TryRemove(correlationId, out _);
-            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-            sw.Stop();
-            return rs;
+            finally
+            {
+                ReceivedMessages.TryRemove(correlationId, out _);
+            }
         }
         #endregion
 

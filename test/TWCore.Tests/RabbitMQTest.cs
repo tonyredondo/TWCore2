@@ -77,7 +77,7 @@ namespace TWCore.Tests
                     },
                     ServerReceiverOptions = new MQServerReceiverOptions
                     {
-                        MaxSimultaneousMessagesPerQueue = 2000,
+                        MaxSimultaneousMessagesPerQueue = 20000,
                         ProcessingWaitOnFinalizeInSec = 10,
                         SleepOnExceptionInSec = 1000
                     }

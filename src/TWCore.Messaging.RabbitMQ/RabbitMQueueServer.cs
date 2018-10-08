@@ -31,7 +31,7 @@ namespace TWCore.Messaging.RabbitMQ
     /// </summary>
     public class RabbitMQueueServer : MQueueServerBase
     {
-        private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+        private readonly ConcurrentDictionary<(string, string), RabbitMQueue> _rQueue = new ConcurrentDictionary<(string, string), RabbitMQueue>();
 		private byte _priority;
 		private byte _deliveryMode;
 		private string _expiration;
@@ -83,12 +83,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
-                    var rabbitQueue = _rQueue.GetOrAdd(queue.Route, q =>
-                    {
-                        var rq = new RabbitMQueue(queue);
-                        rq.EnsureConnection();
-                        return rq;
-                    });
+                    var rabbitQueue = _rQueue.GetOrAdd((queue.Route, queue.Name), q => new RabbitMQueue(queue));
                     if (!rabbitQueue.EnsureConnection()) continue;
                     rabbitQueue.EnsureExchange();
                     var props = rabbitQueue.Channel.CreateBasicProperties();
@@ -99,7 +94,7 @@ namespace TWCore.Messaging.RabbitMQ
                     props.ContentType = SenderSerializer.MimeTypes[0];
                     props.DeliveryMode = _deliveryMode;
                     props.Type = _label;
-                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, rabbitQueue.Route + "/" + queue.Name, correlationId);
+                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, rabbitQueue.Route, queue.Name, correlationId);
                     rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, data.AsArray());
                 }
                 catch (Exception ex)

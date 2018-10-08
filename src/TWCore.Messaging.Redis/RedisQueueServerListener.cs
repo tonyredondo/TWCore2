@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using NATS.Client;
+using StackExchange.Redis;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -26,20 +26,19 @@ using TWCore.Messaging.Server;
 #pragma warning disable 414
 #pragma warning disable CS4014 // Because a call is not awaited
 
-namespace TWCore.Messaging.NATS
+namespace TWCore.Messaging.Redis
 {
     /// <inheritdoc />
     /// <summary>
-    /// NATS server listener implementation
+    /// Redis server listener implementation
     /// </summary>
-    public class NATSQueueServerListener : MQueueServerListenerBase
+    public class RedisQueueServerListener : MQueueServerListenerBase
     {
         #region Fields
-        private readonly ConnectionFactory _factory;
         private readonly Type _messageType;
         private readonly string _name;
-        private IConnection _connection;
-        private IAsyncSubscription _receiver;
+        private ConnectionMultiplexer _connection;
+        private ISubscriber _receiver;
         private CancellationToken _token;
         private Task _monitorTask;
         private int _exceptionSleep;
@@ -48,15 +47,14 @@ namespace TWCore.Messaging.NATS
         #region .ctor
         /// <inheritdoc />
         /// <summary>
-        /// NATS server listener implementation
+        /// Redis server listener implementation
         /// </summary>
         /// <param name="connection">Queue server listener</param>
         /// <param name="server">Message queue server instance</param>
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NATSQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(connection, server, responseServer)
+        public RedisQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(connection, server, responseServer)
         {
-            _factory = new ConnectionFactory();
             _messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
             _name = server.Name;
             Core.Status.Attach(collection =>
@@ -78,8 +76,9 @@ namespace TWCore.Messaging.NATS
             _token = token;
             if (string.IsNullOrEmpty(Connection.Route))
                 throw new UriFormatException($"The route for the connection to {Connection.Name} is null.");
-            _connection = await Extensions.InvokeWithRetry(() => _factory.CreateConnection(Connection.Route), 5000, int.MaxValue).ConfigureAwait(false);
-            _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
+            _connection = await Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(Connection.Route), 5000, int.MaxValue).ConfigureAwait(false);
+            _receiver = _connection.GetSubscriber();
+            _receiver.SubscribeAsync(Connection.Name, MessageHandler);
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
@@ -95,7 +94,7 @@ namespace TWCore.Messaging.NATS
             if (_receiver is null) return;
             try
             {
-                _receiver.Unsubscribe();
+                _receiver.UnsubscribeAll();
                 _connection.Close();
             }
             catch
@@ -110,12 +109,12 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Message Handler
         /// </summary>
-        private void MessageHandler(object sender, MsgHandlerEventArgs e)
+        private void MessageHandler(RedisChannel channel, RedisValue value)
         {
             Core.Log.LibVerbose("Message received");
             try
             {
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data));
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, value));
             }
             catch (Exception ex)
             {
@@ -137,10 +136,10 @@ namespace TWCore.Messaging.NATS
                         OnDispose();
                         Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
                         await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-                        _receiver.Unsubscribe();
-                        _connection.Close();
-                        _connection = _factory.CreateConnection(Connection.Route);
-                        _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
+
+                        _connection = ConnectionMultiplexer.Connect(Connection.Route);
+                        _receiver = _connection.GetSubscriber();
+                        _receiver.SubscribeAsync(Connection.Name, MessageHandler);
                         Core.Log.Warning("The listener has been resumed.");
                     }
 
@@ -152,10 +151,9 @@ namespace TWCore.Messaging.NATS
                         while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
                             await Task.Delay(500, _token).ConfigureAwait(false);
 
-                        _receiver.Unsubscribe();
-                        _connection.Close();
-                        _connection = _factory.CreateConnection(Connection.Route);
-                        _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
+                        _connection = ConnectionMultiplexer.Connect(Connection.Route);
+                        _receiver = _connection.GetSubscriber();
+                        _receiver.SubscribeAsync(Connection.Name, MessageHandler);
                         Core.Log.Warning("The listener has been resumed.");
                     }
 
@@ -173,13 +171,13 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="data">Message data</param>
+        /// <param name="value">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(byte[] data)
+        private async Task ProcessingTaskAsync(RedisValue value)
         {
             try
             {
-                (var body, var correlationId) = NATSQueueClient.GetFromMessageBody(data);
+                (var body, var correlationId) = RedisQueueClient.GetFromMessageBody(value);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Count, Connection.Route, Connection.Name);
                 var messageBody = ReceiverSerializer.Deserialize(body, _messageType);

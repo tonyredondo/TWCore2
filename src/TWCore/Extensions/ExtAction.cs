@@ -883,6 +883,38 @@ namespace TWCore
             }
             throw new AggregateException("The function couldn't be executed successfully", exceptions);
         }
+
+        /// <summary>
+        /// Tries to run the action maximum times until no error with a time interval
+        /// </summary>
+        /// <param name="func">Func to try</param>
+        /// <param name="retryInterval">Time between retries</param>
+        /// <param name="retryCount">Number max of retries</param>
+        /// <returns>Retry Task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<TResult> InvokeWithRetry<TResult>(this Func<TResult> func, int retryInterval = 1000, int retryCount = 3)
+        {
+            var exceptions = new Queue<Exception>();
+            for (var retry = 0; retry < retryCount; retry++)
+            {
+                try
+                {
+                    return func();
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Enqueue(ex);
+                    if (exceptions.Count > 10)
+                        exceptions.Dequeue();
+                }
+                if (retry < retryCount - 1)
+                {
+                    Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exceptions.Last().Message, retryInterval);
+                    await Task.Delay(retryInterval).ConfigureAwait(false);
+                }
+            }
+            throw new AggregateException("The function couldn't be executed successfully", exceptions);
+        }
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error with a time interval
         /// </summary>

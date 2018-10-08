@@ -77,7 +77,7 @@ namespace TWCore.Cache.Client.Configuration
             };
 
             if (cConfig.Pool.Items?.Any() != true) return ccp;
-            
+
             var idx = 0;
             foreach (var pitem in cConfig.Pool.Items)
             {
@@ -89,21 +89,33 @@ namespace TWCore.Cache.Client.Configuration
                 switch (objType)
                 {
                     case ITransportClient transport:
-                    {
                         var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
                         var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 
                         var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
-                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage [" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + "]." + idx;
                         ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode);
                         break;
-                    }
-                    case StorageBase sto:
-                    {
-                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
-                        ccp.Add(cppName, sto);
+                    case IStorageAsyncLoader loader:
+                        var lStoAsync = loader.GetStorage(name, pitem.Parameters);
+                        if (lStoAsync != null)
+                        {
+                            var lCppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage [" + lStoAsync.GetType().Name + "]." + idx;
+                            ccp.Add(lCppName, lStoAsync, pitem.Mode);
+                        }
                         break;
-                    }
+                    case IStorageLoader loader:
+                        var lSto = loader.GetStorage(name, pitem.Parameters);
+                        if (lSto != null)
+                        {
+                            var lCppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage [" + lSto.GetType().Name + "]." + idx;
+                            ccp.Add(lCppName, lSto, pitem.Mode);
+                        }
+                        break;
+                    case StorageBase sto:
+                        var stoName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage [" + sto.Type + "]." + idx;
+                        ccp.Add(stoName, sto);
+                        break;
                 }
             }
             return ccp;

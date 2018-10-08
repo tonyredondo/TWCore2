@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
-using TWCore.Messaging.NSQ;
+using TWCore.Messaging.Redis;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable ConvertToConstant.Local
@@ -17,27 +17,27 @@ using TWCore.Services;
 namespace TWCore.Tests
 {
     /// <inheritdoc />
-    public class NSQTest : ContainerParameterService
+    public class RedisTest : ContainerParameterService
     {
-        public NSQTest() : base("nsqtest", "NSQ Test") { }
+        public RedisTest() : base("redistest", "Redis Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting NSQ Test");
+            Core.Log.Warning("Starting Redis Test");
 
             #region Set Config
             var mqConfig = new MQPairConfig
             {
                 Name = "QueueTest",
-                Types = new MQObjectTypes { ClientType = typeof(NSQueueClient), ServerType = typeof(NSQueueServer), AdminType = typeof(NSQueueAdmin) },
-                RawTypes = new MQObjectTypes { ClientType = typeof(NSQueueRawClient), ServerType = typeof(NSQueueRawServer), AdminType = typeof(NSQueueAdmin) },
+                Types = new MQObjectTypes { ClientType = typeof(RedisQueueClient), ServerType = typeof(RedisQueueServer) },
+                RawTypes = new MQObjectTypes { ClientType = typeof(RedisQueueRawClient), ServerType = typeof(RedisQueueRawServer) },
                 ClientQueues = new List<MQClientQueues>
                 {
                     new MQClientQueues
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						SendQueues = new List<MQConnection> { new MQConnection("localhost:4150", "TEST_RQ", null) },
-						RecvQueue = new MQConnection("localhost:4150", "TEST_RS", null)
+						SendQueues = new List<MQConnection> { new MQConnection("localhost", "TEST_RQ", null) },
+						RecvQueue = new MQConnection("localhost", "TEST_RS", null)
                     }
                 },
                 ServerQueues = new List<MQServerQueues>
@@ -46,7 +46,7 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						RecvQueues = new List<MQConnection> { new MQConnection("localhost:4150", "TEST_RQ", null) }
+						RecvQueues = new List<MQConnection> { new MQConnection("localhost", "TEST_RQ", null) }
                     }
                 },
                 RequestOptions = new MQRequestOptions
@@ -87,14 +87,14 @@ namespace TWCore.Tests
 
             JsonTextSerializerExtensions.Serializer.Indent = true;
 
-            mqConfig.SerializeToXmlFile("nsqConfig.xml");
-            mqConfig.SerializeToJsonFile("nsqConfig.json");
+            mqConfig.SerializeToXmlFile("redisConfig.xml");
+            mqConfig.SerializeToJsonFile("redisConfig.json");
 
             var manager = mqConfig.GetQueueManager();
             manager.CreateClientQueues();
 
             //Core.DebugMode = true;
-            Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
+            //Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
 
             Core.Log.Warning("Starting with Normal Listener and Client");
             NormalTest(mqConfig);
@@ -116,7 +116,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 20000;
+                    var totalQ = 50000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Unique Response Queue");
@@ -124,13 +124,15 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAsync();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
                     Console.ReadLine();
                     #endregion
+
+                    totalQ = 50000;
 
                     #region Parallel Mode
                     Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
@@ -153,7 +155,7 @@ namespace TWCore.Tests
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 50;
+                    var totalQ = 50000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Multiple Response Queue");
@@ -204,7 +206,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetRawClient())
                 {
-                    var totalQ = 20000;
+                    var totalQ = 50000;
 
                     #region Sync Mode
                     Core.Log.Warning("RAW Sync Mode Test, using Unique Response Queue");
@@ -212,13 +214,15 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAsync();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
                     Console.ReadLine();
                     #endregion
+
+                    totalQ = 50000;
 
                     #region Parallel Mode
                     Core.Log.Warning("RAW Parallel Mode Test, using Unique Response Queue");
@@ -238,10 +242,11 @@ namespace TWCore.Tests
                     #endregion
                 }
 
+
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetRawClient())
                 {
-                    var totalQ = 50;
+                    var totalQ = 50000;
 
                     #region Sync Mode
                     Core.Log.Warning("RAW Sync Mode Test, using Multiple Response Queue");

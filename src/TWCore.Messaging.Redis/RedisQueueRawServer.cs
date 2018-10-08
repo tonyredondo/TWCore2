@@ -14,24 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using NsqSharp;
+using StackExchange.Redis;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+
 // ReSharper disable InconsistentNaming
 
-namespace TWCore.Messaging.NSQ
+namespace TWCore.Messaging.Redis
 {
     /// <inheritdoc />
     /// <summary>
-    /// NSQ Raw Server Implementation
+    /// Redis raw Server Implementation
     /// </summary>
-    public class NSQueueRawServer : MQueueRawServerBase
+    public class RedisQueueRawServer : MQueueRawServerBase
     {
-        private readonly ConcurrentDictionary<string, Producer> _rQueue = new ConcurrentDictionary<string, Producer>();
+        private readonly ConcurrentDictionary<string, ConnectionMultiplexer> _rQueue = new ConcurrentDictionary<string, ConnectionMultiplexer>();
 
         /// <inheritdoc />
         /// <summary>
@@ -41,7 +42,7 @@ namespace TWCore.Messaging.NSQ
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         /// <returns>IMQueueServerListener</returns>
         protected override IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
-            => new NSQueueRawServerListener(connection, this, responseServer);
+            => new RedisQueueRawServerListener(connection, this, responseServer);
 
         /// <inheritdoc />
         /// <summary>
@@ -62,7 +63,7 @@ namespace TWCore.Messaging.NSQ
             if (senderOptions is null)
                 throw new NullReferenceException("ServerSenderOptions is null.");
 
-            var body = NSQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, e.Metadata["ReplyTo"]);
+            var body = RedisQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, e.Metadata["ReplyTo"]);
             var replyTo = e.Metadata["ReplyTo"];
 
             var response = true;
@@ -70,29 +71,32 @@ namespace TWCore.Messaging.NSQ
             {
                 try
                 {
-                    var nsqProducer = _rQueue.GetOrAdd(queue.Route, qRoute =>
+                    var producer = _rQueue.GetOrAdd(queue.Route, qRoute =>
                     {
-                        Core.Log.LibVerbose("New Producer from RawQueueServer");
-                        return new Producer(qRoute);
+                        Core.Log.LibVerbose("New Producer from QueueServer");
+                        return Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(qRoute), 5000, int.MaxValue).WaitAsync();
                     });
+                    var prod = producer.GetSubscriber();
 
                     if (!string.IsNullOrEmpty(replyTo))
                     {
                         if (string.IsNullOrEmpty(queue.Name))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, replyTo, e.CorrelationId);
-                            await nsqProducer.PublishAsync(replyTo, body).ConfigureAwait(false);
+                            await prod.PublishAsync(replyTo, body).ConfigureAwait(false);
+
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name + "_" + replyTo, e.CorrelationId);
-                            await nsqProducer.PublishAsync(queue.Name + "_" + replyTo, body).ConfigureAwait(false);
+                            await prod.PublishAsync(queue.Name + "_" + replyTo, body).ConfigureAwait(false);
+
                         }
                     }
                     else
                     {
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, e.CorrelationId);
-                        await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
+                        await prod.PublishAsync(queue.Name, body).ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex)
@@ -111,7 +115,7 @@ namespace TWCore.Messaging.NSQ
         protected override void OnDispose()
         {
             var producers = _rQueue.Select(i => i.Value).ToArray();
-            Parallel.ForEach(producers, p => p.Stop());
+            Parallel.ForEach(producers, p => p.Close());
             _rQueue.Clear();
         }
     }

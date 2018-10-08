@@ -42,8 +42,6 @@ namespace TWCore.Messaging.RabbitMQ
     public class RabbitMQueueClient : MQueueClientBase
     {
         private static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
-        private readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
-        private readonly ConcurrentDictionary<Guid, string> _correlationIdConsumers = new ConcurrentDictionary<Guid, string>();
 
         #region Fields
         private List<RabbitMQueue> _senders;
@@ -72,7 +70,6 @@ namespace TWCore.Messaging.RabbitMQ
         #region Nested Type
         private class RabbitResponseMessage
         {
-            public Guid CorrelationId;
             public IBasicProperties Properties;
             public byte[] Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
@@ -105,7 +102,7 @@ namespace TWCore.Messaging.RabbitMQ
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
-                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(true) ?? true;
 
                 if (_clientQueues != null)
                 {
@@ -129,6 +126,8 @@ namespace TWCore.Messaging.RabbitMQ
 				                   _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
 				_expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
 				_deliveryMode = (byte)(_senderOptions.Recoverable ? 2 : 1);
+
+                CreateReceiverConsumer();
             }
 
             Core.Status.Attach(collection =>
@@ -165,15 +164,6 @@ namespace TWCore.Messaging.RabbitMQ
                 RemoveReceiverConsumer();
                 _receiver = null;
             }
-            foreach (var pools in _routeConnection)
-            {
-                var pool = pools.Value;
-                var connections = pool.GetCurrentObjects();
-                foreach (var connection in connections)
-                    connection.Close();
-                pool.Clear();
-            }
-            _routeConnection.Clear();
         }
         #endregion
 
@@ -200,14 +190,7 @@ namespace TWCore.Messaging.RabbitMQ
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
-                    {
-                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
-                        var pool = _routeConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
-                        var cReceiver = pool.New();
-                        cReceiver.EnsureConnection();
-                        cReceiver.Channel.QueueDeclare(message.Header.ResponseQueue.Name, false, false, true, null);
-                        pool.Store(cReceiver);
-                    }
+                        message.Header.ResponseQueue.Name += "-" + Core.InstanceId;
                 }
                 else
                 {
@@ -233,7 +216,7 @@ namespace TWCore.Messaging.RabbitMQ
                 props.ContentType = SenderSerializer.MimeTypes[0];
                 props.DeliveryMode = _deliveryMode;
                 props.Type = _senderOptions.Label;
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, sender.Route, sender.Name, message.Header.CorrelationId);
                 sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, data.AsArray());
             }
             return TaskHelper.CompleteTrue;
@@ -256,58 +239,21 @@ namespace TWCore.Messaging.RabbitMQ
 
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, _ => new RabbitResponseMessage());
-
+            CreateReceiverConsumer();
             Interlocked.Increment(ref _receiverThreads);
-            var strCorrelationId = correlationId.ToString();
-
-            if (UseSingleResponseQueue)
-            {
-                CreateReceiverConsumer();
-            }
-            else
-            {
-                var recName = _receiver.Name + "_" + strCorrelationId;
-                var pool = _routeConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
-                var cReceiver = pool.New();
-                cReceiver.EnsureConnection();
-                cReceiver.Channel.QueueDeclare(recName, false, false, true, null);
-                var tmpConsumer = new EventingBasicConsumer(cReceiver.Channel);
-                tmpConsumer.Received += (ch, ea) =>
-                {
-                    var crId = Guid.Parse(ea.BasicProperties.CorrelationId);
-
-                    if (!ReceivedMessages.TryRemove(crId, out var rMessage))
-                    {
-                        _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
-                        return;
-                    }
-
-                    rMessage.CorrelationId = crId;
-                    rMessage.Body = ea.Body;
-                    rMessage.Properties = ea.BasicProperties;
-                    rMessage.WaitHandler.Set();
-                    cReceiver.Channel.BasicAck(ea.DeliveryTag, false);
-                    if (_correlationIdConsumers.TryRemove(crId, out var consumerTag))
-                        cReceiver.Channel.BasicCancel(consumerTag);
-                    cReceiver.Channel.QueueDeleteNoWait(recName);
-                    cReceiver.AutoClose();
-                    pool.Store(cReceiver);
-                };
-                _correlationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(recName, false, tmpConsumer));
-            }
 
             if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
             {
                 if (cancellationToken.IsCancellationRequested) cancellationToken.ThrowIfCancellationRequested();
-                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, strCorrelationId);
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
             }
 
             if (message.Body is null)
-                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + strCorrelationId);
+                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, strCorrelationId);
+            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
             var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", strCorrelationId, sw.Elapsed.TotalMilliseconds);
+            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
 
             if (Interlocked.Decrement(ref _receiverThreads) <= 0)
@@ -333,22 +279,24 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiverConsumer.Received += (ch, ea) =>
                 {
                     var correlationId = Guid.Parse(ea.BasicProperties.CorrelationId);
-
                     if (!ReceivedMessages.TryRemove(correlationId, out var message))
                     {
                         _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
                         return;
                     }
-
-                    message.CorrelationId = correlationId;
                     message.Body = ea.Body;
                     message.Properties = ea.BasicProperties;
                     message.WaitHandler.Set();
                     _receiver.Channel.BasicAck(ea.DeliveryTag, false);
                 };
-                _receiverConsumerTag =
-                    _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
-                Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been created.", _receiver.Name);
+                var rcvName = _receiver.Name;
+                if (!UseSingleResponseQueue)
+                {
+                    rcvName += "-" + Core.InstanceId;
+                    _receiver.Channel.QueueDeclare(rcvName, _receiver.Durable, false, false, null);
+                }
+                _receiverConsumerTag = _receiver.Channel.BasicConsume(rcvName, false, _receiverConsumer);
+                Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been created.", rcvName);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -363,7 +311,10 @@ namespace TWCore.Messaging.RabbitMQ
             }
             _receiverConsumer = null;
             _receiver.Close();
-            Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", _receiver.Name);
+            var rcvName = _receiver.Name;
+            if (!UseSingleResponseQueue)
+                rcvName += "-" + Core.InstanceId;
+            Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", rcvName);
         }
         #endregion
     }

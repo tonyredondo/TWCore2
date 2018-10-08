@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using KafkaNet;
-using KafkaNet.Model;
-using KafkaNet.Protocol;
+using StackExchange.Redis;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -34,20 +32,21 @@ using TWCore.Threading;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming
 
-namespace TWCore.Messaging.Kafka
+namespace TWCore.Messaging.Redis
 {
     /// <inheritdoc />
     /// <summary>
-    /// Kafka Queue Client
+    /// Redis Queue Client
     /// </summary>
-    public class KafkaQueueClient : MQueueClientBase
+    public class RedisQueueClient : MQueueClientBase
     {
-        private static readonly ConcurrentDictionary<Guid, KafkaQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, KafkaQueueMessage>();
+        private static readonly ConcurrentDictionary<Guid, Message> ReceivedMessages = new ConcurrentDictionary<Guid, Message>();
 
         #region Fields
-        private List<(MQConnection, Producer)> _senders;
-        private CancellationTokenSource _tokenSource;
+        private List<(MQConnection, ConnectionMultiplexer, ISubscriber)> _senders;
         private MQConnection _receiverConnection;
+        private ConnectionMultiplexer _receiverMultiplexer;
+        private ISubscriber _receiverSubscriber;
         private MQClientQueues _clientQueues;
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
@@ -63,7 +62,7 @@ namespace TWCore.Messaging.Kafka
         #endregion
 
         #region Nested Type
-        private class KafkaQueueMessage
+        private class Message
         {
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
@@ -79,8 +78,7 @@ namespace TWCore.Messaging.Kafka
         protected override void OnInit()
         {
             OnDispose();
-            _senders = new List<(MQConnection, Producer)>();
-            _tokenSource = new CancellationTokenSource();
+            _senders = new List<(MQConnection, ConnectionMultiplexer, ISubscriber)>();
 
             if (Config != null)
             {
@@ -102,47 +100,33 @@ namespace TWCore.Messaging.Kafka
                     foreach (var queue in _clientQueues.SendQueues)
                     {
                         Core.Log.LibVerbose("New Producer from QueueClient");
-                        Producer connection = null;
+                        ConnectionMultiplexer connection = null;
                         if (string.IsNullOrEmpty(queue.Route))
                             throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        var options = new KafkaOptions(new Uri(queue.Route));
-                        var router = new BrokerRouter(options);
-                        connection = Extensions.InvokeWithRetry(() => new Producer(router), 5000, int.MaxValue).WaitAsync();
-                        _senders.Add((queue, connection));
+                        connection = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(queue.Route), 5000, int.MaxValue).WaitAsync();
+                        _senders.Add((queue, connection, connection.GetSubscriber()));
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
-
                     if (string.IsNullOrEmpty(_receiverConnection.Route))
                         throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-
-                    var cancellationToken = _tokenSource.Token;
-                    var consumerTask = Task.Factory.StartNew(() =>
+                    _receiverMultiplexer = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
+                    var rcvName = _receiverConnection.Name;
+                    if (!UseSingleResponseQueue)
                     {
-                        var options = new KafkaOptions(new Uri(_receiverConnection.Route));
-                        var router = new BrokerRouter(options);
-                        var rcvName = _receiverConnection.Name;
-                        if (!UseSingleResponseQueue)
-                        {
-                            rcvName += "-" + Core.InstanceId;
-                            Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
-                        }
-                        
-                        var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(rcvName, router)), 5000, int.MaxValue).WaitAsync();
-                        using (consumer)
-                        {
-                            foreach (var cRes in consumer.Consume(cancellationToken))
-                            {
-                                if (cancellationToken.IsCancellationRequested) break;
-                                var correlationId = new Guid(cRes.Key);
-                                var message = ReceivedMessages.GetOrAdd(correlationId, id => new KafkaQueueMessage());
-                                message.Body = cRes.Value;
-                                message.WaitHandler.Set();
-                            }
-                        }
-                    }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+                        rcvName += "-" + Core.InstanceId;
+                        Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                    }
+                    _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
+                    _receiverSubscriber.Subscribe(rcvName, (channel, value) =>
+                    {
+                        (var body, var correlationId) = GetFromMessageBody(value);
+                        var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
+                        rMsg.Body = body;
+                        rMsg.WaitHandler.Set();
+                    });
                 }
             }
 
@@ -170,15 +154,18 @@ namespace TWCore.Messaging.Kafka
             {
                 foreach (var sender in _senders)
                 {
+                    sender.Item3.UnsubscribeAll();
                     var conn = sender.Item2;
-                    conn.Dispose();
+                    conn.Close();
                 }
                 _senders.Clear();
                 _senders = null;
             }
-            if (_tokenSource is null) return;
-            _tokenSource.Cancel();
-            _tokenSource = null;
+            if (_receiverMultiplexer is null) return;
+            _receiverSubscriber.UnsubscribeAll();
+            _receiverMultiplexer.Close();
+            _receiverSubscriber = null;
+            _receiverMultiplexer = null;
         }
         #endregion
 
@@ -214,11 +201,12 @@ namespace TWCore.Messaging.Kafka
                 }
             }
             var data = SenderSerializer.Serialize(message);
+            var body = CreateMessageBody(data, message.CorrelationId);
 
-            foreach ((var queue, var producer) in _senders)
+            foreach ((var queue, var multiplexer, var subscriber) in _senders)
             {
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, queue.Route, queue.Name, message.Header.CorrelationId);
-                await producer.SendMessageAsync(queue.Name, new[] { new Message { Key = message.CorrelationId.ToByteArray(), Value = data.AsArray() } }).ConfigureAwait(false);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, message.Header.CorrelationId);
+                await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
             return true;
@@ -236,11 +224,12 @@ namespace TWCore.Messaging.Kafka
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (_tokenSource is null && UseSingleResponseQueue)
+            if (_receiverConnection is null && UseSingleResponseQueue)
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
-            var message = ReceivedMessages.GetOrAdd(correlationId, cId => new KafkaQueueMessage());
+            var message = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
+
             try
             {
                 if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
@@ -259,6 +248,33 @@ namespace TWCore.Messaging.Kafka
             {
                 ReceivedMessages.TryRemove(correlationId, out _);
             }
+        }
+        #endregion
+
+        #region Static Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static byte[] CreateMessageBody(MultiArray<byte> message, Guid correlationId)
+        {
+            var body = new byte[16 + message.Count];
+#if COMPATIBILITY
+            correlationId.ToByteArray().CopyTo(body, 0);
+#else
+            correlationId.TryWriteBytes(body.AsSpan(0, 16));
+#endif
+            message.CopyTo(body, 16);
+            return body;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static (MultiArray<byte>, Guid) GetFromMessageBody(byte[] message)
+        {
+            var body = new MultiArray<byte>(message);
+#if COMPATIBILITY
+            var correlationId = new Guid(body.Slice(0, 16).ToArray());
+#else
+            var correlationId = new Guid(body.Slice(0, 16).AsSpan());
+#endif
+            var messageBody = body.Slice(16);
+            return (messageBody, correlationId);
         }
         #endregion
     }

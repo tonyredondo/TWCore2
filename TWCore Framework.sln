@@ -100,11 +100,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.Utf8Js
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.RawSerializer", "src\TWCore.Serialization.RawSerializer\TWCore.Serialization.RawSerializer.csproj", "{FA99AABC-F38D-452D-81E1-8E525D2FA59F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging.Kafka", "src\TWCore.Messaging.Kafka\TWCore.Messaging.Kafka.csproj", "{98999118-4F8D-4C81-BA14-DBAF046B2904}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.Kafka", "src\TWCore.Messaging.Kafka\TWCore.Messaging.Kafka.csproj", "{98999118-4F8D-4C81-BA14-DBAF046B2904}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging.Redis", "src\TWCore.Messaging.Redis\TWCore.Messaging.Redis.csproj", "{AC5CF76E-B4D9-40C1-932E-C2A194634305}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.Redis", "src\TWCore.Messaging.Redis\TWCore.Messaging.Redis.csproj", "{AC5CF76E-B4D9-40C1-932E-C2A194634305}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Cache.Client.Redis", "src\TWCore.Cache.Client.Redis\TWCore.Cache.Client.Redis.csproj", "{111DB7FE-DA1B-45B4-8730-52C0432C0BC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Cache.Client.Redis", "src\TWCore.Cache.Client.Redis\TWCore.Cache.Client.Redis.csproj", "{111DB7FE-DA1B-45B4-8730-52C0432C0BC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

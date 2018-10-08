@@ -1116,7 +1116,7 @@ namespace TWCore.Serialization.NSerializer
         protected void WriteRefType(int refType)
         {
             _buffer[0] = DataBytesDefinition.RefType;
-            MemoryMarshal.Write(_buffer.AsSpan(1), ref tIdx);
+            MemoryMarshal.Write(_buffer.AsSpan(1), ref refType);
             Stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

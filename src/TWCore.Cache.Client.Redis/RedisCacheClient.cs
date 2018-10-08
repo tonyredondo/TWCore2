@@ -46,6 +46,10 @@ namespace TWCore.Cache.Client.Redis
         /// Disable not supported exceptions
         /// </summary>
         public bool DisableNotSupportedExceptions { get; set; }
+        /// <summary>
+        /// Data serializer
+        /// </summary>
+        public ISerializer Serializer { get; set; } = SerializerManager.DefaultBinarySerializer;
         #endregion
 
         #region .ctor
@@ -355,14 +359,13 @@ namespace TWCore.Cache.Client.Redis
         public async Task<bool> SetAsync(StorageItem item)
         {
             if (item?.Meta == null) return false;
-            var metaSerObj = new SerializedObject(item.Meta);
+            var metaSerObj = new SerializedObject(item.Meta, Serializer);
             var metaMulti = metaSerObj.ToMultiArray();
             var dataMulti = item.Data?.ToMultiArray() ?? MultiArray<byte>.Empty;
             var timeSpan = item.Meta.ExpirationDate?.Subtract(Core.Now);
-            var dataMultiArray = dataMulti.AsArray();
             var setResult = await Task.WhenAll(
-                _database.StringSetAsync(_category + item.Meta.Key + DataKey, dataMultiArray, timeSpan),
-                _database.StringSetAsync(_category + item.Meta.Key + MetaKey, dataMultiArray, timeSpan)).ConfigureAwait(false);
+                _database.StringSetAsync(_category + item.Meta.Key + DataKey, dataMulti.AsArray(), timeSpan),
+                _database.StringSetAsync(_category + item.Meta.Key + MetaKey, metaMulti.AsArray(), timeSpan)).ConfigureAwait(false);
             return setResult.All(r => r);
         }
         /// <summary>

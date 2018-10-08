@@ -30,7 +30,7 @@ namespace TWCore.Messaging.RabbitMQ
     /// </summary>
     public class RabbitMQueueRawServer : MQueueRawServerBase
 	{
-		private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+		private readonly ConcurrentDictionary<(string, string), RabbitMQueue> _rQueue = new ConcurrentDictionary<(string, string), RabbitMQueue>();
 		private byte _priority;
 		private byte _deliveryMode;
 		private string _expiration;
@@ -85,12 +85,7 @@ namespace TWCore.Messaging.RabbitMQ
 			{
 				try
 				{
-					var rabbitQueue = _rQueue.GetOrAdd(queue.Route, q =>
-					{
-						var rq = new RabbitMQueue(queue);
-						rq.EnsureConnection();
-						return rq;
-					});
+					var rabbitQueue = _rQueue.GetOrAdd((queue.Route, queue.Name), q => new RabbitMQueue(queue));
 					if (!rabbitQueue.EnsureConnection()) continue;
 					rabbitQueue.EnsureExchange();
 					var props = rabbitQueue.Channel.CreateBasicProperties();

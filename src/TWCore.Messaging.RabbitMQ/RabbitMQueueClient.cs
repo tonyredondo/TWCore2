@@ -42,8 +42,6 @@ namespace TWCore.Messaging.RabbitMQ
     public class RabbitMQueueClient : MQueueClientBase
     {
         private static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
-        private readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
-        private readonly ConcurrentDictionary<Guid, string> _correlationIdConsumers = new ConcurrentDictionary<Guid, string>();
 
         #region Fields
         private List<RabbitMQueue> _senders;
@@ -166,15 +164,6 @@ namespace TWCore.Messaging.RabbitMQ
                 RemoveReceiverConsumer();
                 _receiver = null;
             }
-            foreach (var pools in _routeConnection)
-            {
-                var pool = pools.Value;
-                var connections = pool.GetCurrentObjects();
-                foreach (var connection in connections)
-                    connection.Close();
-                pool.Clear();
-            }
-            _routeConnection.Clear();
         }
         #endregion
 

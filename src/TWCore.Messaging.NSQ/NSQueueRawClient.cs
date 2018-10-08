@@ -75,7 +75,7 @@ namespace TWCore.Messaging.NSQ
         {
             public void HandleMessage(NsqSharp.IMessage message)
             {
-                (var body, var correlationId, var _) = GetFromRawMessageBody(message.Body);
+                (var body, var correlationId, var _) = GetFromRawMessageBody(message.Body, false);
                 Try.Do(message.Finish, false);
                 var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
                 rMsg.Body = body;
@@ -129,7 +129,7 @@ namespace TWCore.Messaging.NSQ
                     var rcvName = _receiverConnection.Name;
                     if (!UseSingleResponseQueue)
                     {
-                        rcvName += "-" + Core.InstanceId;
+                        rcvName += "-" + Core.ProcessId;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                     }
                     _receiver = new Consumer(rcvName, rcvName);
@@ -190,7 +190,7 @@ namespace TWCore.Messaging.NSQ
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.InstanceId;
+                name += "-" + Core.ProcessId;
             var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var nsqProducer) in _senders)
@@ -255,7 +255,7 @@ namespace TWCore.Messaging.NSQ
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
+        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message, bool returnName = true)
         {
             var body = new MultiArray<byte>(message);
 #if COMPATIBILITY
@@ -264,8 +264,11 @@ namespace TWCore.Messaging.NSQ
             var correlationId = new Guid(body.Slice(0, 16).AsSpan());
 #endif
             var nameLength = BitConverter.ToInt32(message, 16);
-            var name = Encoding.GetString(message, 20, nameLength);
             var messageBody = body.Slice(20 + nameLength);
+            if (!returnName)
+                return (messageBody, correlationId, null);
+
+            var name = Encoding.GetString(message, 20, nameLength);
             return (messageBody, correlationId, name);
         }
         #endregion

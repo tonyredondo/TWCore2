@@ -129,7 +129,7 @@ namespace TWCore.Messaging.Kafka
                         var rcvName = _receiverConnection.Name;
                         if (!UseSingleResponseQueue)
                         {
-                            rcvName += "-" + Core.InstanceId;
+                            rcvName += "-" + Core.ProcessId;
                             Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                         }
                         var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(rcvName, router)), 5000, int.MaxValue).WaitAsync();
@@ -138,7 +138,7 @@ namespace TWCore.Messaging.Kafka
                             foreach (var cRes in consumer.Consume(cancellationToken))
                             {
                                 if (cancellationToken.IsCancellationRequested) break;
-                                var correlationId = new Guid(cRes.Key);
+                                var (correlationId, _) = GetFromRawMessageHeader(cRes.Key, false);
                                 var message = ReceivedMessages.GetOrAdd(correlationId, id => new KafkaQueueMessage());
                                 message.Body = cRes.Value;
                                 message.WaitHandler.Set();
@@ -202,7 +202,7 @@ namespace TWCore.Messaging.Kafka
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.InstanceId;
+                name += "-" + Core.ProcessId;
 
             var key = CreateRawMessageHeader(correlationId, name);
 
@@ -271,7 +271,7 @@ namespace TWCore.Messaging.Kafka
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (Guid, string) GetFromRawMessageHeader(byte[] message)
+        internal static (Guid, string) GetFromRawMessageHeader(byte[] message, bool returnName = true)
         {
             var header = new MultiArray<byte>(message);
 #if COMPATIBILITY
@@ -279,6 +279,8 @@ namespace TWCore.Messaging.Kafka
 #else
             var correlationId = new Guid(header.Slice(0, 16).AsSpan());
 #endif
+            if (!returnName)
+                return (correlationId, null);
             var nameLength = BitConverter.ToInt32(message, 16);
             var name = Encoding.GetString(message, 20, nameLength);
             return (correlationId, name);

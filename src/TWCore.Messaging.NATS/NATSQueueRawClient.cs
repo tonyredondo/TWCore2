@@ -73,7 +73,7 @@ namespace TWCore.Messaging.NATS
         }
         private static void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
-            (var body, var correlationId, var _) = GetFromRawMessageBody(e.Message.Data);
+            (var body, var correlationId, var _) = GetFromRawMessageBody(e.Message.Data, false);
             var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
             rMsg.Body = body;
             rMsg.WaitHandler.Set();
@@ -139,7 +139,7 @@ namespace TWCore.Messaging.NATS
                     _receiverNASTConnection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
                     if (!UseSingleResponseQueue)
                     {
-                        var rcvName = _receiverConnection.Name + "-" + Core.InstanceId;
+                        var rcvName = _receiverConnection.Name + "-" + Core.ProcessId;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                         _receiver = _receiverNASTConnection.SubscribeAsync(rcvName, MessageHandler);
                     }
@@ -202,7 +202,7 @@ namespace TWCore.Messaging.NATS
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.InstanceId;
+                name += "-" + Core.ProcessId;
             var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var producer) in _senders)
@@ -268,7 +268,7 @@ namespace TWCore.Messaging.NATS
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
+        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message, bool returnName = true)
         {
             var body = new MultiArray<byte>(message);
 #if COMPATIBILITY
@@ -277,8 +277,11 @@ namespace TWCore.Messaging.NATS
             var correlationId = new Guid(body.Slice(0, 16).AsSpan());
 #endif
             var nameLength = BitConverter.ToInt32(message, 16);
-            var name = Encoding.GetString(message, 20, nameLength);
             var messageBody = body.Slice(20 + nameLength);
+            if (!returnName)
+                return (messageBody, correlationId, null);
+
+            var name = Encoding.GetString(message, 20, nameLength);
             return (messageBody, correlationId, name);
         }
         #endregion

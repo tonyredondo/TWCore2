@@ -187,6 +187,10 @@ namespace TWCore
 #endif
             }
         }
+        /// <summary>
+        /// Process id
+        /// </summary>
+        public static int ProcessId { get; } = System.Diagnostics.Process.GetCurrentProcess().Id;
 		#endregion
 
 		#region Init

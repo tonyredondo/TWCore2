@@ -119,13 +119,13 @@ namespace TWCore.Messaging.Redis
                     var rcvName = _receiverConnection.Name;
                     if (!UseSingleResponseQueue)
                     {
-                        rcvName += "-" + Core.InstanceId;
+                        rcvName += "-" + Core.ProcessId;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                     }
                     _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
                     _receiverSubscriber.Subscribe(rcvName, (channel, value) =>
                     {
-                        (var body, var correlationId, var _) = GetFromRawMessageBody(value);
+                        (var body, var correlationId, var _) = GetFromRawMessageBody(value, false);
                         var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
                         rMsg.Body = body;
                         rMsg.WaitHandler.Set();
@@ -190,7 +190,7 @@ namespace TWCore.Messaging.Redis
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.InstanceId;
+                name += "-" + Core.ProcessId;
             var body = CreateRawMessageBody(message, correlationId, name);
             
             foreach ((var queue, var multiplexer, var subscriber) in _senders)
@@ -257,7 +257,7 @@ namespace TWCore.Messaging.Redis
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
+        internal static (MultiArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message, bool returnName = true)
         {
             var body = new MultiArray<byte>(message);
 #if COMPATIBILITY
@@ -266,8 +266,12 @@ namespace TWCore.Messaging.Redis
             var correlationId = new Guid(body.Slice(0, 16).AsSpan());
 #endif
             var nameLength = BitConverter.ToInt32(message, 16);
-            var name = Encoding.GetString(message, 20, nameLength);
             var messageBody = body.Slice(20 + nameLength);
+
+            if (!returnName)
+                return (messageBody, correlationId, null);
+
+            var name = Encoding.GetString(message, 20, nameLength);
             return (messageBody, correlationId, name);
         }
         #endregion

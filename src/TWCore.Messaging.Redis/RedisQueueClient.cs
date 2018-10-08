@@ -116,7 +116,7 @@ namespace TWCore.Messaging.Redis
                     var rcvName = _receiverConnection.Name;
                     if (!UseSingleResponseQueue)
                     {
-                        rcvName += "-" + Core.InstanceId;
+                        rcvName += "-" + Core.ProcessId;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                     }
                     _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
@@ -192,7 +192,7 @@ namespace TWCore.Messaging.Redis
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
-                        message.Header.ResponseQueue.Name += "-" + Core.InstanceId;
+                        message.Header.ResponseQueue.Name += "-" + Core.ProcessId;
                 }
                 else
                 {

@@ -29,6 +29,15 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net46
 - Slack
 - Telegram
 
+# Supported serializers
+
+- Newtonsoft JsonNet
+- XmlSerializer
+- BinaryFormatter
+- Utf8Json
+- MsgPack
+- NBinary (Custom and faster serializer)
+- RawBinary (Like NBinary without caching)
 
 
 Created by Daniel Redondo

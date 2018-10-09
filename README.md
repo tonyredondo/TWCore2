@@ -11,6 +11,22 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net46
 - Aspnet Core object viewer and compiler developer tool.
 - Fast and fewer allocations.
 
+# Supported messages brokers
 
+- RabbitMQ
+- NATS
+- NSQ
+- Kafka
+- Redis (Pub/Sub)
+
+# Supported key/value cache storages
+
+- Custom TWCore
+- Redis
+
+# Supported bot connectors
+
+- Slack
+- Telegram
 
 Created by Daniel Redondo

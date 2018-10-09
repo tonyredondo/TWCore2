@@ -35,6 +35,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo InternalSimpleWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalSimpleWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo InternalMixedWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalMixedWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
 		internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteBytesMethodInfo = typeof(SerializersTable).GetMethod("WriteBytes", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -57,6 +58,8 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo TryGetValueTypeSerializerCacheMethod = typeof(SerializerCache<Type>).GetMethod("TryGetValue", BindingFlags.Public | BindingFlags.Instance);
         internal static readonly MethodInfo WriteRefTypeMInfo = typeof(SerializersTable).GetMethod("WriteRefType", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo SetTypeSerializerCacheMethod = typeof(SerializerCache<Type>).GetMethod("Set", BindingFlags.Public | BindingFlags.Instance);
+        //
+        internal static readonly MethodInfo GetTypeMethodInfo = typeof(object).GetMethod("GetType", BindingFlags.Public | BindingFlags.Instance);
 
 
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
@@ -997,37 +1000,25 @@ namespace TWCore.Serialization.NSerializer
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InternalWriteSealedObjectValue(object value, SerializerTypeDescriptor descriptor)
-        {
-			//This method should be declared as a <<ExpressionTree>>
-			if (value is null)
-			{
-				WriteByte(DataBytesDefinition.ValueNull);
-				return;
-			}
-			if (_objectCache.TryGetValue(value, out var oIdx))
-			{
-				WriteRefObject(oIdx);
-				return;
-			}
-			_objectCache.Set(value);
 
-			if (_typeCache.TryGetValue(descriptor.Type, out var tIdx))
-			{
-				WriteRefType(tIdx);
-			}
-			else
-			{
-				WriteBytes(descriptor.Definition);
-				_typeCache.Set(descriptor.Type);
-			}
-			if (descriptor.IsNSerializable)
-				((INSerializable)value).Serialize(this);
-			else
-				descriptor.SerializeAction(value, this);
-			WriteByte(DataBytesDefinition.TypeEnd);
-		}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InternalMixedWriteObjectValue(object value, Type valueType)
+        {
+            var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
+            if (_typeCache.TryGetValue(valueType, out var tIdx))
+            {
+                WriteRefType(tIdx);
+            }
+            else
+            {
+                Stream.Write(descriptor.Definition);
+                _typeCache.Set(valueType);
+            }
+            if (descriptor.IsNSerializable)
+                ((INSerializable)value).Serialize(this);
+            else
+                descriptor.SerializeAction(value, this);
+        }
 		#endregion
 
 		#region Private Write Methods

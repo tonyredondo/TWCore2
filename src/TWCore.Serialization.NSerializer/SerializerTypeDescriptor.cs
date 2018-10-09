@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -198,7 +197,9 @@ namespace TWCore.Serialization.NSerializer
                 if (itemType.IsSealed)
                     return WriteSealedExpression(itemType, itemGetExpression, serTableExpression);
 
-                return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+                return WriteMixedExpression(itemType, itemGetExpression, serTableExpression);
+
+                //return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
             }
 
             Expression WriteSealedExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
@@ -279,11 +280,121 @@ namespace TWCore.Serialization.NSerializer
                 #endregion
 
                 innerSerExpressions.Add(Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.TypeEnd)));
-
                 innerSerExpressions.Add(Expression.Label(returnLabel));
                 var innerExpression = Expression.Block(innerVarExpressions, innerSerExpressions).Reduce();
 
                 CreatedDescriptors.Clear();
+                return innerExpression;
+            }
+
+            Expression WriteMixedExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
+            {
+                if (itemType == type)
+                    return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+                if (!CreatedDescriptors.Add(itemType))
+                    return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+
+                var innerDescriptor = SerializersTable.Descriptors.GetOrAdd(itemType, tp => new SerializerTypeDescriptor(tp));
+
+                var innerVarExpressions = new List<ParameterExpression>();
+                var innerSerExpressions = new List<Expression>();
+
+                var returnLabel = Expression.Label(typeof(void), "return");
+                var objValue = Expression.Parameter(typeof(object), "objValue");
+
+                innerVarExpressions.Add(objValue);
+                innerSerExpressions.Add(Expression.Assign(objValue, itemGetExpression));
+
+                #region Null Check
+                innerSerExpressions.Add(
+                    Expression.IfThen(Expression.ReferenceEqual(objValue, Expression.Constant(null)),
+                        Expression.Block(
+                            Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                            Expression.Return(returnLabel)
+                        )
+                    )
+                );
+                #endregion
+
+                #region Object Cache Check
+                var objCacheExp = Expression.Field(serTableExpression, "_objectCache");
+                var objIdxExp = Expression.Variable(typeof(int), "objIdx");
+
+                innerVarExpressions.Add(objIdxExp);
+
+                innerSerExpressions.Add(
+                    Expression.IfThenElse(Expression.Call(objCacheExp, SerializersTable.TryGetValueObjectSerializerCacheMethod, objValue, objIdxExp),
+                        Expression.Block(
+                            Expression.Call(serTable, SerializersTable.WriteRefObjectMInfo, objIdxExp),
+                            Expression.Return(returnLabel)
+                        ),
+                        Expression.Call(objCacheExp, SerializersTable.SetObjectSerializerCacheMethod, objValue)
+                    )
+                );
+                #endregion
+
+
+                var valueType = Expression.Parameter(typeof(Type), "valueType");
+                innerVarExpressions.Add(valueType);
+                innerSerExpressions.Add(Expression.Assign(valueType, Expression.Call(objValue, SerializersTable.GetTypeMethodInfo)));
+
+                innerSerExpressions.Add(
+                    Expression.IfThenElse(Expression.TypeIs(objValue, itemType),
+                        WriteShortSealedExpression(itemType, objValue, serTableExpression, returnLabel, innerDescriptor),
+                        Expression.Call(serTableExpression, SerializersTable.InternalMixedWriteObjectValueMInfo, objValue, valueType)
+                    )
+                );
+
+                innerSerExpressions.Add(Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.TypeEnd)));
+                innerSerExpressions.Add(Expression.Label(returnLabel));
+                var innerExpression = Expression.Block(innerVarExpressions, innerSerExpressions).Reduce();
+
+                CreatedDescriptors.Clear();
+                return innerExpression;
+            }
+            Expression WriteShortSealedExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression, LabelTarget returnLabel, SerializerTypeDescriptor innerDescriptor)
+            {
+                var innerVarExpressions = new List<ParameterExpression>();
+                var innerSerExpressions = new List<Expression>();
+
+
+                var value = Expression.Parameter(itemType, "value");
+                innerVarExpressions.Add(value);
+                innerSerExpressions.Add(Expression.Assign(value, Expression.Convert(itemGetExpression, itemType)));
+
+                #region Type Cache Check
+                var typeCacheExp = Expression.Field(serTableExpression, "_typeCache");
+                var typeIdxExp = Expression.Variable(typeof(int), "tIdx");
+
+                innerVarExpressions.Add(typeIdxExp);
+
+                var descDefinition = typeof(SerializerTypeDescriptor<>).MakeGenericType(itemType).GetField("Definition", BindingFlags.Public | BindingFlags.Static);
+
+                innerSerExpressions.Add(
+                    Expression.IfThenElse(Expression.Call(typeCacheExp, SerializersTable.TryGetValueTypeSerializerCacheMethod, Expression.Constant(itemType, typeof(Type)), typeIdxExp),
+                        Expression.Call(serTable, SerializersTable.WriteRefTypeMInfo, typeIdxExp),
+                        Expression.Block(
+                            Expression.Call(serTable, SerializersTable.WriteBytesMethodInfo, Expression.Field(null, descDefinition)),
+                            Expression.Call(typeCacheExp, SerializersTable.SetTypeSerializerCacheMethod, Expression.Constant(itemType, typeof(Type)))
+                        )
+                    )
+                );
+
+                #endregion
+
+                #region Serializer Call
+                if (innerDescriptor.IsNSerializable)
+                {
+                    innerSerExpressions.Add(Expression.Call(Expression.Convert(value, typeof(INSerializable)), NSerializableSerializeMInfo, serTableExpression));
+                }
+                else
+                {
+                    innerSerExpressions.Add(Expression.Invoke(innerDescriptor.SerializerLambda, value, serTable));
+                }
+                #endregion
+
+                var innerExpression = Expression.Block(innerVarExpressions, innerSerExpressions).Reduce();
+
                 return innerExpression;
             }
         }

@@ -103,7 +103,7 @@ namespace TWCore.Tests
             var colClone = collection[0].DeepClone();
             var clone = collection.DeepClone();
             
-            RunTest(collection[0], 250_000, false);
+            RunTest(collection[0], 200_000, false);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

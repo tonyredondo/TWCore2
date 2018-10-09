@@ -34,7 +34,8 @@ namespace TWCore.Serialization.RawSerializer
         internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo InternalSimpleWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalSimpleWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
-        internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
+		internal static readonly MethodInfo InternalMixedWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalMixedWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
+		internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteBytesMethodInfo = typeof(SerializersTable).GetMethod("WriteBytes", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteIntMethodInfo = typeof(SerializersTable).GetMethod("WriteInt", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -56,10 +57,11 @@ namespace TWCore.Serialization.RawSerializer
         internal static readonly MethodInfo TryGetValueTypeSerializerCacheMethod = typeof(SerializerCache<Type>).GetMethod("TryGetValue", BindingFlags.Public | BindingFlags.Instance);
         internal static readonly MethodInfo WriteRefTypeMInfo = typeof(SerializersTable).GetMethod("WriteRefType", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo SetTypeSerializerCacheMethod = typeof(SerializerCache<Type>).GetMethod("Set", BindingFlags.Public | BindingFlags.Instance);
+		//
+		internal static readonly MethodInfo GetTypeMethodInfo = typeof(object).GetMethod("GetType", BindingFlags.Public | BindingFlags.Instance);
 
 
-
-        private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
+		private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
 
         private readonly object[] _paramObj = new object[1];

@@ -1,4 +1,4 @@
-# TWCore 2.1
+# ![Potato](https://raw.githubusercontent.com/tonyredondo/TWCore2/master/icon.png) TWCore 2.1
 A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net461 and net462 used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
 
 ## Advantages

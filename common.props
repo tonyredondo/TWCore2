@@ -13,10 +13,11 @@ A multipurpose framework library for .net core</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
+    <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
     <Copyright>Daniel Redondo</Copyright>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/tonyredondo/TWCore2/master/icon.png</PackageIconUrl>
     <IncludeSymbols>True</IncludeSymbols>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <LangVersion>7.3</LangVersion>

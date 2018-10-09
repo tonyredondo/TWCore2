@@ -1,7 +1,7 @@
 # TWCore 2.1
 A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net461 and net462 used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
 
-# Advantages
+## Advantages
 
 - Easy development of microservices: With fewer code you can subscribe to a message broker and start to process messages as pub/sub or RPC architecture.
 - Completely agnostic and loosely coupled: All subsystems of the framework are registered with a dependency injector engine, so using only the configurations files you can switch between Messages brokers, Serialization formats, Rpc transports, Stream compressors, and many more.
@@ -11,7 +11,7 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net46
 - Aspnet Core object viewer and compiler developer tool.
 - Fast and fewer allocations.
 
-# Supported messages brokers
+## Supported messages brokers
 
 - RabbitMQ
 - NATS
@@ -19,17 +19,17 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net46
 - Kafka
 - Redis (Pub/Sub)
 
-# Supported key/value cache storages
+## Supported key/value cache storages
 
 - Custom TWCore
 - Redis
 
-# Supported bot connectors
+## Supported bot connectors
 
 - Slack
 - Telegram
 
-# Supported serializers
+## Supported serializers
 
 - Newtonsoft JsonNet
 - XmlSerializer

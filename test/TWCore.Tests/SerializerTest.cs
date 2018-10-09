@@ -76,7 +76,7 @@ namespace TWCore.Tests
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+16, Age = 17 },
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+17, Age = 18 },
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+18, Age = 19 },
-                    new STest2 { FirstName = "Person" , LastName = "Person" + i + "." + i+19, Age = 20, New = "This is a test" }
+                    //new STest2 { FirstName = "Person" , LastName = "Person" + i + "." + i+19, Age = 20, New = "This is a test" }
                 };
                 collection.Add(colSTest);
             }
@@ -84,7 +84,7 @@ namespace TWCore.Tests
             var lt = new List<STest>
             {
                 new STest { FirstName = "Name1" , LastName = "LName1" , Age = 11 },
-                new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
+                //new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
             var lt2 = new List<Test3>
@@ -103,7 +103,7 @@ namespace TWCore.Tests
             var colClone = collection[0].DeepClone();
             var clone = collection.DeepClone();
             
-            RunTest(collection[0], 200_000, false);
+            RunTest(collection[0], 250_000, false);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,7 +185,7 @@ namespace TWCore.Tests
     }
 
     [Serializable]
-    public class STest //: INSerializable
+    public sealed class STest //: INSerializable
     {
         public int value;
         public string FirstName { get; set; }
@@ -201,22 +201,22 @@ namespace TWCore.Tests
         //    table.WriteGenericValue(Brother);
         //}
     }
-    [Serializable]
-    public class STest2 : STest//, INSerializable
-    {
-        public string New { get; set; }
+    //[Serializable]
+    //public class STest2 : STest//, INSerializable
+    //{
+    //    public string New { get; set; }
 
-        //void INSerializable.Serialize(SerializersTable table)
-        //{
-        //    table.WriteValue(FirstName);
-        //    table.WriteValue(LastName);
-        //    table.WriteValue(Age);
-        //    table.WriteGenericValue(Brother);
-        //    table.WriteValue(New);
-        //}
-    }
+    //    //void INSerializable.Serialize(SerializersTable table)
+    //    //{
+    //    //    table.WriteValue(FirstName);
+    //    //    table.WriteValue(LastName);
+    //    //    table.WriteValue(Age);
+    //    //    table.WriteGenericValue(Brother);
+    //    //    table.WriteValue(New);
+    //    //}
+    //}
 
-    public class Test3
+    public sealed class Test3
     {
         public List<int> Values { get; set; }
     }

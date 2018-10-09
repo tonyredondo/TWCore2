@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -29,18 +30,22 @@ namespace TWCore.Serialization.NSerializer
 {
     public delegate void SerializeActionDelegate(object obj, SerializersTable table);
 
-    public readonly struct SerializerTypeDescriptor
+    public class SerializerTypeDescriptor
     {
+        private static readonly MethodInfo GetDefinitionMInfo = typeof(SerializerTypeDescriptor).GetMethod("GetDefinition", BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo NSerializableSerializeMInfo = typeof(INSerializable).GetMethod("Serialize", BindingFlags.Public | BindingFlags.Instance);
+        private static readonly HashSet<Type> CreatedDescriptors = new HashSet<Type>();
+
         public readonly bool IsNSerializable;
         public readonly byte[] Definition;
-		public readonly Type Type;
-		public readonly Expression SerializerExpression;
+        public readonly Type Type;
+        public readonly Expression<SerializeActionDelegate> SerializerLambda;
         public readonly SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerTypeDescriptor(Type type)
         {
-			Type = type;
+            Type = type;
             var ifaces = type.GetInterfaces();
             var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
             var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -54,7 +59,6 @@ namespace TWCore.Serialization.NSerializer
                 if (isIList && prop.Name == "Capacity") return false;
                 return true;
             }).ToArray();
-
             //
             var properties = runtimeProperties.Select(p => p.Name).ToArray();
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
@@ -167,11 +171,11 @@ namespace TWCore.Serialization.NSerializer
                     serExpressions.Add(WriteExpression(prop.PropertyType, getExpression, serTable));
                 }
             }
-			//
-			SerializerExpression = Expression.Block(varExpressions, serExpressions).Reduce();
-            var lambda = Expression.Lambda<SerializeActionDelegate>(SerializerExpression, type.Name + "_Serializer", new[] { obj, serTable });
-            SerializeAction = lambda.Compile();
-            
+            //
+            var serExpression = Expression.Block(varExpressions, serExpressions).Reduce();
+            SerializerLambda = Expression.Lambda<SerializeActionDelegate>(serExpression, type.Name + "_Serializer", new[] { obj, serTable });
+            SerializeAction = SerializerLambda.Compile();
+
             Expression WriteExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
             {
                 if (itemType == typeof(int))
@@ -193,14 +197,131 @@ namespace TWCore.Serialization.NSerializer
                 if (itemType.IsAbstract || itemType.IsInterface || itemType == typeof(object))
                     return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
 
-				//TODO: The class is sealed, we have to do another optimization here.
-				if (itemType.IsSealed)
-				{
-					return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
-				}
-    
+                //TODO: The class is sealed, we have to do another optimization here.
+                if (itemType.IsSealed)
+                {
+                    if (itemType == type)
+                        return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+                    if (!CreatedDescriptors.Add(itemType))
+                        return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+
+                    var innerDescriptor = SerializersTable.Descriptors.GetOrAdd(itemType, tp => new SerializerTypeDescriptor(tp));
+
+                    var innerVarExpressions = new List<ParameterExpression>();
+                    var innerSerExpressions = new List<Expression>();
+
+                    var returnLabel = Expression.Label(typeof(void), "return");
+
+                    var value = Expression.Parameter(itemType, "value");
+                    innerVarExpressions.Add(value);
+                    innerSerExpressions.Add(Expression.Assign(value, Expression.Convert(itemGetExpression, itemType)));
+
+                    #region Null Check
+                    innerSerExpressions.Add(
+                        Expression.IfThen(Expression.ReferenceEqual(value, Expression.Constant(null)),
+                            Expression.Block(
+                                Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                                Expression.Return(returnLabel)
+                            )
+                        )
+                    );
+                    #endregion
+
+                    #region Object Cache Check
+                    var objCacheExp = Expression.Field(serTableExpression, "_objectCache");
+                    var objIdxExp = Expression.Variable(typeof(int), "objIdx");
+
+                    innerVarExpressions.Add(objIdxExp);
+
+                    innerSerExpressions.Add(
+                        Expression.IfThenElse(Expression.Call(objCacheExp, SerializersTable.TryGetValueObjectSerializerCacheMethod, value, objIdxExp),
+                            Expression.Block(
+                                Expression.Call(serTable, SerializersTable.WriteRefObjectMInfo, objIdxExp),
+                                Expression.Return(returnLabel)
+                            ),
+                            Expression.Call(objCacheExp, SerializersTable.SetObjectSerializerCacheMethod, value)
+                        )
+                    );
+                    #endregion
+
+                    #region Type Cache Check
+                    var typeCacheExp = Expression.Field(serTableExpression, "_typeCache");
+                    var typeIdxExp = Expression.Variable(typeof(int), "tIdx");
+
+                    innerVarExpressions.Add(typeIdxExp);
+
+                    innerSerExpressions.Add(
+                        Expression.IfThenElse(Expression.Call(typeCacheExp, SerializersTable.TryGetValueTypeSerializerCacheMethod, Expression.Constant(itemType, typeof(Type)), typeIdxExp),
+                            Expression.Call(serTable, SerializersTable.WriteRefTypeMInfo, typeIdxExp),
+                            Expression.Block(
+                                Expression.Call(serTable, SerializersTable.WriteBytesMethodInfo, Expression.Call(GetDefinitionMInfo, Expression.Constant(itemType, typeof(Type)))),
+                                Expression.Call(typeCacheExp, SerializersTable.SetTypeSerializerCacheMethod, Expression.Constant(itemType, typeof(Type)))
+                            )
+                        )
+                    );
+
+                    #endregion
+
+                    if (innerDescriptor.IsNSerializable)
+                    {
+                        innerSerExpressions.Add(Expression.Call(Expression.Convert(value, typeof(INSerializable)), NSerializableSerializeMInfo, serTableExpression));
+                    }
+                    else
+                    {
+                        innerSerExpressions.Add(Expression.Invoke(innerDescriptor.SerializerLambda, value, serTable));
+                    }
+                    innerSerExpressions.Add(Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.TypeEnd)));
+
+                    innerSerExpressions.Add(Expression.Label(returnLabel));
+                    var innerExpression = Expression.Block(innerVarExpressions, innerSerExpressions).Reduce();
+
+                    CreatedDescriptors.Clear();
+                    return innerExpression;
+                }
+
                 return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
             }
+        }
+
+
+        private static ConcurrentDictionary<Type, byte[]> _definitionsCache = new ConcurrentDictionary<Type, byte[]>();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte[] GetDefinition(Type type)
+        {
+            return _definitionsCache.GetOrAdd(type, mType =>
+            {
+                var ifaces = mType.GetInterfaces();
+                var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+                var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                var isIList = iListType != null;
+                var isIDictionary = iDictionaryType != null;
+                var runtimeProperties = mType.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
+                {
+                    if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
+                    if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
+                    if (prop.GetIndexParameters().Length > 0) return false;
+                    if (isIList && prop.Name == "Capacity") return false;
+                    return true;
+                }).ToArray();
+                //
+                var properties = runtimeProperties.Select(p => p.Name).ToArray();
+                var isArray = mType.IsArray;
+                var isList = false;
+                if (!isArray)
+                    isList = !isIDictionary && isIList;
+                //
+                var typeName = mType.GetTypeName();
+                var defText = typeName + ";" + (isArray ? "1" : "0") + ";" + (isList ? "1" : "0") + ";" + (isIDictionary ? "1" : "0") + ";" + properties.Join(";");
+                var defBytesLength = Encoding.UTF8.GetByteCount(defText);
+                var defBytes = new byte[defBytesLength + 5];
+                defBytes[0] = DataBytesDefinition.TypeStart;
+                defBytes[1] = (byte)defBytesLength;
+                defBytes[2] = (byte)(defBytesLength >> 8);
+                defBytes[3] = (byte)(defBytesLength >> 16);
+                defBytes[4] = (byte)(defBytesLength >> 24);
+                Encoding.UTF8.GetBytes(defText, 0, defText.Length, defBytes, 5);
+                return defBytes;
+            });
         }
     }
 }

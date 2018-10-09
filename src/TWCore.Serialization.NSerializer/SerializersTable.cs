@@ -37,6 +37,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo InternalSimpleWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalSimpleWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
 		internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo WriteBytesMethodInfo = typeof(SerializersTable).GetMethod("WriteBytes", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteIntMethodInfo = typeof(SerializersTable).GetMethod("WriteInt", BindingFlags.NonPublic | BindingFlags.Instance);
         //
         internal static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
@@ -48,6 +49,15 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo EnumeratorMoveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
         internal static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
         internal static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
+        //
+        internal static readonly MethodInfo TryGetValueObjectSerializerCacheMethod = typeof(SerializerCache<object>).GetMethod("TryGetValue", BindingFlags.Public | BindingFlags.Instance);
+        internal static readonly MethodInfo WriteRefObjectMInfo = typeof(SerializersTable).GetMethod("WriteRefObject", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo SetObjectSerializerCacheMethod = typeof(SerializerCache<object>).GetMethod("Set", BindingFlags.Public | BindingFlags.Instance);
+
+        internal static readonly MethodInfo TryGetValueTypeSerializerCacheMethod = typeof(SerializerCache<Type>).GetMethod("TryGetValue", BindingFlags.Public | BindingFlags.Instance);
+        internal static readonly MethodInfo WriteRefTypeMInfo = typeof(SerializersTable).GetMethod("WriteRefType", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo SetTypeSerializerCacheMethod = typeof(SerializerCache<Type>).GetMethod("Set", BindingFlags.Public | BindingFlags.Instance);
+
 
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
@@ -783,7 +793,8 @@ namespace TWCore.Serialization.NSerializer
                     Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
-                //bool isEnumArray, isEnumList;
+                //if (valueType.IsSealed)
+
                 if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
                 {
                     if (valueType.ReflectedType == typeof(Enumerable) || valueType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
@@ -927,7 +938,7 @@ namespace TWCore.Serialization.NSerializer
 			//This method should be declared as a <<ExpressionTree>>
 			if (value is null)
 			{
-				Stream.WriteByte(DataBytesDefinition.ValueNull);
+				WriteByte(DataBytesDefinition.ValueNull);
 				return;
 			}
 			if (_objectCache.TryGetValue(value, out var oIdx))
@@ -943,14 +954,14 @@ namespace TWCore.Serialization.NSerializer
 			}
 			else
 			{
-				Stream.Write(descriptor.Definition);
+				WriteBytes(descriptor.Definition);
 				_typeCache.Set(descriptor.Type);
 			}
 			if (descriptor.IsNSerializable)
 				((INSerializable)value).Serialize(this);
 			else
 				descriptor.SerializeAction(value, this);
-			Stream.WriteByte(DataBytesDefinition.TypeEnd);
+			WriteByte(DataBytesDefinition.TypeEnd);
 		}
 		#endregion
 
@@ -959,6 +970,11 @@ namespace TWCore.Serialization.NSerializer
         protected void WriteByte(byte value)
         {
             Stream.WriteByte(value);
+        }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteBytes(byte[] value)
+        {
+            Stream.Write(value, 0, value.Length);
         }
 
 #if COMPATIBILITY

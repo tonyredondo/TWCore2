@@ -50,14 +50,14 @@ namespace TWCore.Test.Core
             Value2
         }
 
-        public class TestClass
+        public sealed class TestClass
         {
             public bool? Enabled { get; set; }
             public int[] Values { get; set; }
             public decimal DecimalValue { get; set; }
         }
 
-        public class ProviderCacheClone<T1, T2, T3, T4, T5>
+        public sealed class ProviderCacheClone<T1, T2, T3, T4, T5>
         {
             public T1 Item1 { get; set; }
             public T2 Item2 { get; set; }
@@ -94,7 +94,7 @@ namespace TWCore.Test.Core
                     Parameters = new object[]
                     {
                         new string[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
-                        new SerializedObject(new ProviderCacheClone<TestClass, TestClass, TestClass, TestClass, TestClass> { Item1 = testValue, Item2 = testValue, Item3 = testValue, Item4 = testValue, Item5 = testValue } ),
+                        new ProviderCacheClone<TestClass, TestClass, TestClass, TestClass, TestClass> { Item1 = testValue, Item2 = testValue, Item3 = testValue, Item4 = testValue, Item5 = testValue },
                         TimeSpan.FromMinutes(5)
                     }
                 };

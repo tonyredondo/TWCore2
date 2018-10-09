@@ -824,6 +824,60 @@ namespace TWCore.Serialization.RawSerializer
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Serialize<T>(Stream stream, T value)
+        {
+            if (!typeof(T).IsSealed)
+            {
+                Serialize(stream, value, value?.GetType());
+                return;
+            }
+
+            try
+            {
+                Stream = stream;
+                Stream.WriteByte(DataBytesDefinition.Start);
+
+                if (typeof(T).IsClass && value == default)
+                {
+                    Stream.WriteByte(DataBytesDefinition.ValueNull);
+                    return;
+                }
+                if (WriteValues.TryGetValue(typeof(T), out var mTuple))
+                {
+                    _paramObj[0] = value;
+                    mTuple.Accessor(this, _paramObj);
+                    Stream.WriteByte(DataBytesDefinition.End);
+                    return;
+                }
+                _objectCache.Set(value);
+                var descriptor = SerializerTypeDescriptor<T>.Descriptor;
+                Stream.Write(descriptor.Definition);
+                _typeCache.Set(typeof(T));
+                if (descriptor.IsRawSerializable)
+                    ((IRawSerializable)value).Serialize(this);
+                else
+                    descriptor.SerializeAction(value, this);
+
+                Span<byte> buffer = stackalloc byte[2];
+                buffer[0] = DataBytesDefinition.TypeEnd;
+                buffer[1] = DataBytesDefinition.End;
+                Stream.Write(buffer);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+            finally
+            {
+                _typeCache.Clear();
+                _objectCache.Clear();
+                Stream = null;
+            }
+
+        }
+
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalWriteObjectValue(object value)

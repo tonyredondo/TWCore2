@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using TWCore.IO;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization.RawSerializer
@@ -87,6 +88,66 @@ namespace TWCore.Serialization.RawSerializer
             ser.Serialize(stream, item, itemType);
         }
 
+        /// <inheritdoc />
+        /// <summary>
+        /// Serialize an object to a byte array
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="item">Object to serialize</param>
+        /// <returns>Serialized byte array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override MultiArray<byte> Serialize<T>(T item)
+        {
+            var ser = _serializer;
+            if (ser is null)
+            {
+                ser = new SerializersTable();
+                _serializer = ser;
+            }
+            using (var stream = new RecycleMemoryStream())
+            {
+                if (Compressor is null)
+                {
+                    ser.Serialize(stream, item);
+                    return stream.GetMultiArray();
+                }
+                using (var ms = new RecycleMemoryStream())
+                {
+                    ser.Serialize(ms, item);
+                    ms.Position = 0;
+                    Compressor.Compress(ms, stream);
+                }
+                return stream.GetMultiArray();
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Serialize an object to a stream
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="item">Object to serialize</param>
+        /// <param name="stream">Stream data destination</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Serialize<T>(T item, Stream stream)
+        {
+            var ser = _serializer;
+            if (ser is null)
+            {
+                ser = new SerializersTable();
+                _serializer = ser;
+            }
+            if (Compressor is null)
+            {
+                ser.Serialize(stream, item);
+                return;
+            }
+            using (var ms = new RecycleMemoryStream())
+            {
+                ser.Serialize(ms, item);
+                ms.Position = 0;
+                Compressor.Compress(ms, stream);
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object

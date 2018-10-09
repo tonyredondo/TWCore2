@@ -31,7 +31,6 @@ namespace TWCore.Serialization.RawSerializer
 
     public class SerializerTypeDescriptor
     {
-        private static readonly MethodInfo GetDefinitionMInfo = typeof(SerializerTypeDescriptor).GetMethod("GetDefinition", BindingFlags.NonPublic | BindingFlags.Static);
         private static readonly MethodInfo NSerializableSerializeMInfo = typeof(IRawSerializable).GetMethod("Serialize", BindingFlags.Public | BindingFlags.Instance);
         private static readonly HashSet<Type> CreatedDescriptors = new HashSet<Type>();
 
@@ -252,11 +251,13 @@ namespace TWCore.Serialization.RawSerializer
 
                     innerVarExpressions.Add(typeIdxExp);
 
+                    var descDefinition = typeof(SerializerTypeDescriptor<>).MakeGenericType(itemType).GetField("Definition", BindingFlags.Public | BindingFlags.Static);
+
                     innerSerExpressions.Add(
                         Expression.IfThenElse(Expression.Call(typeCacheExp, SerializersTable.TryGetValueTypeSerializerCacheMethod, Expression.Constant(itemType, typeof(Type)), typeIdxExp),
                             Expression.Call(serTable, SerializersTable.WriteRefTypeMInfo, typeIdxExp),
                             Expression.Block(
-                                Expression.Call(serTable, SerializersTable.WriteBytesMethodInfo, Expression.Call(GetDefinitionMInfo, Expression.Constant(itemType, typeof(Type)))),
+                                Expression.Call(serTable, SerializersTable.WriteBytesMethodInfo, Expression.Field(null, descDefinition)),
                                 Expression.Call(typeCacheExp, SerializersTable.SetTypeSerializerCacheMethod, Expression.Constant(itemType, typeof(Type)))
                             )
                         )
@@ -284,47 +285,20 @@ namespace TWCore.Serialization.RawSerializer
                 return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
             }
         }
+    }
 
 
+    public static class SerializerTypeDescriptor<T>
+    {
+        public static byte[] Definition;
+        public static SerializerTypeDescriptor Descriptor;
 
-        private static ConcurrentDictionary<Type, byte[]> _definitionsCache = new ConcurrentDictionary<Type, byte[]>();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static byte[] GetDefinition(Type type)
+        static SerializerTypeDescriptor()
         {
-            return _definitionsCache.GetOrAdd(type, mType =>
-            {
-                var ifaces = mType.GetInterfaces();
-                var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-                var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-                var isIList = iListType != null;
-                var isIDictionary = iDictionaryType != null;
-                var runtimeProperties = mType.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
-                {
-                    if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
-                    if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
-                    if (prop.GetIndexParameters().Length > 0) return false;
-                    if (isIList && prop.Name == "Capacity") return false;
-                    return true;
-                }).ToArray();
-                //
-                var properties = runtimeProperties.Select(p => p.Name).ToArray();
-                var isArray = mType.IsArray;
-                var isList = false;
-                if (!isArray)
-                    isList = !isIDictionary && isIList;
-                //
-                var typeName = mType.GetTypeName();
-                var defText = typeName + ";" + (isArray ? "1" : "0") + ";" + (isList ? "1" : "0") + ";" + (isIDictionary ? "1" : "0") + ";" + properties.Join(";");
-                var defBytesLength = Encoding.UTF8.GetByteCount(defText);
-                var defBytes = new byte[defBytesLength + 5];
-                defBytes[0] = DataBytesDefinition.TypeStart;
-                defBytes[1] = (byte)defBytesLength;
-                defBytes[2] = (byte)(defBytesLength >> 8);
-                defBytes[3] = (byte)(defBytesLength >> 16);
-                defBytes[4] = (byte)(defBytesLength >> 24);
-                Encoding.UTF8.GetBytes(defText, 0, defText.Length, defBytes, 5);
-                return defBytes;
-            });
+            Descriptor = SerializersTable.Descriptors.GetOrAdd(typeof(T), t => new SerializerTypeDescriptor(t));
+            Definition = Descriptor.Definition;
         }
     }
+
+
 }

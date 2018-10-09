@@ -793,8 +793,6 @@ namespace TWCore.Serialization.NSerializer
                     Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
-                //if (valueType.IsSealed)
-
                 if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
                 {
                     if (valueType.ReflectedType == typeof(Enumerable) || valueType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
@@ -849,6 +847,73 @@ namespace TWCore.Serialization.NSerializer
                 _objectCache.Clear();
                 Stream = null;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Serialize<T>(Stream stream, T value)
+        {
+            if (!typeof(T).IsSealed)
+            {
+                Serialize(stream, value, value?.GetType());
+                return;
+            }
+
+            try
+            {
+                Stream = stream;
+                Stream.WriteByte(DataBytesDefinition.Start);
+
+                if (typeof(T).IsClass && value == default)
+                {
+                    Stream.WriteByte(DataBytesDefinition.ValueNull);
+                    return;
+                }
+                if (WriteValues.TryGetValue(typeof(T), out var mTuple))
+                {
+                    _paramObj[0] = value;
+                    mTuple.Accessor(this, _paramObj);
+                    Stream.WriteByte(DataBytesDefinition.End);
+                    return;
+                }
+                _objectCache.Set(value);
+                var descriptor = SerializerTypeDescriptor<T>.Descriptor;
+                Stream.Write(descriptor.Definition);
+                _typeCache.Set(typeof(T));
+                if (descriptor.IsNSerializable)
+                    ((INSerializable)value).Serialize(this);
+                else
+                    descriptor.SerializeAction(value, this);
+
+                Span<byte> buffer = stackalloc byte[2];
+                buffer[0] = DataBytesDefinition.TypeEnd;
+                buffer[1] = DataBytesDefinition.End;
+                Stream.Write(buffer);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+            finally
+            {
+                _dateTimeOffsetCache.Clear();
+                _dateTimeCache.Clear();
+                _guidCache.Clear();
+                _decimalCache.Clear();
+                _doubleCache.Clear();
+                _floatCache.Clear();
+                _longCache.Clear();
+                _uLongCache.Clear();
+                _stringCache8.Clear();
+                _stringCache16.Clear();
+                _stringCache32.Clear();
+                _stringCache.Clear();
+                _timespanCache.Clear();
+                _typeCache.Clear();
+                _objectCache.Clear();
+                Stream = null;
+            }
+
         }
 
         #region Private Methods

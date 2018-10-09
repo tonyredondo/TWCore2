@@ -321,7 +321,7 @@ namespace TWCore.Serialization
         /// <param name="item">Object to serialize</param>
         /// <param name="stream">Stream data destination</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Serialize<T>(T item, Stream stream) => Serialize(item, item?.GetType() ?? typeof(T), stream);
+        public virtual void Serialize<T>(T item, Stream stream) => Serialize(item, item?.GetType() ?? typeof(T), stream);
         /// <inheritdoc />
         /// <summary>
         /// Deserialize a stream content to a object
@@ -330,7 +330,7 @@ namespace TWCore.Serialization
         /// <param name="stream">Stream data source</param>
         /// <returns>Deserialized object</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Deserialize<T>(Stream stream) => (T)Deserialize(stream, typeof(T));
+        public virtual T Deserialize<T>(Stream stream) => (T)Deserialize(stream, typeof(T));
 
 
         /// <inheritdoc />
@@ -341,7 +341,7 @@ namespace TWCore.Serialization
         /// <param name="item">Object to serialize</param>
         /// <returns>Serialized byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public MultiArray<byte> Serialize<T>(T item) => Serialize(item, item?.GetType() ?? typeof(T));
+        public virtual MultiArray<byte> Serialize<T>(T item) => Serialize(item, item?.GetType() ?? typeof(T));
         /// <inheritdoc />
         /// <summary>
         /// Deserialize a byte array value to an item type
@@ -350,7 +350,7 @@ namespace TWCore.Serialization
         /// <param name="value">Byte array to deserialize</param>
         /// <returns>Deserialized object</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Deserialize<T>(MultiArray<byte> value) => (T)Deserialize(value, typeof(T));
+        public virtual T Deserialize<T>(MultiArray<byte> value) => (T)Deserialize(value, typeof(T));
 
         /// <inheritdoc />
         /// <summary>

@@ -99,6 +99,9 @@ namespace TWCore.Test.Core
                     }
                 };
 
+                var pcc = new ProviderCacheClone<TestClass, TestClass, TestClass, TestClass, TestClass> { Item1 = testValue, Item2 = testValue, Item3 = testValue, Item4 = testValue, Item5 = testValue };
+                var pccBytes = pcc.SerializeToNBinary();
+
                 var rqSer = request.SerializeToNBinary();
 
                 var rqDes = rqSer.DeserializeFromNBinary<TWCore.Net.RPC.RPCMessage>();

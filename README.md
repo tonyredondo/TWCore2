@@ -29,4 +29,10 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net46
 - Slack
 - Telegram
 
+
+
 Created by Daniel Redondo
+
+
+
+Thanks to @jetbrains for helping on this development with the licenses for Rider, dotTrace and dotMemory

@@ -36,8 +36,8 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0, net46
 - BinaryFormatter
 - Utf8Json
 - MsgPack
-- NBinary (Custom and faster serializer)
-- RawBinary (Like NBinary without caching)
+- NSerializer (Custom and faster serializer)
+- RawSerializer (Like NSerializer without caching)
 
 
 Created by Daniel Redondo

@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
 {
-    public readonly struct DeserializerMetaDataOfType : IEquatable<DeserializerMetaDataOfType>
+    public class DeserializerMetaDataOfType : IEquatable<DeserializerMetaDataOfType>
     {
         public readonly Type Type;
         public readonly bool IsArray;

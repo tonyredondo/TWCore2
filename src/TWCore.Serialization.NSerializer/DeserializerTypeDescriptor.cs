@@ -27,7 +27,7 @@ namespace TWCore.Serialization.NSerializer
 {
     public delegate object DeserializeDelegate(DeserializersTable table);
 
-    public readonly struct DeserializerTypeDescriptor
+    public class DeserializerTypeDescriptor
     {
         public readonly ActivatorDelegate Activator;
         public readonly Dictionary<string, FastPropertyInfo> Properties;

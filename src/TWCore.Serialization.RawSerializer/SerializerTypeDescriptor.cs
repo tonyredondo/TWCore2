@@ -38,7 +38,8 @@ namespace TWCore.Serialization.RawSerializer
         public readonly bool IsRawSerializable;
         public readonly byte[] Definition;
         public readonly Type Type;
-        public readonly Expression<SerializeActionDelegate> SerializerLambda;
+        //public readonly Expression<SerializeActionDelegate> SerializerLambda;
+        public readonly LambdaExpression InnerWriterLambda;
         public readonly SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,8 +175,13 @@ namespace TWCore.Serialization.RawSerializer
             }
             //
             var serExpression = Expression.Block(varExpressions, serExpressions).Reduce();
-            SerializerLambda = Expression.Lambda<SerializeActionDelegate>(serExpression, type.Name + "_Serializer", new[] { obj, serTable });
-            SerializeAction = SerializerLambda.Compile();
+
+            var innerValue = Expression.Parameter(type, "innerValue");
+            var innerSerExpression = Expression.Block(varExpressions, new[] { Expression.Assign(instance, innerValue) }.Concat(serExpressions.Skip(1))).Reduce();
+            InnerWriterLambda = Expression.Lambda(innerSerExpression, type.Name + "Writer", new[] { innerValue, serTable });
+
+            var serializationLambda = Expression.Lambda<SerializeActionDelegate>(serExpression, type.Name + "_Serializer", new[] { obj, serTable });
+            SerializeAction = serializationLambda.Compile();
 
 			Expression WriteExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
 			{
@@ -278,7 +284,7 @@ namespace TWCore.Serialization.RawSerializer
 				}
 				else
 				{
-					innerSerExpressions.Add(Expression.Invoke(innerDescriptor.SerializerLambda, value, serTable));
+					innerSerExpressions.Add(Expression.Invoke(innerDescriptor.InnerWriterLambda, value, serTable));
 				}
 				#endregion
 
@@ -392,7 +398,7 @@ namespace TWCore.Serialization.RawSerializer
 				}
 				else
 				{
-					innerSerExpressions.Add(Expression.Invoke(innerDescriptor.SerializerLambda, value, serTable));
+					innerSerExpressions.Add(Expression.Invoke(innerDescriptor.InnerWriterLambda, value, serTable));
 				}
 				#endregion
 

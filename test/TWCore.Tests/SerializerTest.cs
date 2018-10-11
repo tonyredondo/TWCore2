@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using TWCore.Compression;
+using TWCore.Messaging;
+using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Serialization.MsgPack;
 using TWCore.Serialization.NSerializer;
@@ -33,14 +35,26 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting Serializer TEST");
 
-            //
-            //TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
-            ////TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
-            //var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
-            //var sObjectValue = sObject.GetValue();
-            //RunTest(sObjectValue, 500, false);
-            //RunTest(sObjectValue, 500, true);
-            //
+            if (info.Arguments?.Contains("/complex") == true)
+            {
+                AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
+                var file = "c:\\temp\\complexObject.nbin.deflate";
+                var serializer = SerializerManager.GetByFileName(file);
+                var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
+                var value = rMsg.Body.GetValue();
+
+                RunTestEx(value, 200, null);
+                GC.Collect();
+                GC.WaitForFullGCComplete();
+                RunTestEx(value, 200, new GZipCompressor());
+                GC.Collect();
+                GC.WaitForFullGCComplete();
+                RunTestEx(value, 200, new DeflateCompressor());
+
+                return;
+            }
+            
+
 
             var sTest = new STest
             {
@@ -138,7 +152,28 @@ namespace TWCore.Tests
             SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
             Console.ReadLine();
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RunTestEx(object value, int times, ICompressor compressor)
+        {
+            var vType = value?.GetType() ?? typeof(object);
+            var memStream = new MemoryStream();
+            var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
+            var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
+
+            Core.Log.Warning("Running Serializer Test. Use Compressor = {0}", compressor?.EncodingType ?? "(no)");
+            Core.Log.WriteEmptyLine();
+            Core.Log.InfoBasic("By size:");
+            Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
+            Core.Log.InfoBasic("\tRawBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, rawBinarySerializer));
+            Core.Log.WriteEmptyLine();
+            Console.ReadLine();
+            Core.Log.InfoBasic("By Times: {0}", times);
+            SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
+            SerializerProcess("RawBinary", value, vType, times, rawBinarySerializer, memStream);
+            Console.ReadLine();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string SerializerSizeProcess(object value, Type valueType, ISerializer serializer)
         {

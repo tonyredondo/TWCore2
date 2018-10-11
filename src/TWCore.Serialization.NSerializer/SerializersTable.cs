@@ -1000,7 +1000,6 @@ namespace TWCore.Serialization.NSerializer
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalMixedWriteObjectValue(object value, Type valueType)
         {

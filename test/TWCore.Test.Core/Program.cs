@@ -116,6 +116,7 @@ namespace TWCore.Test.Core
 
                 testValue.SerializeToNBinary();
 
+
 //                var testBytes = new byte[1024];
 //                var testBytes2 = new byte[1024];
 //                new Random().NextBytes(testBytes);

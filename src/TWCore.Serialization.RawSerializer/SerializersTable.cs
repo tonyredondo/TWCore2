@@ -959,10 +959,29 @@ namespace TWCore.Serialization.RawSerializer
                 descriptor.SerializeAction(value, this);
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InternalMixedWriteObjectValue(object value, Type valueType)
+        {
+            var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
+            if (_typeCache.TryGetValue(valueType, out var tIdx))
+            {
+                WriteRefType(tIdx);
+            }
+            else
+            {
+                Stream.Write(descriptor.Definition);
+                _typeCache.Set(valueType);
+            }
+            if (descriptor.IsRawSerializable)
+                ((IRawSerializable)value).Serialize(this);
+            else
+                descriptor.SerializeAction(value, this);
+        }
         #endregion
 
-		#region Private Write Methods
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Private Write Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteByte(byte value)
         {
             Stream.WriteByte(value);

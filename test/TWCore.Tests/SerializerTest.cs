@@ -160,17 +160,20 @@ namespace TWCore.Tests
             var memStream = new MemoryStream();
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
+            var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
 
             Core.Log.Warning("Running Serializer Test. Use Compressor = {0}", compressor?.EncodingType ?? "(no)");
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
             Core.Log.InfoBasic("\tRawBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, rawBinarySerializer));
+            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
             Core.Log.WriteEmptyLine();
             Console.ReadLine();
             Core.Log.InfoBasic("By Times: {0}", times);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("RawBinary", value, vType, times, rawBinarySerializer, memStream);
+            SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             Console.ReadLine();
         }
 

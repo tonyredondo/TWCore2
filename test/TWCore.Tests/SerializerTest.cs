@@ -44,7 +44,7 @@ namespace TWCore.Tests
                 var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
                 var value = rMsg.Body.GetValue();
 
-                RunTestEx(value, 200, null);
+                //RunTestEx(value, 200, null);
                 GC.Collect();
                 GC.WaitForFullGCComplete();
                 RunTestEx(value, 200, new GZipCompressor());

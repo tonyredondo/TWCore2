@@ -38,8 +38,8 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _collectPoolItems = true;
-        private MultiPosition _position;
-        private MultiPosition _maxLength;
+        private int _currentPosition;
+        private int _totalLength;
 
         #region Allocators
         private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
@@ -62,97 +62,10 @@ namespace TWCore.IO
         }
         #endregion
 
-        #region Nested Types
-        private readonly struct MultiPosition
-        {
-            public readonly int Row;
-            public readonly int Index;
-            public readonly int GlobalIndex;
-
-            #region .ctor
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public MultiPosition(int globalIndex)
-            {
-                Row = (globalIndex / MaxLength);
-                Index = (globalIndex % MaxLength);
-                GlobalIndex = globalIndex;
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public MultiPosition(int row, int index)
-            {
-                Row = row;
-                Index = index;
-                GlobalIndex = (row * MaxLength) + index;
-            }
-            #endregion
-
-            #region Public Methods
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public MultiPosition FromOffset(int offset)
-            {
-                return new MultiPosition(GlobalIndex + offset);
-            }
-            #endregion
-
-            #region Override
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static MultiPosition operator +(MultiPosition a, MultiPosition b)
-                => new MultiPosition(a.GlobalIndex + b.GlobalIndex);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static MultiPosition operator +(MultiPosition a, int offset)
-                => new MultiPosition(a.GlobalIndex + offset);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static MultiPosition operator +(int offset, MultiPosition b)
-                => new MultiPosition(offset + b.GlobalIndex);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static MultiPosition operator -(MultiPosition a, MultiPosition b)
-                => new MultiPosition(a.GlobalIndex - b.GlobalIndex);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static MultiPosition operator -(MultiPosition a, int offset)
-                => new MultiPosition(a.GlobalIndex - offset);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static MultiPosition operator -(int offset, MultiPosition b)
-                => new MultiPosition(offset - b.GlobalIndex);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool operator ==(MultiPosition a, MultiPosition b)
-                => a.GlobalIndex == b.GlobalIndex;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool operator !=(MultiPosition a, MultiPosition b)
-                => a.GlobalIndex != b.GlobalIndex;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool operator <(MultiPosition a, MultiPosition b)
-                => a.GlobalIndex < b.GlobalIndex;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool operator <=(MultiPosition a, MultiPosition b)
-                => a.GlobalIndex <= b.GlobalIndex;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool operator >(MultiPosition a, MultiPosition b)
-                => a.GlobalIndex > b.GlobalIndex;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool operator >=(MultiPosition a, MultiPosition b)
-                => a.GlobalIndex >= b.GlobalIndex;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator MultiPosition(int a)
-                => new MultiPosition(a);
-            #endregion
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public override bool Equals(object obj)
-            {
-                if (obj is MultiPosition mPos)
-                    return GlobalIndex == mPos.GlobalIndex;
-                return false;
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public override int GetHashCode()
-            {
-                return GlobalIndex.GetHashCode();
-            }
-        }
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private (int Row, int Index) GetPosition(int globalIndex)
+            => (globalIndex / MaxLength, globalIndex % MaxLength);
         #endregion
 
         #region Properties
@@ -175,22 +88,22 @@ namespace TWCore.IO
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-        public override long Length => _maxLength.GlobalIndex;
+        public override long Length => _totalLength;
         /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
         public override long Position
         {
-            get => _position.GlobalIndex;
+            get => _currentPosition;
             set
             {
-                if (value >= _maxLength.GlobalIndex)
-                    _position = _maxLength;
+                if (value >= _totalLength)
+                    _currentPosition = _totalLength;
                 else if (value <= 0)
-                    _position = 0;
+                    _currentPosition = 0;
                 else
-                    _position = (int)value;
+                    _currentPosition = (int)value;
             }
         }
         #endregion
@@ -263,10 +176,10 @@ namespace TWCore.IO
         {
             if (_isClosed)
                 throw new IOException("The stream is closed.");
-            var cPos = _position;
-            if (cPos >= _maxLength) return -1;
-            var res = _buffers[cPos.Row][cPos.Index];
-            _position = _position + 1;
+            if (_currentPosition >= _totalLength) return -1;
+            var (row, index) = GetPosition(_currentPosition);
+            var res = _buffers[row][index];
+            _currentPosition++;
             return res;
         }
         /// <summary>
@@ -286,31 +199,32 @@ namespace TWCore.IO
                 throw new IOException("The stream is closed.");
             var bLength = buffer.Length;
             if (bLength == 0) return 0;
-            var fromPos = _position;
-            if (fromPos >= _maxLength) return -1;
+            if (_currentPosition >= _totalLength) return -1;
+            var (fromRow, fromIndex) = GetPosition(_currentPosition);
             if (bLength > 1)
             {
-                var toPos = _position + bLength;
-                if (toPos > _maxLength)
-                    toPos = _maxLength;
+                var toPos = _currentPosition + bLength;
+                if (toPos > _totalLength)
+                    toPos = _totalLength;
+                var (toRow, toIndex) = GetPosition(toPos);
 
-                if (fromPos.Row == toPos.Row)
+                if (fromRow == toRow)
                 {
-                    var source = _buffers[fromPos.Row].AsSpan(fromPos.Index, toPos.Index - fromPos.Index);
+                    var source = _buffers[fromRow].AsSpan(fromIndex, toIndex - fromIndex);
                     source.CopyTo(buffer);
-                    _position += source.Length;
+                    _currentPosition += source.Length;
                     return source.Length;
                 }
 
                 int readLength = 0;
-                for (var i = fromPos.Row; i <= toPos.Row; i++)
+                for (var i = fromRow; i <= toRow; i++)
                 {
                     Span<byte> source;
 
-                    if (i == fromPos.Row)
-                        source = _buffers[i].AsSpan(fromPos.Index, MaxLength - fromPos.Index);
-                    else if (i == toPos.Row)
-                        source = _buffers[i].AsSpan(0, toPos.Index);
+                    if (i == fromRow)
+                        source = _buffers[i].AsSpan(fromIndex, MaxLength - fromIndex);
+                    else if (i == toRow)
+                        source = _buffers[i].AsSpan(0, toIndex);
                     else
                         source = _buffers[i].AsSpan();
 
@@ -318,11 +232,11 @@ namespace TWCore.IO
                     buffer = buffer.Slice(source.Length);
                     readLength += source.Length;
                 }
-                _position += readLength;
+                _currentPosition += readLength;
                 return readLength;
             }
-            buffer[0] = _buffers[fromPos.Row][fromPos.Index];
-            _position = _position + 1;
+            buffer[0] = _buffers[fromRow][fromIndex];
+            _currentPosition++;
             return 1;
         }
         /// <inheritdoc />
@@ -377,13 +291,13 @@ namespace TWCore.IO
                 throw new IOException("The stream is closed.");
             if (!_canWrite)
                 throw new IOException("The stream is readonly.");
-            var cPos = _position;
-            if (cPos.Row >= _buffers.Count)
+            var (cRow, cIndex) = GetPosition(_currentPosition);
+            if (cRow >= _buffers.Count)
                 _buffers.Add(ByteArrayPool.New());
-            _buffers[cPos.Row][cPos.Index] = value;
-            _position = _position + 1;
-            if (_position > _maxLength)
-                _maxLength = _position;
+            _buffers[cRow][cIndex] = value;
+            _currentPosition++;
+            if (_currentPosition > _totalLength)
+                _totalLength = _currentPosition;
         }
         /// <summary>
         /// Writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
@@ -401,34 +315,35 @@ namespace TWCore.IO
                 throw new IOException("The stream is closed.");
             if (!_canWrite)
                 throw new IOException("The stream is readonly.");
-            var cPos = _position;
-            var fPos = _position + buffer.Length;
-            var missRows = (fPos.Row + 1) - _buffers.Count;
+            var (cRow, cIndex) = GetPosition(_currentPosition);
+            var finalPosition = _currentPosition + buffer.Length;
+            var (fRow, fIndex) = GetPosition(finalPosition);
+            var missRows = (fRow + 1) - _buffers.Count;
             for (var i = 0; i < missRows; i++)
                 _buffers.Add(ByteArrayPool.New());
 
-            if (cPos.Row == fPos.Row)
+            if (cRow == fRow)
             {
-                var destination = _buffers[cPos.Row].AsSpan(cPos.Index, fPos.Index - cPos.Index);
+                var destination = _buffers[cRow].AsSpan(cIndex, fIndex - cIndex);
                 buffer.CopyTo(destination);
                 buffer = buffer.Slice(destination.Length);
                 if (buffer.Length > 0)
                     throw new IOException("Write error");
-                _position = fPos;
-                if (_position > _maxLength)
-                    _maxLength = _position;
+                _currentPosition = finalPosition;
+                if (_currentPosition > _totalLength)
+                    _totalLength = _currentPosition;
                 return;
             }
 
             int writeLength = 0;
-            for (var i = cPos.Row; i <= fPos.Row; i++)
+            for (var i = cRow; i <= fRow; i++)
             {
                 Span<byte> destination;
 
-                if (i == cPos.Row)
-                    destination = _buffers[i].AsSpan(cPos.Index, MaxLength - cPos.Index);
-                else if (i == fPos.Row)
-                    destination = _buffers[i].AsSpan(0, fPos.Index);
+                if (i == cRow)
+                    destination = _buffers[i].AsSpan(cIndex, MaxLength - cIndex);
+                else if (i == fRow)
+                    destination = _buffers[i].AsSpan(0, fIndex);
                 else
                     destination = _buffers[i].AsSpan();
 
@@ -439,10 +354,9 @@ namespace TWCore.IO
             }
             if (buffer.Length != 0)
                 throw new IOException("Write error");
-            _position = fPos;
-
-            if (_position > _maxLength)
-                _maxLength = _position;
+            _currentPosition = finalPosition;
+            if (_currentPosition > _totalLength)
+                _totalLength = _currentPosition;
         }
         /// <inheritdoc />
         /// <summary>
@@ -521,7 +435,7 @@ namespace TWCore.IO
         public override void CopyTo(Stream destination, int bufferSize)
 #endif
         {
-            var mArray = new MultiArray<byte>(_buffers, (int)Position, (int)Length);
+            var mArray = new MultiArray<byte>(_buffers, _currentPosition, _totalLength - _currentPosition);
             mArray.CopyTo(destination);
         }
         /// <inheritdoc />
@@ -534,7 +448,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
         {
-            var mArray = new MultiArray<byte>(_buffers, 0, (int)Length);
+            var mArray = new MultiArray<byte>(_buffers, _currentPosition, _totalLength - _currentPosition);
             return mArray.CopyToAsync(destination);
         }
         #endregion
@@ -556,11 +470,11 @@ namespace TWCore.IO
             }
             else if (origin == SeekOrigin.End)
             {
-                Position = _maxLength.GlobalIndex + offset;
+                Position = _totalLength + offset;
             }
             else
             {
-                _position = _position + (int)offset;
+                _currentPosition += (int)offset;
             }
             return Position;
         }
@@ -574,7 +488,7 @@ namespace TWCore.IO
         {
             if (value < 0)
                 value = 0;
-            _maxLength = (int) value;
+            _totalLength = (int)value;
         }
         /// <summary>
         /// Close stream
@@ -600,7 +514,7 @@ namespace TWCore.IO
         /// <returns>A new byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ToArray()
-            => new MultiArray<byte>(_buffers, 0, (int)Length).ToArray();
+            => new MultiArray<byte>(_buffers, 0, _totalLength).ToArray();
         /// <summary>
         /// Get the internal buffer as MultiArray
         /// </summary>
@@ -609,7 +523,7 @@ namespace TWCore.IO
         public MultiArray<byte> GetMultiArray()
         {
             _collectPoolItems = false;
-            return new MultiArray<byte>(_buffers, 0, (int)Length);
+            return new MultiArray<byte>(_buffers, 0, _totalLength);
         }
         #endregion
     }

@@ -18,30 +18,28 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 // ReSharper disable IntroduceOptionalParameters.Global
 
 namespace TWCore.IO
 {
     /// <inheritdoc />
     /// <summary>
-    /// Recycle ByteArray MemoryStream
+    /// Recycle Arrays MemoryStream
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
-        private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
-        private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 2048;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 8192;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _length;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _maxRow;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _rowIndex;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _position;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffer;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private byte[] _currentBuffer;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _collectPoolItems = true;
+        private MultiPosition _position;
+        private MultiPosition _maxLength;
 
         #region Allocators
         private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
@@ -49,7 +47,7 @@ namespace TWCore.IO
             public int InitialSize => 4;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
             public int DropTimeFrequencyInSeconds => 120;
-            public void DropAction(byte[] value) {}
+            public void DropAction(byte[] value) { }
             public byte[] New() => new byte[MaxLength];
             public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
         }
@@ -64,17 +62,110 @@ namespace TWCore.IO
         }
         #endregion
 
+        #region Nested Types
+        private readonly struct MultiPosition
+        {
+            public readonly int Row;
+            public readonly int Index;
+            public readonly int GlobalIndex;
+
+            #region .ctor
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public MultiPosition(int globalIndex)
+            {
+                Row = (globalIndex / MaxLength);
+                Index = (globalIndex % MaxLength);
+                GlobalIndex = globalIndex;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public MultiPosition(int row, int index)
+            {
+                Row = row;
+                Index = index;
+                GlobalIndex = (row * MaxLength) + index;
+            }
+            #endregion
+
+            #region Public Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public MultiPosition FromOffset(int offset)
+            {
+                return new MultiPosition(GlobalIndex + offset);
+            }
+            #endregion
+
+            #region Override
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static MultiPosition operator +(MultiPosition a, MultiPosition b)
+                => new MultiPosition(a.GlobalIndex + b.GlobalIndex);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static MultiPosition operator +(MultiPosition a, int offset)
+                => new MultiPosition(a.GlobalIndex + offset);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static MultiPosition operator +(int offset, MultiPosition b)
+                => new MultiPosition(offset + b.GlobalIndex);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static MultiPosition operator -(MultiPosition a, MultiPosition b)
+                => new MultiPosition(a.GlobalIndex - b.GlobalIndex);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static MultiPosition operator -(MultiPosition a, int offset)
+                => new MultiPosition(a.GlobalIndex - offset);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static MultiPosition operator -(int offset, MultiPosition b)
+                => new MultiPosition(offset - b.GlobalIndex);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool operator ==(MultiPosition a, MultiPosition b)
+                => a.GlobalIndex == b.GlobalIndex;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool operator !=(MultiPosition a, MultiPosition b)
+                => a.GlobalIndex != b.GlobalIndex;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool operator <(MultiPosition a, MultiPosition b)
+                => a.GlobalIndex < b.GlobalIndex;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool operator <=(MultiPosition a, MultiPosition b)
+                => a.GlobalIndex <= b.GlobalIndex;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool operator >(MultiPosition a, MultiPosition b)
+                => a.GlobalIndex > b.GlobalIndex;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool operator >=(MultiPosition a, MultiPosition b)
+                => a.GlobalIndex >= b.GlobalIndex;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static implicit operator MultiPosition(int a)
+                => new MultiPosition(a);
+            #endregion
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public override bool Equals(object obj)
+            {
+                if (obj is MultiPosition mPos)
+                    return GlobalIndex == mPos.GlobalIndex;
+                return false;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public override int GetHashCode()
+            {
+                return GlobalIndex.GetHashCode();
+            }
+        }
+        #endregion
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
-        public override bool CanRead => true;
+        public override bool CanRead { get; } = true;
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
-        public override bool CanSeek => true;
+        public override bool CanSeek { get; } = true;
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
@@ -84,21 +175,22 @@ namespace TWCore.IO
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-		public override long Length => (_maxRow * MaxLength) + _length;
+        public override long Length => _maxLength.GlobalIndex;
         /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
         public override long Position
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (_rowIndex * MaxLength) + _position;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _position.GlobalIndex;
             set
             {
-                _rowIndex = (int)value / MaxLength;
-                _position = (int)value % MaxLength;
-                _currentBuffer = _buffer[_rowIndex];
+                if (value >= _maxLength.GlobalIndex)
+                    _position = _maxLength;
+                else if (value <= 0)
+                    _position = 0;
+                else
+                    _position = (int)value;
             }
         }
         #endregion
@@ -106,42 +198,40 @@ namespace TWCore.IO
         #region .ctor
         /// <inheritdoc />
         /// <summary>
-        /// Recycle ByteArray MemoryStream
+        /// Recycle Arrays MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream() : this(null, 0, 0, true) { }
         /// <inheritdoc />
         /// <summary>
-        /// Recycle ByteArray MemoryStream
+        /// Recycle Arrays MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer) : this(buffer, 0, buffer?.Length ?? 0, true) { }
         /// <inheritdoc />
         /// <summary>
-        /// Recycle ByteArray MemoryStream
+        /// Recycle Arrays MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, bool writable) : this(buffer, 0, buffer?.Length ?? 0, writable) { }
         /// <inheritdoc />
         /// <summary>
-        /// Recycle ByteArray MemoryStream
+        /// Recycle Arrays MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, int index, int count) : this(buffer, index, count, true) { }
         /// <inheritdoc />
         /// <summary>
-        /// Recycle ByteArray MemoryStream
+        /// Recycle Arrays MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, int index, int count, bool writable)
         {
-            _currentBuffer = ByteArrayPool.New();
-            _buffer = ListByteArrayPool.New();
-            _buffer.Add(_currentBuffer);
-            _maxRow = 0;
-            if (buffer != null)
-                Write(buffer, index, count);
+            _buffers = ListByteArrayPool.New();
+            _buffers.Add(ByteArrayPool.New());
             _canWrite = writable;
+            if (buffer != null)
+                Write(buffer.AsSpan(index, count));
         }
         /// <summary>
         /// RecycleMemoryStream finalizer
@@ -158,94 +248,82 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Dispose(bool disposing)
         {
-            if (_buffer != null)
-            {
-                _currentBuffer = null;
-                if (_collectPoolItems)
-                {
-                    foreach (var array in _buffer)
-                        ByteArrayPool.Store(array);
-                    ListByteArrayPool.Store(_buffer);
-                }
-                _buffer = null;
-            }
-            base.Dispose(disposing);
+            Close();
         }
         #endregion
 
-        #region Abstract Override Methods
+        #region Read
         /// <inheritdoc />
         /// <summary>
-        /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+        /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
         /// </summary>
+        /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush() { }
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets the position within the current stream.
-        /// </summary>
-        /// <param name="offset">A byte offset relative to the origin parameter.</param>
-        /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
-        /// <returns>The new position within the current stream.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin)
+        public override int ReadByte()
         {
-            var length = ((_buffer.Count - 1) * MaxLength) + _length;
-            var currentPosition = (_rowIndex * MaxLength) + _position;
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    currentPosition = (int)offset;
-                    break;
-                case SeekOrigin.Current:
-                    currentPosition += (int)offset;
-                    break;
-                case SeekOrigin.End:
-                    currentPosition = length + (int)offset;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(origin), origin, null);
-            }
-            Position = currentPosition;
-            return currentPosition;
+            if (_isClosed)
+                throw new IOException("The stream is closed.");
+            var cPos = _position;
+            if (cPos >= _maxLength) return -1;
+            var res = _buffers[cPos.Row][cPos.Index];
+            _position = _position + 1;
+            return res;
         }
-        /// <inheritdoc />
         /// <summary>
-        /// Sets the length of the current stream.
+        /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
-        /// <param name="value">The desired length of the current stream in bytes.</param>
+        /// <param name="buffer">Buffer. When this method returns, the buffer contains the values between offset and (offset + count - 1).</param>
+        /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+        /// <exception cref="IOException">Exception when the stream is closed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value)
+#if COMPATIBILITY
+        public int Read(Span<byte> buffer)
+#else
+        public override int Read(Span<byte> buffer)
+#endif
         {
-            var val = ((double)value / MaxLength);
-            var rowIndex = (int)val;
-            var nRows = rowIndex + 1;
-            var nlength = (int)((val - rowIndex) * MaxLength);
-            if (nRows == _buffer.Count)
+            if (_isClosed)
+                throw new IOException("The stream is closed.");
+            var bLength = buffer.Length;
+            if (bLength == 0) return 0;
+            var fromPos = _position;
+            if (fromPos >= _maxLength) return -1;
+            if (bLength > 1)
             {
-                if (_length > nlength)
-                    Array.Clear(_currentBuffer, nlength - 1, _length - nlength);
-                return;
-            }
-            if (nRows < _buffer.Count)
-            {
-                while (nRows < _buffer.Count)
+                var toPos = _position + bLength;
+                if (toPos > _maxLength)
+                    toPos = _maxLength;
+
+                if (fromPos.Row == toPos.Row)
                 {
-                    ByteArrayPool.Store(_currentBuffer);
-                    var lastIdx = _buffer.Count - 1;
-                    _currentBuffer = _buffer[lastIdx];
-                    _buffer.RemoveAt(lastIdx);
-                    _length = nlength;
+                    var source = _buffers[fromPos.Row].AsSpan(fromPos.Index, toPos.Index - fromPos.Index);
+                    source.CopyTo(buffer);
+                    _position += source.Length;
+                    return source.Length;
                 }
-                Array.Clear(_currentBuffer, _length - 1, MaxLength - _length);
+
+                int readLength = 0;
+                for (var i = fromPos.Row; i <= toPos.Row; i++)
+                {
+                    Span<byte> source;
+
+                    if (i == fromPos.Row)
+                        source = _buffers[i].AsSpan(fromPos.Index, MaxLength - fromPos.Index);
+                    else if (i == toPos.Row)
+                        source = _buffers[i].AsSpan(0, toPos.Index);
+                    else
+                        source = _buffers[i].AsSpan();
+
+                    source.CopyTo(buffer);
+                    buffer = buffer.Slice(source.Length);
+                    readLength += source.Length;
+                }
+                _position += readLength;
+                return readLength;
             }
-            if (nRows <= _buffer.Count) return;
-            for (var i = _buffer.Count; i < nRows; i++)
-            {
-                _currentBuffer = ByteArrayPool.New();
-                _buffer.Add(_currentBuffer);
-                _maxRow++;
-            }
+            buffer[0] = _buffers[fromPos.Row][fromPos.Index];
+            _position = _position + 1;
+            return 1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -257,32 +335,114 @@ namespace TWCore.IO
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
+            => Read(buffer.AsSpan(offset, count));
+        /// <inheritdoc />
+        /// <summary>
+        /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
+        /// </summary>
+        /// <param name="buffer">An array of bytes. When this method returns, the buffer contains the specified byte array with the values between offset and (offset + count - 1) replaced by the bytes read from the current source.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin storing the data read from the current stream.</param>
+        /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => Task.FromResult(Read(buffer.AsSpan(offset, count)));
+        /// <summary>
+        /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
+        /// </summary>
+        /// <param name="buffer">Buffer. When this method returns, the buffer contains the values between offset and (offset + count - 1).</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+        /// <exception cref="IOException">Exception when the stream is closed.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if COMPATIBILITY
+        public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+#else
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+#endif
+            => new ValueTask<int>(Read(buffer.Span));
+        #endregion
+
+        #region Write
+        /// <inheritdoc />
+        /// <summary>
+        /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
+        /// </summary>
+        /// <param name="value">The byte to write to the stream.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void WriteByte(byte value)
         {
-            var total = 0;
-            while (count > 0)
+            if (_isClosed)
+                throw new IOException("The stream is closed.");
+            if (!_canWrite)
+                throw new IOException("The stream is readonly.");
+            var cPos = _position;
+            if (cPos.Row >= _buffers.Count)
+                _buffers.Add(ByteArrayPool.New());
+            _buffers[cPos.Row][cPos.Index] = value;
+            _position = _position + 1;
+            if (_position > _maxLength)
+                _maxLength = _position;
+        }
+        /// <summary>
+        /// Writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+        /// </summary>
+        /// <param name="buffer">A buffer to write the values</param>
+        /// <exception cref="IOException">Exception when the stream is closed or is readonly.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if COMPATIBILITY
+        public void Write(ReadOnlySpan<byte> buffer)
+#else
+        public override void Write(ReadOnlySpan<byte> buffer)
+#endif
+        {
+            if (_isClosed)
+                throw new IOException("The stream is closed.");
+            if (!_canWrite)
+                throw new IOException("The stream is readonly.");
+            var cPos = _position;
+            var fPos = _position + buffer.Length;
+            var missRows = (fPos.Row + 1) - _buffers.Count;
+            for (var i = 0; i < missRows; i++)
+                _buffers.Add(ByteArrayPool.New());
+
+            if (cPos.Row == fPos.Row)
             {
-                var clength = (_rowIndex == _maxRow) ? _length : MaxLength;
-                var remain = clength - _position;
-                if (remain == 0)
-                {
-                    if (_rowIndex < _maxRow)
-                    {
-                        _rowIndex++;
-                        _currentBuffer = _buffer[_rowIndex];
-                        _position = 0;
-                        remain = (_rowIndex == _maxRow) ? _length : MaxLength;
-                    }
-                    else
-                        return total;
-                }
-                var canRead = remain < count ? remain : count;
-                Buffer.BlockCopy(_currentBuffer, _position, buffer, offset, canRead);
-                total += canRead;
-                _position += canRead;
-                offset += canRead;
-                count -= canRead;
+                var destination = _buffers[cPos.Row].AsSpan(cPos.Index, fPos.Index - cPos.Index);
+                buffer.CopyTo(destination);
+                buffer = buffer.Slice(destination.Length);
+                if (buffer.Length > 0)
+                    throw new IOException("Write error");
+                _position = fPos;
+                if (_position > _maxLength)
+                    _maxLength = _position;
+                return;
             }
-            return total;
+
+            int writeLength = 0;
+            for (var i = cPos.Row; i <= fPos.Row; i++)
+            {
+                Span<byte> destination;
+
+                if (i == cPos.Row)
+                    destination = _buffers[i].AsSpan(cPos.Index, MaxLength - cPos.Index);
+                else if (i == fPos.Row)
+                    destination = _buffers[i].AsSpan(0, fPos.Index);
+                else
+                    destination = _buffers[i].AsSpan();
+
+                var bcopy = buffer.Slice(0, destination.Length);
+                bcopy.CopyTo(destination);
+                buffer = buffer.Slice(destination.Length);
+                writeLength += destination.Length;
+            }
+            if (buffer.Length != 0)
+                throw new IOException("Write error");
+            _position = fPos;
+
+            if (_position > _maxLength)
+                _maxLength = _position;
         }
         /// <inheritdoc />
         /// <summary>
@@ -292,90 +452,164 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public sealed override void Write(byte[] buffer, int offset, int count)
+        public override void Write(byte[] buffer, int offset, int count)
+            => Write(buffer.AsSpan(offset, count));
+        /// <inheritdoc />
+        /// <summary>
+        ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+        /// </summary>
+        /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
+        /// <param name="count">The number of bytes to be written to the current stream.</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            while (count > 0)
+            Write(buffer.AsSpan(offset, count));
+            return Task.CompletedTask;
+        }
+        /// <summary>
+        /// Writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+        /// </summary>
+        /// <param name="buffer">A buffer to write the values</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <exception cref="IOException">Exception when the stream is closed or is readonly.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if COMPATIBILITY
+        public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+#else
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+#endif
+        {
+            Write(buffer.Span);
+            return new ValueTask();
+        }
+        #endregion
+
+        #region Flush
+        /// <inheritdoc />
+        /// <summary>
+        /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Flush()
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+        #endregion
+
+        #region CopyTo
+        /// <inheritdoc />
+        /// <summary>
+        /// Copy stream data to other stream
+        /// </summary>
+        /// <param name="destination">Destination stream</param>
+        /// <param name="bufferSize">Buffer size. (not used)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if COMPATIBILITY
+        public new void CopyTo(Stream destination, int bufferSize)
+#else
+        public override void CopyTo(Stream destination, int bufferSize)
+#endif
+        {
+            var mArray = new MultiArray<byte>(_buffers, (int)Position, (int)Length);
+            mArray.CopyTo(destination);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Copy stream data to other stream
+        /// </summary>
+        /// <param name="destination">Destination stream</param>
+        /// <param name="bufferSize">Buffer size. (not used)</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+        {
+            var mArray = new MultiArray<byte>(_buffers, 0, (int)Length);
+            return mArray.CopyToAsync(destination);
+        }
+        #endregion
+
+        #region Other Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets the position within the current stream.
+        /// </summary>
+        /// <param name="offset">A byte offset relative to the origin parameter.</param>
+        /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
+        /// <returns>The new position within the current stream.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            if (origin == SeekOrigin.Begin)
             {
-                var remain = MaxLength - _position;
-                if (remain == 0)
+                Position = offset;
+            }
+            else if (origin == SeekOrigin.End)
+            {
+                Position = _maxLength.GlobalIndex + offset;
+            }
+            else
+            {
+                _position = _position + (int)offset;
+            }
+            return Position;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets the length of the current stream.
+        /// </summary>
+        /// <param name="value">The desired length of the current stream in bytes.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void SetLength(long value)
+        {
+            if (value < 0)
+                value = 0;
+            _maxLength = (int) value;
+        }
+        /// <summary>
+        /// Close stream
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Close()
+        {
+            if (_buffers != null)
+            {
+                if (_collectPoolItems)
                 {
-                    _currentBuffer = ByteArrayPool.New();
-                    _buffer.Add(_currentBuffer);
-                    _maxRow++;
-                    _rowIndex++;
-                    _position = 0;
-                    _length = 0;
-                    remain = MaxLength;
+                    foreach (var array in _buffers)
+                        ByteArrayPool.Store(array);
+                    ListByteArrayPool.Store(_buffers);
                 }
-                var canWrite = remain < count ? remain : count;
-                Buffer.BlockCopy(buffer, offset, _currentBuffer, _position, canWrite);
-                offset += canWrite;
-                _position += canWrite;
-                if (_position > _length) _length = _position;
-                count -= canWrite;
+                _buffers = null;
+                _isClosed = true;
             }
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
-        /// </summary>
-        /// <param name="value">The byte to write to the stream.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteByte(byte value)
-        {
-            if (MaxLength > _position)
-            {
-                _currentBuffer[_position] = value;
-                _position++;
-                if (_position > _length) _length = _position;
-                return;
-            }
-            _currentBuffer = ByteArrayPool.New();
-            _buffer.Add(_currentBuffer);
-            _maxRow++;
-            _rowIndex++;
-            _position = 1;
-            _length = 1;
-            _currentBuffer[0] = value;
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
-        /// </summary>
-        /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
-        {
-            if (_rowIndex == _maxRow)
-                return (_length > _position) ? _currentBuffer[_position++] : -1;
-            if (MaxLength > _position)
-                return _currentBuffer[_position++];
-            _rowIndex++;
-            _currentBuffer = _buffer[_rowIndex];
-            _position = 1;
-            return _currentBuffer[0];
         }
         /// <summary>
         /// Writes the stream contents to a byte array, regardless of the Position property
         /// </summary>
         /// <returns>A new byte array</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ToArray()
-        {
-            var tmp = new byte[Length];
-            for (var i = 0; i < _maxRow; i++)
-                Buffer.BlockCopy(_buffer[i], 0, tmp, i * MaxLength, MaxLength);
-            Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * MaxLength, _length);
-            return tmp;
-        }
+            => new MultiArray<byte>(_buffers, 0, (int)Length).ToArray();
         /// <summary>
         /// Get the internal buffer as MultiArray
         /// </summary>
         /// <returns>MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<byte> GetMultiArray()
         {
             _collectPoolItems = false;
-            return new MultiArray<byte>(_buffer, 0, (int)Length);
+            return new MultiArray<byte>(_buffers, 0, (int)Length);
         }
         #endregion
     }

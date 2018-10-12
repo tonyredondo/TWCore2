@@ -433,7 +433,7 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer, 0);
             if (dataLength > -1)
             {
-                const int segmentLength = 2048;
+                const int segmentLength = 8192;
                 var rows = dataLength / segmentLength;
                 var pos = dataLength % segmentLength;
                 if (pos > 0)
@@ -473,7 +473,7 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                const int segmentLength = 2048;
+                const int segmentLength = 8192;
                 var rows = dataLength / segmentLength;
                 var pos = dataLength % segmentLength;
                 if (pos > 0)
@@ -529,7 +529,7 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer, 0);
             if (dataLength > -1)
             {
-                const int segmentLength = 2048;
+                const int segmentLength = 8192;
                 var rows = dataLength / segmentLength;
                 var pos = dataLength % segmentLength;
                 if (pos > 0)
@@ -569,7 +569,7 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                const int segmentLength = 2048;
+                const int segmentLength = 8192;
                 var rows = dataLength / segmentLength;
                 var pos = dataLength % segmentLength;
                 if (pos > 0)

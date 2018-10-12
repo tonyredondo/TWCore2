@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using TWCore.Compression;
+using TWCore.IO;
 using TWCore.Messaging;
 using TWCore.Reflection;
 using TWCore.Serialization;
@@ -37,7 +38,7 @@ namespace TWCore.Tests
 
             if (info.Arguments?.Contains("/complex") == true)
             {
-                AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
+                AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
                 var file = "c:\\temp\\complexObject.nbin.deflate";
                 var serializer = SerializerManager.GetByFileName(file);
                 var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
@@ -187,7 +188,7 @@ namespace TWCore.Tests
             return memStream.Length.ToReadableBytes().Text;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, MemoryStream memStream)
+        private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, Stream memStream)
         {
             double totalValue;
             memStream.Position = 0;

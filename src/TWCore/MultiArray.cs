@@ -42,7 +42,7 @@ namespace TWCore
         /// </summary>
         public static MultiArray<T> Empty = new MultiArray<T>();
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
         internal readonly IList<T[]> ListOfArrays;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly int _offset;

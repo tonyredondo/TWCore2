@@ -321,18 +321,12 @@ namespace TWCore.IO
             var missRows = (fRow + 1) - _buffers.Count;
             for (var i = 0; i < missRows; i++)
                 _buffers.Add(ByteArrayPool.New());
-
             if (cRow == fRow)
             {
                 var destination = _buffers[cRow].AsSpan(cIndex, fIndex - cIndex);
                 buffer.CopyTo(destination);
                 buffer = buffer.Slice(destination.Length);
-                if (buffer.Length > 0)
-                    throw new IOException("Write error");
-                _currentPosition = finalPosition;
-                if (_currentPosition > _totalLength)
-                    _totalLength = _currentPosition;
-                return;
+                goto final;
             }
 
             int writeLength = 0;
@@ -352,6 +346,8 @@ namespace TWCore.IO
                 buffer = buffer.Slice(destination.Length);
                 writeLength += destination.Length;
             }
+
+            final:
             if (buffer.Length != 0)
                 throw new IOException("Write error");
             _currentPosition = finalPosition;

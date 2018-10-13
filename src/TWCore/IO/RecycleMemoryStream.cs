@@ -171,8 +171,7 @@ namespace TWCore.IO
             if (_isClosed)
                 throw new IOException("The stream is closed.");
             if (_currentPosition >= _totalLength) return -1;
-            var row = _currentPosition / MaxLength;
-            var index = _currentPosition % MaxLength;
+            var row = Math.DivRem(_currentPosition, MaxLength, out var index);
             var res = _buffers[row][index];
             _currentPosition++;
             return res;
@@ -195,15 +194,13 @@ namespace TWCore.IO
             var bLength = buffer.Length;
             if (bLength == 0) return 0;
             if (_currentPosition >= _totalLength) return -1;
-            var fromRow = _currentPosition / MaxLength;
-            var fromIndex = _currentPosition % MaxLength;
+            var fromRow = Math.DivRem(_currentPosition, MaxLength, out var fromIndex);
             if (bLength > 1)
             {
                 var toPos = _currentPosition + bLength;
                 if (toPos > _totalLength)
                     toPos = _totalLength;
-                var toRow = toPos / MaxLength;
-                var toIndex = toPos % MaxLength;
+                var toRow = Math.DivRem(toPos, MaxLength, out var toIndex);
 
                 if (fromRow == toRow)
                 {
@@ -288,8 +285,7 @@ namespace TWCore.IO
                 throw new IOException("The stream is closed.");
             if (!_canWrite)
                 throw new IOException("The stream is readonly.");
-            var cRow = _currentPosition / MaxLength;
-            var cIndex = _currentPosition % MaxLength;
+            var cRow = Math.DivRem(_currentPosition, MaxLength, out var cIndex);
             if (cRow >= _buffers.Count)
                 _buffers.Add(ByteArrayPool.New());
             _buffers[cRow][cIndex] = value;
@@ -314,10 +310,8 @@ namespace TWCore.IO
             if (!_canWrite)
                 throw new IOException("The stream is readonly.");
             var finalPosition = _currentPosition + buffer.Length;
-            var cRow = _currentPosition / MaxLength;
-            var cIndex = _currentPosition % MaxLength;
-            var fRow = finalPosition / MaxLength;
-            var fIndex = finalPosition % MaxLength;
+            var cRow = Math.DivRem(_currentPosition, MaxLength, out var cIndex);
+            var fRow = Math.DivRem(finalPosition, MaxLength, out var fIndex);
             var missRows = (fRow + 1) - _buffers.Count;
             for (var i = 0; i < missRows; i++)
                 _buffers.Add(ByteArrayPool.New());

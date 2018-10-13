@@ -38,13 +38,13 @@ namespace TWCore.Tests
 
             if (info.Arguments?.Contains("/complex") == true)
             {
-                AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
+                AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
                 var file = "c:\\temp\\complexObject.nbin.deflate";
                 var serializer = SerializerManager.GetByFileName(file);
                 var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
                 var value = rMsg.Body.GetValue();
 
-                //RunTestEx(value, 200, null);
+                RunTestEx(value, 200, null);
                 GC.Collect();
                 GC.WaitForFullGCComplete();
                 RunTestEx(value, 200, new GZipCompressor());
@@ -126,7 +126,7 @@ namespace TWCore.Tests
         {
             var vType = value?.GetType() ?? typeof(object);
             var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
-            var memStream = new MemoryStream();
+            var memStream = new RecycleMemoryStream();
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
             var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
@@ -158,7 +158,8 @@ namespace TWCore.Tests
         private void RunTestEx(object value, int times, ICompressor compressor)
         {
             var vType = value?.GetType() ?? typeof(object);
-            var memStream = new MemoryStream();
+            //var memStream = new MemoryStream();
+            var memStream = new RecycleMemoryStream();
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };

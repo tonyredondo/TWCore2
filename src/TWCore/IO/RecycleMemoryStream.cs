@@ -193,7 +193,7 @@ namespace TWCore.IO
                 throw new IOException("The stream is closed.");
             var bLength = buffer.Length;
             if (bLength == 0) return 0;
-            if (_currentPosition >= _totalLength) return -1;
+            if (_currentPosition >= _totalLength) return 0;
             var fromRow = Math.DivRem(_currentPosition, MaxLength, out var fromIndex);
             if (bLength > 1)
             {

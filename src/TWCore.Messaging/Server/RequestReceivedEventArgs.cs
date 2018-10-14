@@ -111,8 +111,14 @@ namespace TWCore.Messaging.Server
         /// <param name="obj">Response body</param>
         public void SetResponseBody(object obj)
         {
-            if (obj != null)
-                Response.Body = _senderSerializer?.GetSerializedObject(obj) ?? ResponseMessage.NoResponseSerialized;
+            if (obj == ResponseMessage.NoResponse)
+                Response.Body = ResponseMessage.NoResponseSerialized;
+            else if (obj is SerializedObject serObj)
+                Response.Body = serObj;
+            else if (_senderSerializer != null && obj != null)
+                Response.Body = _senderSerializer.GetSerializedObject(obj);
+            else
+                Response.Body = ResponseMessage.NoResponseSerialized;
         }
     }
 }

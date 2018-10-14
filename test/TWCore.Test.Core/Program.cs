@@ -86,7 +86,7 @@ namespace TWCore.Test.Core
                 matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);
 
                 var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
-
+                
                 var request = new TWCore.Net.RPC.RPCRequestMessage
                 {
                     MessageId = Guid.NewGuid(),

@@ -267,10 +267,27 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGet(TKey key, out TItem item)
         {
-            item = default;
-            if (Count == 0) return false;
+            if (key == null)
+                throw new ArgumentNullException(nameof(key));
+
             lock (Ilocker)
-                return Dictionary.TryGetValue(key, out item);
+            {
+                if (Dictionary != null)
+                    return Dictionary.TryGetValue(key, out item);
+
+                foreach (TItem itemInItems in Items)
+                {
+                    TKey keyInItems = GetKeyForItem(itemInItems);
+                    if (keyInItems != null && Comparer.Equals(key, keyInItems))
+                    {
+                        item = itemInItems;
+                        return true;
+                    }
+                }
+            }
+
+            item = default;
+            return false;
         }
         #endregion
 

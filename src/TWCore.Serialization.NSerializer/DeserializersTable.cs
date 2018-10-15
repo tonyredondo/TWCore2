@@ -1010,12 +1010,186 @@ namespace TWCore.Serialization.NSerializer
 
 #endif
 
-        #endregion
+		#endregion
 
-        //
+		//
 
-        #region GenericObject Deserializer
+		#region GenericObject Deserializer
+		internal static readonly ConcurrentDictionary<MultiArray<byte>, GenericDeserializerMetaDataOfType> GenericMultiArrayMetadata = new ConcurrentDictionary<MultiArray<byte>, GenericDeserializerMetaDataOfType>(MultiArrayBytesComparer.Instance);
+		private readonly DeserializerCache<GenericDeserializerMetaDataOfType> _genericTypeCache = new DeserializerCache<GenericDeserializerMetaDataOfType>();
 
-        #endregion
-    }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public object GenericObjectDeserialize(Stream stream)
+		{
+			object value;
+			try
+			{
+				Stream = stream;
+				var firstByte = stream.ReadByte();
+				if (firstByte == -1)
+					throw new IOException("The stream has been closed.");
+				if (firstByte != DataBytesDefinition.Start)
+					throw new FormatException("The stream is not in NSerializer format.");
+				value = GenericReadValue(StreamReadByte());
+				while (StreamReadByte() != DataBytesDefinition.End) { }
+			}
+			finally
+			{
+				_dateTimeOffsetCache.Clear();
+				_dateTimeCache.Clear();
+				_guidCache.Clear();
+				_decimalCache.Clear();
+				_doubleCache.Clear();
+				_floatCache.Clear();
+				_longCache.Clear();
+				_uLongCache.Clear();
+				_stringCache8.Clear();
+				_stringCache16.Clear();
+				_stringCache32.Clear();
+				_stringCache.Clear();
+				_timespanCache.Clear();
+				ObjectCache.Clear();
+				_genericTypeCache.Clear();
+				_serErrors.Clear();
+				Stream = null;
+			}
+			return value;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private object GenericReadValue(byte type)
+		{
+			if (type == DataBytesDefinition.ValueNull) return null;
+			if (type == DataBytesDefinition.RefObject)
+			{
+				var idx = StreamReadInt();
+				return ObjectCache.Get(idx);
+			}
+			if (ReadValues.TryGetValue(type, out var mTuple))
+			{
+				_parameters[0] = type;
+				return mTuple.Accessor(this, _parameters);
+			}
+
+			GenericDeserializerMetaDataOfType metadata = default;
+
+			if (type == DataBytesDefinition.TypeStart)
+			{
+				var length = StreamReadInt();
+				var typeBytes = ArrayPool<byte>.Shared.Rent(length);
+				Stream.Read(typeBytes, 0, length);
+				var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
+				if (!GenericMultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
+				{
+					var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
+					var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
+					var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
+					var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
+					var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
+					var vTypeString = typeData.Substring(0, fsCol1);
+					var isArray = typeData[fsCol1 + 1] == '1';
+					var isList = typeData[fsCol2 + 1] == '1';
+					var isDictionary = typeData[fsCol3 + 1] == '1';
+					var propertiesString = typeData.Substring(fsCol4 + 1);
+					var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
+					metadata = new GenericDeserializerMetaDataOfType(vTypeString, isArray, isList, isDictionary, properties);
+					GenericMultiArrayMetadata.TryAdd(new MultiArray<byte>(subTypeBytes.ToArray()), metadata);
+				}
+				ArrayPool<byte>.Shared.Return(typeBytes);
+				_genericTypeCache.Set(metadata);
+			}
+			else if (type == DataBytesDefinition.RefType)
+			{
+				metadata = _genericTypeCache.Get(StreamReadInt());
+			}
+			return GenericFillObject(metadata);
+
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private GenericObject GenericFillObject(GenericDeserializerMetaDataOfType metadata)
+		{
+			//try
+			//{
+			//	object value;
+			//	if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)
+			//	{
+			//		var capacity = StreamReadInt();
+			//		value = descriptor.Activator(capacity);
+			//		ObjectCache.Set(value);
+
+			//		if (descriptor.Metadata.IsArray)
+			//		{
+			//			var aValue = (Array)value;
+			//			for (var i = 0; i < capacity; i++)
+			//			{
+			//				var item = ReadValue(StreamReadByte());
+			//				aValue.SetValue(item, i);
+			//			}
+			//		}
+			//		else if (descriptor.Metadata.IsList)
+			//		{
+			//			var iValue = (IList)value;
+			//			for (var i = 0; i < capacity; i++)
+			//			{
+			//				var item = ReadValue(StreamReadByte());
+			//				iValue.Add(item);
+			//			}
+			//		}
+			//		else if (descriptor.Metadata.IsDictionary)
+			//		{
+			//			var dictio = (IDictionary)value;
+			//			for (var i = 0; i < capacity; i++)
+			//			{
+			//				var dKey = ReadValue(StreamReadByte());
+			//				var dValue = ReadValue(StreamReadByte());
+			//				dictio[dKey] = dValue;
+			//			}
+			//		}
+			//	}
+			//	else
+			//	{
+			//		value = descriptor.Activator();
+			//		ObjectCache.Set(value);
+			//	}
+
+			//	for (var i = 0; i < metadata.Properties.Length; i++)
+			//	{
+			//		var name = metadata.Properties[i];
+			//		var propValue = ReadValue(StreamReadByte());
+
+			//		if (descriptor.Properties.TryGetValue(name, out var fProp))
+			//		{
+			//			try
+			//			{
+			//				fProp.SetValue(value, propValue);
+			//			}
+			//			catch (Exception ex)
+			//			{
+			//				var metaProperties = metadata.Properties.Join(", ");
+			//				var typeProperties = descriptor.Metadata.Properties?.Join(", ");
+			//				var strMsg = $"Error trying to fill the property '{name}' of the object type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}].";
+			//				if (_serErrors.Add(strMsg))
+			//					Core.Log.Error(ex, strMsg);
+			//			}
+			//		}
+			//		else
+			//		{
+			//			var strMsg = string.Format("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type?.FullName);
+			//			if (_serErrors.Add(strMsg))
+			//				Core.Log.Warning(strMsg);
+			//		}
+			//	}
+
+			//	StreamReadByte();
+			//	return value;
+			//}
+			//catch (Exception ex)
+			//{
+			//	var metaProperties = metadata.Properties?.Join(", ");
+			//	var typeProperties = descriptor.Metadata.Properties?.Join(", ");
+			//	throw new Exception($"Error trying to fill an object of type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
+			//}
+			return null;
+		}
+		#endregion
+	}
 }

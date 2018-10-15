@@ -30,7 +30,6 @@ namespace TWCore.Serialization.NSerializer
         public readonly bool IsDictionary;
         public readonly string[] Properties;
 
-
         #region .ctor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GenericDeserializerMetaDataOfType(string type, bool isArray, bool isList, bool isDictionary, string[] properties)
@@ -93,6 +92,5 @@ namespace TWCore.Serialization.NSerializer
         public static bool operator ==(GenericDeserializerMetaDataOfType meta1, GenericDeserializerMetaDataOfType meta2)
             => meta1.Equals(meta2);
         #endregion
-
     }
 }

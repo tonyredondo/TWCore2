@@ -31,12 +31,16 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class DeserializersTable
     {
+        #region Static fields
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly Dictionary<Type, MethodInfo> ReadValuesFromType = new Dictionary<Type, MethodInfo>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
         internal static readonly ConcurrentDictionary<MultiArray<byte>, DeserializerMetadataOfTypeRuntime> MultiArrayMetadata = new ConcurrentDictionary<MultiArray<byte>, DeserializerMetadataOfTypeRuntime>(MultiArrayBytesComparer.Instance);
         internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
+        #endregion
+
+        #region Fields
         private readonly object[] _parameters = new object[1];
         internal readonly DeserializerCache<object> ObjectCache = new DeserializerCache<object>();
         private readonly DeserializerCache<DeserializerMetadataOfTypeRuntime> _typeCache = new DeserializerCache<DeserializerMetadataOfTypeRuntime>();
@@ -55,6 +59,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
         private readonly HashSet<string> _serErrors = new HashSet<string>();
         protected Stream Stream;
+        #endregion
 
 
         #region Attributes
@@ -84,6 +89,7 @@ namespace TWCore.Serialization.NSerializer
         }
         #endregion
 
+        #region Normal Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
@@ -322,6 +328,7 @@ namespace TWCore.Serialization.NSerializer
                 throw new Exception($"Error trying to fill an object of type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
             }
         }
+        #endregion
 
         #region Read Values
         [DeserializerMethod(DataBytesDefinition.BoolArray, ReturnType = typeof(bool[]))]
@@ -1002,6 +1009,12 @@ namespace TWCore.Serialization.NSerializer
         }
 
 #endif
+
+        #endregion
+
+        //
+
+        #region GenericObject Deserializer
 
         #endregion
     }

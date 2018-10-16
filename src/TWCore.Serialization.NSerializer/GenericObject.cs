@@ -218,14 +218,14 @@ namespace TWCore.Serialization.NSerializer
 		}
 		#endregion
 
-		#region Internal Methods
+		#region Other Methods
 		/// <summary>
 		/// Set property value
 		/// </summary>
 		/// <param name="key">Object property key</param>
 		/// <param name="value">Object property value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void SetProperty(string key, object value)
+		public void SetProperty(string key, object value)
 		{
 			if (value is GenericObject gObject)
 				Properties[key] = gObject;
@@ -239,7 +239,7 @@ namespace TWCore.Serialization.NSerializer
 		/// </summary>
 		/// <param name="capacity">Array capacity</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void InitArray(int capacity)
+		public void InitArray(int capacity)
 		{
 			Array = new GenericObject[capacity];
 		}
@@ -249,7 +249,7 @@ namespace TWCore.Serialization.NSerializer
 		/// <param name="index">Index of the array</param>
 		/// <param name="value">Object value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void SetArrayValue(int index, object value)
+		public void SetArrayValue(int index, object value)
 		{
 			if (value is GenericObject gObject)
 				Array[index] = gObject;
@@ -264,7 +264,7 @@ namespace TWCore.Serialization.NSerializer
 		/// <param name="index">Index of the list</param>
 		/// <param name="value">Object value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void SetListValue(int index, object value)
+		public void SetListValue(int index, object value)
 		{
 			if (value is GenericObject gObject)
 				List[index] = gObject;
@@ -278,7 +278,7 @@ namespace TWCore.Serialization.NSerializer
 		/// </summary>
 		/// <param name="value">Object value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void AddListValue(object value)
+		public void AddListValue(object value)
 		{
 			if (value is GenericObject gObject)
 				List.Add(gObject);
@@ -293,7 +293,7 @@ namespace TWCore.Serialization.NSerializer
 		/// <param name="key">Dictionary key</param>
 		/// <param name="value">Dictionary value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void SetDictionaryValue(object key, object value)
+		public void SetDictionaryValue(object key, object value)
 		{
 			if (value is GenericObject gObject)
 				Dictionary[key] = gObject;

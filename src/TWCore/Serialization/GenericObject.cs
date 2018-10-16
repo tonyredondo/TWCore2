@@ -304,4 +304,5 @@ namespace TWCore.Serialization
 		}
 		#endregion
 	}
+
 }

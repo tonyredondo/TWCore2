@@ -111,9 +111,9 @@ namespace TWCore.Serialization.NSerializer
                 {
                     stream.Seek(0, SeekOrigin.Begin);
                     var genericValue = (GenericObject)GenericObjectDeserialize(stream);
-                    throw new ExceptionWithGenericObject(ex, genericValue);
+                    throw new DeserializerException(ex, genericValue);
                 }
-                throw;
+                throw new DeserializerException(ex);
             }
             finally
             {

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -31,9 +32,9 @@ namespace TWCore.Serialization.NSerializer
     [DataContract]
     public class GenericObject
     {
-        private bool _isArray;
-        private bool _isList;
-        private bool _isDictionary;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isArray;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isList;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isDictionary;
 
         #region Properties
         /// <summary>

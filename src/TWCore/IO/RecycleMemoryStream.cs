@@ -38,8 +38,8 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _collectPoolItems = true;
-        private int _currentPosition;
-        private int _totalLength;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentPosition;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _totalLength;
 
         #region Allocators
         private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>

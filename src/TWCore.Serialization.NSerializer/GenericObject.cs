@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -140,7 +141,7 @@ namespace TWCore.Serialization.NSerializer
                 IsList = metaData.IsList;
                 IsDictionary = metaData.IsDictionary;
 
-                if (metaData.Properties != null)
+                if (metaData.Properties?.Any() == true)
                 {
                     Properties = new Dictionary<string, GenericObject>();
                     foreach (var property in metaData.Properties)

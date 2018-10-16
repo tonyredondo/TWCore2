@@ -21,11 +21,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
-using TWCore.Collections;
 // ReSharper disable PossibleNullReferenceException
 #pragma warning disable 1591
 
-namespace TWCore.Serialization.NSerializer
+namespace TWCore.Serialization
 {
 	/// <summary>
 	/// Generic object
@@ -83,8 +82,8 @@ namespace TWCore.Serialization.NSerializer
 		/// Properties
 		/// </summary>
 		[DataMember, Newtonsoft.Json.JsonProperty(
-			NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore, 
-			TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None, 
+			NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+			TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
 			ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
 		public Dictionary<string, GenericObject> Properties { get; set; }
 		/// <summary>
@@ -128,31 +127,32 @@ namespace TWCore.Serialization.NSerializer
 		/// <summary>
 		/// Generic object
 		/// </summary>
-		/// <param name="metaData">Generic deserializer metadata</param>
+		/// <param name="type">Type value</param>
+		/// <param name="isArray">Is Array value</param>
+		/// <param name="isList">Is List value</param>
+		/// <param name="isDictionary">Is Dictionary value</param>
+		/// <param name="properties">Properties array value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public GenericObject(GenericDeserializerMetaDataOfType metaData)
+		public GenericObject(string type, bool isArray, bool isList, bool isDictionary, string[] properties)
 		{
-			if (metaData != null)
-			{
-				Type = metaData.Type;
-				IsArray = metaData.IsArray;
-				IsList = metaData.IsList;
-				IsDictionary = metaData.IsDictionary;
+			Type = type;
+			IsArray = isArray;
+			IsList = isList;
+			IsDictionary = isDictionary;
 
-				if (metaData.Properties?.Any() == true)
-				{
-					Properties = new Dictionary<string, GenericObject>();
-					foreach (var property in metaData.Properties)
-						Properties[property] = null;
-				}
-				if (IsList)
-				{
-					List = new List<GenericObject>();
-				}
-				if (IsDictionary)
-				{
-					Dictionary = new Dictionary<object, GenericObject>();
-				}
+			if (properties?.Any() == true)
+			{
+				Properties = new Dictionary<string, GenericObject>();
+				foreach (var property in properties)
+					Properties[property] = null;
+			}
+			if (IsList)
+			{
+				List = new List<GenericObject>();
+			}
+			if (IsDictionary)
+			{
+				Dictionary = new Dictionary<object, GenericObject>();
 			}
 		}
 		#endregion

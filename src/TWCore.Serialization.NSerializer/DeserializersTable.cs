@@ -1122,7 +1122,7 @@ namespace TWCore.Serialization.NSerializer
         {
             try
             {
-                var value = new GenericObject(metadata);
+                var value = metadata.CreateObject();
                 _genericObjectCache.Set(value);
 
                 if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)

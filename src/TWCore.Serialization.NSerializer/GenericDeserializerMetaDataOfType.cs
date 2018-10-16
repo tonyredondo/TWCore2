@@ -43,6 +43,14 @@ namespace TWCore.Serialization.NSerializer
         #endregion
 
         #region Methods
+        /// <summary>
+        /// Create Object
+        /// </summary>
+        /// <returns>GenericObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public GenericObject CreateObject()
+            => new GenericObject(Type, IsArray, IsList, IsDictionary, Properties);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(GenericDeserializerMetaDataOfType other)
         {

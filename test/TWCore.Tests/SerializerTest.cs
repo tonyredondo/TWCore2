@@ -54,7 +54,7 @@ namespace TWCore.Tests
                     var jsonSerializer = new JsonTextSerializer { Indent = true };
                     jsonSerializer.SerializeToFile(exGO.Value, "c:\\temp\\complexObject-GenericObject.json");
 
-                    var val =exGO.Value["Products"][5];
+                    var val = exGO.Value["Products"][5];
                 }
                 
 

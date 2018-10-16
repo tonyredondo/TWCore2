@@ -166,7 +166,7 @@ namespace TWCore.Serialization
         public object GetValue()
         {
             if (Data == MultiArray<byte>.Empty) return null;
-            var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, true);
+            var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, false);
             if (string.IsNullOrWhiteSpace(SerializerMimeType))
             {
                 if (type == typeof(byte[]))
@@ -176,7 +176,7 @@ namespace TWCore.Serialization
                 return null;
             }            
             var serializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
-            var value = serializer.Deserialize(Data, type);
+            var value = serializer.Deserialize(Data, type ?? typeof(object));
             return value;
         }
         /// <summary>

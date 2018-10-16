@@ -365,6 +365,7 @@ namespace TWCore
 
             #region Run On Init Actions
             var onError = false;
+            var lstExceptions = new List<Exception>();
             lock (OninitActions)
             {
                 while (OninitActions.Count > 0)
@@ -376,6 +377,7 @@ namespace TWCore
                     catch (Exception ex)
                     {
                         Log.Write(ex);
+                        lstExceptions.Add(ex);
                         onError = true;
                     }
                 }
@@ -385,7 +387,7 @@ namespace TWCore
             Log.Start();
 
             if (onError)
-                throw new Exception("Error initializing the application.");
+                throw new AggregateException("Error initializing the application.", lstExceptions);
 
             Log.LibDebug("Core has been initialized.");
         }

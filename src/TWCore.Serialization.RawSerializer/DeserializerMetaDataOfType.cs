@@ -45,6 +45,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(DeserializerMetaDataOfType other)
         {
+            if (other is null) return false;
             if (Type != other.Type) return false;
             if (IsArray != other.IsArray) return false;
             if (IsList != other.IsList) return false;

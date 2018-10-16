@@ -130,7 +130,9 @@ namespace TWCore.Serialization.RawSerializer
                     var isList = typeData[fsCol2 + 1] == '1';
                     var isDictionary = typeData[fsCol3 + 1] == '1';
                     var propertiesString = typeData.Substring(fsCol4 + 1);
-                    var valueType = Core.GetType(vTypeString);
+                    var valueType = Core.GetType(vTypeString, true);
+                    if (valueType == null)
+                        throw new Exception($"The type: {vTypeString} could not be found or loaded.");
                     var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));

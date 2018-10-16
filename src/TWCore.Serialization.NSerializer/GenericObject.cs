@@ -31,6 +31,10 @@ namespace TWCore.Serialization.NSerializer
     [DataContract]
     public class GenericObject
     {
+        private bool _isArray;
+        private bool _isList;
+        private bool _isDictionary;
+
         #region Properties
         /// <summary>
         /// Type name
@@ -40,38 +44,68 @@ namespace TWCore.Serialization.NSerializer
         /// <summary>
         /// Is Array Object
         /// </summary>
-        [XmlAttribute, DataMember]
-        public bool IsArray { get; set; }
+        [XmlIgnore]
+        public bool IsArray
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Array != null || _isArray;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _isArray = value;
+        }
         /// <summary>
         /// Is List Object
         /// </summary>
-        [XmlAttribute, DataMember]
-        public bool IsList { get; set; }
+        [XmlIgnore]
+        public bool IsList
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => List != null || _isList;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _isList = value;
+        }
         /// <summary>
         /// Is Dictionary Object
         /// </summary>
-        [XmlAttribute, DataMember]
-        public bool IsDictionary { get; set; }
+        [XmlIgnore]
+        public bool IsDictionary
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Dictionary != null || _isDictionary;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _isDictionary = value;
+        }
         /// <summary>
         /// Properties
         /// </summary>
-        [DataMember]
-        public KeyValueCollection<string, object> Properties { get; set; }
+        [DataMember, Newtonsoft.Json.JsonProperty(
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore, 
+            TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None, 
+            ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
+        public Dictionary<string, object> Properties { get; set; }
         /// <summary>
         /// Dictionary Data
         /// </summary>
-        [DataMember]
-        public KeyValueCollection<object, object> DictionaryData { get; set; }
+        [DataMember, Newtonsoft.Json.JsonProperty(
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+            TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
+            ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
+        public Dictionary<object, object> Dictionary { get; set; }
         /// <summary>
         /// List Data
         /// </summary>
-        [DataMember]
-        public List<object> ListData { get; set; }
+        [DataMember, Newtonsoft.Json.JsonProperty(
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+            TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
+            ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
+        public List<object> List { get; set; }
         /// <summary>
         /// Array Data
         /// </summary>
-        [DataMember]
-        public object[] ArrayData { get; set; }
+        [DataMember, Newtonsoft.Json.JsonProperty(
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+            TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
+            ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
+        public object[] Array { get; set; }
         #endregion
 
         #region .ctor
@@ -96,17 +130,17 @@ namespace TWCore.Serialization.NSerializer
 
                 if (metaData.Properties != null)
                 {
-                    Properties = new KeyValueCollection<string, object>();
+                    Properties = new Dictionary<string, object>();
                     foreach (var property in metaData.Properties)
                         Properties[property] = null;
                 }
                 if (IsList)
                 {
-                    ListData = new List<object>();
+                    List = new List<object>();
                 }
                 if (IsDictionary)
                 {
-                    DictionaryData = new KeyValueCollection<object, object>();
+                    Dictionary = new Dictionary<object, object>();
                 }
             }
         }
@@ -123,9 +157,9 @@ namespace TWCore.Serialization.NSerializer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (IsDictionary && DictionaryData.TryGet(key, out var dictioValue))
+                if (IsDictionary && Dictionary.TryGetValue(key, out var dictioValue))
                     return dictioValue;
-                if (Properties.TryGet(key, out var value))
+                if (Properties.TryGetValue(key, out var value))
                     return value;
                 if (!IsDictionary)
                     throw new Exception("Property is not found in the object");
@@ -142,7 +176,7 @@ namespace TWCore.Serialization.NSerializer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (IsDictionary && DictionaryData.TryGet(key, out var dictioValue))
+                if (IsDictionary && Dictionary.TryGetValue(key, out var dictioValue))
                     return dictioValue;
                 if (!IsDictionary)
                     throw new Exception("The object is not a Dictionary");
@@ -161,13 +195,13 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (IsArray)
                 {
-                    if (ArrayData != null)
-                        return ArrayData[index];
+                    if (Array != null)
+                        return Array[index];
                     else
                         throw new Exception("The ArrayData has not been initialized");
                 }
                 if (IsList)
-                    return ListData[index];
+                    return List[index];
                 throw new Exception("The object is not an Array/List");
             }
         }
@@ -191,7 +225,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void InitArray(int capacity)
         {
-            ArrayData = new object[capacity];
+            Array = new object[capacity];
         }
         /// <summary>
         /// Set an array value
@@ -201,7 +235,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetArrayValue(int index, object value)
         {
-            ArrayData[index] = value;
+            Array[index] = value;
         }
         /// <summary>
         /// Set a list value
@@ -211,7 +245,16 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetListValue(int index, object value)
         {
-            ListData[index] = value;
+            List[index] = value;
+        }
+        /// <summary>
+        /// Add a list value
+        /// </summary>
+        /// <param name="value">Object value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void AddListValue(object value)
+        {
+            List.Add(value);
         }
         /// <summary>
         /// Set a dictionary key/value
@@ -221,8 +264,9 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetDictionaryValue(object key, object value)
         {
-            DictionaryData[key] = value;
+            Dictionary[key] = value;
         }
         #endregion
+
     }
 }

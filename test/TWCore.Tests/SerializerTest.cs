@@ -38,11 +38,25 @@ namespace TWCore.Tests
 
             if (info.Arguments?.Contains("/complex") == true)
             {
-                AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
                 var file = "c:\\temp\\complexObject.nbin.deflate";
                 var serializer = SerializerManager.GetByFileName(file);
+
+                //AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
                 var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
-                var value = rMsg.Body.GetValue();
+                object value = null;
+                try
+                {
+                    value = rMsg.Body.GetValue();
+
+                }
+                catch(ExceptionWithGenericObject exGO)
+                {
+                    var jsonSerializer = new JsonTextSerializer { Indent = true };
+                    jsonSerializer.SerializeToFile(exGO.Value, "c:\\temp\\complexObject-GenericObject.json");
+
+                    var val =((GenericObject)exGO.Value["Products"])[5];
+                }
+                
 
                 RunTestEx(value, 200, null);
                 GC.Collect();

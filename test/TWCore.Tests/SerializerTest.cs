@@ -49,7 +49,7 @@ namespace TWCore.Tests
                     value = rMsg.Body.GetValue();
 
                 }
-                catch(ExceptionWithGenericObject exGO)
+                catch(DeserializerException exGO)
                 {
                     var jsonSerializer = new JsonTextSerializer { Indent = true };
                     jsonSerializer.SerializeToFile(exGO.Value, "c:\\temp\\complexObject-GenericObject.json");

@@ -82,7 +82,7 @@ namespace TWCore.Serialization.NSerializer
             NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore, 
             TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None, 
             ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
-        public Dictionary<string, object> Properties { get; set; }
+        public Dictionary<string, ObjectValue> Properties { get; set; }
         /// <summary>
         /// Dictionary Data
         /// </summary>
@@ -90,7 +90,7 @@ namespace TWCore.Serialization.NSerializer
             NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
             TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
             ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
-        public Dictionary<object, object> Dictionary { get; set; }
+        public Dictionary<object, ObjectValue> Dictionary { get; set; }
         /// <summary>
         /// List Data
         /// </summary>
@@ -98,7 +98,7 @@ namespace TWCore.Serialization.NSerializer
             NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
             TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
             ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
-        public List<object> List { get; set; }
+        public List<ObjectValue> List { get; set; }
         /// <summary>
         /// Array Data
         /// </summary>
@@ -106,7 +106,7 @@ namespace TWCore.Serialization.NSerializer
             NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
             TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
             ItemTypeNameHandling = Newtonsoft.Json.TypeNameHandling.None)]
-        public object[] Array { get; set; }
+        public ObjectValue[] Array { get; set; }
         #endregion
 
         #region .ctor
@@ -131,17 +131,17 @@ namespace TWCore.Serialization.NSerializer
 
                 if (metaData.Properties != null)
                 {
-                    Properties = new Dictionary<string, object>();
+                    Properties = new Dictionary<string, ObjectValue>();
                     foreach (var property in metaData.Properties)
                         Properties[property] = null;
                 }
                 if (IsList)
                 {
-                    List = new List<object>();
+                    List = new List<ObjectValue>();
                 }
                 if (IsDictionary)
                 {
-                    Dictionary = new Dictionary<object, object>();
+                    Dictionary = new Dictionary<object, ObjectValue>();
                 }
             }
         }
@@ -153,7 +153,7 @@ namespace TWCore.Serialization.NSerializer
         /// </summary>
         /// <param name="key">Object property name</param>
         /// <returns>Property value</returns>
-        public object this[string key]
+        public ObjectValue this[string key]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -172,7 +172,7 @@ namespace TWCore.Serialization.NSerializer
         /// </summary>
         /// <param name="key">Object dictionary name</param>
         /// <returns>Property value</returns>
-        public object this[object key]
+        public ObjectValue this[object key]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -189,7 +189,7 @@ namespace TWCore.Serialization.NSerializer
         /// </summary>
         /// <param name="index">Index number</param>
         /// <returns>Object value</returns>
-        public object this[int index]
+        public ObjectValue this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -217,7 +217,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetProperty(string key, object value)
         {
-            Properties[key] = value;
+            Properties[key] = new ObjectValue(value);
         }
         /// <summary>
         /// Init array value
@@ -226,7 +226,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void InitArray(int capacity)
         {
-            Array = new object[capacity];
+            Array = new ObjectValue[capacity];
         }
         /// <summary>
         /// Set an array value
@@ -236,7 +236,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetArrayValue(int index, object value)
         {
-            Array[index] = value;
+            Array[index] = new ObjectValue(value);
         }
         /// <summary>
         /// Set a list value
@@ -246,7 +246,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetListValue(int index, object value)
         {
-            List[index] = value;
+            List[index] = new ObjectValue(value);
         }
         /// <summary>
         /// Add a list value
@@ -255,7 +255,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AddListValue(object value)
         {
-            List.Add(value);
+            List.Add(new ObjectValue(value));
         }
         /// <summary>
         /// Set a dictionary key/value
@@ -265,9 +265,68 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetDictionaryValue(object key, object value)
         {
-            Dictionary[key] = value;
+            Dictionary[key] = new ObjectValue(value);
         }
-        #endregion
+		#endregion
 
-    }
+		#region Nested Types
+		/// <summary>
+		/// Object value
+		/// </summary>
+		public class ObjectValue
+		{
+			#region Properties
+			/// <summary>
+			/// Gets or sets the raw value.
+			/// </summary>
+			/// <value>The raw value.</value>
+			public object Value { get; set; }
+			/// <summary>
+			/// Gets or sets the value.
+			/// </summary>
+			/// <value>The value.</value>
+			public GenericObject Object { get; set; }
+			#endregion
+
+			#region .ctor
+			/// <summary>
+			/// Object Value
+			/// </summary>
+			public ObjectValue() { }
+			/// <summary>
+			/// Object Value
+			/// </summary>
+			/// <param name="value">Value item</param>
+			public ObjectValue(object value)
+			{
+				if (value is GenericObject gObject)
+					Object = gObject;
+				else
+					Value = value;
+			}
+			#endregion
+
+			#region Public Methods
+			/// <summary>
+			/// Get the object property value
+			/// </summary>
+			/// <param name="key">Object property name</param>
+			/// <returns>Property value</returns>
+			public ObjectValue this[string key] => Object[key];
+			/// <summary>
+			/// Get the object dictionary value
+			/// </summary>
+			/// <param name="key">Object dictionary name</param>
+			/// <returns>Property value</returns>
+			public ObjectValue this[object key] => Object[key];
+			/// <summary>
+			/// Get the index value of an array or list
+			/// </summary>
+			/// <param name="index">Index number</param>
+			/// <returns>Object value</returns>
+			public ObjectValue this[int index] => Object[index];
+			#endregion
+		}
+		#endregion
+	}
 }

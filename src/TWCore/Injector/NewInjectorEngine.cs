@@ -178,7 +178,33 @@ namespace TWCore.Injector
                 Type = type;
                 InstantiableName = name;
 
+                NonInstantiable nonInstantiable = null;
+                if (type.IsInterface)
+                {
+                    if (!settings.Interfaces.TryGet(type.AssemblyQualifiedName, out nonInstantiable))
+                        settings.Interfaces.TryGet(type.GetTypeName(), out nonInstantiable);
+                }
+                else if (type.IsAbstract)
+                {
+                    if (!settings.Abstracts.TryGet(type.AssemblyQualifiedName, out nonInstantiable))
+                        settings.Abstracts.TryGet(type.GetTypeName(), out nonInstantiable);
+                }
+                else
+                {
+                    InstantiableType = type;
+                }
 
+                if (nonInstantiable != null)
+                    nonInstantiable.ClassDefinitions.TryGet(name, out Definition);
+                else
+                    settings.InstantiableClasses.TryGet(name, out Definition);
+
+
+                if (Definition != null)
+                {
+
+                }
+                
 
             }
 

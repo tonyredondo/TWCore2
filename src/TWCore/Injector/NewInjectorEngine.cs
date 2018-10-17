@@ -36,6 +36,77 @@ namespace TWCore.Injector
     /// </summary>
     public class NewInjectorEngine : IDisposable
     {
+        private InjectorSettings _settings;
+        private bool _attributesRegistered;
+        private bool _useOnlyLoadedAssemblies = true;
+
+        #region Events
+        /// <summary>
+        /// Event occurs when a new instance is requested for a non instantiable type
+        /// </summary>
+        public event TypeInstanceResolverDelegate OnTypeInstanceResolve;
+        #endregion
+
+        #region Properties
+        /// <summary>
+        /// Injector settings
+        /// </summary>
+        public InjectorSettings Settings
+        {
+            get => _settings;
+            set
+            {
+                _settings = value;
+                _attributesRegistered = false;
+            }
+        }
+        /// <summary>
+        /// Use only assemblies loaded, false if uses all assemblies in the folder
+        /// </summary>
+        public bool UseOnlyLoadedAssemblies
+        {
+            get => _useOnlyLoadedAssemblies;
+            set
+            {
+                _useOnlyLoadedAssemblies = value;
+                _attributesRegistered = false;
+            }
+        }
+        /// <summary>
+        /// Throw exception on instance creation error
+        /// </summary>
+        public bool ThrowExceptionOnInstanceCreationError { get; set; } = true;
+        #endregion
+
+        #region .ctor
+        /// <summary>
+        /// Inject instances for non instantiable class
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NewInjectorEngine()
+        {
+            UseOnlyLoadedAssemblies = Core.GlobalSettings.InjectorUseOnlyLoadedAssemblies;
+            Settings = new InjectorSettings();
+        }
+        /// <summary>
+        /// Inject instances for non instantiable class
+        /// </summary>
+        /// <param name="settings">Injector settings</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NewInjectorEngine(InjectorSettings settings)
+        {
+            UseOnlyLoadedAssemblies = Core.GlobalSettings.InjectorUseOnlyLoadedAssemblies;
+            Settings = settings;
+        }
+        /// <summary>
+        /// Destructor
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        ~NewInjectorEngine()
+        {
+            Dispose();
+        }
+        #endregion
 
 
         /// <inheritdoc />

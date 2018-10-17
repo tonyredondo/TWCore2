@@ -1063,7 +1063,6 @@ namespace TWCore.Serialization.NSerializer
                 _timespanCache.Clear();
                 ObjectCache.Clear();
                 _genericTypeCache.Clear();
-                _serErrors.Clear();
                 Stream = null;
             }
             return value;

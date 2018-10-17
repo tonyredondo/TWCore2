@@ -70,6 +70,7 @@ namespace TWCore.Serialization.RawSerializer
         }
         #endregion
 
+        #region Normal Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
@@ -81,9 +82,19 @@ namespace TWCore.Serialization.RawSerializer
                 if (firstByte == -1)
                     throw new IOException("The stream has been closed.");
                 if (firstByte != DataBytesDefinition.Start)
-                    throw new FormatException("The stream is not in NSerializer format.");
+                    throw new FormatException("The stream is not in RAWSerializer format.");
                 value = ReadValue(StreamReadByte());
                 while (StreamReadByte() != DataBytesDefinition.End) {}
+            }
+            catch (Exception ex)
+            {
+                if (stream.CanSeek)
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    var genericValue = (GenericObject)GenericObjectDeserialize(stream);
+                    throw new DeserializerException(ex, genericValue);
+                }
+                throw new DeserializerException(ex);
             }
             finally
             {
@@ -297,6 +308,7 @@ namespace TWCore.Serialization.RawSerializer
                 throw new Exception($"Error trying to fill an object of type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
             }
         }
+        #endregion
 
         #region Read Values
         [DeserializerMethod(DataBytesDefinition.BoolArray, ReturnType = typeof(bool[]))]
@@ -979,5 +991,143 @@ namespace TWCore.Serialization.RawSerializer
 #endif
 
         #endregion
+
+        //
+
+        #region GenericObject Deserializer
+        internal static readonly ConcurrentDictionary<MultiArray<byte>, GenericDeserializerMetaDataOfType> GenericMultiArrayMetadata = new ConcurrentDictionary<MultiArray<byte>, GenericDeserializerMetaDataOfType>(MultiArrayBytesComparer.Instance);
+        private readonly DeserializerCache<GenericDeserializerMetaDataOfType> _genericTypeCache = new DeserializerCache<GenericDeserializerMetaDataOfType>();
+        private readonly DeserializerCache<GenericObject> _genericObjectCache = new DeserializerCache<GenericObject>();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object GenericObjectDeserialize(Stream stream)
+        {
+            object value;
+            try
+            {
+                Stream = stream;
+                var firstByte = stream.ReadByte();
+                if (firstByte == -1)
+                    throw new IOException("The stream has been closed.");
+                if (firstByte != DataBytesDefinition.Start)
+                    throw new FormatException("The stream is not in RAWSerializer format.");
+                value = GenericReadValue(StreamReadByte());
+                while (StreamReadByte() != DataBytesDefinition.End) { }
+            }
+            finally
+            {
+                ObjectCache.Clear();
+                _genericTypeCache.Clear();
+                Stream = null;
+            }
+            return value;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object GenericReadValue(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.RefObject)
+            {
+                var idx = StreamReadInt();
+                return _genericObjectCache.Get(idx);
+            }
+            if (ReadValues.TryGetValue(type, out var mTuple))
+            {
+                _parameters[0] = type;
+                return mTuple.Accessor(this, _parameters);
+            }
+
+            GenericDeserializerMetaDataOfType metadata = default;
+
+            if (type == DataBytesDefinition.TypeStart)
+            {
+                var length = StreamReadInt();
+                var typeBytes = ArrayPool<byte>.Shared.Rent(length);
+                Stream.Read(typeBytes, 0, length);
+                var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
+                if (!GenericMultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
+                {
+                    var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
+                    var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
+                    var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
+                    var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
+                    var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
+                    var vTypeString = typeData.Substring(0, fsCol1);
+                    var isArray = typeData[fsCol1 + 1] == '1';
+                    var isList = typeData[fsCol2 + 1] == '1';
+                    var isDictionary = typeData[fsCol3 + 1] == '1';
+                    var propertiesString = typeData.Substring(fsCol4 + 1);
+                    var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
+                    metadata = new GenericDeserializerMetaDataOfType(vTypeString, isArray, isList, isDictionary, properties);
+                    GenericMultiArrayMetadata.TryAdd(new MultiArray<byte>(subTypeBytes.ToArray()), metadata);
+                }
+                ArrayPool<byte>.Shared.Return(typeBytes);
+                _genericTypeCache.Set(metadata);
+            }
+            else if (type == DataBytesDefinition.RefType)
+            {
+                metadata = _genericTypeCache.Get(StreamReadInt());
+            }
+            return GenericFillObject(metadata);
+
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private GenericObject GenericFillObject(GenericDeserializerMetaDataOfType metadata)
+        {
+            try
+            {
+                var value = metadata.CreateObject();
+                _genericObjectCache.Set(value);
+
+                if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)
+                {
+                    var capacity = StreamReadInt();
+                    if (metadata.IsArray)
+                    {
+                        value.InitArray(capacity);
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var item = GenericReadValue(StreamReadByte());
+                            value.SetArrayValue(i, item);
+                        }
+                    }
+                    else if (metadata.IsList)
+                    {
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var item = GenericReadValue(StreamReadByte());
+                            value.AddListValue(item);
+                        }
+                    }
+                    else if (metadata.IsDictionary)
+                    {
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var itemKey = GenericReadValue(StreamReadByte());
+                            var itemValue = GenericReadValue(StreamReadByte());
+                            value.SetDictionaryValue(itemKey, itemValue);
+                        }
+                    }
+
+                }
+
+                for (var i = 0; i < metadata.Properties.Length; i++)
+                {
+                    var name = metadata.Properties[i];
+                    var propValue = GenericReadValue(StreamReadByte());
+                    value.SetProperty(name, propValue);
+                }
+
+                StreamReadByte();
+                return value;
+            }
+            catch (Exception ex)
+            {
+                var metaProperties = metadata.Properties?.Join(", ");
+                throw new Exception($"Error trying to fill an object of type: {metadata.Type}; with the definition [{metaProperties}]", ex);
+            }
+        }
+        #endregion
+
     }
 }

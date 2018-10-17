@@ -38,16 +38,18 @@ namespace TWCore.Tests
 
             if (info.Arguments?.Contains("/complex") == true)
             {
+                //var file = "c:\\temp\\complexObject.rawbin";
                 var file = "c:\\temp\\complexObject.nbin.deflate";
                 var serializer = SerializerManager.GetByFileName(file);
 
+                AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
                 //AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
-                var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
+                
                 object value = null;
                 try
                 {
+                    var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
                     value = rMsg.Body.GetValue();
-
                 }
                 catch(DeserializerException exGO)
                 {

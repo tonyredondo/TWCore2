@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable PossibleNullReferenceException
 #pragma warning disable 1591
 
-namespace TWCore.Serialization.NSerializer
+namespace TWCore.Serialization.RawSerializer
 {
     public class GenericDeserializerMetaDataOfType : IEquatable<GenericDeserializerMetaDataOfType>
     {

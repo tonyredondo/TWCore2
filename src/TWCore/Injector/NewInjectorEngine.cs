@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
@@ -30,21 +31,31 @@ using TWCore.Text;
 
 namespace TWCore.Injector
 {
+    /// <summary>
+    /// Injector delegate for type instance resolver
+    /// </summary>
+    /// <param name="type">Type to resolve</param>
+    /// <param name="name">Name to resolve</param>
+    /// <param name="value">Output instance value</param>
+    /// <returns>True if the resolve was successful; otherwise, false.</returns>
+    public delegate bool InjectorResolveDelegate(Type type, string name, out object value);
+
     /// <inheritdoc />
     /// <summary>
     /// Inject instances engine
     /// </summary>
     public class NewInjectorEngine : IDisposable
     {
+        private ConcurrentDictionary<(Type, string), InjectorTypeNameInfo> _injectorData = new ConcurrentDictionary<(Type, string), InjectorTypeNameInfo>();
         private InjectorSettings _settings;
         private bool _attributesRegistered;
         private bool _useOnlyLoadedAssemblies = true;
 
-        #region Events
+        #region Delegates
         /// <summary>
-        /// Event occurs when a new instance is requested for a non instantiable type
+        /// Delgate when a new instance is requested
         /// </summary>
-        public event TypeInstanceResolverDelegate OnTypeInstanceResolve;
+        public InjectorResolveDelegate OnTypeInjectorResolve;
         #endregion
 
         #region Properties
@@ -108,6 +119,39 @@ namespace TWCore.Injector
         }
         #endregion
 
+        #region Public Methods
+        /// <summary>
+        /// Create a new instance for a Interface, Abstract, or setted class
+        /// </summary>
+        /// <typeparam name="T">Type of object to create</typeparam>
+        /// <param name="name">Name of the instance, if is null the default one</param>
+        /// <returns>A new instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T New<T>(string name = null)
+            => (T)New(typeof(T), name);
+        /// <summary>
+        /// Create a new instance for a Interface, Abstract, or setted class
+        /// </summary>
+        /// <param name="type">Type of object to create</param>
+        /// <param name="name">Name of the instance, if is null the default one</param>
+        /// <returns>A new instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object New(Type type, string name = null)
+        {
+            if (OnTypeInjectorResolve != null && OnTypeInjectorResolve(type, name, out var result))
+                return result;
+
+            var injectorTypeInfo = _injectorData.GetOrAdd((type, name), CreateInjectorTypeNameInfo);
+
+
+            return null;
+        }
+        #endregion
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private InjectorTypeNameInfo CreateInjectorTypeNameInfo((Type Type, string Name) value)
+            => new InjectorTypeNameInfo(value.Type, value.Name, Settings);
 
         /// <inheritdoc />
         /// <summary>
@@ -118,5 +162,49 @@ namespace TWCore.Injector
         {
         }
 
+
+        private class InjectorTypeNameInfo
+        {
+            public readonly Type Type;
+            public readonly Type InstantiableType;
+            public readonly string InstantiableName;
+            public bool Singleton;
+            public object SingletonValue;
+            public Func<object> Activator;
+            private Instantiable Definition;
+
+            public InjectorTypeNameInfo(Type type, string name, InjectorSettings settings)
+            {
+                Type = type;
+                InstantiableName = name;
+
+
+
+            }
+
+            public InjectorTypeNameInfo(Type type, Instantiable definition, NewInjectorEngine engine)
+            {
+                Type = type;
+                InstantiableType = Core.GetType(definition.Type, engine.ThrowExceptionOnInstanceCreationError);
+                InstantiableName = definition.Name;
+                Singleton = definition.Singleton;
+
+                if (InstantiableType is null) return;
+
+
+                var ctors = InstantiableType.GetConstructors();
+
+            }
+
+            public InjectorTypeNameInfo(Type type, Type instantiableType, bool singleton, string name, object[] parameters)
+            {
+
+            }
+
+            public InjectorTypeNameInfo(Type type, Func<object> activator, bool singleton, string name)
+            {
+
+            }
+        }
     }
 }

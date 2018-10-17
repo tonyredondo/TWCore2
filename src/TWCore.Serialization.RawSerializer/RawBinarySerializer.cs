@@ -65,8 +65,9 @@ namespace TWCore.Serialization.RawSerializer
                 des = new DeserializersTable();
                 _deserializer = des;
             }
-            var value = des.Deserialize(stream);
-            return value;
+            if (itemType == typeof(GenericObject))
+                return des.GenericObjectDeserialize(stream);
+            return des.Deserialize(stream);
         }
 
         /// <summary>

@@ -178,34 +178,20 @@ namespace TWCore.Injector
                 Type = type;
                 InstantiableName = name;
 
-                NonInstantiable nonInstantiable = null;
-                if (type.IsInterface)
-                {
-                    if (!settings.Interfaces.TryGet(type.AssemblyQualifiedName, out nonInstantiable))
-                        settings.Interfaces.TryGet(type.GetTypeName(), out nonInstantiable);
-                }
-                else if (type.IsAbstract)
-                {
-                    if (!settings.Abstracts.TryGet(type.AssemblyQualifiedName, out nonInstantiable))
-                        settings.Abstracts.TryGet(type.GetTypeName(), out nonInstantiable);
-                }
-                else
-                {
-                    InstantiableType = type;
-                }
-
-                if (nonInstantiable != null)
-                    nonInstantiable.ClassDefinitions.TryGet(name, out Definition);
-                else
-                    settings.InstantiableClasses.TryGet(name, out Definition);
-
+				if (type.IsInterface)
+					Definition = settings.GetInterfaceInstanceDefinition(type.AssemblyQualifiedName, name);
+				else if (type.IsAbstract)
+					Definition = settings.GetAbstractInstanceDefinition(type.AssemblyQualifiedName, name);
+				else
+				{
+					Definition = settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName).FirstOrDefault(i => i.Name == name);
+					InstantiableType = type;
+				}
 
                 if (Definition != null)
                 {
 
                 }
-                
-
             }
 
             public InjectorTypeNameInfo(Type type, Instantiable definition, NewInjectorEngine engine)

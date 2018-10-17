@@ -542,7 +542,7 @@ namespace TWCore
         public static (T[], T[]) Split<T>(this IEnumerable<T> enumerable,
             Predicate<T> separatorPredicate)
         {
-            if (enumerable is null) return (new T[0], new T[0]);
+            if (enumerable is null) return (Array.Empty<T>(), Array.Empty<T>());
             var pool = ReferencePool<List<T>>.Shared;
             var firstList = pool.New();
             var secondList = pool.New();

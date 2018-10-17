@@ -42,7 +42,7 @@ namespace TWCore.Object.Api.Controllers
     {
         private static readonly TimeoutDictionary<bool, Dictionary<string, PathEntry>> LocalServicesCache = new TimeoutDictionary<bool, Dictionary<string, PathEntry>>();
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
-        private static readonly PathEntry[] PathEmpty = new PathEntry[0];
+        private static readonly PathEntry[] PathEmpty = Array.Empty<PathEntry>();
         private static readonly string[] Extensions;
         private static readonly string[] TextExtensions = { ".xml", ".js", ".txt", ".log", ".json", ".ini", ".srt", ".htm", ".html" };
 
@@ -588,7 +588,7 @@ namespace TWCore.Object.Api.Controllers
         private class FileSystemSettings : SettingsBase
         {
             [SettingsArray(';')]
-            public string[] RootPaths { get; set; } = new string[0];
+            public string[] RootPaths { get; set; } = Array.Empty<string>();
         }
         public enum PathEntryType
         {

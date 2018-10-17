@@ -162,7 +162,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Run(string[] args)
         {
-            _currentArgs = args ?? new string[0];
+            _currentArgs = args ?? Array.Empty<string>();
 
             if (_currentArgs.Any(a => !a.Trim().StartsWith("/", StringComparison.OrdinalIgnoreCase)))
             {

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -60,7 +61,7 @@ namespace TWCore.Settings
                 ThrowExceptionOnDuplicateKeys = false
             };
 
-            var appsNames = applicationName?.SplitAndTrim(",") ?? new string[0];
+            var appsNames = applicationName?.SplitAndTrim(",") ?? Array.Empty<string>();
             foreach(var appName in appsNames)
             {
                 if (Applications.TryGetByPartialKey(appName, out var appSetting))

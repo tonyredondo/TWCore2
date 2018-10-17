@@ -334,7 +334,7 @@ namespace TWCore.Net.HttpServer
                 }
                 else
                 {
-                    var response = ctlMethod.Invoke(ctl, new object[0]);
+                    var response = ctlMethod.Invoke(ctl, Array.Empty<object>());
                     if (response is null) return;
                     var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
                     switch (serializer)

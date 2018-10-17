@@ -153,7 +153,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public ILogStorage[] GetAllStorages()
         {
             lock (_locker)
-                return _items.Select(i => i.Item1).ToArray() ?? new ILogStorage[0];
+                return _items.Select(i => i.Item1).ToArray() ?? Array.Empty<ILogStorage>();
         }
         /// <summary>
         /// Get Max LogLevel in Storages

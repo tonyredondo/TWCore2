@@ -40,7 +40,7 @@ namespace TWCore.Net.RPC.Client
     [StatusName("RPC Client")]
     public class RPCClient : IRPCClient, IDisposable
     {
-        private static readonly object[] _emptyArgs = new object[0];
+        private static readonly object[] _emptyArgs = Array.Empty<object>();
         private static readonly object[] _nullItemArgs = { null };
         private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>(new MethodDescriptionEqualityComparer());
         private ITransportClient _transport;

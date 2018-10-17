@@ -95,7 +95,7 @@ namespace TWCore.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public object CallMethod(string methodName, params object[] args)
 		{
-			args = args ?? new object[0];
+            args = args ?? Array.Empty<object>();
 
 			if (_methodsDelegates != null && _methodsDelegates.TryGetValue(methodName, out var mDelegate))
 				return mDelegate(_realObject, args);

@@ -440,7 +440,7 @@ namespace TWCore
         public static string[] SplitAndTrim(this string value, params char[] separators)
         {
             if (string.IsNullOrEmpty(value))
-                return new string[0];
+                return Array.Empty<string>();
             if (separators?.Length == 1 && separators[0] == Space[0])
                 return value.Split(Space, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
             return value.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
@@ -456,7 +456,7 @@ namespace TWCore
         public static string[] SplitAndTrim(this string value, string separators)
         {
             if (string.IsNullOrEmpty(value))
-                return new string[0];
+                return Array.Empty<string>();
             if (separators?.Length == 1 && separators == SpaceString)
                 return value.Split(Space, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
             return value.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();

@@ -89,7 +89,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         public ITraceStorage[] GetAllStorages()
         {
             lock (_locker)
-                return _items.ToArray() ?? new ITraceStorage[0];
+                return _items.ToArray() ?? Array.Empty<ITraceStorage>();
         }
         #endregion
 

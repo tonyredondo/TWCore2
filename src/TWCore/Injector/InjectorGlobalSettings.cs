@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -53,7 +54,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public InjectorSettings GetSettings(string environment, string applicationName)
         {
-            var appNames = applicationName?.SplitAndTrim(",") ?? new string[0];
+            var appNames = applicationName?.SplitAndTrim(",") ?? Array.Empty<string>();
             var res = new InjectorSettings();
 
             foreach (var appName in appNames)

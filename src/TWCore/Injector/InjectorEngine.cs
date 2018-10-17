@@ -44,7 +44,6 @@ namespace TWCore.Injector
     /// </summary>
     public class InjectorEngine : IDisposable
     {
-        private static readonly string[] EmptyStringArray = new string[0];
         private readonly ConcurrentDictionary<(Type, string), RegisteredValues> _registeredDelegates = new ConcurrentDictionary<(Type, string), RegisteredValues>();
         private readonly ConcurrentDictionary<Instantiable, ActivatorItem> _instantiableCache = new ConcurrentDictionary<Instantiable, ActivatorItem>();
         private InjectorSettings _settings;
@@ -176,11 +175,11 @@ namespace TWCore.Injector
         {
             if (Settings is null) throw new NullReferenceException("The injector settings is null.");
             if (type.IsInterface)
-                return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
+                return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
             if (type.IsAbstract)
-                return Settings.GetAbstractDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
-            if (!type.IsClass) return EmptyStringArray;
-            return Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
+                return Settings.GetAbstractDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+            if (!type.IsClass) return Array.Empty<string>();
+            return Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
         }
 
         /// <summary>

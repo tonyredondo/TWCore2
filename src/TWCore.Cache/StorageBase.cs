@@ -38,8 +38,8 @@ namespace TWCore.Cache
     /// </summary>
     public abstract class StorageBase : IStorage
     {
-        private static readonly StorageItemMeta[] EmptyMeta = new StorageItemMeta[0];
-        private static readonly StorageItem[] EmptyItem = new StorageItem[0];
+        private static readonly StorageItemMeta[] EmptyMeta = Array.Empty<StorageItemMeta>();
+        private static readonly StorageItem[] EmptyItem = Array.Empty<StorageItem>();
         private readonly ManualResetEventSlim _readyEventSlim = new ManualResetEventSlim(false);
         private readonly string _name;
         private int _expirationCheckTimeInMinutes = 30;

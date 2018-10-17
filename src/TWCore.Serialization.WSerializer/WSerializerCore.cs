@@ -872,7 +872,7 @@ namespace TWCore.Serialization.WSerializer
                     }
                     var tStart = new SerializerPlanItem.TypeStart(mType, typeInfo)
                     {
-                        Properties = new string[0]
+                        Properties = Array.Empty<string>()
                     };
                     plan.Add(tStart);
                     plan.Add(new SerializerPlanItem.TupleStart(mType, types, serTypes));

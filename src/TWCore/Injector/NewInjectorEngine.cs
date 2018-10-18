@@ -140,17 +140,12 @@ namespace TWCore.Injector
         {
             if (OnTypeInjectorResolve != null && OnTypeInjectorResolve(type, name, out var result))
                 return result;
-
             var injectorTypeInfo = _injectorData.GetOrAdd((type, name), CreateInjectorTypeNameInfo);
             if (injectorTypeInfo == null)
                 return null;
-
-
-
-            return null;
+            return injectorTypeInfo.Singleton ? injectorTypeInfo.SingletonValue : injectorTypeInfo.Activator();
         }
         #endregion
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private InjectorTypeNameInfo CreateInjectorTypeNameInfo((Type Type, string Name) value)
@@ -189,6 +184,7 @@ namespace TWCore.Injector
             public LambdaExpression ActivatorExpression;
             public Func<object> Activator;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InjectorTypeNameInfo(Type type, string name, InjectorSettings settings)
             {
                 Type = type;
@@ -285,7 +281,7 @@ namespace TWCore.Injector
                 #region Create Expression
                 var serExpressions = new List<Expression>();
                 var varExpressions = new List<ParameterExpression>();
-                var value = Expression.Parameter(typeof(object), "value");
+                var value = Expression.Parameter(defType, "value");
                 varExpressions.Add(value);
                 var returnTarget = Expression.Label(typeof(object), "ReturnTarget");
 
@@ -309,35 +305,29 @@ namespace TWCore.Injector
                                 paramExpressions.Add(
                                     Expression.Convert(
                                         Expression.Call(
-                                            Expression.Property(null, typeof(Core), "Injector"), 
-                                            "New", 
-                                            null, 
-                                            Expression.Constant(Core.GetType(defArgument.Value), typeof(Type)), 
+                                            Expression.Property(null, typeof(Core), "Injector"),
+                                            "New",
+                                            null,
+                                            Expression.Constant(Core.GetType(defArgument.Value), typeof(Type)),
                                             Expression.Constant(defArgument.ClassName, typeof(string))),
                                         cParam.ParameterType)
                                 );
 
                                 break;
                             case ArgumentType.Raw:
-                                var rawValue = defArgument.Value.ParseTo(cParam.ParameterType, System.Activator.CreateInstance(cParam.ParameterType));
+                                var rawValue = defArgument.Value.ParseTo(cParam.ParameterType, cParam.ParameterType.IsValueType ? System.Activator.CreateInstance(cParam.ParameterType) : null);
                                 paramExpressions.Add(Expression.Constant(rawValue, cParam.ParameterType));
                                 break;
                             case ArgumentType.Settings:
                                 if (Core.Settings.TryGet(defArgument.Value, out var setKeyValue))
                                 {
-                                    var setValue = setKeyValue.Value.ParseTo(cParam.ParameterType, System.Activator.CreateInstance(cParam.ParameterType));
+                                    var setValue = setKeyValue.Value.ParseTo(cParam.ParameterType, cParam.ParameterType.IsValueType ? System.Activator.CreateInstance(cParam.ParameterType) : null);
                                     paramExpressions.Add(Expression.Constant(setValue, cParam.ParameterType));
                                 }
                                 else
-                                    paramExpressions.Add(Expression.Constant(System.Activator.CreateInstance(cParam.ParameterType), cParam.ParameterType));
+                                    paramExpressions.Add(Expression.Constant(cParam.ParameterType.IsValueType ? System.Activator.CreateInstance(cParam.ParameterType) : null, cParam.ParameterType));
                                 break;
                         }
-
-                        //defParam.ArgumentName;
-                        //defParam.ClassName;
-                        //defParam.Name;
-                        //defParam.Type;
-                        //defParam.Value;
                     }
                     else if (cParam.HasDefaultValue)
                     {
@@ -351,7 +341,54 @@ namespace TWCore.Injector
                 #endregion
 
                 #region Properties Set
+                if (definition.PropertiesSets?.Any() == true)
+                {
+                    foreach (var set in definition.PropertiesSets)
+                    {
+                        Argument argSet = set;
+                        if (!string.IsNullOrWhiteSpace(set.ArgumentName))
+                            settings.Arguments.TryGet(set.ArgumentName, out argSet);
 
+                        var property = defType.GetProperty(set.Name, BindingFlags.Instance | BindingFlags.Public);
+                        if (property == null)
+                            throw new Exception($"The Property '{set.Name}' can't be found in the object type '{definition.Type}'");
+
+                        var propertyExpression = Expression.Property(value, property);
+
+                        switch (argSet.Type)
+                        {
+                            case ArgumentType.Abstract:
+                            case ArgumentType.Instance:
+                            case ArgumentType.Interface:
+                                serExpressions.Add(
+                                    Expression.Assign(propertyExpression,
+                                        Expression.Convert(
+                                            Expression.Call(
+                                                Expression.Property(null, typeof(Core), "Injector"),
+                                                "New",
+                                                null,
+                                                Expression.Constant(Core.GetType(argSet.Value), typeof(Type)),
+                                                Expression.Constant(argSet.ClassName, typeof(string))),
+                                            property.PropertyType)
+                                   )
+                                );
+                                break;
+                            case ArgumentType.Raw:
+                                var rawValue = argSet.Value.ParseTo(property.PropertyType, property.PropertyType.IsValueType ? System.Activator.CreateInstance(property.PropertyType) : null);
+                                serExpressions.Add(Expression.Assign(propertyExpression, Expression.Constant(rawValue, property.PropertyType)));
+                                break;
+                            case ArgumentType.Settings:
+                                if (Core.Settings.TryGet(argSet.Value, out var setKeyValue))
+                                {
+                                    var setValue = setKeyValue.Value.ParseTo(property.PropertyType, property.PropertyType.IsValueType ? System.Activator.CreateInstance(property.PropertyType) : null);
+                                    serExpressions.Add(Expression.Assign(propertyExpression, Expression.Constant(setValue, property.PropertyType)));
+                                }
+                                else
+                                    serExpressions.Add(Expression.Assign(propertyExpression, Expression.Constant(property.PropertyType.IsValueType ? System.Activator.CreateInstance(property.PropertyType) : null, property.PropertyType)));
+                                break;
+                        }
+                    }
+                }
                 #endregion
 
                 serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
@@ -366,30 +403,13 @@ namespace TWCore.Injector
                     SingletonValue = Activator();
             }
 
-
-
-
-
-
-            public InjectorTypeNameInfo(Type type, Instantiable definition, NewInjectorEngine engine)
-            {
-                Type = type;
-                InstantiableType = Core.GetType(definition.Type, engine.ThrowExceptionOnInstanceCreationError);
-                InstantiableName = definition.Name;
-                Singleton = definition.Singleton;
-
-                if (InstantiableType is null) return;
-
-
-                var ctors = InstantiableType.GetConstructors();
-
-            }
-
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InjectorTypeNameInfo(Type type, Type instantiableType, bool singleton, string name, object[] parameters)
             {
 
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InjectorTypeNameInfo(Type type, Func<object> activator, bool singleton, string name)
             {
 

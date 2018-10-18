@@ -7,6 +7,8 @@
       <Interface Type="TWCore.Tests.IInjectTestA, TWCore.Tests">
         <Class Name="Default" Type="TWCore.Tests.InjectTestA, TWCore.Tests">
           <Parameter Name="bInstance" Type="Interface" Value="TWCore.Tests.IInjectTestB, TWCore.Tests" />
+
+          <PropertySet Name="TestProperty" Type="Raw" Value="Hola mundo!!!" />
         </Class>
       </Interface>
       <Interface Type="TWCore.Tests.IInjectTestB, TWCore.Tests">

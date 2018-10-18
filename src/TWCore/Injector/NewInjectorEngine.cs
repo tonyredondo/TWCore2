@@ -185,7 +185,6 @@ namespace TWCore.Injector
             public readonly string InstantiableName;
             public readonly Instantiable Definition;
             public bool Singleton;
-
             public object SingletonValue;
             public LambdaExpression ActivatorExpression;
             public Func<object> Activator;
@@ -286,8 +285,11 @@ namespace TWCore.Injector
                 #region Create Expression
                 var serExpressions = new List<Expression>();
                 var varExpressions = new List<ParameterExpression>();
+                var value = Expression.Parameter(typeof(object), "value");
+                varExpressions.Add(value);
                 var returnTarget = Expression.Label(typeof(object), "ReturnTarget");
 
+                #region New Call
                 var paramExpressions = new List<Expression>();
                 var cParameters = selectedCtor.GetParameters();
                 var defParameters = definition.Parameters.ToDictionary(k => k.Name);
@@ -295,32 +297,74 @@ namespace TWCore.Injector
                 {
                     if (defParameters.TryGetValue(cParam.Name, out var defParam))
                     {
-                        switch (defParam.Type)
+                        Argument defArgument = defParam;
+                        if (!string.IsNullOrWhiteSpace(defParam.ArgumentName))
+                            settings.Arguments.TryGet(defParam.ArgumentName, out defArgument);
+
+                        switch (defArgument.Type)
                         {
                             case ArgumentType.Abstract:
-                                break;
                             case ArgumentType.Instance:
-                                break;
                             case ArgumentType.Interface:
+                                paramExpressions.Add(
+                                    Expression.Convert(
+                                        Expression.Call(
+                                            Expression.Property(null, typeof(Core), "Injector"), 
+                                            "New", 
+                                            null, 
+                                            Expression.Constant(Core.GetType(defArgument.Value), typeof(Type)), 
+                                            Expression.Constant(defArgument.ClassName, typeof(string))),
+                                        cParam.ParameterType)
+                                );
+
                                 break;
                             case ArgumentType.Raw:
+                                var rawValue = defArgument.Value.ParseTo(cParam.ParameterType, System.Activator.CreateInstance(cParam.ParameterType));
+                                paramExpressions.Add(Expression.Constant(rawValue, cParam.ParameterType));
                                 break;
                             case ArgumentType.Settings:
+                                if (Core.Settings.TryGet(defArgument.Value, out var setKeyValue))
+                                {
+                                    var setValue = setKeyValue.Value.ParseTo(cParam.ParameterType, System.Activator.CreateInstance(cParam.ParameterType));
+                                    paramExpressions.Add(Expression.Constant(setValue, cParam.ParameterType));
+                                }
+                                else
+                                    paramExpressions.Add(Expression.Constant(System.Activator.CreateInstance(cParam.ParameterType), cParam.ParameterType));
                                 break;
                         }
 
+                        //defParam.ArgumentName;
+                        //defParam.ClassName;
+                        //defParam.Name;
+                        //defParam.Type;
+                        //defParam.Value;
                     }
                     else if (cParam.HasDefaultValue)
                     {
                         paramExpressions.Add(Expression.Constant(cParam.RawDefaultValue, cParam.ParameterType));
                     }
                 }
-
-                serExpressions.Add(Expression.New(selectedCtor, paramExpressions));
+                if (paramExpressions.Count == 0)
+                    serExpressions.Add(Expression.Assign(value, Expression.New(selectedCtor)));
+                else
+                    serExpressions.Add(Expression.Assign(value, Expression.New(selectedCtor, paramExpressions)));
                 #endregion
 
-            }
+                #region Properties Set
 
+                #endregion
+
+                serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
+                serExpressions.Add(Expression.Label(returnTarget, value));
+                var block = Expression.Block(varExpressions, serExpressions).Reduce();
+                var lambda = Expression.Lambda<Func<object>>(block, type.Name + "_Activator", null);
+                ActivatorExpression = lambda;
+                Activator = lambda.Compile();
+                #endregion
+
+                if (Singleton)
+                    SingletonValue = Activator();
+            }
 
 
 

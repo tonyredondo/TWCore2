@@ -16,6 +16,7 @@ namespace TWCore.Tests
             var nInj = new NewInjectorEngine();
             nInj.Settings = Core.Injector.Settings;
             nInj.New<IInjectTestA>("Default");
+            nInj.New<IInjectTestB>("Default");
 
             var instance1 = Core.Injector.New<IInjectTestA>("Default");
             var instance2 = Core.Injector.New<IInjectTestA>("Default");

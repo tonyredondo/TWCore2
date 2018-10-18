@@ -22,17 +22,17 @@ namespace TWCore.Tests
 
 
             using (var w = Watch.Create("New Injector A"))
-                for(var i = 0; i < 1000000; i++)
+                for(var i = 0; i < 10000000; i++)
                     nInj.New<IInjectTestA>("Default");
             using (var w = Watch.Create("New Injector B"))
-                for (var i = 0; i < 1000000; i++)
+                for (var i = 0; i < 10000000; i++)
                     nInj.New<IInjectTestB>("Default");
 
             using (var w = Watch.Create("Injector A"))
-                for (var i = 0; i < 1000000; i++)
+                for (var i = 0; i < 10000000; i++)
                     Core.Injector.New<IInjectTestA>("Default");
             using (var w = Watch.Create("Injector B"))
-                for (var i = 0; i < 1000000; i++)
+                for (var i = 0; i < 10000000; i++)
                     Core.Injector.New<IInjectTestB>("Default");
 
 

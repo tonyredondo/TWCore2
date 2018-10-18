@@ -161,7 +161,7 @@ namespace TWCore.Injector
             {
                 return new InjectorTypeNameInfo(value.Type, value.Name, Settings);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(LogLevel.Warning, ex);
                 return null;
@@ -204,22 +204,20 @@ namespace TWCore.Injector
                 else if (type.IsClass)
                 {
                     definition = settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName).FirstOrDefault(i => i.Name == name);
-                    InstantiableType = type;
+                    if (definition == null)
+                        definition = new Instantiable { Type = type.AssemblyQualifiedName, Name = name };
                 }
                 Definition = definition;
                 #endregion
 
-                if (definition == null)
-                {
-
-                }
-
                 Singleton = definition.Singleton;
                 var defType = Core.GetType(definition.Type, true);
                 if (defType is null) return;
+                InstantiableType = defType;
 
                 ConstructorInfo selectedCtor = null;
 
+                #region Constructor Selector
                 var ctors = defType.GetConstructors();
                 if (definition.Parameters == null || definition.Parameters.Count == 0)
                 {
@@ -266,26 +264,55 @@ namespace TWCore.Injector
                 }
                 else
                 {
-                    var posibleCtors = ctors.Where(c => c.GetParameters().Length == definition.Parameters.Count).ToArray();
-                    if (posibleCtors.Length == 0)
-                        throw new Exception($"A .ctor with {definition.Parameters.Count} parameters wasn't found in the type: {defType.AssemblyQualifiedName}.");
-
-                    #region .ctor Selector
-                    foreach (var pCtor in posibleCtors)
+                    selectedCtor = ctors.FirstOrDefault(c =>
                     {
-                        selectedCtor = pCtor;
-                        var ctorParameters = pCtor.GetParameters();
-                        for (var i = 0; i < ctorParameters.Length; i++)
+                        var cParams = c.GetParameters();
+                        var definitionParameters = definition.Parameters.ToDictionary(k => k.Name);
+                        foreach (var cParam in cParams)
                         {
-                            var ctorParam = ctorParameters[i];
-                            var parameter = definition.Parameters[i];
+                            if (!definitionParameters.Remove(cParam.Name))
+                                if (!cParam.HasDefaultValue)
+                                    return false;
 
-                            
                         }
-                    }
-                    #endregion
+                        return definitionParameters.Count == 0;
+                    });
 
+                    if (selectedCtor == null)
+                        throw new Exception($"A .ctor with {definition.Parameters.Count} parameters wasn't found in the type: {defType.AssemblyQualifiedName}.");
                 }
+                #endregion
+
+
+                #region Fill 
+                var cParameters = selectedCtor.GetParameters();
+                for (var i = 0; i < cParameters.Length; i++)
+                {
+                    //        var ctorParam = ctorParameters[i];
+                    //        var parameter = definition.Parameters[i];
+
+                    //        switch(parameter.Type)
+                    //        {
+                    //            case ArgumentType.Abstract:
+                    //                break;
+                    //            case ArgumentType.Instance:
+                    //                break;
+                    //            case ArgumentType.Interface:
+                    //                break;
+                    //            case ArgumentType.Raw:
+                    //                break;
+                    //            case ArgumentType.Settings:
+                    //                break;
+                    //        }
+
+                    //        //parameter.ArgumentName
+                    //        //parameter.ClassName
+                    //        //parameter.Name
+                    //        //parameter.Type
+                    //        //parameter.Value
+                }
+                #endregion
+
             }
 
 

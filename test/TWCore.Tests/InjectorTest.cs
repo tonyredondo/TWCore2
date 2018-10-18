@@ -1,4 +1,5 @@
 ﻿using System;
+using TWCore.Injector;
 using TWCore.Services;
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable UnusedMember.Global
@@ -11,6 +12,11 @@ namespace TWCore.Tests
         public InjectorTest() : base("injectorTest", "Injector Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
+
+            var nInj = new NewInjectorEngine();
+            nInj.Settings = Core.Injector.Settings;
+            nInj.New<IInjectTestA>("Default");
+
             var instance1 = Core.Injector.New<IInjectTestA>("Default");
             var instance2 = Core.Injector.New<IInjectTestA>("Default");
 

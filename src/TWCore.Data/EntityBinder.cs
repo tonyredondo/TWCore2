@@ -31,21 +31,11 @@ namespace TWCore.Data
     public class EntityBinder
     {
         #region Statics
-        ///// <summary>
-        ///// Properties of entities type
-        ///// </summary>
-        //public static ConcurrentDictionary<Type, EntityInfo> Entities { get; } = new ConcurrentDictionary<Type, EntityInfo>();
-        ///// <summary>
-        ///// Types overwrite definition
-        ///// </summary>
-        //public static ConcurrentDictionary<Type, Type> TypesOverwrite { get; } = new ConcurrentDictionary<Type, Type>();
         /// <summary>
         /// Prepare Type for entity binder
         /// </summary>
-        ///// <param name="type">Type of entity</param>
         /// <returns>EntityInfo instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public static EntityInfo PrepareEntity(Type type) => Entities.GetOrAdd(type, EntityInfo.CreateEntityInfo);
         public static EntityInfo<T> PrepareEntity<T>() => EntityInfo<T>.Instance;
         #endregion
 
@@ -91,13 +81,8 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Bind<T>(object[] rowValues, string pattern = null)
         {
-            //var type = typeof(T);
-            //if (TypesOverwrite.TryGetValue(type, out var rType))
-            //    type = rType;
-
             if (ColumnIndex.Count != rowValues.Length)
                 throw new ArgumentException("The row values length is different from the expected.");
-
             if (typeof(T) == typeof(DictionaryObject))
             {
                 var dicData = ColumnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();

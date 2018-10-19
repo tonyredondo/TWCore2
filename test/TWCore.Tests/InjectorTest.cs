@@ -22,23 +22,24 @@ namespace TWCore.Tests
             var instance1 = oInj.New<IInjectTestA>("Default");
             var instance2 = oInj.New<IInjectTestA>("Default");
 
+            var times = 10_000_000;
+            Core.Log.InfoBasic("Injector New, Number of times: {0}", times);
 
-            using (var w = Watch.Create("New Injector A"))
-                for(var i = 0; i < 10000000; i++)
-                    nInj.New<IInjectTestA>("Default");
-            using (var w = Watch.Create("New Injector B"))
-                for (var i = 0; i < 10000000; i++)
-                    nInj.New<IInjectTestB>("Default");
-
-            using (var w = Watch.Create("Injector A"))
-                for (var i = 0; i < 10000000; i++)
+            using (var w = Watch.Create("Old Injector Object A"))
+                for (var i = 0; i < times; i++)
                     oInj.New<IInjectTestA>("Default");
-            using (var w = Watch.Create("Injector B"))
-                for (var i = 0; i < 10000000; i++)
+            using (var w = Watch.Create("New Injector Object A"))
+                for(var i = 0; i < times; i++)
+                    nInj.New<IInjectTestA>("Default");
+
+            using (var w = Watch.Create("Old Injector Object B"))
+                for (var i = 0; i < times; i++)
                     oInj.New<IInjectTestB>("Default");
 
+            using (var w = Watch.Create("New Injector Object B"))
+                for (var i = 0; i < times; i++)
+                    nInj.New<IInjectTestB>("Default");
 
-            
 
             if (instance1 != instance2)
                 Core.Log.InfoBasic("The instance are differents. OK");

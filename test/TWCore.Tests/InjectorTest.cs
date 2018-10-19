@@ -12,33 +12,22 @@ namespace TWCore.Tests
         public InjectorTest() : base("injectorTest", "Injector Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            var oInj = new InjectorEngine();
-            oInj.Settings = Core.Injector.Settings;
-            var nInj = new NewInjectorEngine();
-            nInj.Settings = Core.Injector.Settings;
+            var n2obj1 = Core.Injector.New<IInjectTestA>("Default");
+            var n2obj2 = Core.Injector.New<IInjectTestB>("Default");
 
-            var n2obj1 = nInj.New<IInjectTestA>("Default");
-            var n2obj2 = nInj.New<IInjectTestB>("Default");
-            var instance1 = oInj.New<IInjectTestA>("Default");
-            var instance2 = oInj.New<IInjectTestA>("Default");
+            var instance1 = Core.Injector.New<IInjectTestA>("Default");
+            var instance2 = Core.Injector.New<IInjectTestA>("Default");
 
             var times = 10_000_000;
-            Core.Log.InfoBasic("Injector New, Number of times: {0}", times);
+            Core.Log.InfoBasic("Injector Number of times: {0}", times);
 
-            using (var w = Watch.Create("Old Injector Object A"))
-                for (var i = 0; i < times; i++)
-                    oInj.New<IInjectTestA>("Default");
-            using (var w = Watch.Create("New Injector Object A"))
+            using (var w = Watch.Create("Injector Object A"))
                 for(var i = 0; i < times; i++)
-                    nInj.New<IInjectTestA>("Default");
+                    Core.Injector.New<IInjectTestA>("Default");
 
-            using (var w = Watch.Create("Old Injector Object B"))
+            using (var w = Watch.Create("Injector Object B"))
                 for (var i = 0; i < times; i++)
-                    oInj.New<IInjectTestB>("Default");
-
-            using (var w = Watch.Create("New Injector Object B"))
-                for (var i = 0; i < times; i++)
-                    nInj.New<IInjectTestB>("Default");
+                    Core.Injector.New<IInjectTestB>("Default");
 
 
             if (instance1 != instance2)

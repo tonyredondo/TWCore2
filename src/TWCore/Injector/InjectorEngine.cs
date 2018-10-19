@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
@@ -31,30 +32,29 @@ using TWCore.Text;
 namespace TWCore.Injector
 {
     /// <summary>
-    /// Injector delegate for type instance resolve.
+    /// Injector delegate for type instance resolver
     /// </summary>
-    /// <param name="type">Object type</param>
-    /// <param name="name">Name of the instance</param>
-    /// <returns>Instance of the object type</returns>
-    public delegate object TypeInstanceResolverDelegate(Type type, string name);
+    /// <param name="type">Type to resolve</param>
+    /// <param name="name">Name to resolve</param>
+    /// <param name="value">Output instance value</param>
+    /// <returns>True if the resolve was successful; otherwise, false.</returns>
+    public delegate bool InjectorResolveDelegate(Type type, string name, out object value);
 
     /// <inheritdoc />
     /// <summary>
-    /// Inject instances for non instantiable class
+    /// Inject instances engine
     /// </summary>
     public class InjectorEngine : IDisposable
     {
-        private readonly ConcurrentDictionary<(Type, string), RegisteredValues> _registeredDelegates = new ConcurrentDictionary<(Type, string), RegisteredValues>();
-        private readonly ConcurrentDictionary<Instantiable, ActivatorItem> _instantiableCache = new ConcurrentDictionary<Instantiable, ActivatorItem>();
+        private ConcurrentDictionary<(Type, string), InjectorTypeNameInfo> _injectorData = new ConcurrentDictionary<(Type, string), InjectorTypeNameInfo>();
+        private ConcurrentDictionary<Type, string[]> _injectorNames = new ConcurrentDictionary<Type, string[]>();
         private InjectorSettings _settings;
-        private bool _attributesRegistered;
-        private bool _useOnlyLoadedAssemblies = true;
 
-        #region Events
+        #region Delegates
         /// <summary>
-        /// Event occurs when a new instance is requested for a non instantiable type
+        /// Delgate when a new instance is requested
         /// </summary>
-        public event TypeInstanceResolverDelegate OnTypeInstanceResolve;
+        public InjectorResolveDelegate OnTypeInjectorResolve;
         #endregion
 
         #region Properties
@@ -67,19 +67,8 @@ namespace TWCore.Injector
             set
             {
                 _settings = value;
-                _attributesRegistered = false;
-            }
-        }
-        /// <summary>
-        /// Use only assemblies loaded, false if uses all assemblies in the folder
-        /// </summary>
-        public bool UseOnlyLoadedAssemblies
-        {
-            get => _useOnlyLoadedAssemblies;
-            set
-            {
-                _useOnlyLoadedAssemblies = value;
-                _attributesRegistered = false;
+                _injectorData.Clear();
+                _injectorNames.Clear();
             }
         }
         /// <summary>
@@ -95,7 +84,6 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public InjectorEngine()
         {
-            UseOnlyLoadedAssemblies = Core.GlobalSettings.InjectorUseOnlyLoadedAssemblies;
             Settings = new InjectorSettings();
         }
         /// <summary>
@@ -105,7 +93,6 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public InjectorEngine(InjectorSettings settings)
         {
-            UseOnlyLoadedAssemblies = Core.GlobalSettings.InjectorUseOnlyLoadedAssemblies;
             Settings = settings;
         }
         /// <summary>
@@ -137,25 +124,18 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object New(Type type, string name = null)
         {
-            if (OnTypeInstanceResolve != null)
+            if (OnTypeInjectorResolve != null && OnTypeInjectorResolve(type, name, out var result))
+                return result;
+            var injectorTypeInfo = _injectorData.GetOrAdd((type, name), CreateInjectorTypeNameInfo);
+            if (injectorTypeInfo == null)
+                return null;
+            if (injectorTypeInfo.Singleton)
             {
-                var tmpObj = OnTypeInstanceResolve(type, name);
-                if (tmpObj != null)
-                    return tmpObj;
+                if (!injectorTypeInfo.SettedSingletonValue)
+                    injectorTypeInfo.SingletonValue = injectorTypeInfo.Activator();
+                return injectorTypeInfo.SingletonValue;
             }
-            if (_registeredDelegates.TryGetValue((type, name), out var regValue))
-            {
-                if (!regValue.Singleton)
-                    return regValue.Delegate();
-                return regValue.SingletonValue ?? (regValue.SingletonValue = regValue.Delegate());
-            }
-            if (type.IsInterface)
-                return CreateInterfaceInstance(type.AssemblyQualifiedName, name);
-            if (type.IsAbstract)
-                return CreateAbstractInstance(type.AssemblyQualifiedName, name);
-            if (type.IsClass)
-                return CreateClassInstance(type.AssemblyQualifiedName, name) ?? Activator.CreateInstance(type);
-            return null;
+            return injectorTypeInfo.Activator();
         }
         /// <summary>
         /// Get all defined instance names for a type
@@ -174,14 +154,16 @@ namespace TWCore.Injector
         public string[] GetNames(Type type)
         {
             if (Settings is null) throw new NullReferenceException("The injector settings is null.");
-            if (type.IsInterface)
-                return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
-            if (type.IsAbstract)
-                return Settings.GetAbstractDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
-            if (!type.IsClass) return Array.Empty<string>();
-            return Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+            return _injectorNames.GetOrAdd(type, mType =>
+            {
+                if (mType.IsInterface)
+                    return Settings.GetInterfaceDefinition(mType.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+                if (mType.IsAbstract)
+                    return Settings.GetAbstractDefinition(mType.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+                if (!mType.IsClass) return Array.Empty<string>();
+                return Settings.GetInstantiableClassDefinition(mType.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+            });
         }
-
         /// <summary>
         /// Get all instances of a type
         /// </summary>
@@ -205,7 +187,7 @@ namespace TWCore.Injector
         /// <typeparam name="TIt">Instantiable type</typeparam>
         /// <param name="name">Instance name, leave null for instantiable type name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Register<TNt, TIt>(string name = null)
+        public bool Register<TNt, TIt>(string name = null)
             => Register(typeof(TNt), typeof(TIt), name, null);
         /// <summary>
         /// Register a instantiable type to a non instantiable type
@@ -215,7 +197,7 @@ namespace TWCore.Injector
         /// <param name="name">Instance name, leave null for instantiable type name</param>
         /// <param name="args">Arguments to register on the constructor</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Register<TNt, TIt>(string name, params object[] args)
+        public bool Register<TNt, TIt>(string name, params object[] args)
             => Register(typeof(TNt), typeof(TIt), name, args);
         /// <summary>
         /// Register a instantiable type to a non instantiable type
@@ -226,7 +208,7 @@ namespace TWCore.Injector
         /// <param name="name">Instance name, leave null for instantiable type name</param>
         /// <param name="args">Arguments to register on the constructor</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Register<TNt, TIt>(bool singleton, string name, params object[] args)
+        public bool Register<TNt, TIt>(bool singleton, string name, params object[] args)
             => Register(typeof(TNt), typeof(TIt), singleton, name, args);
         /// <summary>
         /// Register a instantiable type to a non instantiable type
@@ -236,7 +218,7 @@ namespace TWCore.Injector
         /// <param name="name">Instance name, leave null for instantiable type name</param>
         /// <param name="args">Arguments to register on the constructor</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Register(Type noninstantiableType, Type instantiableType, string name, params object[] args)
+        public bool Register(Type noninstantiableType, Type instantiableType, string name, params object[] args)
             => Register(noninstantiableType, instantiableType, false, name, args);
         /// <summary>
         /// Register a instantiable type to a non instantiable type
@@ -247,12 +229,13 @@ namespace TWCore.Injector
         /// <param name="name">Instance name, leave null for instantiable type name</param>
         /// <param name="args">Arguments to register on the constructor</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Register(Type noninstantiableType, Type instantiableType, bool singleton, string name, params object[] args)
+        public bool Register(Type noninstantiableType, Type instantiableType, bool singleton, string name, params object[] args)
         {
             if (Settings is null) throw new NullReferenceException("The injector settings is null.");
-            var nonTypeInfo = noninstantiableType.GetTypeInfo();
+
+            #region Ensure NonInstantiable Type
             NonInstantiable def = null;
-            if (nonTypeInfo.IsInterface)
+            if (noninstantiableType.IsInterface)
             {
                 def = Settings.GetInterfaceDefinition(noninstantiableType.AssemblyQualifiedName);
                 if (def is null)
@@ -261,7 +244,7 @@ namespace TWCore.Injector
                     Settings.Interfaces.Add(def);
                 }
             }
-            else if (nonTypeInfo.IsAbstract)
+            else if (noninstantiableType.IsAbstract)
             {
                 def = Settings.GetAbstractDefinition(noninstantiableType.AssemblyQualifiedName);
                 if (def is null)
@@ -270,73 +253,57 @@ namespace TWCore.Injector
                     Settings.Abstracts.Add(def);
                 }
             }
-            if (def is null) return;
+            if (def is null) return false;
+            #endregion
+
+            #region Checks if the Item already exist in the definition
             if (name is null)
             {
-                if (def.ClassDefinitions.FirstOrDefault((d, iType) => d.Type == iType.AssemblyQualifiedName, instantiableType) != null) return;
-                var inst = new Instantiable
-                {
-                    Type = instantiableType.AssemblyQualifiedName,
-                    Name = instantiableType.Name,
-                    Singleton = singleton
-                };
-                if (args?.Any() == true)
-                {
-                    inst.Parameters = new NameCollection<Parameter>();
-                    var ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Length == aLength, args.Length);
-                    if (ctor != null)
-                    {
-                        var pargs = ctor.GetParameters();
-                        for (var i = 0; i < pargs.Length; i++)
-                        {
-                            var parg = pargs[i];
-                            inst.Parameters.Add(new Parameter { Name = parg.Name, Type = ArgumentType.Raw, Value = args[i].ToString() });
-                        }
-                    }
-                    else
-                    {
-                        ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Count(p => !p.HasDefaultValue) == aLength, args.Length);
-                        var pargs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
-                        for (var i = 0; i < pargs.Length; i++)
-                        {
-                            var parg = pargs[i];
-                            inst.Parameters.Add(new Parameter { Name = parg.Name, Type = ArgumentType.Raw, Value = args[i].ToString() });
-                        }
-                    }
-                }
-                def.ClassDefinitions.Insert(0, inst);
-                _instantiableCache[inst] = new ActivatorItem { Type = instantiableType, Arguments = args };
+                if (def.ClassDefinitions.FirstOrDefault((d, iType) => d.Type == iType.AssemblyQualifiedName, instantiableType) != null)
+                    return false;
             }
-            else if (!def.ClassDefinitions.Contains(name))
+            else
             {
-                var inst = new Instantiable { Type = instantiableType.AssemblyQualifiedName, Name = name, Singleton = singleton };
-                if (args?.Any() == true)
-                {
-                    inst.Parameters = new NameCollection<Parameter>();
-                    var ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Length == aLength, args.Length);
-                    if (ctor != null)
-                    {
-                        var pargs = ctor.GetParameters();
-                        for (var i = 0; i < pargs.Length; i++)
-                        {
-                            var parg = pargs[i];
-                            inst.Parameters.Add(new Parameter { Name = parg.Name, Type = ArgumentType.Raw, Value = args[i].ToString() });
-                        }
-                    }
-                    else
-                    {
-                        ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Count(p => !p.HasDefaultValue) == aLength, args.Length);
-                        var pargs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
-                        for (var i = 0; i < pargs.Length; i++)
-                        {
-                            var parg = pargs[i];
-                            inst.Parameters.Add(new Parameter { Name = parg.Name, Type = ArgumentType.Raw, Value = args[i].ToString() });
-                        }
-                    }
-                }
-                def.ClassDefinitions.Add(inst);
-                _instantiableCache[inst] = new ActivatorItem { Type = instantiableType, Arguments = args };
+                if (def.ClassDefinitions.FirstOrDefault((d, iType, iName) => d.Type == iType.AssemblyQualifiedName && d.Name == iName, instantiableType, name) != null)
+                    return false;
             }
+            #endregion
+
+            var instantiable = new Instantiable
+            {
+                Type = instantiableType.AssemblyQualifiedName,
+                Name = name ?? instantiableType.Name,
+                Singleton = singleton
+            };
+
+            if (args?.Any() == true)
+            {
+                instantiable.Parameters = new NameCollection<Parameter>();
+                var ctors = instantiableType.GetConstructors();
+                ParameterInfo[] pargs = null;
+
+                #region .ctor Selector
+                var ctor = ctors.FirstOrDefault((c, aLength) => c.GetParameters().Length == aLength, args.Length);
+                if (ctor != null)
+                    pargs = ctor.GetParameters();
+                else
+                {
+                    ctor = ctors.FirstOrDefault((c, aLength) => c.GetParameters().Count(p => !p.HasDefaultValue) == aLength, args.Length);
+                    pargs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
+                }
+                #endregion
+
+                for (var i = 0; i < pargs.Length; i++)
+                    instantiable.Parameters.Add(new Parameter { Name = pargs[i].Name, Type = ArgumentType.Raw, Value = args[i].ToString() });
+            }
+
+            if (name is null)
+                def.ClassDefinitions.Insert(0, instantiable);
+            else
+                def.ClassDefinitions.Add(instantiable);
+            _injectorData.GetOrAdd((noninstantiableType, name), CreateInjectorTypeNameInfo);
+            _injectorNames.Clear();
+            return true;
         }
         /// <summary>
         /// Sets a default name for a non instantiable type
@@ -347,9 +314,8 @@ namespace TWCore.Injector
         public void SetTypeDefault(Type noninstantiableType, string name)
         {
             if (Settings is null) throw new NullReferenceException("The injector settings is null.");
-            var nonTypeInfo = noninstantiableType.GetTypeInfo();
             NonInstantiable def = null;
-            if (nonTypeInfo.IsInterface)
+            if (noninstantiableType.IsInterface)
             {
                 def = Settings.GetInterfaceDefinition(noninstantiableType.AssemblyQualifiedName);
                 if (def is null)
@@ -358,7 +324,7 @@ namespace TWCore.Injector
                     Settings.Interfaces.Add(def);
                 }
             }
-            else if (nonTypeInfo.IsAbstract)
+            else if (noninstantiableType.IsAbstract)
             {
                 def = Settings.GetAbstractDefinition(noninstantiableType.AssemblyQualifiedName);
                 if (def is null)
@@ -380,20 +346,18 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(Type noninstantiableType, Func<object> createInstanceDelegate, string name = null, bool singleton = false)
         {
-            var key = (noninstantiableType, name);
-            _registeredDelegates.TryRemove(key, out var _);
-            _registeredDelegates.TryAdd(key, new RegisteredValues
-            {
-                Delegate = createInstanceDelegate,
-                Singleton = singleton
-            });
+            var regDelegate = _injectorData.GetOrAdd((noninstantiableType, name), mKey => new InjectorTypeNameInfo(mKey.Item1, mKey.Item2));
+            regDelegate.Activator = createInstanceDelegate;
+            regDelegate.Singleton = singleton;
+            regDelegate.SettedSingletonValue = false;
+            _injectorNames.Clear();
         }
         /// <summary>
         /// Preload all declared types
         /// </summary>
         /// <returns>Types tuples array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlyCollection<InjectorSettings.TypeLoadResult> PreloadAllTypes() 
+        public ReadOnlyCollection<InjectorSettings.TypeLoadResult> PreloadAllTypes()
             => Settings.PreloadAllTypes();
         /// <summary>
         /// Get all missing types
@@ -402,207 +366,6 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetAllMissingTypes()
             => Settings.PreloadAllTypes().Where(t => !t.Loaded).Select(t => t.Type).ToArray();
-        #endregion
-
-        #region Private Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object CreateInterfaceInstance(string type, string name)
-        {
-            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
-            RegisterAttributes();
-            var instanceDefinition = Settings.GetInterfaceInstanceDefinition(type, name);
-            if (instanceDefinition is null)
-            {
-                if (name.IsNullOrEmpty())
-                    throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
-                throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
-            }
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
-                return activator.SingletonValue;
-            return CreateInstance(instanceDefinition);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object CreateAbstractInstance(string type, string name)
-        {
-            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
-            RegisterAttributes();
-            var instanceDefinition = Settings.GetAbstractInstanceDefinition(type, name);
-            if (instanceDefinition is null)
-            {
-                if (name.IsNullOrEmpty())
-                    throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
-                throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
-            }
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
-                return activator.SingletonValue;
-            return CreateInstance(instanceDefinition);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object CreateClassInstance(string type, string name)
-        {
-            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
-            RegisterAttributes();
-            var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault((i, mName) => i.Name == mName, name);
-            if (instanceDefinition is null) return null;
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
-                return activator.SingletonValue;
-            return CreateInstance(instanceDefinition);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void RegisterAttributes()
-        {
-            if (_attributesRegistered) return;
-            _attributesRegistered = true;
-            var assemblies = _useOnlyLoadedAssemblies ? Factory.GetAssemblies() : Factory.GetAllAssemblies();
-            var type = typeof(InjectionAttribute);
-            foreach (var assembly in assemblies)
-            {
-                try
-                {
-                    var attributes = assembly.GetCustomAttributes(type).ToArray();
-                    if (attributes.Length <= 0) continue;
-                    foreach (var attr in attributes)
-                        if (attr != null && attr is InjectionAttribute iAttr)
-                            Register(iAttr.NonInstantiableType, iAttr.InstantiableType, iAttr.Singleton, iAttr.Name);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(LogLevel.Warning, string.Format("Error loading InjectionAttributes on Assembly: {0}. {1}", assembly.FullName, ex.Message), ex);
-                }
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object CreateInstance(Instantiable instanceDefinition)
-        {
-            if (!_instantiableCache.TryGetValue(instanceDefinition, out var activatorItem))
-            {
-                activatorItem = GetActivatorItem(instanceDefinition);
-                if (activatorItem is null || activatorItem.EnableCache)
-                    _instantiableCache.TryAdd(instanceDefinition, activatorItem);
-            }
-            if (activatorItem is null) return null;
-            
-            var response = activatorItem.CreateInstance();
-            if (response != null && instanceDefinition.PropertiesSets?.Any() == true)
-            {
-                foreach (var set in instanceDefinition.PropertiesSets)
-                {
-                    var valueType = response.GetMemberObjectType(set.Name);
-                    if (valueType is null) continue;
-                    var value = set.ArgumentName.IsNotNullOrEmpty() ? 
-                        GetArgumentValue(GetArgument(set.ArgumentName), valueType) : 
-                        GetArgumentValue(set, valueType);
-                    response.SetMemberObjectValue(set.Name, value);
-                }
-            }
-            if (instanceDefinition.Singleton)
-            {
-                activatorItem.SingletonValue = response;
-                _instantiableCache.TryAdd(instanceDefinition, activatorItem);
-            }
-            return response;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ActivatorItem GetActivatorItem(Instantiable definition)
-        {
-            var type = Core.GetType(definition.Type, ThrowExceptionOnInstanceCreationError);
-            if (type is null) return null;
-            var typeInfo = type.GetTypeInfo();
-            if (definition.Parameters is null || definition.Parameters.Count == 0)
-                return new ActivatorItem { Type = type, EnableCache = true };
-
-            var parameters = definition.Parameters;
-            foreach (var ctor in typeInfo.DeclaredConstructors)
-            {
-                var ctorArgs = ctor.GetParameters();
-                if (ctorArgs.Length != parameters.Count)
-                    ctorArgs = ctorArgs.Where(p => !p.HasDefaultValue).ToArray();
-                if (ctorArgs.Length != parameters.Count) continue;
-                if (!ctorArgs.SequenceEqual(parameters, p => p.Name, p => p.Name)) continue;
-                
-                var argsLst = new List<object>();
-                var enableCache = true;
-
-                #region Create and parsing Parameters
-                for (var i = 0; i < ctorArgs.Length; i++)
-                {
-                    var parameter = parameters[i];
-                    if (parameter.Type != ArgumentType.Raw && parameter.Type != ArgumentType.Settings)
-                        enableCache = false;
-                    argsLst.Add(parameter.ArgumentName.IsNotNullOrWhitespace()
-                        ? GetArgumentValue(GetArgument(parameter.ArgumentName), ctorArgs[i].ParameterType)
-                        : GetArgumentValue(parameter, ctorArgs[i].ParameterType));
-                }
-                #endregion
-
-                return new ActivatorItem { Type = type, Arguments = argsLst.ToArray(), EnableCache = enableCache };
-            }
-
-            if (ThrowExceptionOnInstanceCreationError)
-                throw new EntryPointNotFoundException("A valid constructor can't be found for the type: " + type.AssemblyQualifiedName);
-
-            return null;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Argument GetArgument(string name)
-        {
-            if (!Settings.Arguments.Contains(name)) 
-                throw new ArgumentNullException(name);
-            return Settings.Arguments[name];
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object GetArgumentValue(Argument argument, Type valueType)
-        {
-            object argumentValue;
-            switch (argument.Type)
-            {
-                case ArgumentType.Raw:
-                    argumentValue = StringParser.Parse(argument.Value, valueType, null);
-                    break;
-                case ArgumentType.Settings:
-                    argumentValue = StringParser.Parse(Core.Settings[argument.Value], valueType, null);
-                    break;
-                case ArgumentType.Interface:
-                    argumentValue = CreateInterfaceInstance(argument.Value, argument.ClassName);
-                    break;
-                case ArgumentType.Abstract:
-                    argumentValue = CreateAbstractInstance(argument.Value, argument.ClassName);
-                    break;
-                case ArgumentType.Instance:
-                    argumentValue = CreateClassInstance(argument.Value, argument.ClassName);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            return argumentValue;
-        }
-        #endregion
-
-        #region Nested Class
-        private class ActivatorItem
-        {
-            public Type Type;
-            public object[] Arguments;
-            public object SingletonValue;
-            public bool EnableCache;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public object CreateInstance()
-            {
-                return Arguments?.Any() == true ? 
-                    Activator.CreateInstance(Type, Arguments) : 
-                    Activator.CreateInstance(Type);
-            }
-        }
-        private class RegisteredValues
-        {
-            public bool Singleton;
-            public object SingletonValue;
-            public Func<object> Delegate;
-        }
-        #endregion
-
         /// <inheritdoc />
         /// <summary>
         /// Dispose resources
@@ -610,8 +373,275 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            _instantiableCache?.Clear();
+            _injectorData.Clear();
+            _injectorNames.Clear();
             _settings = null;
         }
+        #endregion
+
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private InjectorTypeNameInfo CreateInjectorTypeNameInfo((Type Type, string Name) value)
+        {
+            if (ThrowExceptionOnInstanceCreationError)
+                return new InjectorTypeNameInfo(value.Type, value.Name, Settings);
+            try
+            {
+                return new InjectorTypeNameInfo(value.Type, value.Name, Settings);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(LogLevel.Warning, ex);
+                return null;
+            }
+        }
+        #endregion
+
+        #region Nested Types
+        private class InjectorTypeNameInfo
+        {
+            public readonly Type Type;
+            public readonly Type InstantiableType;
+            public readonly string InstantiableName;
+            public readonly Instantiable Definition;
+            public readonly bool ActivatorByExpression;
+            public bool Singleton;
+            public bool SettedSingletonValue;
+            public object SingletonValue;
+            public LambdaExpression ActivatorExpression;
+            public Func<object> Activator;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InjectorTypeNameInfo(Type type, string name, InjectorSettings settings)
+            {
+                Type = type;
+                InstantiableName = name;
+                Instantiable definition = null;
+
+                #region Definitions
+                if (type.IsInterface)
+                    definition = settings.GetInterfaceInstanceDefinition(type.AssemblyQualifiedName, name);
+                else if (type.IsAbstract)
+                    definition = settings.GetAbstractInstanceDefinition(type.AssemblyQualifiedName, name);
+                else if (type.IsClass)
+                {
+                    definition = settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName).FirstOrDefault(i => i.Name == name);
+                    if (definition == null)
+                        definition = new Instantiable { Type = type.AssemblyQualifiedName, Name = name };
+                }
+                Definition = definition;
+                #endregion
+
+                Singleton = definition.Singleton;
+                var defType = Core.GetType(definition.Type, true);
+                if (defType is null) return;
+                InstantiableType = defType;
+
+                ConstructorInfo selectedCtor = null;
+
+                #region Constructor Selector
+                var ctors = defType.GetConstructors();
+                if (definition.Parameters == null || definition.Parameters.Count == 0)
+                {
+                    #region .ctor Selector
+                    var lstParams = new List<string>();
+                    var ctorsOrdersByParamLength = ctors.OrderByDescending(i => i.GetParameters().Length);
+                    foreach (var ctor in ctorsOrdersByParamLength)
+                    {
+                        selectedCtor = ctor;
+                        var ctorParameters = ctor.GetParameters();
+                        foreach (var ctorParam in ctorParameters)
+                        {
+                            var paramType = ctorParam.ParameterType;
+                            var paramTypeAQName = paramType.AssemblyQualifiedName;
+
+                            if (ctorParam.HasDefaultValue) continue;
+
+                            if (paramType.IsInterface && settings.GetInterfaceDefinition(paramTypeAQName) == null)
+                            {
+                                selectedCtor = null;
+                                lstParams.Add($"A definition for interface: '{paramTypeAQName}' wasn't found.");
+                                break;
+                            }
+                            else if (paramType.IsAbstract && settings.GetAbstractDefinition(paramTypeAQName) == null)
+                            {
+                                selectedCtor = null;
+                                lstParams.Add($"A definition for abstract: '{paramTypeAQName}' wasn't found.");
+                                break;
+                            }
+                            else if (paramType.IsClass && !settings.GetInstantiableClassDefinition(paramTypeAQName).Any())
+                            {
+                                selectedCtor = null;
+                                lstParams.Add($"A definition for class: '{paramTypeAQName}' wasn't found.");
+                                break;
+                            }
+                        }
+                        if (selectedCtor != null)
+                            break;
+                    }
+                    #endregion
+
+                    if (selectedCtor == null)
+                        throw new Exception($"A valid .ctor wasn't found in the type: {defType.AssemblyQualifiedName}.\r\n{lstParams.Join("\r\n")}");
+                }
+                else
+                {
+                    selectedCtor = ctors.FirstOrDefault(c =>
+                    {
+                        var cParams = c.GetParameters();
+                        var definitionParameters = definition.Parameters.ToDictionary(k => k.Name);
+                        foreach (var cParam in cParams)
+                        {
+                            if (!definitionParameters.Remove(cParam.Name))
+                                if (!cParam.HasDefaultValue)
+                                    return false;
+
+                        }
+                        return definitionParameters.Count == 0;
+                    });
+
+                    if (selectedCtor == null)
+                        throw new Exception($"A .ctor with {definition.Parameters.Count} parameters wasn't found in the type: {defType.AssemblyQualifiedName}.");
+                }
+                #endregion
+
+                #region Create Expression
+                var serExpressions = new List<Expression>();
+                var varExpressions = new List<ParameterExpression>();
+                var value = Expression.Parameter(defType, "value");
+                varExpressions.Add(value);
+                var returnTarget = Expression.Label(typeof(object), "ReturnTarget");
+
+                #region New Call
+                var paramExpressions = new List<Expression>();
+                var cParameters = selectedCtor.GetParameters();
+                var defParameters = definition.Parameters.ToDictionary(k => k.Name);
+                foreach (var cParam in cParameters)
+                {
+                    if (defParameters.TryGetValue(cParam.Name, out var defParam))
+                    {
+                        Argument defArgument = defParam;
+                        if (!string.IsNullOrWhiteSpace(defParam.ArgumentName))
+                            settings.Arguments.TryGet(defParam.ArgumentName, out defArgument);
+
+                        switch (defArgument.Type)
+                        {
+                            case ArgumentType.Abstract:
+                            case ArgumentType.Instance:
+                            case ArgumentType.Interface:
+                                paramExpressions.Add(
+                                    Expression.Convert(
+                                        Expression.Call(
+                                            Expression.Property(null, typeof(Core), "Injector"),
+                                            "New",
+                                            null,
+                                            Expression.Constant(Core.GetType(defArgument.Value), typeof(Type)),
+                                            Expression.Constant(defArgument.ClassName, typeof(string))),
+                                        cParam.ParameterType)
+                                );
+
+                                break;
+                            case ArgumentType.Raw:
+                                var rawValue = defArgument.Value.ParseTo(cParam.ParameterType, cParam.ParameterType.IsValueType ? System.Activator.CreateInstance(cParam.ParameterType) : null);
+                                paramExpressions.Add(Expression.Constant(rawValue, cParam.ParameterType));
+                                break;
+                            case ArgumentType.Settings:
+                                if (Core.Settings.TryGet(defArgument.Value, out var setKeyValue))
+                                {
+                                    var setValue = setKeyValue.Value.ParseTo(cParam.ParameterType, cParam.ParameterType.IsValueType ? System.Activator.CreateInstance(cParam.ParameterType) : null);
+                                    paramExpressions.Add(Expression.Constant(setValue, cParam.ParameterType));
+                                }
+                                else
+                                    paramExpressions.Add(Expression.Constant(cParam.ParameterType.IsValueType ? System.Activator.CreateInstance(cParam.ParameterType) : null, cParam.ParameterType));
+                                break;
+                        }
+                    }
+                    else if (cParam.HasDefaultValue)
+                    {
+                        paramExpressions.Add(Expression.Constant(cParam.RawDefaultValue, cParam.ParameterType));
+                    }
+                }
+                if (paramExpressions.Count == 0)
+                    serExpressions.Add(Expression.Assign(value, Expression.New(selectedCtor)));
+                else
+                    serExpressions.Add(Expression.Assign(value, Expression.New(selectedCtor, paramExpressions)));
+                #endregion
+
+                #region Properties Set
+                if (definition.PropertiesSets?.Any() == true)
+                {
+                    foreach (var set in definition.PropertiesSets)
+                    {
+                        Argument argSet = set;
+                        if (!string.IsNullOrWhiteSpace(set.ArgumentName))
+                            settings.Arguments.TryGet(set.ArgumentName, out argSet);
+
+                        var property = defType.GetProperty(set.Name, BindingFlags.Instance | BindingFlags.Public);
+                        if (property == null)
+                            throw new Exception($"The Property '{set.Name}' can't be found in the object type '{definition.Type}'");
+
+                        var propertyExpression = Expression.Property(value, property);
+
+                        switch (argSet.Type)
+                        {
+                            case ArgumentType.Abstract:
+                            case ArgumentType.Instance:
+                            case ArgumentType.Interface:
+                                serExpressions.Add(
+                                    Expression.Assign(propertyExpression,
+                                        Expression.Convert(
+                                            Expression.Call(
+                                                Expression.Property(null, typeof(Core), "Injector"),
+                                                "New",
+                                                null,
+                                                Expression.Constant(Core.GetType(argSet.Value), typeof(Type)),
+                                                Expression.Constant(argSet.ClassName, typeof(string))),
+                                            property.PropertyType)
+                                   )
+                                );
+                                break;
+                            case ArgumentType.Raw:
+                                var rawValue = argSet.Value.ParseTo(property.PropertyType, property.PropertyType.IsValueType ? System.Activator.CreateInstance(property.PropertyType) : null);
+                                serExpressions.Add(Expression.Assign(propertyExpression, Expression.Constant(rawValue, property.PropertyType)));
+                                break;
+                            case ArgumentType.Settings:
+                                if (Core.Settings.TryGet(argSet.Value, out var setKeyValue))
+                                {
+                                    var setValue = setKeyValue.Value.ParseTo(property.PropertyType, property.PropertyType.IsValueType ? System.Activator.CreateInstance(property.PropertyType) : null);
+                                    serExpressions.Add(Expression.Assign(propertyExpression, Expression.Constant(setValue, property.PropertyType)));
+                                }
+                                else
+                                    serExpressions.Add(Expression.Assign(propertyExpression, Expression.Constant(property.PropertyType.IsValueType ? System.Activator.CreateInstance(property.PropertyType) : null, property.PropertyType)));
+                                break;
+                        }
+                    }
+                }
+                #endregion
+
+                serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
+                serExpressions.Add(Expression.Label(returnTarget, value));
+                var block = Expression.Block(varExpressions, serExpressions).Reduce();
+                var lambda = Expression.Lambda<Func<object>>(block, type.Name + "_Activator", null);
+                ActivatorExpression = lambda;
+                Activator = lambda.Compile();
+                #endregion
+
+                ActivatorByExpression = true;
+
+                if (Singleton)
+                {
+                    SingletonValue = Activator();
+                    SettedSingletonValue = true;
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InjectorTypeNameInfo(Type type, string name)
+            {
+                Type = type;
+                InstantiableName = name;
+                ActivatorByExpression = false;
+            }
+        }
+        #endregion
     }
 }

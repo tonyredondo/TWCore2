@@ -114,7 +114,7 @@ namespace TWCore
         /// <summary>
         /// Default Injector instance
         /// </summary>
-        public static NewInjectorEngine Injector { get; private set; } = new NewInjectorEngine();
+        public static InjectorEngine Injector { get; private set; } = new InjectorEngine();
         /// <summary>
         /// Task global data dictionary
         /// </summary>
@@ -762,7 +762,7 @@ namespace TWCore
         /// <param name="applicationName">Application name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void LoadInjector(InjectorGlobalSettings settings, string environmentName = null, string applicationName = null)
-            => Injector = new NewInjectorEngine(settings.GetSettings(environmentName ?? EnvironmentName, applicationName ?? ApplicationName));
+            => Injector = new InjectorEngine(settings.GetSettings(environmentName ?? EnvironmentName, applicationName ?? ApplicationName));
         /// <summary>
         /// Load injector
         /// </summary>

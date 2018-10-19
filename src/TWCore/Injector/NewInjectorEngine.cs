@@ -47,9 +47,8 @@ namespace TWCore.Injector
     public class NewInjectorEngine : IDisposable
     {
         private ConcurrentDictionary<(Type, string), InjectorTypeNameInfo> _injectorData = new ConcurrentDictionary<(Type, string), InjectorTypeNameInfo>();
+        private ConcurrentDictionary<Type, string[]> _injectorNames = new ConcurrentDictionary<Type, string[]>();
         private InjectorSettings _settings;
-        private bool _attributesRegistered;
-        private bool _useOnlyLoadedAssemblies = true;
 
         #region Delegates
         /// <summary>
@@ -68,19 +67,8 @@ namespace TWCore.Injector
             set
             {
                 _settings = value;
-                _attributesRegistered = false;
-            }
-        }
-        /// <summary>
-        /// Use only assemblies loaded, false if uses all assemblies in the folder
-        /// </summary>
-        public bool UseOnlyLoadedAssemblies
-        {
-            get => _useOnlyLoadedAssemblies;
-            set
-            {
-                _useOnlyLoadedAssemblies = value;
-                _attributesRegistered = false;
+                _injectorData.Clear();
+                _injectorNames.Clear();
             }
         }
         /// <summary>
@@ -96,7 +84,6 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NewInjectorEngine()
         {
-            UseOnlyLoadedAssemblies = Core.GlobalSettings.InjectorUseOnlyLoadedAssemblies;
             Settings = new InjectorSettings();
         }
         /// <summary>
@@ -106,7 +93,6 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NewInjectorEngine(InjectorSettings settings)
         {
-            UseOnlyLoadedAssemblies = Core.GlobalSettings.InjectorUseOnlyLoadedAssemblies;
             Settings = settings;
         }
         /// <summary>
@@ -143,10 +129,257 @@ namespace TWCore.Injector
             var injectorTypeInfo = _injectorData.GetOrAdd((type, name), CreateInjectorTypeNameInfo);
             if (injectorTypeInfo == null)
                 return null;
-            return injectorTypeInfo.Singleton ? injectorTypeInfo.SingletonValue : injectorTypeInfo.Activator();
+            if (injectorTypeInfo.Singleton)
+            {
+                if (!injectorTypeInfo.SettedSingletonValue)
+                    injectorTypeInfo.SingletonValue = injectorTypeInfo.Activator();
+                return injectorTypeInfo.SingletonValue;
+            }
+            return injectorTypeInfo.Activator();
+        }
+        /// <summary>
+        /// Get all defined instance names for a type
+        /// </summary>
+        /// <typeparam name="T">Type of object</typeparam>
+        /// <returns>String array with all names defined</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string[] GetNames<T>()
+            => GetNames(typeof(T));
+        /// <summary>
+        /// Get all defined instance names for a type
+        /// </summary>
+        /// <param name="type">Type of object</param>
+        /// <returns>String array with all names defined</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string[] GetNames(Type type)
+        {
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
+            return _injectorNames.GetOrAdd(type, mType =>
+            {
+                if (mType.IsInterface)
+                    return Settings.GetInterfaceDefinition(mType.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+                if (mType.IsAbstract)
+                    return Settings.GetAbstractDefinition(mType.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+                if (!mType.IsClass) return Array.Empty<string>();
+                return Settings.GetInstantiableClassDefinition(mType.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+            });
+        }
+        /// <summary>
+        /// Get all instances of a type
+        /// </summary>
+        /// <typeparam name="T">Type of object</typeparam>
+        /// <returns>All instances array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] GetAllInstances<T>()
+            => GetNames<T>().Select(New<T>).ToArray();
+        /// <summary>
+        /// Get all instances of a type
+        /// </summary>
+        /// <param name="type">Type of object</param>
+        /// <returns>All instances array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object[] GetAllInstances(Type type)
+            => GetNames(type).Select((n, mType) => New(mType, n), type).ToArray();
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
+        /// <typeparam name="TNt">Non instantiable type</typeparam>
+        /// <typeparam name="TIt">Instantiable type</typeparam>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Register<TNt, TIt>(string name = null)
+            => Register(typeof(TNt), typeof(TIt), name, null);
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
+        /// <typeparam name="TNt">Non instantiable type</typeparam>
+        /// <typeparam name="TIt">Instantiable type</typeparam>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        /// <param name="args">Arguments to register on the constructor</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Register<TNt, TIt>(string name, params object[] args)
+            => Register(typeof(TNt), typeof(TIt), name, args);
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
+        /// <typeparam name="TNt">Non instantiable type</typeparam>
+        /// <typeparam name="TIt">Instantiable type</typeparam>
+        /// <param name="singleton">Indicates that this instantiable type is a singleton</param>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        /// <param name="args">Arguments to register on the constructor</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Register<TNt, TIt>(bool singleton, string name, params object[] args)
+            => Register(typeof(TNt), typeof(TIt), singleton, name, args);
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
+        /// <param name="noninstantiableType">Non instantiable type</param>
+        /// <param name="instantiableType">Instantiable type</param>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        /// <param name="args">Arguments to register on the constructor</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Register(Type noninstantiableType, Type instantiableType, string name, params object[] args)
+            => Register(noninstantiableType, instantiableType, false, name, args);
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
+        /// <param name="noninstantiableType">Non instantiable type</param>
+        /// <param name="instantiableType">Instantiable type</param>
+        /// <param name="singleton">Indicates that this instantiable type is a singleton</param>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        /// <param name="args">Arguments to register on the constructor</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Register(Type noninstantiableType, Type instantiableType, bool singleton, string name, params object[] args)
+        {
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
+
+            #region Ensure NonInstantiable Type
+            NonInstantiable def = null;
+            if (noninstantiableType.IsInterface)
+            {
+                def = Settings.GetInterfaceDefinition(noninstantiableType.AssemblyQualifiedName);
+                if (def is null)
+                {
+                    def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
+                    Settings.Interfaces.Add(def);
+                }
+            }
+            else if (noninstantiableType.IsAbstract)
+            {
+                def = Settings.GetAbstractDefinition(noninstantiableType.AssemblyQualifiedName);
+                if (def is null)
+                {
+                    def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
+                    Settings.Abstracts.Add(def);
+                }
+            }
+            if (def is null) return false;
+            #endregion
+
+            #region Checks if the Item already exist in the definition
+            if (name is null)
+            {
+                if (def.ClassDefinitions.FirstOrDefault((d, iType) => d.Type == iType.AssemblyQualifiedName, instantiableType) != null)
+                    return false;
+            }
+            else
+            {
+                if (def.ClassDefinitions.FirstOrDefault((d, iType, iName) => d.Type == iType.AssemblyQualifiedName && d.Name == iName, instantiableType, name) != null)
+                    return false;
+            }
+            #endregion
+
+            var instantiable = new Instantiable
+            {
+                Type = instantiableType.AssemblyQualifiedName,
+                Name = name ?? instantiableType.Name,
+                Singleton = singleton
+            };
+
+            if (args?.Any() == true)
+            {
+                instantiable.Parameters = new NameCollection<Parameter>();
+                var ctors = instantiableType.GetConstructors();
+                ParameterInfo[] pargs = null;
+
+                #region .ctor Selector
+                var ctor = ctors.FirstOrDefault((c, aLength) => c.GetParameters().Length == aLength, args.Length);
+                if (ctor != null)
+                    pargs = ctor.GetParameters();
+                else
+                {
+                    ctor = ctors.FirstOrDefault((c, aLength) => c.GetParameters().Count(p => !p.HasDefaultValue) == aLength, args.Length);
+                    pargs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
+                }
+                #endregion
+
+                for (var i = 0; i < pargs.Length; i++)
+                    instantiable.Parameters.Add(new Parameter { Name = pargs[i].Name, Type = ArgumentType.Raw, Value = args[i].ToString() });
+            }
+
+            if (name is null)
+                def.ClassDefinitions.Insert(0, instantiable);
+            else
+                def.ClassDefinitions.Add(instantiable);
+            _injectorData.GetOrAdd((noninstantiableType, name), CreateInjectorTypeNameInfo);
+            _injectorNames.Clear();
+            return true;
+        }
+        /// <summary>
+        /// Sets a default name for a non instantiable type
+        /// </summary>
+        /// <param name="noninstantiableType">Non instantiable type</param>
+        /// <param name="name">Instance name</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetTypeDefault(Type noninstantiableType, string name)
+        {
+            if (Settings is null) throw new NullReferenceException("The injector settings is null.");
+            NonInstantiable def = null;
+            if (noninstantiableType.IsInterface)
+            {
+                def = Settings.GetInterfaceDefinition(noninstantiableType.AssemblyQualifiedName);
+                if (def is null)
+                {
+                    def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
+                    Settings.Interfaces.Add(def);
+                }
+            }
+            else if (noninstantiableType.IsAbstract)
+            {
+                def = Settings.GetAbstractDefinition(noninstantiableType.AssemblyQualifiedName);
+                if (def is null)
+                {
+                    def = new NonInstantiable { Type = noninstantiableType.AssemblyQualifiedName };
+                    Settings.Abstracts.Add(def);
+                }
+            }
+            if (def != null)
+                def.DefaultClassName = name;
+        }
+        /// <summary>
+        /// Register a Func delegate for create a non instantiable type
+        /// </summary>
+        /// <param name="noninstantiableType">Non instantiable type</param>
+        /// <param name="createInstanceDelegate">Create instance delegate</param>
+        /// <param name="name">Instance name</param>
+        /// <param name="singleton">Indicates that this instantiable type is a singleton</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Register(Type noninstantiableType, Func<object> createInstanceDelegate, string name = null, bool singleton = false)
+        {
+            var regDelegate = _injectorData.GetOrAdd((noninstantiableType, name), mKey => new InjectorTypeNameInfo(mKey.Item1, mKey.Item2));
+            regDelegate.Activator = createInstanceDelegate;
+            regDelegate.Singleton = singleton;
+            regDelegate.SettedSingletonValue = false;
+            _injectorNames.Clear();
+        }
+        /// <summary>
+        /// Preload all declared types
+        /// </summary>
+        /// <returns>Types tuples array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlyCollection<InjectorSettings.TypeLoadResult> PreloadAllTypes()
+            => Settings.PreloadAllTypes();
+        /// <summary>
+        /// Get all missing types
+        /// </summary>
+        /// <returns>Type AssemblyQualifiedName array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string[] GetAllMissingTypes()
+            => Settings.PreloadAllTypes().Where(t => !t.Loaded).Select(t => t.Type).ToArray();
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
+        {
+            _injectorData.Clear();
+            _injectorNames.Clear();
+            _settings = null;
         }
         #endregion
 
+        #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private InjectorTypeNameInfo CreateInjectorTypeNameInfo((Type Type, string Name) value)
         {
@@ -162,24 +395,18 @@ namespace TWCore.Injector
                 return null;
             }
         }
+        #endregion
 
-        /// <inheritdoc />
-        /// <summary>
-        /// Dispose resources
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-        }
-
-
+        #region Nested Types
         private class InjectorTypeNameInfo
         {
             public readonly Type Type;
             public readonly Type InstantiableType;
             public readonly string InstantiableName;
             public readonly Instantiable Definition;
+            public readonly bool ActivatorByExpression;
             public bool Singleton;
+            public bool SettedSingletonValue;
             public object SingletonValue;
             public LambdaExpression ActivatorExpression;
             public Func<object> Activator;
@@ -399,21 +626,22 @@ namespace TWCore.Injector
                 Activator = lambda.Compile();
                 #endregion
 
+                ActivatorByExpression = true;
+
                 if (Singleton)
+                {
                     SingletonValue = Activator();
+                    SettedSingletonValue = true;
+                }
             }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InjectorTypeNameInfo(Type type, Type instantiableType, bool singleton, string name, object[] parameters)
+            public InjectorTypeNameInfo(Type type, string name)
             {
-
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InjectorTypeNameInfo(Type type, Func<object> activator, bool singleton, string name)
-            {
-
+                Type = type;
+                InstantiableName = name;
+                ActivatorByExpression = false;
             }
         }
+        #endregion
     }
 }

@@ -12,13 +12,15 @@ namespace TWCore.Tests
         public InjectorTest() : base("injectorTest", "Injector Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-
+            var oInj = new InjectorEngine();
+            oInj.Settings = Core.Injector.Settings;
             var nInj = new NewInjectorEngine();
             nInj.Settings = Core.Injector.Settings;
+
             var n2obj1 = nInj.New<IInjectTestA>("Default");
             var n2obj2 = nInj.New<IInjectTestB>("Default");
-            var instance1 = Core.Injector.New<IInjectTestA>("Default");
-            var instance2 = Core.Injector.New<IInjectTestA>("Default");
+            var instance1 = oInj.New<IInjectTestA>("Default");
+            var instance2 = oInj.New<IInjectTestA>("Default");
 
 
             using (var w = Watch.Create("New Injector A"))
@@ -30,10 +32,10 @@ namespace TWCore.Tests
 
             using (var w = Watch.Create("Injector A"))
                 for (var i = 0; i < 10000000; i++)
-                    Core.Injector.New<IInjectTestA>("Default");
+                    oInj.New<IInjectTestA>("Default");
             using (var w = Watch.Create("Injector B"))
                 for (var i = 0; i < 10000000; i++)
-                    Core.Injector.New<IInjectTestB>("Default");
+                    oInj.New<IInjectTestB>("Default");
 
 
             

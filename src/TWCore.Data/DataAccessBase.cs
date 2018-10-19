@@ -421,7 +421,8 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    //Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    Task.Run(() => EntityBinder.PrepareEntity<T>());
                     if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
@@ -619,7 +620,8 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    //Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    Task.Run(() => EntityBinder.PrepareEntity<T>());
                     if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
@@ -1497,7 +1499,8 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    EntityBinder.PrepareEntity(typeof(T));
+                    //EntityBinder.PrepareEntity(typeof(T));
+                    EntityBinder.PrepareEntity<T>();
                     if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion
@@ -1640,7 +1643,8 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    EntityBinder.PrepareEntity(typeof(T));
+                    //EntityBinder.PrepareEntity(typeof(T));
+                    EntityBinder.PrepareEntity<T>();
                     if (fillMethod is null)
                         fillMethod = (e, o) => e.Bind<T>(o);
                     #endregion

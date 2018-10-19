@@ -31,21 +31,22 @@ namespace TWCore.Data
     public class EntityBinder
     {
         #region Statics
-        /// <summary>
-        /// Properties of entities type
-        /// </summary>
-        public static ConcurrentDictionary<Type, EntityInfo> Entities { get; } = new ConcurrentDictionary<Type, EntityInfo>();
-        /// <summary>
-        /// Types overwrite definition
-        /// </summary>
-        public static ConcurrentDictionary<Type, Type> TypesOverwrite { get; } = new ConcurrentDictionary<Type, Type>();
+        ///// <summary>
+        ///// Properties of entities type
+        ///// </summary>
+        //public static ConcurrentDictionary<Type, EntityInfo> Entities { get; } = new ConcurrentDictionary<Type, EntityInfo>();
+        ///// <summary>
+        ///// Types overwrite definition
+        ///// </summary>
+        //public static ConcurrentDictionary<Type, Type> TypesOverwrite { get; } = new ConcurrentDictionary<Type, Type>();
         /// <summary>
         /// Prepare Type for entity binder
         /// </summary>
-        /// <param name="type">Type of entity</param>
+        ///// <param name="type">Type of entity</param>
         /// <returns>EntityInfo instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityInfo PrepareEntity(Type type) => Entities.GetOrAdd(type, EntityInfo.CreateEntityInfo);
+        //public static EntityInfo PrepareEntity(Type type) => Entities.GetOrAdd(type, EntityInfo.CreateEntityInfo);
+        public static EntityInfo<T> PrepareEntity<T>() => EntityInfo<T>.Instance;
         #endregion
 
         #region Property
@@ -90,33 +91,27 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Bind<T>(object[] rowValues, string pattern = null)
         {
-            var type = typeof(T);
-            if (TypesOverwrite.TryGetValue(type, out var rType))
-                type = rType;
+            //var type = typeof(T);
+            //if (TypesOverwrite.TryGetValue(type, out var rType))
+            //    type = rType;
 
             if (ColumnIndex.Count != rowValues.Length)
                 throw new ArgumentException("The row values length is different from the expected.");
 
-            if (type == typeof(DictionaryObject))
+            if (typeof(T) == typeof(DictionaryObject))
             {
                 var dicData = ColumnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();
                 return (T)(object)new DictionaryObject(dicData);
             }
-            
-            var entityInfo = PrepareEntity(type);
-            var entity = (T)entityInfo.Activator();
-            foreach (var prop in entityInfo.Properties)
-            {
-                var propName = prop.Name;
-                if (pattern.IsNotNullOrEmpty())
-                    propName = pattern.Replace("%", propName);
 
-                if (!ColumnIndex.ContainsKey(propName)) continue;
-                    
-                var idx = ColumnIndex[propName];
+            var entityInfo = EntityInfo<T>.Instance;
+            var entity = (T)entityInfo.Activator();
+            foreach (var (propName, prop) in entityInfo.GetColumnNamesByPattern(pattern))
+            {
+                if (!ColumnIndex.TryGetValue(propName, out var idx)) continue;
                 if (idx >= rowValues.Length || idx < 0)
                 {
-                    Core.Log.Warning($"The value for the property: {propName} on the entity: {type.Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
+                    Core.Log.Warning($"The value for the property: {propName} on the entity: {typeof(T).Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
                     continue;
                 }
                 var value = rowValues[idx];
@@ -198,8 +193,16 @@ namespace TWCore.Data
         /// <summary>
         /// Entity info
         /// </summary>
-        public class EntityInfo
+        /// <typeparam name="T">Type of entity</typeparam>
+        public class EntityInfo<T>
         {
+            private static readonly ConcurrentDictionary<string, (string, FastPropertyInfo)[]> EntityInfoPropertyPatterns = new ConcurrentDictionary<string, (string, FastPropertyInfo)[]>();
+            /// <summary>
+            /// Singleton instance
+            /// </summary>
+            public static readonly EntityInfo<T> Instance = new EntityInfo<T>();
+
+
             /// <summary>
             /// Entity Activator
             /// </summary>
@@ -213,20 +216,62 @@ namespace TWCore.Data
             /// Entity info
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private EntityInfo(Type type)
+            private EntityInfo()
             {
+                var type = typeof(T);
                 Activator = Factory.Accessors.CreateActivator(type);
                 Properties = type.GetRuntimeProperties().Where(p => p.CanWrite).Select(p => p.GetFastPropertyInfo()).ToArray();
             }
 
             /// <summary>
-            /// Create a new entity info
+            /// Gets the columns names list using a pattern 
             /// </summary>
-            /// <param name="type">Type of entity</param>
-            /// <returns>EntityInfo</returns>
+            /// <param name="pattern"></param>
+            /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static EntityInfo CreateEntityInfo(Type type) => new EntityInfo(type);
+            public (string, FastPropertyInfo)[] GetColumnNamesByPattern(string pattern)
+            {
+                return EntityInfoPropertyPatterns.GetOrAdd(pattern ?? string.Empty, mPattern =>
+                {
+                    if (mPattern == string.Empty)
+                        return Properties.Select(p => (p.Name, p)).ToArray();
+                    return Properties.Select(p => (pattern.Replace("%", p.Name), p)).ToArray();
+                });
+            }
         }
+
+        ///// <summary>
+        ///// Entity info
+        ///// </summary>
+        //public class EntityInfo
+        //{
+        //    /// <summary>
+        //    /// Entity Activator
+        //    /// </summary>
+        //    public readonly ActivatorDelegate Activator;
+        //    /// <summary>
+        //    /// Fast Property information
+        //    /// </summary>
+        //    public readonly FastPropertyInfo[] Properties;
+
+        //    /// <summary>
+        //    /// Entity info
+        //    /// </summary>
+        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //    private EntityInfo(Type type)
+        //    {
+        //        Activator = Factory.Accessors.CreateActivator(type);
+        //        Properties = type.GetRuntimeProperties().Where(p => p.CanWrite).Select(p => p.GetFastPropertyInfo()).ToArray();
+        //    }
+
+        //    /// <summary>
+        //    /// Create a new entity info
+        //    /// </summary>
+        //    /// <param name="type">Type of entity</param>
+        //    /// <returns>EntityInfo</returns>
+        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //    public static EntityInfo CreateEntityInfo(Type type) => new EntityInfo(type);
+        //}
         #endregion
     }
 }

@@ -69,7 +69,8 @@ namespace TWCore.Data
         public void PrepareSet(IEntityValueConverter valueConverter)
         {
             Binder = new EntityBinder(valueConverter);
-            EntityBinder.PrepareEntity(typeof(T));
+            //EntityBinder.PrepareEntity(typeof(T));
+            EntityBinder.PrepareEntity<T>();
             FillMethod = FillMethod ?? DefaultFillMethod;
         }
         /// <inheritdoc />

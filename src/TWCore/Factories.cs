@@ -26,6 +26,7 @@ using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
 using TWCore.Reflection;
+using TWCore.Serialization;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable VirtualMemberNeverOverridden.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -418,6 +419,18 @@ namespace TWCore
             lItem.AssemblyName = assemblyName;
             lItem.TypeName = typeName;
             lItem.Exception = ex != null ? new SerializableException(ex) : null;
+
+            if (Core.GlobalSettings.DumpDeserializerExceptionGenericObject && ex is DeserializerException dEx)
+            {
+                try
+                {
+                    dEx.SerializeToJsonFile($"{lItem.Id}.DEX.json");
+                }
+                catch
+                {
+                }
+            }
+
             return lItem;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

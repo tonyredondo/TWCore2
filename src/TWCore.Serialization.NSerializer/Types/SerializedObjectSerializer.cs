@@ -44,7 +44,8 @@ namespace TWCore.Serialization.NSerializer
         public SerializedObject ReadSerializedObject(byte type)
         {
             if (type == DataBytesDefinition.SerializedObjectNull) return null;
-            if (type != DataBytesDefinition.SerializedObject) throw new InvalidOperationException("Invalid type value.");
+            if (type != DataBytesDefinition.SerializedObject)
+                throw new InvalidOperationException($"Invalid type value. [{type}]");
             return SerializedObject.FromStream(Stream);
         }
     }

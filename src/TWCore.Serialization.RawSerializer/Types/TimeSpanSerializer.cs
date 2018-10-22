@@ -55,7 +55,7 @@ namespace TWCore.Serialization.RawSerializer
                 case DataBytesDefinition.TimeSpan:
                     return TimeSpan.FromTicks(StreamReadLong());
             }
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
 
         [DeserializerMethod(ReturnType = typeof(TimeSpan?))]

@@ -145,7 +145,7 @@ namespace TWCore.Serialization.NSerializer
                     length = StreamReadInt();
                     break;
                 default:
-                    throw new InvalidOperationException("Invalid type value.");
+                    throw new InvalidOperationException($"Invalid type value. [{type}]");
             }
 
             string strValue = null;

@@ -86,7 +86,7 @@ namespace TWCore.Serialization.RawSerializer
                 return true;
             if (value == DataBytesDefinition.BoolFalse)
                 return false;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{value}]");
         }
 
         [DeserializerMethod(ReturnType = typeof(bool?))]
@@ -99,7 +99,7 @@ namespace TWCore.Serialization.RawSerializer
                 return true;
             if (value == DataBytesDefinition.BoolFalse)
                 return false;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{value}]");
         }
     }
 }

@@ -44,7 +44,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type == DataBytesDefinition.EnumInt)
                 return StreamReadInt();
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
     }
 }

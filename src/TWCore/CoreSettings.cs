@@ -146,5 +146,10 @@ namespace TWCore
         /// </summary>
         [SettingsKey("LargeObjectHeapCompactTimeoutInMinutes")]
         public int LargeObjectHeapCompactTimeoutInMinutes { get; set; } = 60;
+        /// <summary>
+        /// Dump the Generic Object Deserializer data from the DeserializerException
+        /// </summary>
+        [SettingsKey("DumpDeserializerExceptionGenericObject")]
+        public bool DumpDeserializerExceptionGenericObject { get; set; } = true;
     }
 }

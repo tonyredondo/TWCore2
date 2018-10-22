@@ -405,9 +405,24 @@ namespace TWCore
             if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.Stats)
                 return null;
 
+            var logId = Guid.NewGuid();
+
+            if (Core.GlobalSettings.DumpDeserializerExceptionGenericObject && ex is DeserializerException dEx)
+            {
+                try
+                {
+                    var file = $"{logId}.DEX.json";
+                    dEx.SerializeToJsonFile(file);
+                    ex.Data["ExceptionFileName"] = file;
+                }
+                catch
+                {
+                }
+            }
+
             var lItem = LogItem.Retrieve();
             lItem.InstanceId = Core.InstanceId;
-            lItem.Id = Guid.NewGuid();
+            lItem.Id = logId;
             lItem.EnvironmentName = Core.EnvironmentName;
             lItem.MachineName = Core.MachineName;
             lItem.Timestamp = Core.Now;
@@ -419,18 +434,6 @@ namespace TWCore
             lItem.AssemblyName = assemblyName;
             lItem.TypeName = typeName;
             lItem.Exception = ex != null ? new SerializableException(ex) : null;
-
-            if (Core.GlobalSettings.DumpDeserializerExceptionGenericObject && ex is DeserializerException dEx)
-            {
-                try
-                {
-                    dEx.SerializeToJsonFile($"{lItem.Id}.DEX.json");
-                }
-                catch
-                {
-                }
-            }
-
             return lItem;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using TWCore.IO;
 using TWCore.Serialization;
 using Microsoft.Net.Http.Headers;
 using System;
@@ -57,7 +58,7 @@ namespace TWCore.Web.Formatters
             try
             {
                 var origin = context.HttpContext.Request.Body;
-                using (var rms = new MemoryStream())
+                using (var rms = new RecycleMemoryStream())
                 {
                     await origin.CopyToAsync(rms).ConfigureAwait(false);
                     rms.Position = 0;

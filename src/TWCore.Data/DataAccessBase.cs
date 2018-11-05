@@ -170,10 +170,10 @@ namespace TWCore.Data
             
             if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var result))
             {
-                if (result.Count != reader.FieldCount)
+				if (result.Count == reader.FieldCount)
+					return result;
+				else
                     ColumnsByNameOrQuery.TryRemove(nameOrQuery, out result);
-                else
-                    return result;
             }
             return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
         }

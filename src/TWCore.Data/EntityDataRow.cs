@@ -30,7 +30,6 @@ namespace TWCore.Data
         private FillDataDelegate<T> _fillMethod;
         private T _entity;
 
-
         #region Properties
         /// <summary>
         /// Gets the entity after calling the fillmethod

@@ -21,6 +21,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using TWCore.Reflection;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -31,6 +32,8 @@ namespace TWCore.Data
     /// </summary>
     public class EntityBinder
     {
+        private static volatile int HasInvalidCast;
+
         #region Statics
         /// <summary>
         /// Prepare Type for entity binder
@@ -48,7 +51,7 @@ namespace TWCore.Data
         /// <summary>
         /// Concurrent list with all casting errors
         /// </summary>
-        private static ConcurrentBag<InvalidCast> InvalidCastList { get; } = new ConcurrentBag<InvalidCast>();
+        private static ConcurrentDictionary<(Type, Type), InvalidCast> InvalidCastList { get; } = new ConcurrentDictionary<(Type, Type), InvalidCast>();
         /// <summary>
         /// Value converter from the data source to the entity properties.
         /// </summary>
@@ -82,35 +85,37 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Bind<T>(object[] rowValues, string pattern = null)
         {
-            if (ColumnIndex.Count != rowValues.Length)
+            var columnIndex = ColumnIndex;
+            if (columnIndex.Count != rowValues.Length)
                 throw new ArgumentException("The row values length is different from the expected.");
             if (typeof(T) == typeof(DictionaryObject))
             {
-                var dicData = ColumnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();
+                var dicData = columnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();
                 return (T)(object)new DictionaryObject(dicData);
             }
-
+            var valueConverter = ValueConverter;
             var entityInfo = EntityInfo<T>.Instance;
-            var entityCreator = entityInfo.GetEntityCreator(pattern);
-
             var entity = (T)entityInfo.Activator();
             foreach (var (propName, prop) in entityInfo.GetColumnNamesByPattern(pattern))
             {
-                if (!ColumnIndex.TryGetValue(propName, out var idx)) continue;
+                if (!columnIndex.TryGetValue(propName, out var idx)) continue;
                 if (idx >= rowValues.Length || idx < 0)
                 {
                     Core.Log.Warning($"The value for the property: {propName} on the entity: {typeof(T).Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
                     continue;
                 }
+                var defaultValue = prop.PropertyType.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
                 var value = rowValues[idx];
+                if (value is null)
+                {
+                    prop.SetValue(entity, defaultValue);
+                    continue;
+                }
+
                 var valueType = value?.GetType();
                 var propertyType = prop.PropertyUnderlayingType;
-                var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
-                var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
 
-                if (value is null)
-                    prop.SetValue(entity, defaultValue);
-                else if (propertyType == valueType)
+                if (propertyType == valueType)
                     prop.SetValue(entity, value);
                 else
                 {
@@ -118,12 +123,11 @@ namespace TWCore.Data
 
                     if (propertyType == typeof(Guid) && valueType == typeof(string))
                         result = new Guid((string)value);
-                    else if (propertyTypeInfo.IsEnum &&
-                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
+                    else if (propertyType.IsEnum && (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
                         result = Enum.Parse(propertyType, value.ToString());
-                    else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out var valueConverterResult))
+                    else if (valueConverter != null && valueConverter.Convert(value, valueType, prop.PropertyType, out var valueConverterResult))
                         result = valueConverterResult;
-                    else if (!InvalidCastList.Any((i, vTuple) => i.ValueType == vTuple.valueType && i.PropertyType == vTuple.propertyType, (valueType, propertyType)))
+                    else if (HasInvalidCast == 0 || !InvalidCastList.TryGetValue((valueType, propertyType), out _))
                     {
                         try
                         {
@@ -132,7 +136,8 @@ namespace TWCore.Data
                         catch (InvalidCastException exCast)
                         {
                             Core.Log.Write(exCast);
-                            InvalidCastList.Add(new InvalidCast(valueType, propertyType));
+                            Interlocked.Increment(ref HasInvalidCast);
+                            InvalidCastList.TryAdd((valueType, propertyType), new InvalidCast(valueType, propertyType));
                         }
                         catch (Exception ex)
                         {
@@ -165,7 +170,7 @@ namespace TWCore.Data
         /// <summary>
         /// Invalid cast item
         /// </summary>
-        public class InvalidCast
+        private class InvalidCast
         {
             public readonly Type ValueType;
             public readonly Type PropertyType;
@@ -184,10 +189,9 @@ namespace TWCore.Data
         /// <typeparam name="T">Type of entity</typeparam>
         /// <param name="rowValues">Row values</param>
         /// <param name="columnIndex">Column index names</param>
-        /// <param name="invalidCastList">Invalid cast list</param>
         /// <param name="valueConverter">Value converter</param>
         /// <returns>Entity instance</returns>
-        public delegate T EntityCreatorDelegate<T>(object[] rowValues, Dictionary<string, int> columnIndex, ConcurrentBag<InvalidCast> invalidCastList, IEntityValueConverter valueConverter);
+        public delegate T EntityCreatorDelegate<T>(object[] rowValues, Dictionary<string, int> columnIndex, IEntityValueConverter valueConverter);
 
         /// <summary>
         /// Entity info
@@ -195,8 +199,6 @@ namespace TWCore.Data
         /// <typeparam name="T">Type of entity</typeparam>
         public class EntityInfo<T>
         {
-            private static readonly ConcurrentDictionary<string, EntityCreatorDelegate<T>> CreatorDelegates = new ConcurrentDictionary<string, EntityCreatorDelegate<T>>();
-
             private static readonly ConcurrentDictionary<string, (string, FastPropertyInfo)[]> EntityInfoPropertyPatterns = new ConcurrentDictionary<string, (string, FastPropertyInfo)[]>();
             /// <summary>
             /// Singleton instance
@@ -238,105 +240,6 @@ namespace TWCore.Data
                         return Properties.Select(p => (p.Name, p)).ToArray();
                     return Properties.Select(p => (pattern.Replace("%", p.Name), p)).ToArray();
                 });
-            }
-
-            /// <summary>
-            /// Gets the entity creator delegate
-            /// </summary>
-            /// <param name="pattern">Pattern of the entity creator</param>
-            /// <returns>Entity creator delegate</returns>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public EntityCreatorDelegate<T> GetEntityCreator(string pattern)
-                => CreatorDelegates.GetOrAdd(pattern ?? string.Empty, CreateEntityCreator);
-
-            private EntityCreatorDelegate<T> CreateEntityCreator(string pattern)
-            {
-                var type = typeof(T);
-                var properties = type.GetRuntimeProperties().Where(p => p.CanWrite);
-
-
-                //***************************************************************************************************** Expression
-                var serExpressions = new List<Expression>();
-                var varExpressions = new List<ParameterExpression>();
-
-                //In Parameters
-                var rowValues = Expression.Parameter(typeof(object[]), "rowValues");
-                var columnIndex = Expression.Parameter(typeof(Dictionary<string, int>), "columnIndex");
-                var invalidCastList = Expression.Parameter(typeof(ConcurrentBag<InvalidCast>), "invalidCastList");
-                var valueConverter = Expression.Parameter(typeof(IEntityValueConverter), "valueConverter");
-                
-                //Return value
-                var returnTarget = Expression.Label(type, "ReturnTarget");
-                var returnValue = Expression.Parameter(type, "returnValue");
-                varExpressions.Add(returnValue);
-                //***************************************************************************************************** 
-
-                serExpressions.Add(Expression.Assign(returnValue, Expression.New(type)));
-                var idxValue = Expression.Variable(typeof(int), "idx");
-                varExpressions.Add(idxValue);
-                foreach (var prop in properties)
-                {
-                    var propName = string.IsNullOrEmpty(pattern) ? prop.Name : pattern.Replace("%", prop.Name);
-                    var tryGetValue = Expression.Call(columnIndex, "TryGetValue", null, Expression.Constant(propName), idxValue);
-                    var idxIf = Expression.And(Expression.GreaterThanOrEqual(idxValue, Expression.Constant(0)), Expression.LessThan(idxValue,  Expression.Property(rowValues, "Length")));
-
-                    //
-                    var value = Expression.Variable(typeof(object), "value");
-                    var valueType = Expression.Variable(typeof(Type), "valueType");
-
-                    var propertyType = prop.PropertyType.GetUnderlyingType();
-
-                    //
-                    var valueConverterResult = Expression.Variable(typeof(object), "valueConverterResult");
-                    var valueConverterExpression = Expression.IfThenElse(
-
-                        Expression.And(
-                            Expression.ReferenceNotEqual(valueConverter, Expression.Constant(null)),
-                            Expression.Call(valueConverter, "Convert", null, value, valueType, Expression.Constant(prop.PropertyType), valueConverterResult)
-                        ),
-                        Expression.Assign(Expression.Property(returnValue, prop), Expression.Convert(valueConverterResult, prop.PropertyType)),
-                        Expression.Empty()
-                    );
-
-
-                    //
-                    Expression expType = Expression.Empty();
-                    if (propertyType == typeof(Guid))
-                    {
-                        expType = Expression.IfThenElse(Expression.TypeEqual(valueType, typeof(string)),
-                            Expression.Assign(Expression.Property(returnValue, prop), Expression.New(typeof(Guid).GetConstructor(new[] { typeof(string) }), Expression.Convert(value, typeof(string)))),
-                            valueConverterExpression);
-                    }
-
-
-                    //
-                    serExpressions.Add(
-                        Expression.IfThen(Expression.And(tryGetValue, idxIf), Expression.Block(new[] { value, valueType },
-                            
-                                Expression.Assign(value, Expression.ArrayIndex(rowValues, idxValue)),
-                                Expression.IfThenElse(Expression.ReferenceEqual(value, Expression.Constant(null)),
-                                    Expression.Assign(Expression.Property(returnValue, prop), Expression.Default(prop.PropertyType)),
-                                    Expression.Block(
-                                        Expression.Assign(valueType, Expression.Call(value, "GetType", null)),
-                                        Expression.IfThenElse(Expression.TypeEqual(valueType, propertyType),
-                                            Expression.Assign(Expression.Property(returnValue, prop), Expression.Convert(value, prop.PropertyType)),
-                                            expType
-                                        )
-                                    )
-                                )
-
-                            )
-                        )
-                    );
-                }
-
-                //***************************************************************************************************** 
-                serExpressions.Add(Expression.Return(returnTarget, returnValue, type));
-                serExpressions.Add(Expression.Label(returnTarget, returnValue));
-
-                var block = Expression.Block(varExpressions, serExpressions).Reduce();
-                var lambda = Expression.Lambda<EntityCreatorDelegate<T>>(block, type.Name + "_EntityBinder", new[] { rowValues, columnIndex, invalidCastList, valueConverter });
-                return lambda.Compile();
             }
         }
         #endregion

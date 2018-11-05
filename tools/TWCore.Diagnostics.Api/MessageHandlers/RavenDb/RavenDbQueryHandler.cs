@@ -245,7 +245,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .OrderBy(x => x.Timestamp);
 
                 var logQueryLazy = logQuery
-                                        .Take(200)
+                                        .Take(1000)
                                         .LazilyAsync();
 
                 var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem, Traces_Search>()
@@ -264,7 +264,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .OrderBy(x => x.Timestamp);
 
                 var traceQueryLazy = traceQuery
-                                        .Take(200)
+                                        .Take(1000)
                                         .LazilyAsync();
 
                 await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);

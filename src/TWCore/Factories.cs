@@ -26,6 +26,7 @@ using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
 using TWCore.Reflection;
+using TWCore.Serialization;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable VirtualMemberNeverOverridden.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -404,9 +405,24 @@ namespace TWCore
             if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.Stats)
                 return null;
 
+            var logId = Guid.NewGuid();
+
+            if (Core.GlobalSettings.DumpDeserializerExceptionGenericObject && ex is DeserializerException dEx)
+            {
+                try
+                {
+                    var file = $"{logId}.DEX.json";
+                    dEx.SerializeToJsonFile(file);
+                    ex.Data["ExceptionFileName"] = file;
+                }
+                catch
+                {
+                }
+            }
+
             var lItem = LogItem.Retrieve();
             lItem.InstanceId = Core.InstanceId;
-            lItem.Id = Guid.NewGuid();
+            lItem.Id = logId;
             lItem.EnvironmentName = Core.EnvironmentName;
             lItem.MachineName = Core.MachineName;
             lItem.Timestamp = Core.Now;

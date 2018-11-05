@@ -57,7 +57,7 @@ namespace TWCore.Serialization.NSerializer
                 return default;
             if (value == DataBytesDefinition.Char)
                 return StreamReadChar();
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{value}]");
         }
 
         [DeserializerMethod(ReturnType = typeof(char?))]
@@ -70,7 +70,7 @@ namespace TWCore.Serialization.NSerializer
                 return default;
             if (value == DataBytesDefinition.Char)
                 return StreamReadChar();
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{value}]");
         }
     }
 }

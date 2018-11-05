@@ -1851,7 +1851,7 @@ namespace TWCore
                     if (predicate(item, state))
                         return item;
             }
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("No element satisfies the condition in predicate");
         }
         /// <summary>
         /// Returns the first element of the sequence that satisfies a condition or a default value if no such element is found.
@@ -1969,7 +1969,7 @@ namespace TWCore
                     if (predicate(item, state))
                         return item;
             }
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("No element satisfies the condition in predicate");
         }
         /// <summary>
         /// Returns the last element of a sequence that satisfies a condition or a default value if no such element is found.
@@ -2034,7 +2034,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2071,7 +2071,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2108,7 +2108,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2145,7 +2145,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2182,7 +2182,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2221,7 +2221,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2260,7 +2260,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2338,7 +2338,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2377,7 +2377,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (maxValue is null) throw new InvalidOperationException();
+            if (maxValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
 
@@ -2415,7 +2415,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2452,7 +2452,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2489,7 +2489,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2526,7 +2526,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2563,7 +2563,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2602,7 +2602,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2641,7 +2641,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2680,7 +2680,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2719,7 +2719,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
         /// <summary>
@@ -2758,7 +2758,7 @@ namespace TWCore
                     resItem = item;
                 }
             }
-            if (minValue is null) throw new InvalidOperationException();
+            if (minValue is null) throw new InvalidOperationException("The source sequence is empty");
             return resItem;
         }
 
@@ -2783,7 +2783,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     if (!predicate(sourceList[i], state)) continue;
-                    if (found) throw new InvalidOperationException();
+                    if (found) throw new InvalidOperationException("The input sequence contains more than one element");
                     @default = sourceList[i];
                     found = true;
                 }
@@ -2793,13 +2793,13 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     if (!predicate(item, state)) continue;
-                    if (found) throw new InvalidOperationException();
+                    if (found) throw new InvalidOperationException("The input sequence contains more than one element");
                     @default = item;
                     found = true;
                 }
             }
             if (found) return @default;
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("No element satisfies the condition in predicate");
         }
         /// <summary>
         /// Returns the only element of a sequence that satisfies a specified condition or a default value if no such element exists; this method throws an exception if more than one element satisfies the condition.
@@ -2822,7 +2822,7 @@ namespace TWCore
                 for (var i = 0; i < length; i++)
                 {
                     if (!predicate(sourceList[i], state)) continue;
-                    if (found) throw new InvalidOperationException();
+                    if (found) throw new InvalidOperationException("The input sequence contains more than one element");
                     @default = sourceList[i];
                     found = true;
                 }
@@ -2832,7 +2832,7 @@ namespace TWCore
                 foreach (var item in source)
                 {
                     if (!predicate(item, state)) continue;
-                    if (found) throw new InvalidOperationException();
+                    if (found) throw new InvalidOperationException("The input sequence contains more than one element");
                     @default = item;
                     found = true;
                 }

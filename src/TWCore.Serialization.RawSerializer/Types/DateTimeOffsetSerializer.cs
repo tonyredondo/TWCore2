@@ -55,7 +55,7 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (type == DataBytesDefinition.DateTimeOffset)
                 return DateTimeOffset.FromFileTime(StreamReadLong());
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
 
         [DeserializerMethod(ReturnType = typeof(DateTimeOffset?))]
@@ -68,7 +68,7 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (type == DataBytesDefinition.DateTimeOffset)
                 return DateTimeOffset.FromFileTime(StreamReadLong());
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
     }
 

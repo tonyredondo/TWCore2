@@ -243,7 +243,7 @@ namespace TWCore.Serialization.NSerializer
                 return _decimalCache.Get(StreamReadInt());
             if (type == DataBytesDefinition.DecimalDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(decimal?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -267,7 +267,7 @@ namespace TWCore.Serialization.NSerializer
                 return _doubleCache.Get(StreamReadInt());
             if (type == DataBytesDefinition.DoubleDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(double?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -291,7 +291,7 @@ namespace TWCore.Serialization.NSerializer
                 return _floatCache.Get(StreamReadInt());
             if (type == DataBytesDefinition.FloatDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(float?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -315,7 +315,7 @@ namespace TWCore.Serialization.NSerializer
                 return _longCache.Get(StreamReadInt());
             if (type == DataBytesDefinition.LongDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(long?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -339,7 +339,7 @@ namespace TWCore.Serialization.NSerializer
                 return _uLongCache.Get(StreamReadInt());
             if (type == DataBytesDefinition.ULongDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(ulong?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -357,7 +357,7 @@ namespace TWCore.Serialization.NSerializer
                 return StreamReadInt();
             if (type == DataBytesDefinition.IntDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(int?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -376,7 +376,7 @@ namespace TWCore.Serialization.NSerializer
                 return StreamReadUInt();
             if (type == DataBytesDefinition.UIntDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(uint?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -394,7 +394,7 @@ namespace TWCore.Serialization.NSerializer
                 return StreamReadShort();
             if (type == DataBytesDefinition.ShortDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(short?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -412,7 +412,7 @@ namespace TWCore.Serialization.NSerializer
                 return StreamReadUShort();
             if (type == DataBytesDefinition.UShortDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(ushort?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -430,7 +430,7 @@ namespace TWCore.Serialization.NSerializer
                 return StreamReadByte();
             if (type == DataBytesDefinition.ByteDefault)
                 return default;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(byte?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -450,7 +450,7 @@ namespace TWCore.Serialization.NSerializer
                 return default;
             if (type == DataBytesDefinition.SByteMinusOne)
                 return -1;
-            throw new InvalidOperationException("Invalid type value.");
+            throw new InvalidOperationException($"Invalid type value. [{type}]");
         }
         [DeserializerMethod(ReturnType = typeof(sbyte?))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

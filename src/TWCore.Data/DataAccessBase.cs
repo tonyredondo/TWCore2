@@ -431,24 +431,21 @@ namespace TWCore.Data
                     {
                         #region Command Execution
                         var lstRows = new List<EntityDataRow<T>>();
-                        var indexNumber = 0;
-                        var firstTime = true;
                         connection.Open();
                         using (var reader = command.ExecuteReader())
                         {
-                            while (reader.Read())
-                            {
-                                if (firstTime)
-                                {
-                                    firstTime = false;
-                                    var cIndex = ExtractColumnNames(nameOrQuery, reader);
-                                    indexNumber = cIndex.Count;
-                                    entityBinder.ColumnIndex = cIndex;
-                                }
-                                var columns = new object[indexNumber];
-                                reader.GetValues(columns);
-                                lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
-                            }
+							if (reader.Read())
+							{
+								var cIndex = ExtractColumnNames(nameOrQuery, reader);
+								var indexNumber = cIndex.Count;
+								entityBinder.ColumnIndex = cIndex;
+								do
+								{
+									var columns = new object[indexNumber];
+									reader.GetValues(columns);
+									lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+								} while (reader.Read());
+							}
                         }
                         returnValue = returnValueParam?.Value;
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
@@ -944,10 +941,6 @@ namespace TWCore.Data
                             {
                                 result = Convert.ChangeType(value, propertyType);
                             }
-                            catch (InvalidCastException exCast)
-                            {
-                                Core.Log.Write(exCast);
-                            }
                             catch (Exception ex)
                             {
                                 Core.Log.Write(ex);
@@ -1352,35 +1345,32 @@ namespace TWCore.Data
 
                             do
                             {
-                                var indexNumber = 0;
-                                var firstTime = true;
                                 var resultset = resultSets[resultSetIndex];
+								if (reader.Read())
+								{
+									var dct = new Dictionary<string, int>();
+									for (var i = 0; i < reader.FieldCount; i++)
+									{
+										var name = reader.GetName(i);
+										if (!dct.ContainsKey(name))
+											dct[name] = i;
+										else
+										{
+											var oIdx = dct[name];
+											var nIdx = i;
+											Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+										}
+									}
+									var indexNumber = dct.Count;
+									resultset.SetColumnsOnBinder(dct);
 
-                                while (reader.Read())
-                                {
-                                    if (firstTime)
-                                    {
-                                        firstTime = false;
-                                        var dct = new Dictionary<string, int>();
-                                        for (var i = 0; i < reader.FieldCount; i++)
-                                        {
-                                            var name = reader.GetName(i);
-                                            if (!dct.ContainsKey(name))
-                                                dct[name] = i;
-                                            else
-                                            {
-                                                var oIdx = dct[name];
-                                                var nIdx = i;
-                                                Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
-                                            }
-                                        }
-                                        indexNumber = dct.Count;
-                                        resultset.SetColumnsOnBinder(dct);
-                                    }
-                                    var columns = new object[indexNumber];
-                                    reader.GetValues(columns);
-                                    resultset.AddRow(columns);
-                                }
+									do
+									{
+										var columns = new object[indexNumber];
+										reader.GetValues(columns);
+										resultset.AddRow(columns);
+									} while (reader.Read());
+								}
                                 resultSetIndex++;
                             } while (reader.NextResult() && resultSets.Length > resultSetIndex);
                         }
@@ -1509,24 +1499,21 @@ namespace TWCore.Data
                     {
                         #region Command Execution
                         var lstRows = new List<EntityDataRow<T>>();
-                        var indexNumber = 0;
-                        var firstTime = true;
                         await connection.OpenAsync().ConfigureAwait(false);
                         using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                         {
-                            while (await reader.ReadAsync().ConfigureAwait(false))
-                            {
-                                if (firstTime)
-                                {
-                                    firstTime = false;
-                                    var cIndex = ExtractColumnNames(nameOrQuery, reader);
-                                    indexNumber = cIndex.Count;
-                                    entityBinder.ColumnIndex = cIndex;
-                                }
-                                var columns = new object[indexNumber];
-                                reader.GetValues(columns);
-                                lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
-                            }
+							if (await reader.ReadAsync().ConfigureAwait(false))
+							{
+								var cIndex = ExtractColumnNames(nameOrQuery, reader);
+								var indexNumber = cIndex.Count;
+								entityBinder.ColumnIndex = cIndex;
+								do
+								{
+									var columns = new object[indexNumber];
+									reader.GetValues(columns);
+									lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+								} while (await reader.ReadAsync().ConfigureAwait(false));
+							}
                         }
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
                         connection.Close();
@@ -1969,10 +1956,6 @@ namespace TWCore.Data
                             {
                                 result = Convert.ChangeType(value, propertyType);
                             }
-                            catch (InvalidCastException exCast)
-                            {
-                                Core.Log.Write(exCast);
-                            }
                             catch (Exception ex)
                             {
                                 Core.Log.Write(ex);
@@ -2330,37 +2313,34 @@ namespace TWCore.Data
 
                             do
                             {
-                                var indexNumber = 0;
-                                var firstTime = true;
                                 var resultset = resultSets[resultSetIndex];
 
-                                while (reader.Read())
-                                {
-                                    if (firstTime)
-                                    {
-                                        firstTime = false;
-                                        var dct = new Dictionary<string, int>();
-                                        for (var i = 0; i < reader.FieldCount; i++)
-                                        {
-                                            var name = reader.GetName(i);
-                                            if (!dct.ContainsKey(name))
-                                                dct[name] = i;
-                                            else
-                                            {
-                                                var oIdx = dct[name];
-                                                var nIdx = i;
-                                                Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
-                                            }
-                                        }
-                                        indexNumber = dct.Count;
-                                        resultset.SetColumnsOnBinder(dct);
-                                    }
-                                    var columns = new object[indexNumber];
-                                    reader.GetValues(columns);
-                                    resultset.AddRow(columns);
-                                }
+								if (await reader.ReadAsync().ConfigureAwait(false))
+								{
+									var dct = new Dictionary<string, int>();
+									for (var i = 0; i < reader.FieldCount; i++)
+									{
+										var name = reader.GetName(i);
+										if (!dct.ContainsKey(name))
+											dct[name] = i;
+										else
+										{
+											var oIdx = dct[name];
+											var nIdx = i;
+											Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+										}
+									}
+									var indexNumber = dct.Count;
+									resultset.SetColumnsOnBinder(dct);
+									do
+									{
+										var columns = new object[indexNumber];
+										reader.GetValues(columns);
+										resultset.AddRow(columns);
+									} while (await reader.ReadAsync().ConfigureAwait(false));
+								}
                                 resultSetIndex++;
-                            } while (reader.NextResult() && resultSets.Length > resultSetIndex);
+                            } while (await reader.NextResultAsync().ConfigureAwait(false) && resultSets.Length > resultSetIndex);
                         }
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
                         connection.Close();

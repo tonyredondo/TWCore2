@@ -205,6 +205,7 @@ namespace TWCore.Data
 
             private static readonly TimeoutDictionary<(string Pattern, Dictionary<string, int> ColumnIndexes), (DataPerPattern, int Index)[]> EntityInfoPropertyPatternsColumnIndexes
                 = new TimeoutDictionary<(string Pattern, Dictionary<string, int> ColumnIndexes), (DataPerPattern, int Index)[]>();
+            private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
             /// <summary>
             /// Singleton instance
@@ -275,7 +276,7 @@ namespace TWCore.Data
                             idx = -1;
                         res[i] = (item, idx);
                     }
-                    return (res, TimeSpan.FromSeconds(10));
+                    return (res, Timeout);
                 });
             }
 

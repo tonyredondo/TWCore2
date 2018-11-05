@@ -125,7 +125,7 @@ namespace TWCore.Data
                         result = new Guid((string)value);
                     else if (propertyType.IsEnum && (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
                         result = Enum.Parse(propertyType, value.ToString());
-                    else if (valueConverter != null && valueConverter.Convert(value, valueType, prop.PropertyType, out var valueConverterResult))
+                    else if (valueConverter != null && valueConverter.Convert(value, valueType, prop.PropertyType, defaultValue, out var valueConverterResult))
                         result = valueConverterResult;
                     else if (HasInvalidCast == 0 || !InvalidCastList.TryGetValue((valueType, propertyType), out _))
                     {

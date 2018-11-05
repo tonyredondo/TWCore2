@@ -936,7 +936,7 @@ namespace TWCore.Data
                         else if (propertyType.IsEnum &&
                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte)))
                             result = Enum.Parse(propertyType, value.ToString());
-                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), out var valueConverterResult))
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), defaultValue, out var valueConverterResult))
                             result = valueConverterResult;
                         else
                         {
@@ -1961,7 +1961,7 @@ namespace TWCore.Data
                         else if (propertyType.IsEnum &&
                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte)))
                             result = Enum.Parse(propertyType, value.ToString());
-                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, out var valueConverterResult))
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, defaultValue, out var valueConverterResult))
                             result = valueConverterResult;
                         else
                         {

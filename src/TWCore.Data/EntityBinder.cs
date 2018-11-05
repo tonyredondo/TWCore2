@@ -97,11 +97,10 @@ namespace TWCore.Data
             var valueConverter = ValueConverter;
             var entityInfo = EntityInfo<T>.Instance;
             var entity = (T)entityInfo.Activator();
-            //foreach (var (propName, prop, defaultValue, isGuid, isEnum, idx) in entityInfo.GetColumnNamesByPatternAndColumnIndexes(pattern, columnIndex))
-            foreach (var (dataPattern, idx) in entityInfo.GetColumnNamesByPatternAndColumnIndexes(pattern, columnIndex))
+            foreach (var dataPattern in entityInfo.GetColumnNamesByPattern(pattern))
             {
-                if (idx < 0) continue;
-                if (idx >= rowValues.Length)
+                if (!columnIndex.TryGetValue(dataPattern.Name, out var idx)) continue;
+                if (idx >= rowValues.Length || idx < 0)
                 {
                     Core.Log.Warning($"The value for the property: {dataPattern.Name} on the entity: {typeof(T).Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
                     continue;
@@ -200,13 +199,8 @@ namespace TWCore.Data
         /// <typeparam name="T">Type of entity</typeparam>
         public class EntityInfo<T>
         {
-            private static readonly ConcurrentDictionary<string, DataPerPattern[]> EntityInfoPropertyPatterns
-                = new ConcurrentDictionary<string, DataPerPattern[]>();
-
-            private static readonly TimeoutDictionary<(string Pattern, Dictionary<string, int> ColumnIndexes), (DataPerPattern, int Index)[]> EntityInfoPropertyPatternsColumnIndexes
-                = new TimeoutDictionary<(string Pattern, Dictionary<string, int> ColumnIndexes), (DataPerPattern, int Index)[]>();
-            private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
-
+            private static readonly ConcurrentDictionary<string, DataPerPattern[]> EntityInfoPropertyPatterns = new ConcurrentDictionary<string, DataPerPattern[]>();
+            
             /// <summary>
             /// Singleton instance
             /// </summary>
@@ -255,32 +249,7 @@ namespace TWCore.Data
                 });
             }
 
-
-            /// <summary>
-            /// Gets the columns names list using a pattern 
-            /// </summary>
-            /// <param name="pattern">String pattern</param>
-            /// <param name="columnIndexes">Column indexes</param>
-            /// <returns>Data struct</returns>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal (DataPerPattern, int Index)[] GetColumnNamesByPatternAndColumnIndexes(string pattern, Dictionary<string, int> columnIndexes)
-            {
-                return EntityInfoPropertyPatternsColumnIndexes.GetOrAdd((pattern ?? string.Empty, columnIndexes), mParams =>
-                {
-                    var prevRes = GetColumnNamesByPattern(mParams.Pattern);
-                    var res = new (DataPerPattern, int Index)[prevRes.Length];
-                    for (var i = 0; i < prevRes.Length; i++)
-                    {
-                        var item = prevRes[i];
-                        if (!mParams.ColumnIndexes.TryGetValue(item.Name, out var idx))
-                            idx = -1;
-                        res[i] = (item, idx);
-                    }
-                    return (res, Timeout);
-                });
-            }
-
-            internal class DataPerPattern
+            internal readonly struct DataPerPattern
             {
                 public readonly string Name;
                 public readonly FastPropertyInfo Property;

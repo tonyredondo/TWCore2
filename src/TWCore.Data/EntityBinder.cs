@@ -96,7 +96,7 @@ namespace TWCore.Data
             var valueConverter = ValueConverter;
             var entityInfo = EntityInfo<T>.Instance;
             var entity = (T)entityInfo.Activator();
-            foreach (var (propName, prop) in entityInfo.GetColumnNamesByPattern(pattern))
+            foreach (var (propName, prop, defaultValue, isGuid, isEnum) in entityInfo.GetColumnNamesByPattern(pattern))
             {
                 if (!columnIndex.TryGetValue(propName, out var idx)) continue;
                 if (idx >= rowValues.Length || idx < 0)
@@ -104,7 +104,6 @@ namespace TWCore.Data
                     Core.Log.Warning($"The value for the property: {propName} on the entity: {typeof(T).Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
                     continue;
                 }
-                var defaultValue = prop.PropertyType.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
                 var value = rowValues[idx];
                 if (value is null)
                 {
@@ -121,9 +120,9 @@ namespace TWCore.Data
                 {
                     var result = defaultValue;
 
-                    if (propertyType == typeof(Guid) && valueType == typeof(string))
+                    if (isGuid && valueType == typeof(string))
                         result = new Guid((string)value);
-                    else if (propertyType.IsEnum && (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
+                    else if (isEnum && (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
                         result = Enum.Parse(propertyType, value.ToString());
                     else if (valueConverter != null && valueConverter.Convert(value, valueType, prop.PropertyType, defaultValue, out var valueConverterResult))
                         result = valueConverterResult;
@@ -199,7 +198,8 @@ namespace TWCore.Data
         /// <typeparam name="T">Type of entity</typeparam>
         public class EntityInfo<T>
         {
-            private static readonly ConcurrentDictionary<string, (string, FastPropertyInfo)[]> EntityInfoPropertyPatterns = new ConcurrentDictionary<string, (string, FastPropertyInfo)[]>();
+            private static readonly ConcurrentDictionary<string, (string Name, FastPropertyInfo Property, object DefaultValue, bool IsGuid, bool IsEnum)[]> EntityInfoPropertyPatterns 
+                = new ConcurrentDictionary<string, (string Name, FastPropertyInfo Property, object DefaultValue, bool IsGuid, bool IsEnum)[]>();
             /// <summary>
             /// Singleton instance
             /// </summary>
@@ -232,13 +232,15 @@ namespace TWCore.Data
             /// <param name="pattern"></param>
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public (string, FastPropertyInfo)[] GetColumnNamesByPattern(string pattern)
+            public (string Name, FastPropertyInfo Property, object DefaultValue, bool IsGuid, bool IsEnum)[] GetColumnNamesByPattern(string pattern)
             {
                 return EntityInfoPropertyPatterns.GetOrAdd(pattern ?? string.Empty, mPattern =>
                 {
                     if (mPattern == string.Empty)
-                        return Properties.Select(p => (p.Name, p)).ToArray();
-                    return Properties.Select(p => (pattern.Replace("%", p.Name), p)).ToArray();
+                        return Properties.Select(p => 
+                            (p.Name, p, p.PropertyType.IsValueType ? System.Activator.CreateInstance(p.PropertyType) : null, p.PropertyUnderlayingType == typeof(Guid), p.PropertyUnderlayingType.IsEnum)).ToArray();
+                    return Properties.Select(p => 
+                        (pattern.Replace("%", p.Name), p, p.PropertyType.IsValueType ? System.Activator.CreateInstance(p.PropertyType) : null, p.PropertyUnderlayingType == typeof(Guid), p.PropertyUnderlayingType.IsEnum)).ToArray();
                 });
             }
         }

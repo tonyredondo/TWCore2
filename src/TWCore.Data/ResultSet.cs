@@ -27,8 +27,6 @@ namespace TWCore.Data
     /// <typeparam name="T">Entity type for the result set</typeparam>
     public class ResultSet<T> : IResultSet
     {
-        private static readonly FillDataDelegate<T> DefaultFillMethod = ((e, o) => e.Bind<T>(o));
-
         #region Fields
         private readonly List<EntityDataRow<T>> _dataRows = new List<EntityDataRow<T>>();
         #endregion
@@ -71,7 +69,7 @@ namespace TWCore.Data
             Binder = new EntityBinder(valueConverter);
             //EntityBinder.PrepareEntity(typeof(T));
             EntityBinder.PrepareEntity<T>();
-            FillMethod = FillMethod ?? DefaultFillMethod;
+            FillMethod = FillMethod ?? DataAccessBase.DefaultFillMethod<T>.Instance;
         }
         /// <inheritdoc />
         /// <summary>

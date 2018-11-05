@@ -424,7 +424,7 @@ namespace TWCore.Data
                     //Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
                     Task.Run(() => EntityBinder.PrepareEntity<T>());
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
@@ -623,7 +623,7 @@ namespace TWCore.Data
                     //Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
                     Task.Run(() => EntityBinder.PrepareEntity<T>());
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
@@ -1502,7 +1502,7 @@ namespace TWCore.Data
                     //EntityBinder.PrepareEntity(typeof(T));
                     EntityBinder.PrepareEntity<T>();
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
@@ -1646,7 +1646,7 @@ namespace TWCore.Data
                     //EntityBinder.PrepareEntity(typeof(T));
                     EntityBinder.PrepareEntity<T>();
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
@@ -2475,6 +2475,21 @@ namespace TWCore.Data
         public virtual string GetDeleteFromContainer(GeneratorSelectionContainer container)
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
+        #endregion
+
+
+        #region Nested Class
+        /// <summary>
+        /// Default Fill Method for an entity
+        /// </summary>
+        /// <typeparam name="T">Type of entity</typeparam>
+        public static class DefaultFillMethod<T>
+        {
+            /// <summary>
+            /// Default fill method delegate
+            /// </summary>
+            public static FillDataDelegate<T> Instance = (e, o) => e.Bind<T>(o);
         }
         #endregion
     }

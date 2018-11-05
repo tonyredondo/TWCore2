@@ -275,7 +275,7 @@ namespace TWCore.Data
                             idx = -1;
                         res[i] = (item, idx);
                     }
-                    return (res, TimeSpan.FromSeconds(30));
+                    return (res, TimeSpan.FromSeconds(10));
                 });
             }
 

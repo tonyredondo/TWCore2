@@ -116,10 +116,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                         if (traceItem.TraceObject != null)
                         {
+                            var lstExtensions = new List<string>();
                             using (var msNBinary = new RecycleMemoryStream())
                             using (var msXml = new RecycleMemoryStream())
                             using (var msJson = new RecycleMemoryStream())
+                            using (var msTxt = new RecycleMemoryStream())
                             {
+                                #region NBinary
                                 try
                                 {
                                     NBinarySerializer.Serialize(traceItem.TraceObject, msNBinary);
@@ -130,82 +133,135 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 {
                                     //
                                 }
+                                #endregion
 
+                                #region Xml Serializer
                                 try
                                 {
+                                    var bXml = false;
                                     if (traceItem.TraceObject is SerializedObject serObj)
                                     {
                                         var value = serObj.GetValue();
                                         switch (value)
                                         {
-                                            case string valStr:
-                                                var valBytes = Encoding.UTF8.GetBytes(valStr);
-                                                var compressedBytes = Compressor.Compress(valBytes);
-                                                compressedBytes.CopyTo(msXml);
-                                                break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
                                                 XmlSerializer.Serialize(rsMessage.Body.GetValue(), msXml);
+                                                bXml = true;
                                                 break;
                                             case RequestMessage rqMessage when rqMessage?.Body != null:
                                                 XmlSerializer.Serialize(rqMessage.Body.GetValue(), msXml);
+                                                bXml = true;
                                                 break;
                                             default:
                                                 if (value != null)
                                                 {
                                                     XmlSerializer.Serialize(value, msXml);
+                                                    bXml = true;
                                                 }
                                                 break;
                                         }
                                     }
                                     else
+                                    {
                                         XmlSerializer.Serialize(traceItem.TraceObject, msXml);
+                                        bXml = true;
+                                    }
 
-                                    msXml.Position = 0;
-                                    session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
+                                    if (bXml)
+                                    {
+                                        msXml.Position = 0;
+                                        session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
+                                        lstExtensions.Add("XML");
+                                    }
                                 }
                                 catch (Exception)
                                 {
                                     //
                                 }
+                                #endregion
 
+                                #region Json Serializer
                                 try
                                 {
+                                    var bJson = false;
                                     if (traceItem.TraceObject is SerializedObject serObj)
                                     {
                                         var value = serObj.GetValue();
                                         switch (value)
                                         {
-                                            case string valStr:
-                                                var valBytes = Encoding.UTF8.GetBytes(valStr);
-                                                var compressedBytes = Compressor.Compress(valBytes);
-                                                compressedBytes.CopyTo(msJson);
-                                                break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
                                                 JsonSerializer.Serialize(rsMessage.Body.GetValue(), msJson);
+                                                bJson = true;
                                                 break;
                                             case RequestMessage rqMessage when rqMessage?.Body != null:
                                                 JsonSerializer.Serialize(rqMessage.Body.GetValue(), msJson);
+                                                bJson = true;
                                                 break;
                                             default:
                                                 if (value != null)
                                                 {
                                                     JsonSerializer.Serialize(value, msJson);
+                                                    bJson = true;
                                                 }
                                                 break;
                                         }
                                     }
                                     else
+                                    {
                                         JsonSerializer.Serialize(traceItem.TraceObject, msJson);
+                                        bJson = true;
+                                    }
 
-                                    msJson.Position = 0;
-                                    session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
+                                    if (bJson)
+                                    {
+                                        msJson.Position = 0;
+                                        session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
+                                        lstExtensions.Add("JSON");
+                                    }
                                 }
                                 catch (Exception)
                                 {
                                     //
                                 }
+                                #endregion
 
-                                await session.SaveChangesAsync().ConfigureAwait(false);
+                                #region String Serializer
+                                try
+                                {
+                                    var bTxt = false;
+                                    if (traceItem.TraceObject is SerializedObject serObj)
+                                    {
+                                        var value = serObj.GetValue();
+                                        if (value is string txtValue)
+                                        {
+                                            msTxt.Write(Encoding.UTF8.GetBytes(txtValue));
+                                            bTxt = true;
+                                        }
+                                    }
+                                    else if (traceItem.TraceObject is string strObj)
+                                    {
+                                        msTxt.Write(Encoding.UTF8.GetBytes(strObj));
+                                        bTxt = true;
+                                    }
+
+                                    if (bTxt)
+                                    {
+                                        msTxt.Position = 0;
+                                        session.Advanced.Attachments.Store(traceInfo.Id, "TraceTxt", msTxt, traceItem.TraceObject?.GetType().FullName);
+                                        lstExtensions.Add("TXT");
+                                    }
+                                }
+                                catch (Exception)
+                                {
+                                    //
+                                }
+                                #endregion
+
+                                if (lstExtensions.Count > 0)
+                                {
+                                    traceInfo.Formats = lstExtensions.ToArray();
+                                    await session.SaveChangesAsync().ConfigureAwait(false);
+                                }
                             }
                         }
                         else

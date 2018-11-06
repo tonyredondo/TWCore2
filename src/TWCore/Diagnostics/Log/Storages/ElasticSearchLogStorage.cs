@@ -37,6 +37,7 @@ namespace TWCore.Diagnostics.Log.Storages
     public class ElasticSearchLogStorage : ILogStorage
     {
         private readonly Timer _timer;
+        private readonly string _originalUrl;
         private readonly Uri _url;
         private readonly string _indexFormat;
         private volatile bool _processing;
@@ -59,6 +60,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="periodInSeconds">Fetch period in seconds</param>
         public ElasticSearchLogStorage(string url, string indexFormat, int periodInSeconds = 10)
         {
+            _originalUrl = url;
             _url = new UriBuilder(url) { Path = "_bulk" }.Uri;
             _indexFormat = indexFormat;
             _client = new WebClient();
@@ -68,13 +70,12 @@ namespace TWCore.Diagnostics.Log.Storages
             Core.Status.Attach(collection =>
             {
                 collection.Add("Configuration",
-                    new StatusItemValueItem("Url", _url),
+                    new StatusItemValueItem("Url", _originalUrl),
                     new StatusItemValueItem("IndexFormat", _indexFormat),
                     new StatusItemValueItem("Period In Seconds", periodInSeconds)
                 );
                 collection.Add("Remaining Items", _count);
-            });
-
+            }, this);
         }
         /// <summary>
         /// ElasticSearch log storage finalizer

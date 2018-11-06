@@ -131,8 +131,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("Message: " + ex.Message);
-                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
+                                    Core.Log.Write(ex);
                                 }
                                 #endregion
 
@@ -177,8 +176,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("Message: " + ex.Message);
-                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
+                                    Core.Log.Write(ex);
                                 }
                                 #endregion
 
@@ -223,8 +221,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("Message: " + ex.Message);
-                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
+                                    Core.Log.Write(ex);
                                 }
                                 #endregion
 
@@ -256,8 +253,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("Message: " + ex.Message);
-                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
+                                    Core.Log.Write(ex);
                                 }
                                 #endregion
 

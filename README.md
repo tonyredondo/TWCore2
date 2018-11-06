@@ -17,6 +17,7 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0 and ne
 - Html File
 - MessageBroker
 - ElasticSearch
+- Mail
 
 #### Supported trace storages
 - File

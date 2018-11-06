@@ -1396,6 +1396,41 @@ var QueryService = /** @class */ (function () {
             reportProgress: reportProgress
         });
     };
+    QueryService.prototype.apiQueryByEnvironmentTracesTxtByIdGet = function (environment, id, observe, reportProgress) {
+        if (observe === void 0) { observe = 'body'; }
+        if (reportProgress === void 0) { reportProgress = false; }
+        if (environment === null || environment === undefined) {
+            throw new Error('Required parameter environment was null or undefined when calling apiQueryByEnvironmentTracesXmlByIdGet.');
+        }
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling apiQueryByEnvironmentTracesXmlByIdGet.');
+        }
+        var headers = this.defaultHeaders;
+        // to determine the Accept header
+        var httpHeaderAccepts = [
+            'text/plain',
+            'application/json',
+            'text/json',
+            'application/xml',
+            'text/xml',
+            'application/binary-formatter',
+            'application/n-binary',
+            'application/pw-binary',
+            'application/w-binary'
+        ];
+        var httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        if (httpHeaderAcceptSelected != undefined) {
+            headers = headers.set("Accept", httpHeaderAcceptSelected);
+        }
+        // to determine the Content-Type header
+        var consumes = [];
+        return this.httpClient.get(this.basePath + "/api/query/" + encodeURIComponent(String(environment)) + "/traces/txt/" + encodeURIComponent(String(id)), {
+            withCredentials: this.configuration.withCredentials,
+            headers: headers,
+            observe: observe,
+            reportProgress: reportProgress
+        });
+    };
     QueryService.prototype.apiQueryGet = function (observe, reportProgress) {
         if (observe === void 0) { observe = 'body'; }
         if (reportProgress === void 0) { reportProgress = false; }

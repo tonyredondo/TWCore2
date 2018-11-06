@@ -74,7 +74,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     new StatusItemValueItem("IndexFormat", _indexFormat),
                     new StatusItemValueItem("Period In Seconds", periodInSeconds)
                 );
-                collection.Add("Remaining Items", _count);
+                collection.Add("Remaining Items", _count, true);
             }, this);
         }
         /// <summary>

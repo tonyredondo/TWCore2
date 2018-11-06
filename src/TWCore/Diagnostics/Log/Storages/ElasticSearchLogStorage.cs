@@ -60,7 +60,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public ElasticSearchLogStorage(string url, string indexFormat, int periodInSeconds = 10)
         {
             _url = new UriBuilder(url) { Path = "_bulk" }.Uri;
-            _indexFormat = indexFormat?.ToLowerInvariant();
+            _indexFormat = indexFormat;
             _client = new WebClient();
             _logItems = new BlockingCollection<SourceData>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
@@ -135,7 +135,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 var count = 0;
                 while (count++ < 2048 && _logItems.TryTake(out var item, 10))
                 {
-                    var index = _indexFormat.ApplyFormat(item.@timestamp, item.applicationName, item.environmentName);
+                    var index = _indexFormat.ApplyFormat(item.@timestamp, item.applicationName, item.environmentName).ToLowerInvariant();
                     _builderBuffer.Append("{\"index\":{\"_index\":\"" + index + "\",\"_type\":\"logevent\"}}\n");
                     _builderBuffer.Append(serializer.SerializeToString(item) + "\n");
                     Interlocked.Decrement(ref _count);

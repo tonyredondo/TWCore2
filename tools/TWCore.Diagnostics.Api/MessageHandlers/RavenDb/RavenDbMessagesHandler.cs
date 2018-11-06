@@ -153,7 +153,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 bXml = true;
                                                 break;
                                             default:
-                                                if (value != null)
+                                                if (value != null && value.GetType() != typeof(string))
                                                 {
                                                     XmlSerializer.Serialize(value, msXml);
                                                     bXml = true;
@@ -161,7 +161,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 break;
                                         }
                                     }
-                                    else
+                                    else if (!(traceItem.TraceObject is string))
                                     {
                                         XmlSerializer.Serialize(traceItem.TraceObject, msXml);
                                         bXml = true;
@@ -198,7 +198,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 bJson = true;
                                                 break;
                                             default:
-                                                if (value != null)
+                                                if (value != null && value.GetType() != typeof(string))
                                                 {
                                                     JsonSerializer.Serialize(value, msJson);
                                                     bJson = true;
@@ -206,7 +206,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 break;
                                         }
                                     }
-                                    else
+                                    else if (!(traceItem.TraceObject is string))
                                     {
                                         JsonSerializer.Serialize(traceItem.TraceObject, msJson);
                                         bJson = true;

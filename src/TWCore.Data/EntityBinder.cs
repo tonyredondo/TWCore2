@@ -18,8 +18,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using TWCore.Collections;
 using TWCore.Reflection;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -30,22 +33,15 @@ namespace TWCore.Data
     /// </summary>
     public class EntityBinder
     {
+        private static volatile int HasInvalidCast;
+
         #region Statics
-        /// <summary>
-        /// Properties of entities type
-        /// </summary>
-        public static ConcurrentDictionary<Type, EntityInfo> Entities { get; } = new ConcurrentDictionary<Type, EntityInfo>();
-        /// <summary>
-        /// Types overwrite definition
-        /// </summary>
-        public static ConcurrentDictionary<Type, Type> TypesOverwrite { get; } = new ConcurrentDictionary<Type, Type>();
         /// <summary>
         /// Prepare Type for entity binder
         /// </summary>
-        /// <param name="type">Type of entity</param>
         /// <returns>EntityInfo instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityInfo PrepareEntity(Type type) => Entities.GetOrAdd(type, EntityInfo.CreateEntityInfo);
+        public static EntityInfo<T> PrepareEntity<T>() => EntityInfo<T>.Instance;
         #endregion
 
         #region Property
@@ -56,7 +52,7 @@ namespace TWCore.Data
         /// <summary>
         /// Concurrent list with all casting errors
         /// </summary>
-        private static ConcurrentBag<InvalidCast> InvalidCastList { get; } = new ConcurrentBag<InvalidCast>();
+        private static ConcurrentDictionary<(Type, Type), InvalidCast> InvalidCastList { get; } = new ConcurrentDictionary<(Type, Type), InvalidCast>();
         /// <summary>
         /// Value converter from the data source to the entity properties.
         /// </summary>
@@ -90,57 +86,48 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Bind<T>(object[] rowValues, string pattern = null)
         {
-            var type = typeof(T);
-            if (TypesOverwrite.TryGetValue(type, out var rType))
-                type = rType;
-
-            if (ColumnIndex.Count != rowValues.Length)
+            var columnIndex = ColumnIndex;
+            if (columnIndex.Count != rowValues.Length)
                 throw new ArgumentException("The row values length is different from the expected.");
-
-            if (type == typeof(DictionaryObject))
+            if (typeof(T) == typeof(DictionaryObject))
             {
-                var dicData = ColumnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();
+                var dicData = columnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();
                 return (T)(object)new DictionaryObject(dicData);
             }
-            
-            var entityInfo = PrepareEntity(type);
+            var valueConverter = ValueConverter;
+            var entityInfo = EntityInfo<T>.Instance;
             var entity = (T)entityInfo.Activator();
-            foreach (var prop in entityInfo.Properties)
+            foreach (var dataPattern in entityInfo.GetColumnNamesByPattern(pattern))
             {
-                var propName = prop.Name;
-                if (pattern.IsNotNullOrEmpty())
-                    propName = pattern.Replace("%", propName);
-
-                if (!ColumnIndex.ContainsKey(propName)) continue;
-                    
-                var idx = ColumnIndex[propName];
+                if (!columnIndex.TryGetValue(dataPattern.Name, out var idx)) continue;
                 if (idx >= rowValues.Length || idx < 0)
                 {
-                    Core.Log.Warning($"The value for the property: {propName} on the entity: {type.Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
+                    Core.Log.Warning($"The value for the property: {dataPattern.Name} on the entity: {typeof(T).Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
                     continue;
                 }
                 var value = rowValues[idx];
-                var valueType = value?.GetType();
-                var propertyType = prop.PropertyUnderlayingType;
-                var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
-                var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
-
                 if (value is null)
-                    prop.SetValue(entity, defaultValue);
-                else if (propertyType == valueType)
-                    prop.SetValue(entity, value);
+                {
+                    dataPattern.Property.SetValue(entity, dataPattern.DefaultValue);
+                    continue;
+                }
+
+                var valueType = value?.GetType();
+                var propertyType = dataPattern.Property.PropertyUnderlayingType;
+
+                if (propertyType == valueType)
+                    dataPattern.Property.SetValue(entity, value);
                 else
                 {
-                    var result = defaultValue;
+                    var result = dataPattern.DefaultValue;
 
-                    if (propertyType == typeof(Guid) && valueType == typeof(string))
+                    if (dataPattern.IsGuid && valueType == typeof(string))
                         result = new Guid((string)value);
-                    else if (propertyTypeInfo.IsEnum &&
-                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
+                    else if (dataPattern.IsEnum && (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
                         result = Enum.Parse(propertyType, value.ToString());
-                    else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out var valueConverterResult))
+                    else if (valueConverter != null && valueConverter.Convert(value, valueType, dataPattern.Property.PropertyType, dataPattern.DefaultValue, out var valueConverterResult))
                         result = valueConverterResult;
-                    else if (!InvalidCastList.Any((i, vTuple) => i.ValueType == vTuple.valueType && i.PropertyType == vTuple.propertyType, (valueType, propertyType)))
+                    else if (HasInvalidCast == 0 || !InvalidCastList.TryGetValue((valueType, propertyType), out _))
                     {
                         try
                         {
@@ -149,7 +136,8 @@ namespace TWCore.Data
                         catch (InvalidCastException exCast)
                         {
                             Core.Log.Write(exCast);
-                            InvalidCastList.Add(new InvalidCast(valueType, propertyType));
+                            Interlocked.Increment(ref HasInvalidCast);
+                            InvalidCastList.TryAdd((valueType, propertyType), new InvalidCast(valueType, propertyType));
                         }
                         catch (Exception ex)
                         {
@@ -157,7 +145,7 @@ namespace TWCore.Data
                         }
                     }
 
-                    prop.SetValue(entity, result);
+                    dataPattern.Property.SetValue(entity, result);
                 }
             }
             return entity;
@@ -196,10 +184,29 @@ namespace TWCore.Data
         }
 
         /// <summary>
+        /// Entity Creator delegate
+        /// </summary>
+        /// <typeparam name="T">Type of entity</typeparam>
+        /// <param name="rowValues">Row values</param>
+        /// <param name="columnIndex">Column index names</param>
+        /// <param name="valueConverter">Value converter</param>
+        /// <returns>Entity instance</returns>
+        public delegate T EntityCreatorDelegate<T>(object[] rowValues, Dictionary<string, int> columnIndex, IEntityValueConverter valueConverter);
+
+        /// <summary>
         /// Entity info
         /// </summary>
-        public class EntityInfo
+        /// <typeparam name="T">Type of entity</typeparam>
+        public class EntityInfo<T>
         {
+            private static readonly ConcurrentDictionary<string, DataPerPattern[]> EntityInfoPropertyPatterns = new ConcurrentDictionary<string, DataPerPattern[]>();
+            
+            /// <summary>
+            /// Singleton instance
+            /// </summary>
+            public static readonly EntityInfo<T> Instance = new EntityInfo<T>();
+
+
             /// <summary>
             /// Entity Activator
             /// </summary>
@@ -213,19 +220,53 @@ namespace TWCore.Data
             /// Entity info
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private EntityInfo(Type type)
+            private EntityInfo()
             {
+                var type = typeof(T);
                 Activator = Factory.Accessors.CreateActivator(type);
                 Properties = type.GetRuntimeProperties().Where(p => p.CanWrite).Select(p => p.GetFastPropertyInfo()).ToArray();
             }
 
             /// <summary>
-            /// Create a new entity info
+            /// Gets the columns names list using a pattern 
             /// </summary>
-            /// <param name="type">Type of entity</param>
-            /// <returns>EntityInfo</returns>
+            /// <param name="pattern">String pattern</param>
+            /// <returns>Data struct</returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static EntityInfo CreateEntityInfo(Type type) => new EntityInfo(type);
+            internal DataPerPattern[] GetColumnNamesByPattern(string pattern)
+            {
+                return EntityInfoPropertyPatterns.GetOrAdd(pattern ?? string.Empty, mPattern =>
+                {
+                    return Properties.Select(prop =>
+                    {
+                        var name = mPattern == string.Empty ? prop.Name : mPattern.Replace("%", prop.Name);
+                        var defaultValue = prop.PropertyType.IsValueType ? System.Activator.CreateInstance(prop.PropertyType) : null;
+                        var isGuid = prop.PropertyUnderlayingType == typeof(Guid);
+                        var isEnum = prop.PropertyUnderlayingType.IsEnum;
+
+                        return new DataPerPattern(name, prop, defaultValue, isGuid, isEnum);
+                    }).ToArray();
+                });
+            }
+
+            internal readonly struct DataPerPattern
+            {
+                public readonly string Name;
+                public readonly FastPropertyInfo Property;
+                public readonly object DefaultValue;
+                public readonly bool IsGuid;
+                public readonly bool IsEnum;
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                internal DataPerPattern(string name, FastPropertyInfo property, object defaultValue, bool isGuid, bool isEnum)
+                {
+                    Name = name;
+                    Property = property;
+                    DefaultValue = defaultValue;
+                    IsGuid = isGuid;
+                    IsEnum = isEnum;
+                }
+            }
         }
         #endregion
     }

@@ -170,10 +170,10 @@ namespace TWCore.Data
             
             if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var result))
             {
-                if (result.Count != reader.FieldCount)
+				if (result.Count == reader.FieldCount)
+					return result;
+				else
                     ColumnsByNameOrQuery.TryRemove(nameOrQuery, out result);
-                else
-                    return result;
             }
             return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
         }
@@ -421,33 +421,31 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    //Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    Task.Run(() => EntityBinder.PrepareEntity<T>());
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
                     {
                         #region Command Execution
                         var lstRows = new List<EntityDataRow<T>>();
-                        var indexNumber = 0;
-                        var firstTime = true;
                         connection.Open();
                         using (var reader = command.ExecuteReader())
                         {
-                            while (reader.Read())
-                            {
-                                if (firstTime)
-                                {
-                                    firstTime = false;
-                                    var cIndex = ExtractColumnNames(nameOrQuery, reader);
-                                    indexNumber = cIndex.Count;
-                                    entityBinder.ColumnIndex = cIndex;
-                                }
-                                var columns = new object[indexNumber];
-                                reader.GetValues(columns);
-                                lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
-                            }
+							if (reader.Read())
+							{
+								var cIndex = ExtractColumnNames(nameOrQuery, reader);
+								var indexNumber = cIndex.Count;
+								entityBinder.ColumnIndex = cIndex;
+								do
+								{
+									var columns = new object[indexNumber];
+									reader.GetValues(columns);
+									lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+								} while (reader.Read());
+							}
                         }
                         returnValue = returnValueParam?.Value;
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
@@ -619,9 +617,10 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    //Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    Task.Run(() => EntityBinder.PrepareEntity<T>());
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
@@ -934,17 +933,13 @@ namespace TWCore.Data
                         else if (propertyType.IsEnum &&
                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte)))
                             result = Enum.Parse(propertyType, value.ToString());
-                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), out var valueConverterResult))
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), defaultValue, out var valueConverterResult))
                             result = valueConverterResult;
                         else
                         {
                             try
                             {
                                 result = Convert.ChangeType(value, propertyType);
-                            }
-                            catch (InvalidCastException exCast)
-                            {
-                                Core.Log.Write(exCast);
                             }
                             catch (Exception ex)
                             {
@@ -1350,35 +1345,32 @@ namespace TWCore.Data
 
                             do
                             {
-                                var indexNumber = 0;
-                                var firstTime = true;
                                 var resultset = resultSets[resultSetIndex];
+								if (reader.Read())
+								{
+									var dct = new Dictionary<string, int>();
+									for (var i = 0; i < reader.FieldCount; i++)
+									{
+										var name = reader.GetName(i);
+										if (!dct.ContainsKey(name))
+											dct[name] = i;
+										else
+										{
+											var oIdx = dct[name];
+											var nIdx = i;
+											Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+										}
+									}
+									var indexNumber = dct.Count;
+									resultset.SetColumnsOnBinder(dct);
 
-                                while (reader.Read())
-                                {
-                                    if (firstTime)
-                                    {
-                                        firstTime = false;
-                                        var dct = new Dictionary<string, int>();
-                                        for (var i = 0; i < reader.FieldCount; i++)
-                                        {
-                                            var name = reader.GetName(i);
-                                            if (!dct.ContainsKey(name))
-                                                dct[name] = i;
-                                            else
-                                            {
-                                                var oIdx = dct[name];
-                                                var nIdx = i;
-                                                Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
-                                            }
-                                        }
-                                        indexNumber = dct.Count;
-                                        resultset.SetColumnsOnBinder(dct);
-                                    }
-                                    var columns = new object[indexNumber];
-                                    reader.GetValues(columns);
-                                    resultset.AddRow(columns);
-                                }
+									do
+									{
+										var columns = new object[indexNumber];
+										reader.GetValues(columns);
+										resultset.AddRow(columns);
+									} while (reader.Read());
+								}
                                 resultSetIndex++;
                             } while (reader.NextResult() && resultSets.Length > resultSetIndex);
                         }
@@ -1497,33 +1489,31 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    EntityBinder.PrepareEntity(typeof(T));
+                    //EntityBinder.PrepareEntity(typeof(T));
+                    EntityBinder.PrepareEntity<T>();
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
                     {
                         #region Command Execution
                         var lstRows = new List<EntityDataRow<T>>();
-                        var indexNumber = 0;
-                        var firstTime = true;
                         await connection.OpenAsync().ConfigureAwait(false);
                         using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                         {
-                            while (await reader.ReadAsync().ConfigureAwait(false))
-                            {
-                                if (firstTime)
-                                {
-                                    firstTime = false;
-                                    var cIndex = ExtractColumnNames(nameOrQuery, reader);
-                                    indexNumber = cIndex.Count;
-                                    entityBinder.ColumnIndex = cIndex;
-                                }
-                                var columns = new object[indexNumber];
-                                reader.GetValues(columns);
-                                lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
-                            }
+							if (await reader.ReadAsync().ConfigureAwait(false))
+							{
+								var cIndex = ExtractColumnNames(nameOrQuery, reader);
+								var indexNumber = cIndex.Count;
+								entityBinder.ColumnIndex = cIndex;
+								do
+								{
+									var columns = new object[indexNumber];
+									reader.GetValues(columns);
+									lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+								} while (await reader.ReadAsync().ConfigureAwait(false));
+							}
                         }
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
                         connection.Close();
@@ -1640,9 +1630,10 @@ namespace TWCore.Data
 
                     #region Sets EntityBinder and FillMethod
                     var entityBinder = new EntityBinder(EntityValueConverter);
-                    EntityBinder.PrepareEntity(typeof(T));
+                    //EntityBinder.PrepareEntity(typeof(T));
+                    EntityBinder.PrepareEntity<T>();
                     if (fillMethod is null)
-                        fillMethod = (e, o) => e.Bind<T>(o);
+                        fillMethod = DefaultFillMethod<T>.Instance;
                     #endregion
 
                     try
@@ -1957,17 +1948,13 @@ namespace TWCore.Data
                         else if (propertyType.IsEnum &&
                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte)))
                             result = Enum.Parse(propertyType, value.ToString());
-                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, out var valueConverterResult))
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, defaultValue, out var valueConverterResult))
                             result = valueConverterResult;
                         else
                         {
                             try
                             {
                                 result = Convert.ChangeType(value, propertyType);
-                            }
-                            catch (InvalidCastException exCast)
-                            {
-                                Core.Log.Write(exCast);
                             }
                             catch (Exception ex)
                             {
@@ -2326,37 +2313,34 @@ namespace TWCore.Data
 
                             do
                             {
-                                var indexNumber = 0;
-                                var firstTime = true;
                                 var resultset = resultSets[resultSetIndex];
 
-                                while (reader.Read())
-                                {
-                                    if (firstTime)
-                                    {
-                                        firstTime = false;
-                                        var dct = new Dictionary<string, int>();
-                                        for (var i = 0; i < reader.FieldCount; i++)
-                                        {
-                                            var name = reader.GetName(i);
-                                            if (!dct.ContainsKey(name))
-                                                dct[name] = i;
-                                            else
-                                            {
-                                                var oIdx = dct[name];
-                                                var nIdx = i;
-                                                Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
-                                            }
-                                        }
-                                        indexNumber = dct.Count;
-                                        resultset.SetColumnsOnBinder(dct);
-                                    }
-                                    var columns = new object[indexNumber];
-                                    reader.GetValues(columns);
-                                    resultset.AddRow(columns);
-                                }
+								if (await reader.ReadAsync().ConfigureAwait(false))
+								{
+									var dct = new Dictionary<string, int>();
+									for (var i = 0; i < reader.FieldCount; i++)
+									{
+										var name = reader.GetName(i);
+										if (!dct.ContainsKey(name))
+											dct[name] = i;
+										else
+										{
+											var oIdx = dct[name];
+											var nIdx = i;
+											Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+										}
+									}
+									var indexNumber = dct.Count;
+									resultset.SetColumnsOnBinder(dct);
+									do
+									{
+										var columns = new object[indexNumber];
+										reader.GetValues(columns);
+										resultset.AddRow(columns);
+									} while (await reader.ReadAsync().ConfigureAwait(false));
+								}
                                 resultSetIndex++;
-                            } while (reader.NextResult() && resultSets.Length > resultSetIndex);
+                            } while (await reader.NextResultAsync().ConfigureAwait(false) && resultSets.Length > resultSetIndex);
                         }
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
                         connection.Close();
@@ -2471,6 +2455,21 @@ namespace TWCore.Data
         public virtual string GetDeleteFromContainer(GeneratorSelectionContainer container)
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
+        #endregion
+
+
+        #region Nested Class
+        /// <summary>
+        /// Default Fill Method for an entity
+        /// </summary>
+        /// <typeparam name="T">Type of entity</typeparam>
+        public static class DefaultFillMethod<T>
+        {
+            /// <summary>
+            /// Default fill method delegate
+            /// </summary>
+            public static FillDataDelegate<T> Instance = (e, o) => e.Bind<T>(o);
         }
         #endregion
     }

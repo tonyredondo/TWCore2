@@ -29,8 +29,9 @@ namespace TWCore.Data
         /// <param name="value">Value to convert from the data source</param>
         /// <param name="valueType">Value type from the data source, this is the source type</param>
         /// <param name="propertyType">Property type of the entity, is the destination type</param>
+        /// <param name="defaultValue">Default value</param>
         /// <param name="propertyValue">Output parameter as result of the convertion</param>
         /// <returns>true if the convertion was successful; otherwise, false</returns>
-        bool Convert(object value, Type valueType, Type propertyType, out object propertyValue);
+        bool Convert(object value, Type valueType, Type propertyType, object defaultValue, out object propertyValue);
     }
 }

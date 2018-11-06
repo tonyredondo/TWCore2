@@ -23,7 +23,10 @@ A multipurpose framework library for .net core</Description>
     <LangVersion>7.3</LangVersion>
     <Features>strict</Features>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(Configuration)'=='Release' ">
+  <ItemGroup Condition=" '$(Configuration)'=='Release' AND '$(OS)' == 'Windows_NT' ">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All"/>
   </ItemGroup>
+  <Target Name="DisplayMessages" BeforeTargets="Build">
+  	<Message Importance="High" Text="Compiling in: $(OS) - Mode: $(Configuration) - Version: $(VersionPrefix)-$(VersionSuffix)" />
+  </Target>
 </Project>

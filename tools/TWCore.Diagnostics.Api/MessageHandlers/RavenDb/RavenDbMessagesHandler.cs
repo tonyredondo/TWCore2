@@ -129,9 +129,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                     msNBinary.Position = 0;
                                     session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    //
+                                    Console.WriteLine("Message: " + ex.Message);
+                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
                                 }
                                 #endregion
 
@@ -174,9 +175,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                         lstExtensions.Add("XML");
                                     }
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    //
+                                    Console.WriteLine("Message: " + ex.Message);
+                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
                                 }
                                 #endregion
 
@@ -219,9 +221,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                         lstExtensions.Add("JSON");
                                     }
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    //
+                                    Console.WriteLine("Message: " + ex.Message);
+                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
                                 }
                                 #endregion
 
@@ -251,9 +254,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                         lstExtensions.Add("TXT");
                                     }
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    //
+                                    Console.WriteLine("Message: " + ex.Message);
+                                    Console.WriteLine("StackTrace: \r\n" + ex.StackTrace);
                                 }
                                 #endregion
 

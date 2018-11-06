@@ -38,20 +38,18 @@ namespace TWCore.Diagnostics.Api
             //var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
             //var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 
-            var status = ((RavenDbQueryHandler)DbHandlers.Instance.Query).GetTracesByEnvironmentAsync("docker", DateTime.MinValue, DateTime.Now, 0).WaitAndResults();
-	        
+            //var status = ((RavenDbQueryHandler)DbHandlers.Instance.Query).GetTracesByEnvironmentAsync("docker", DateTime.MinValue, DateTime.Now, 0).WaitAndResults();
 
-         //   Task.Delay(6000).ContinueWith(async _ =>
-         //   {
-         //       while (true)
-         //       {
+            //   Task.Delay(6000).ContinueWith(async _ =>
+            //   {
+            //       while (true)
+            //       {
 
-         //           Core.Trace.Write("Hola Mundo");
+            //           Core.Trace.Write("Hola Mundo");
 
-         //           await Task.Delay(6000).ConfigureAwait(false);
-         //       }
-         //   });
-
+            //           await Task.Delay(6000).ConfigureAwait(false);
+            //       }
+            //   });
 
             /*
 	        var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();

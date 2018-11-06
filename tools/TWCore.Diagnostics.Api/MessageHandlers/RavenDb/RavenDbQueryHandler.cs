@@ -179,42 +179,32 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     return bytes.DeserializeFromNBinary<SerializedObject>();
             });
         }
+        public Task<string> GetTraceAsync(string id, string traceName)
+        {
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                var attachment = await session.Advanced.Attachments.GetAsync(id, traceName).ConfigureAwait(false);
+                if (attachment?.Stream is null) return null;
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                {
+                    var desBytes = Compressor.Decompress(bytes);
+                    return Encoding.UTF8.GetString(desBytes.AsSpan());
+                }
+                else
+                {
+                    return Encoding.UTF8.GetString(bytes.AsSpan());
+                }
+            });
+        }
         public Task<string> GetTraceXmlAsync(string id)
-        {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
-            {
-                var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceXml").ConfigureAwait(false);
-                if (attachment?.Stream is null) return null;
-                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
-                if (bytes.IsGzip())
-                {
-                    var desBytes = Compressor.Decompress(bytes);
-                    return Encoding.UTF8.GetString(desBytes.AsSpan());
-                }
-                else
-                {
-                    return Encoding.UTF8.GetString(bytes.AsSpan());
-                }
-            });
-        }
+            => GetTraceAsync(id, "TraceXml");
         public Task<string> GetTraceJsonAsync(string id)
-        {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
-            {
-                var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceJson").ConfigureAwait(false);
-                if (attachment?.Stream is null) return null;
-                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
-                if (bytes.IsGzip())
-                {
-                    var desBytes = Compressor.Decompress(bytes);
-                    return Encoding.UTF8.GetString(desBytes.AsSpan());
-                }
-                else
-                {
-                    return Encoding.UTF8.GetString(bytes.AsSpan());
-                }
-            });
-        }
+            => GetTraceAsync(id, "TraceJson");
+        public Task<string> GetTraceTxtAsync(string id)
+            => GetTraceAsync(id, "TraceTxt");
+
+
 
         private class TraceTempResult
         {

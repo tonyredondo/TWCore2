@@ -91,15 +91,22 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <returns>The trace object</returns>
 		/// <param name="id">Trace object id</param>
 		Task<string> GetTraceJsonAsync(string id);
-		/// <summary>
-		/// Search a term in the database
+        /// <summary>
+		/// Gets the Trace object in txt
 		/// </summary>
-		/// <param name="environment">Environment name</param>
-		/// <param name="searchTerm">Term to search in the database</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <returns>Search results</returns>
-		Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate);
+		/// <returns>The trace object</returns>
+		/// <param name="id">Trace object id</param>
+		Task<string> GetTraceTxtAsync(string id);
+
+        /// <summary>
+        /// Search a term in the database
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="searchTerm">Term to search in the database</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>Search results</returns>
+        Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate);
 
 		
 		

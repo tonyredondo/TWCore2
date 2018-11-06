@@ -95,6 +95,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             return DbHandlers.Instance.Query.GetTracesByGroupIdAsync(environment, groupName);
         }
         
+
         [HttpGet("{environment}/traces/raw/{id}")]
         public Task<SerializedObject> GetTraceObjectAsync([FromRoute] string environment, [FromRoute] string id)
         {
@@ -156,6 +157,15 @@ namespace TWCore.Diagnostics.Api.Controllers
                 return JsonSerializer.SerializeToString(new SerializableException(ex));
             }
         }
+        [HttpGet("{environment}/traces/txt/{id}")]
+        public async Task<string> GetTraceObjectValueInTxtAsync([FromRoute] string environment, [FromRoute] string id)
+        {
+            id = WebUtility.UrlDecode(id);
+            var txtData = await DbHandlers.Instance.Query.GetTraceTxtAsync(id).ConfigureAwait(false);
+            return txtData;
+        }
+        
+
         /// <summary>
         /// Search a term in the database
         /// </summary>

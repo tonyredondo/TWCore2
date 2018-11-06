@@ -1,4 +1,4 @@
-﻿162echo "Remove previous build"
+﻿echo "Remove previous build"
 rm -r app
 
 echo "Creating folder structure..."

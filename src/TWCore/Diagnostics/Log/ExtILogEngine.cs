@@ -91,5 +91,32 @@ namespace TWCore
 			if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is HtmlFileLogStorage) == false)
 				logEngine.Storage.Add(new HtmlFileLogStorage(fileName, createByDay), writeLevel);
 		}
+
+
+        /// <summary>
+        /// Adds an ElasticSearch log storage instance to the log engine
+        /// </summary>
+        /// <param name="logEngine">Log engine</param>
+        /// <param name="url">ElasticSearch Json api url</param>
+        /// <param name="indexName">Index name</param>
+        public static void AddElasticSearchStorage(this ILogEngine logEngine, string url, string indexName)
+        {
+            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is ElasticSearchLogStorage) == false)
+                logEngine.Storage.Add(new ElasticSearchLogStorage(url, indexName));
+        }
+
+        /// <summary>
+        /// Adds an ElasticSearch log storage instance to the log engine
+        /// </summary>
+        /// <param name="logEngine">Log engine</param>
+        /// <param name="url">ElasticSearch Json api url</param>
+        /// <param name="indexName">Index name</param>
+        /// <param name="writeLevel">Write level for the log storage</param>
+        public static void AddElasticSearchStorage(this ILogEngine logEngine, string url, string indexName, LogLevel writeLevel)
+        {
+            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is ElasticSearchLogStorage) == false)
+                logEngine.Storage.Add(new ElasticSearchLogStorage(url, indexName), writeLevel);
+        }
+
     }
 }

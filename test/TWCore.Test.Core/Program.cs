@@ -78,6 +78,9 @@ namespace TWCore.Test.Core
                 TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");
                 TWCore.Core.Trace.AddSimpleFileStorage("./traces");
 
+                TWCore.Core.Log.AddElasticSearchStorage("http://10.10.1.52:9220", "TestIndex{0:yyyy.MM.dd}");
+
+
                 var path = Factory.ResolveLowLowFilePath("<</temp/copyright.txt");
                 var folder = Factory.ResolveLowLowPath("<</temp/copyright.txt");
                 var folder2 = Factory.ResolveLowLowPath("<<(Github)/logs");

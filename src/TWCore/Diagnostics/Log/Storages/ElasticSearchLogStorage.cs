@@ -65,6 +65,16 @@ namespace TWCore.Diagnostics.Log.Storages
             _logItems = new BlockingCollection<SourceData>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
+            Core.Status.Attach(collection =>
+            {
+                collection.Add("Configuration",
+                    new StatusItemValueItem("Url", _url),
+                    new StatusItemValueItem("IndexFormat", _indexFormat),
+                    new StatusItemValueItem("Period In Seconds", periodInSeconds)
+                );
+                collection.Add("Remaining Items", _count);
+            });
+
         }
         /// <summary>
         /// ElasticSearch log storage finalizer
@@ -131,7 +141,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     _processing = false;
                     return;
                 }
-                
+
                 var count = 0;
                 while (count++ < 2048 && _logItems.TryTake(out var item, 10))
                 {

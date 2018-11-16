@@ -240,9 +240,7 @@ namespace TWCore.Messaging.Kafka
                 if (message.Body == MultiArray<byte>.Empty)
                     throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-                sw.Stop();
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2} at {3}ms", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
                 return message.Body.AsArray();
             }
             finally

@@ -84,16 +84,15 @@ namespace TWCore.Messaging.RabbitMQ
         {
             _token = token;
             _receiver = new RabbitMQueue(Connection);
-            _receiver.EnsureConnection();
+            await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
             _receiver.EnsureQueue();
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
-            _receiverConsumer.Received += (ch, ea) =>
+            _receiverConsumer.Received += async (ch, ea) =>
             {
                 var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
-                _receiver.Channel.BasicAck(ea.DeliveryTag, false);
+                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg).ConfigureAwait(false);
             };
-            _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+            _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, true, _receiverConsumer);
             _monitorTask = Task.Run(MonitorProcess, _token);
 
             await token.WhenCanceledAsync().ConfigureAwait(false);

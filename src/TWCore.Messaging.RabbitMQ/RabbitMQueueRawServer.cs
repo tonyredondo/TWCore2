@@ -17,6 +17,7 @@ limitations under the License.
 using RabbitMQ.Client;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
@@ -68,61 +69,76 @@ namespace TWCore.Messaging.RabbitMQ
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		/// <param name="e">RawRequest received event args</param>
-		protected override Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e)
+		protected override async Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e)
 		{
-			var queues = e.ResponseQueues;
-			queues.Add(new MQConnection
-			{
-				Route = e.Sender.Route,
-				Parameters = e.Sender.Parameters
-			});
+            var crId = e.CorrelationId.ToString();
+            var replyTo = e.Metadata["ReplyTo"];
+            var queues = e.ResponseQueues;
 
-			var crId = e.CorrelationId.ToString();
-			var replyTo = e.Metadata["ReplyTo"];
+            if (queues.Count == 0)
+            {
+                var queue = new MQConnection
+                {
+                    Route = e.Sender.Route,
+                    Parameters = e.Sender.Parameters
+                };
+                await SendTaskAsync(queue).ConfigureAwait(false);
+            }
+            else
+            {
+                queues.Add(new MQConnection
+                {
+                    Route = e.Sender.Route,
+                    Parameters = e.Sender.Parameters
+                });
+                var sendTasks = queues.Select(SendTaskAsync).ToArray();
+                await Task.WhenAny(sendTasks).ConfigureAwait(false);
+            }
 
-			var response = true;
-			foreach (var queue in queues)
-			{
-				try
-				{
-					var rabbitQueue = _rQueue.GetOrAdd((queue.Route, queue.Name), q => new RabbitMQueue(queue));
-					if (!rabbitQueue.EnsureConnection()) continue;
-					rabbitQueue.EnsureExchange();
-					var props = rabbitQueue.Channel.CreateBasicProperties();
-					props.CorrelationId = crId;
-					props.Priority = _priority;
-					props.Expiration = _expiration;
-					props.AppId = Core.ApplicationName;
-					props.ContentType = SenderSerializer.MimeTypes[0];
-					props.DeliveryMode = _deliveryMode;
-					props.Type = _label;
-					if (!string.IsNullOrEmpty(replyTo))
-					{
-						if (string.IsNullOrEmpty(queue.Name))
-						{
-							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Count, rabbitQueue.Route, replyTo, crId);
-							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, replyTo, props, message.AsArray());
-						}
-						else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
-						{
-							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Count, rabbitQueue.Route, queue.Name + "_" + replyTo, crId);
-							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name + "_" + replyTo, props, message.AsArray());
-						}
-					}
-					else
-					{
-						Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Count, rabbitQueue.Route, queue.Name, crId);
-						rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, message.AsArray());
-					}
-				}
-				catch (Exception ex)
-				{
-					response = false;
-					Core.Log.Write(ex);
-				}
-			}
-		    return response ? Task.FromResult(message.Count) : TaskHelper.CompleteValueMinus1;
-		}
+		    return message.Count;
+
+            async Task SendTaskAsync(MQConnection queue)
+            {
+                try
+                {
+                    var rabbitQueue = _rQueue.GetOrAdd((queue.Route, queue.Name), q => new RabbitMQueue(queue));
+                    if (await rabbitQueue.EnsureConnectionAsync(1000, 2).ConfigureAwait(false))
+                    {
+                        rabbitQueue.EnsureExchange();
+                        var props = rabbitQueue.Channel.CreateBasicProperties();
+                        props.CorrelationId = crId;
+                        props.Priority = _priority;
+                        props.Expiration = _expiration;
+                        props.AppId = Core.ApplicationName;
+                        props.ContentType = SenderSerializer.MimeTypes[0];
+                        props.DeliveryMode = _deliveryMode;
+                        props.Type = _label;
+                        if (!string.IsNullOrEmpty(replyTo))
+                        {
+                            if (string.IsNullOrEmpty(queue.Name))
+                            {
+                                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Count, rabbitQueue.Route, replyTo, crId);
+                                rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, replyTo, props, message.AsArray());
+                            }
+                            else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
+                            {
+                                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Count, rabbitQueue.Route, queue.Name + "_" + replyTo, crId);
+                                rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name + "_" + replyTo, props, message.AsArray());
+                            }
+                        }
+                        else
+                        {
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Count, rabbitQueue.Route, queue.Name, crId);
+                            rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, message.AsArray());
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+            }
+        }
 
 		/// <inheritdoc />
 		/// <summary>

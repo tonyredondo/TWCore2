@@ -17,6 +17,7 @@ limitations under the License.
 using RabbitMQ.Client;
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 // ReSharper disable InheritdocConsiderUsage
@@ -85,15 +86,17 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// Ensure Connection
         /// </summary>
+        /// <param name="retryInterval">Retry interval</param>
+        /// <param name="retryCount">Retry count</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool EnsureConnection()
+        public async ValueTask<bool> EnsureConnectionAsync(int retryInterval, int retryCount)
         {
             try
             {
                 if (Channel != null) return true;
                 if (string.IsNullOrEmpty(Route))
                     throw new UriFormatException($"The route for the connection to {Name} is null.");
-                ((Action)InternalConnection).InvokeWithRetry(5000, int.MaxValue).WaitAsync();
+                await ((Action)InternalConnection).InvokeWithRetry(retryInterval, retryCount).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex)
@@ -101,24 +104,25 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.Write(ex);
                 return false;
             }
+        }
 
-            void InternalConnection()
+        private void InternalConnection()
+        {
+            lock (this)
             {
-                lock (this)
+                if (Channel != null) return;
+                Core.Log.LibVerbose("Creating channel for: {0}", Name);
+                Factory = new ConnectionFactory
                 {
-                    Core.Log.LibVerbose("Creating channel for: {0}", Name);
-                    if (Channel != null) return;
-                    Factory = new ConnectionFactory
-                    {
-                        Uri = new Uri(Route),
-                        UseBackgroundThreadsForIO = true,
-                        AutomaticRecoveryEnabled = true,
-                    };
-                    Connection = Factory.CreateConnection();
-                    Channel = Connection.CreateModel();
-                }
+                    Uri = new Uri(Route),
+                    UseBackgroundThreadsForIO = true,
+                    AutomaticRecoveryEnabled = true,
+                };
+                Connection = Factory.CreateConnection();
+                Channel = Connection.CreateModel();
             }
         }
+
         /// <summary>
         /// Ensure Queue
         /// </summary>

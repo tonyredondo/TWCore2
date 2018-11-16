@@ -70,40 +70,49 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
+        protected override async Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return TaskHelper.CompleteValueMinus1;
+                return -1;
 
             var correlationId = message.CorrelationId.ToString();
             var data = SenderSerializer.Serialize(message);
-            var response = true;
 
-            foreach (var queue in e.ResponseQueues)
+            if (e.ResponseQueues.Count == 1)
+                await SendTaskAsync(e.ResponseQueues[0]).ConfigureAwait(false);
+            else
+            {
+                var sendTasks = e.ResponseQueues.Select(SendTaskAsync).ToArray();
+                await Task.WhenAny(sendTasks).ConfigureAwait(false);
+            }
+
+            return data.Count;
+
+            async Task SendTaskAsync(MQConnection queue)
             {
                 try
                 {
                     var rabbitQueue = _rQueue.GetOrAdd((queue.Route, queue.Name), q => new RabbitMQueue(queue));
-                    if (!rabbitQueue.EnsureConnection()) continue;
-                    rabbitQueue.EnsureExchange();
-                    var props = rabbitQueue.Channel.CreateBasicProperties();
-                    props.CorrelationId = correlationId;
-                    props.Priority = _priority;
-                    props.Expiration = _expiration;
-                    props.AppId = Core.ApplicationName;
-                    props.ContentType = SenderSerializer.MimeTypes[0];
-                    props.DeliveryMode = _deliveryMode;
-                    props.Type = _label;
-                    Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, rabbitQueue.Route, queue.Name, correlationId);
-                    rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, data.AsArray());
+                    if (await rabbitQueue.EnsureConnectionAsync(1000, 2).ConfigureAwait(false))
+                    {
+                        rabbitQueue.EnsureExchange();
+                        var props = rabbitQueue.Channel.CreateBasicProperties();
+                        props.CorrelationId = correlationId;
+                        props.Priority = _priority;
+                        props.Expiration = _expiration;
+                        props.AppId = Core.ApplicationName;
+                        props.ContentType = SenderSerializer.MimeTypes[0];
+                        props.DeliveryMode = _deliveryMode;
+                        props.Type = _label;
+                        Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, rabbitQueue.Route, queue.Name, correlationId);
+                        rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, data.AsArray());
+                    }
                 }
                 catch (Exception ex)
                 {
-                    response = false;
                     Core.Log.Write(ex);
                 }
             }
-            return response ? Task.FromResult(data.Count) : TaskHelper.CompleteValueMinus1;
         }
 
         /// <inheritdoc />

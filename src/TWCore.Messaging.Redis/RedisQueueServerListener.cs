@@ -109,12 +109,12 @@ namespace TWCore.Messaging.Redis
         /// <summary>
         /// Message Handler
         /// </summary>
-        private void MessageHandler(RedisChannel channel, RedisValue value)
+        private async void MessageHandler(RedisChannel channel, RedisValue value)
         {
             Core.Log.LibVerbose("Message received");
             try
             {
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, value));
+                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, value).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

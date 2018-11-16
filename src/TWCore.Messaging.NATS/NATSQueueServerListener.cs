@@ -110,12 +110,12 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Message Handler
         /// </summary>
-        private void MessageHandler(object sender, MsgHandlerEventArgs e)
+        private async void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
             Core.Log.LibVerbose("Message received");
             try
             {
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data));
+                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

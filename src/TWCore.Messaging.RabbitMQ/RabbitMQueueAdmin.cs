@@ -34,7 +34,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (Exist(queue)) return false;
             var rabbitQueue = new RabbitMQueue(queue);
-            if (!rabbitQueue.EnsureConnection()) return false;
+            if (!rabbitQueue.EnsureConnectionAsync(2000, 100).WaitAndResults()) return false;
             rabbitQueue.EnsureQueue();
             rabbitQueue.EnsureExchange();
             rabbitQueue.Close();
@@ -50,7 +50,7 @@ namespace TWCore.Messaging.RabbitMQ
         public bool Delete(MQConnection queue)
         {
             var rabbitQueue = new RabbitMQueue(queue);
-            rabbitQueue.EnsureConnection();
+            rabbitQueue.EnsureConnectionAsync(2000, 100).WaitAndResults();
             rabbitQueue.Channel.QueueDelete(queue.Name, false, false);
             rabbitQueue.Close();
             return true;
@@ -65,7 +65,7 @@ namespace TWCore.Messaging.RabbitMQ
         public bool Exist(MQConnection queue)
         {
             var rabbitQueue = new RabbitMQueue(queue);
-            rabbitQueue.EnsureConnection();
+            rabbitQueue.EnsureConnectionAsync(2000, 100).WaitAndResults();
             try
             {
                 var result = rabbitQueue.Channel.QueueDeclarePassive(queue.Name);
@@ -87,7 +87,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (!Exist(queue)) return;
             var rabbitQueue = new RabbitMQueue(queue);
-            rabbitQueue.EnsureConnection();
+            rabbitQueue.EnsureConnectionAsync(2000, 100).WaitAndResults();
             rabbitQueue.Channel.QueuePurge(queue.Name);
             rabbitQueue.Close();
         }

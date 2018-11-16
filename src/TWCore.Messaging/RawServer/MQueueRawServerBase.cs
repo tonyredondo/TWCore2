@@ -281,6 +281,25 @@ namespace TWCore.Messaging.RawServer
             {
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
+
+                #region Client Queues Routes Rebindings
+                if (_serverQueues.ClientQueuesRoutesRebindings != null)
+                {
+                    Core.Log.LibDebug("Processing ClientQueues Route Rebinding");
+                    foreach (var queue in e.ResponseQueues)
+                    {
+                        if (queue.IsSkippingRoute()) continue;
+                        if (_serverQueues.ClientQueuesRoutesRebindings.TryGet(queue.Route, out var qRebinding))
+                        {
+                            Core.Log.LibVerbose("Rebinding Route: '{0}' to '{1}'", queue.Route, qRebinding.Value);
+                            queue.Route = qRebinding.Value;
+                        }
+                        else
+                            Core.Log.LibVerbose("Route '{0}' doesn't have a Rebinding.", queue.Route);
+                    }
+                }
+                #endregion
+
                 Counters.IncrementTotalReceivingBytes(e.MessageLength);
                 Core.Log.LibDebug("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, iMessages);
                 if (RequestReceived != null)

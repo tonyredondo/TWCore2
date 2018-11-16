@@ -111,7 +111,7 @@ namespace TWCore.Messaging.RabbitMQ
             lock (this)
             {
                 if (Channel != null) return;
-                Core.Log.LibVerbose("Creating channel for: {0}", Name);
+                Core.Log.LibVerbose("Creating channel for: Route={0}, Name={1}", Route, Name);
                 Factory = new ConnectionFactory
                 {
                     Uri = new Uri(Route),
@@ -157,7 +157,7 @@ namespace TWCore.Messaging.RabbitMQ
                 Connection = null;
                 Channel = null;
                 Factory = null;
-                Core.Log.LibVerbose("Closing channel for: {0}", Name);
+                Core.Log.LibVerbose("Closing channel for: Route={0}, Name={1}", Route, Name);
             }
         }
         /// <summary>

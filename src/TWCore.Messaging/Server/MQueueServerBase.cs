@@ -283,11 +283,17 @@ namespace TWCore.Messaging.Server
                 #region Client Queues Routes Rebindings
                 if (_serverQueues.ClientQueuesRoutesRebindings != null)
                 {
+                    Core.Log.LibDebug("Processing ClientQueues Route Rebinding");
                     foreach(var queue in e.ResponseQueues)
                     {
                         if (queue.IsSkippingRoute()) continue;
                         if (_serverQueues.ClientQueuesRoutesRebindings.TryGet(queue.Route, out var qRebinding))
+                        {
+                            Core.Log.LibVerbose("Rebinding Route: '{0}' to '{1}'", queue.Route, qRebinding.Value);
                             queue.Route = qRebinding.Value;
+                        }
+                        else
+                            Core.Log.LibVerbose("Route '{0}' doesn't have a Rebinding.", queue.Route);
                     }
                 }
                 #endregion

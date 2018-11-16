@@ -60,10 +60,6 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         string TypeName { get; }
         /// <summary>
-        /// Line number
-        /// </summary>
-        int LineNumber { get; }
-        /// <summary>
         /// Nivel de log
         /// </summary>
         LogLevel Level { get; }

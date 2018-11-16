@@ -92,7 +92,6 @@ namespace TWCore.Diagnostics.Log.Storages
                     Code = logItem.Code,
                     Exception = logItem.Exception,
                     Level = logItem.Level,
-                    LineNumber = logItem.LineNumber,
                     Message = logItem.Message,
                     Timestamp = logItem.Timestamp
                 });

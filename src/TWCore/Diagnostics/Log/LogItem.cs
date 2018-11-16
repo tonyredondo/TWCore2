@@ -87,12 +87,6 @@ namespace TWCore.Diagnostics.Log
         public string TypeName { get; set; }
         /// <inheritdoc />
         /// <summary>
-        /// Line number
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public int LineNumber { get; set; } = -1;
-        /// <inheritdoc />
-        /// <summary>
         /// Nivel de log
         /// </summary>
         [XmlAttribute, DataMember]

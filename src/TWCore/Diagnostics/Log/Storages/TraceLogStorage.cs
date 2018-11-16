@@ -49,9 +49,7 @@ namespace TWCore.Diagnostics.Log.Storages
             if (!string.IsNullOrEmpty(item.GroupName))
                 strBuffer.Append(item.GroupName + " - ");
 
-            if (item.LineNumber > 0)
-                strBuffer.AppendFormat(string.Format("<{0};{1:000}> ", item.TypeName, item.LineNumber));
-            else if (!string.IsNullOrEmpty(item.TypeName))
+            if (!string.IsNullOrEmpty(item.TypeName))
                 strBuffer.AppendFormat(string.Format("<{0}> ", item.TypeName));
 
             if (!string.IsNullOrEmpty(item.Code))

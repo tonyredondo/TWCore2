@@ -513,9 +513,7 @@ namespace TWCore.Diagnostics.Log.Storages
             if (!string.IsNullOrEmpty(item.GroupName))
                 strBuffer.Append(item.GroupName + " | ");
 
-            if (item.LineNumber > 0)
-                strBuffer.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-            else if (!string.IsNullOrEmpty(item.TypeName))
+            if (!string.IsNullOrEmpty(item.TypeName))
             {
                 strBuffer.Append("&lt;" + item.TypeName + "&gt; ");
                 format = PreFormatWType;

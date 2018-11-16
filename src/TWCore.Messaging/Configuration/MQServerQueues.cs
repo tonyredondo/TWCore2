@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TWCore.Collections;
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Configuration
@@ -114,5 +115,10 @@ namespace TWCore.Messaging.Configuration
                 _additionalSendQueuesProcessed = false;
             }
         }
+        /// <summary>
+        /// Client queues routes rebinding
+        /// </summary>
+        [XmlElement("ClientQueueRouteRebinding"), DataMember]
+        public KeyValueCollection ClientQueuesRoutesRebindings { get; set; }
     }
 }

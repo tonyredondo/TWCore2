@@ -61,7 +61,11 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://agsw:agsw@127.0.0.1:5672/", "TEST_RQ", null) }
+                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://agsw:agsw@127.0.0.1:5672/", "TEST_RQ", null) },
+                        ClientQueuesRoutesRebindings = new KeyValueCollection
+                        {
+                            new KeyValue<string, string> { Key = "amqp://agsw:agsw@127.0.0.1:5672/", Value = "amqp://agsw:agsw@127.0.0.2:5672/" }
+                        }
                     }
                 },
                 RequestOptions = new MQRequestOptions

@@ -279,6 +279,19 @@ namespace TWCore.Messaging.Server
                 Counters.IncrementReceivingTime(e.Request.Header.TotalTime);
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
+
+                #region Client Queues Routes Rebindings
+                if (_serverQueues.ClientQueuesRoutesRebindings != null)
+                {
+                    foreach(var queue in e.ResponseQueues)
+                    {
+                        if (queue.IsSkippingRoute()) continue;
+                        if (_serverQueues.ClientQueuesRoutesRebindings.TryGet(queue.Route, out var qRebinding))
+                            queue.Route = qRebinding.Value;
+                    }
+                }
+                #endregion
+
                 e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
                 Core.Log.LibDebug("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, iMessages);
                 if (RequestReceived != null)

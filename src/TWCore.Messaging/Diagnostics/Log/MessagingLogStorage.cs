@@ -84,7 +84,6 @@ namespace TWCore.Diagnostics.Log.Storages
                     EnvironmentName = logItem.EnvironmentName,
                     MachineName = logItem.MachineName,
                     ApplicationName = logItem.ApplicationName,
-                    ProcessId = logItem.ProcessId,
                     ProcessName = logItem.ProcessName,
                     AssemblyName = logItem.AssemblyName,
                     TypeName = logItem.TypeName,

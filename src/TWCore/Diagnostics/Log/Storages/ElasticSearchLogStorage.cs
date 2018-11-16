@@ -105,7 +105,6 @@ namespace TWCore.Diagnostics.Log.Storages
                     machineName = logItem.MachineName,
                     applicationName = logItem.ApplicationName,
                     processName = logItem.ProcessName,
-                    processId = logItem.ProcessId,
                     assemblyName = logItem.AssemblyName,
                     code = logItem.Code,
                     groupName = logItem.GroupName,
@@ -182,7 +181,6 @@ namespace TWCore.Diagnostics.Log.Storages
             public string machineName;
             public string applicationName;
             public string processName;
-            public int processId;
             public string assemblyName;
             public string code;
             public string groupName;

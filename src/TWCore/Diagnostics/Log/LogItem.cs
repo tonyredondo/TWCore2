@@ -69,12 +69,6 @@ namespace TWCore.Diagnostics.Log
         public string ProcessName { get; set; }
         /// <inheritdoc />
         /// <summary>
-        /// Process Id
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public int ProcessId { get; set; } = -1;
-        /// <inheritdoc />
-        /// <summary>
         /// Assembly name
         /// </summary>
         [XmlAttribute, DataMember]

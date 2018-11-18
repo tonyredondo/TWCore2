@@ -18,10 +18,10 @@ using System;
 
 namespace TWCore.Diagnostics.Log
 {
-    /// <summary>
-    /// Log item interface
-    /// </summary>
-    public interface ILogItem
+	/// <summary>
+	/// Log item interface
+	/// </summary>
+	public interface ILogItem
     {
         /// <summary>
         /// Instance identifier
@@ -79,5 +79,5 @@ namespace TWCore.Diagnostics.Log
         /// If is an error log item, the exception object instance
         /// </summary>
         SerializableException Exception { get; }
-    }
+	}
 }

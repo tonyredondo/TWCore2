@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Messaging;
@@ -69,6 +70,9 @@ namespace TWCore.Test.Core
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
+
+			//var kv1 = new KeyValue<string, DateTime?>("Hola", TWCore.Core.Now);
+			//var xmlKv1 = kv1.SerializeToXml();
 
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>

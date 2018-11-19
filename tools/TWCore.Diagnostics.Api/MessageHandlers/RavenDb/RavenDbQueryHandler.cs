@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Raven.Client.Documents;
+using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
@@ -122,7 +123,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 };
             });
         }
-
 
         // Traces
         public Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
@@ -269,7 +269,18 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             });
         }
 
-
+        // Group metadata
+        public async Task<KeyValue[]> GetMetadatas(string groupName)
+        {
+            var metas = await RavenHelper.ExecuteAndReturnAsync(async session => 
+            {
+                return await session.Advanced.AsyncDocumentQuery<GroupMetadata>()
+                    .WhereEquals(x => x.GroupName, groupName)
+                    .OrderByDescending(x => x.Timestamp)
+                    .ToListAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
+            return metas.SelectMany(m => m.Items).GroupBy(m => m.Key).Select(m => m.First()).ToArray();
+        }
 
 
 
@@ -305,7 +316,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
             }).ConfigureAwait(false);
         }
-
         public async Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>

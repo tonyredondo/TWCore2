@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
@@ -107,8 +108,12 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="toDate">To date and time</param>
         /// <returns>Search results</returns>
         Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate);
-
-		
+        /// <summary>
+        /// Get metadata from a group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <returns>List of metadatas</returns>
+		Task<KeyValue[]> GetMetadatas(string groupName);
 		
 		/// <summary>
 		/// Gets the statuses

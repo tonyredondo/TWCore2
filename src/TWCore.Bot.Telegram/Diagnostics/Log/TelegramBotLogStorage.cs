@@ -60,6 +60,10 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         public LogLevel LevelAllowed { get; set; } = LogLevel.Error;
         /// <summary>
+        /// Send Group Metadata
+        /// </summary>
+        public bool SendGroupMetadata { get; set; }
+        /// <summary>
         /// Flag to send Stack Trace in message
         /// </summary>
         public bool SendStackTrace { get; set; } = false;
@@ -160,6 +164,27 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             return Task.CompletedTask;
         }
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public async Task WriteAsync(IGroupMetadata item)
+        {
+            if (!SendGroupMetadata) return;
+            var msg = string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nGroup: {4}\r\n", item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), Core.MachineName, Core.EnvironmentName, Core.ApplicationName, item.GroupName);
+            if (item.Items != null)
+            {
+                var count = item.Items.Length;
+                for (var i = 0; i < count; i++)
+                {
+                    var keyValue = item.Items[i];
+                    msg += string.Format("{0}={1}\r\n", keyValue.Key, keyValue.Value);
+                }
+            }
+            await Bot.SendTextMessageToTrackedChatsAsync(msg).ConfigureAwait(false);
+        }
+
 
         /// <inheritdoc />
         /// <summary>

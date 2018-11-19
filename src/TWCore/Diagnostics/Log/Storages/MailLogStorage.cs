@@ -196,15 +196,41 @@ namespace TWCore.Diagnostics.Log.Storages
         public Task WriteAsync(ILogItem item)
         {
             if (!LevelAllowed.HasFlag(item.Level) || item.Message.Contains("SMTPERROR")) return Task.CompletedTask;
-
             lock (_buffer)
-                _buffer.Add(item);
+            {
+                _buffer.Add(new LogItem
+                {
+                    ApplicationName = item.ApplicationName,
+                    AssemblyName = item.AssemblyName,
+                    Code = item.Code,
+                    EnvironmentName = item.EnvironmentName,
+                    Exception = item.Exception,
+                    GroupName = item.GroupName,
+                    Id = item.Id,
+                    InstanceId = item.InstanceId,
+                    Level = item.Level,
+                    MachineName = item.MachineName,
+                    Message = item.Message,
+                    ProcessName = item.ProcessName,
+                    Timestamp = item.Timestamp,
+                    TypeName = item.TypeName
+                });
+            }
             if (_waiting) return Task.CompletedTask;
             _waiting = true;
             Task.Delay(BufferTimeoutInSeconds * 1000).ContinueWith(t =>
             {
                 SendEmail();
             });
+            return Task.CompletedTask;
+        }
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public Task WriteAsync(IGroupMetadata item)
+        {
             return Task.CompletedTask;
         }
 

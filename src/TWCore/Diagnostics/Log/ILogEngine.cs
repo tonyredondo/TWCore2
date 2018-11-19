@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using TWCore.Collections;
 using TWCore.Diagnostics.Log.Storages;
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 // ReSharper disable UnusedMemberInSuper.Global
@@ -43,12 +44,12 @@ namespace TWCore.Diagnostics.Log
         /// Get all pending to write log items
         /// </summary>
         /// <returns>Pending log items array</returns>
-        ILogItem[] GetPendingItems();
+        IGroupItem[] GetPendingItems();
         /// <summary>
         /// Enqueue to write the log items to the log storages
         /// </summary>
         /// <param name="items">Log items range</param>
-        void EnqueueItemsArray(ILogItem[] items);
+        void EnqueueItemsArray(IGroupItem[] items);
         
         #region Write
         /// <summary>
@@ -862,6 +863,24 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="args">Arguments to bing with the pattern</param>
         void StatsGroup(string groupName, string message, params object[] args);
+        #endregion
+
+
+        #region Group Metadata
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="keyValues">Key value pairs to add</param>
+        void AddGroupMetadata(string groupName, params KeyValue[] keyValues);
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="keyValues">Key value pairs to add</param>
+        void AddGroupMetadata(string groupName, params (string Key, string Value)[] keyValues);
         #endregion
 
         /// <summary>

@@ -73,7 +73,20 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             while (true)
             {
-                sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                if (itemEx.Data == null || itemEx.Data.Count == 0)
+                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                else
+                {
+                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tData:\r\n",
+                        itemEx.ExceptionType,
+                        itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"));
+
+                    foreach (var dataItem in itemEx.Data)
+                        sbuilder.AppendFormat("\t\t{0}: {1}\r\n", dataItem.Key, dataItem.Value);
+
+                    sbuilder.AppendFormat("\tStack: {0}\r\n\r\n",
+                        itemEx.StackTrace);
+                }
                 if (itemEx.InnerException is null) break;
                 itemEx = itemEx.InnerException;
             }
@@ -89,6 +102,39 @@ namespace TWCore.Diagnostics.Log.Storages
             System.Diagnostics.Trace.WriteLine(string.Empty);
             return Task.CompletedTask;
         }
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public Task WriteAsync(IGroupMetadata item)
+        {
+            if (!StringBuilderPool.TryPop(out var strBuffer))
+                strBuffer = new StringBuilder();
+
+            strBuffer.Append(item.Timestamp.GetTimeSpanFormat());
+            strBuffer.AppendFormat("{0, 11}: ", "GroupData");
+            strBuffer.Append(item.GroupName);
+            if (item.Items != null)
+            {
+                strBuffer.Append(" [");
+                var count = item.Items.Length;
+                for (var i = 0; i < count; i++)
+                {
+                    var keyValue = item.Items[i];
+                    strBuffer.AppendFormat("{0}={1}", keyValue.Key, keyValue.Value);
+                    if (i < count - 1)
+                        strBuffer.Append(", ");
+                }
+                strBuffer.Append("] ");
+            }
+
+            System.Diagnostics.Trace.WriteLine(strBuffer.ToString());
+            strBuffer.Clear();
+            StringBuilderPool.Push(strBuffer);
+            return Task.CompletedTask;
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources

@@ -18,15 +18,11 @@ using System;
 
 namespace TWCore.Diagnostics.Log
 {
-	/// <summary>
-	/// Log item interface
-	/// </summary>
-	public interface ILogItem
+    /// <summary>
+    /// Log item interface
+    /// </summary>
+    public interface ILogItem : IGroupItem
     {
-        /// <summary>
-        /// Instance identifier
-        /// </summary>
-        Guid InstanceId { get; }
         /// <summary>
         /// Item unique identifier
         /// </summary>
@@ -67,14 +63,6 @@ namespace TWCore.Diagnostics.Log
         /// Message
         /// </summary>
         string Message { get; }
-        /// <summary>
-        /// Item timestamp
-        /// </summary>
-        DateTime Timestamp { get; }
-        /// <summary>
-        /// Message group name
-        /// </summary>
-        string GroupName { get; }
         /// <summary>
         /// If is an error log item, the exception object instance
         /// </summary>

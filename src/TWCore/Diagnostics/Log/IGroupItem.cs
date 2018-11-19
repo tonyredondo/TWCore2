@@ -15,32 +15,26 @@ limitations under the License.
  */
 
 using System;
-using System.Threading.Tasks;
 
-namespace TWCore.Diagnostics.Log.Storages
+namespace TWCore.Diagnostics.Log
 {
-    /// <inheritdoc />
     /// <summary>
-    /// Log Storage interface
+    /// Log Group item interface
     /// </summary>
-    public interface ILogStorage : IDisposable
+    public interface IGroupItem
     {
         /// <summary>
-        /// Writes a log item to the storage
+        /// Instance identifier
         /// </summary>
-        /// <param name="item">Log Item</param>
-        /// <returns>Task process</returns>
-        Task WriteAsync(ILogItem item);
+        Guid InstanceId { get; }
         /// <summary>
-        /// Writes a log item empty line
+        /// Item timestamp
         /// </summary>
-        /// <returns>Task process</returns>
-        Task WriteEmptyLineAsync();
+        DateTime Timestamp { get; }
         /// <summary>
-        /// Writes a group metadata item to the storage
+        /// Message group name
         /// </summary>
-        /// <param name="item">Group metadata item</param>
-        /// <returns>Task process</returns>
-        Task WriteAsync(IGroupMetadata item);
+        string GroupName { get; }
+
     }
 }

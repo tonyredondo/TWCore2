@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using TWCore.Collections;
 
 namespace TWCore.Diagnostics.Log
@@ -21,13 +22,8 @@ namespace TWCore.Diagnostics.Log
 	/// <summary>
 	/// Group metadata.
 	/// </summary>
-	public interface IGroupMetadata
+	public interface IGroupMetadata : IGroupItem
 	{
-		/// <summary>
-		/// Gets the name of the group.
-		/// </summary>
-		/// <value>The name of the group.</value>
-		string GroupName { get; }
 		/// <summary>
 		/// Gets the Metadata Items
 		/// </summary>

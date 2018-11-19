@@ -14,24 +14,41 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 using TWCore.Collections;
 
 namespace TWCore.Diagnostics.Log
 {
-	/// <summary>
-	/// Group metadata
-	/// </summary>
-	public class GroupMetadata : IGroupMetadata
+    /// <summary>
+    /// Group metadata
+    /// </summary>
+    [XmlRoot("GroupMetadata")]
+    public class GroupMetadata : IGroupMetadata
 	{
-		/// <summary>
-		/// Gets the name of the group.
-		/// </summary>
-		/// <value>The name of the group.</value>
-		public string GroupName { get; set; }
+        /// <summary>
+        /// Instance id
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public Guid InstanceId { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Item timestamp
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public DateTime Timestamp { get; set; }
+        /// <summary>
+        /// Gets the name of the group.
+        /// </summary>
+        /// <value>The name of the group.</value>
+        [XmlAttribute, DataMember]
+        public string GroupName { get; set; }
 		/// <summary>
 		/// Gets the Metadata Items
 		/// </summary>
 		/// <value>The metadata items</value>
+        [XmlArray("Items"), XmlArrayItem("Item"), DataMember]
 		public KeyValue[] Items { get; set; }
 	}
 }

@@ -39,9 +39,10 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly Timer _timer;
         private volatile bool _processing;
         private int _count;
-        private readonly BlockingCollection<LogItem> _logItems;
+        private readonly BlockingCollection<object> _items;
         private IMQueueClient _queueClient;
         private readonly IPool<List<LogItem>> _pool;
+        private readonly IPool<List<GroupMetadata>> _poolGroup;
         private bool _enabled = true;
 
         #region .ctor
@@ -53,8 +54,9 @@ namespace TWCore.Diagnostics.Log.Storages
         public MessagingLogStorage(string queueName, int periodInSeconds)
         {
             _queueName = queueName;
-            _logItems = new BlockingCollection<LogItem>();
+            _items = new BlockingCollection<object>();
             _pool = new ReferencePool<List<LogItem>>();
+            _poolGroup = new ReferencePool<List<GroupMetadata>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
@@ -76,24 +78,26 @@ namespace TWCore.Diagnostics.Log.Storages
         public Task WriteAsync(ILogItem item)
         {
             if (!_enabled) return Task.CompletedTask;
-            if (item is LogItem logItem && Interlocked.Increment(ref _count) < 10_000)
-                _logItems.Add(new LogItem
+            if (Interlocked.Increment(ref _count) < 10_000)
+            {
+                _items.Add(new LogItem
                 {
                     InstanceId = Core.InstanceId,
-                    Id = logItem.Id,
-                    EnvironmentName = logItem.EnvironmentName,
-                    MachineName = logItem.MachineName,
-                    ApplicationName = logItem.ApplicationName,
-                    ProcessName = logItem.ProcessName,
-                    AssemblyName = logItem.AssemblyName,
-                    TypeName = logItem.TypeName,
-                    GroupName = logItem.GroupName,
-                    Code = logItem.Code,
-                    Exception = logItem.Exception,
-                    Level = logItem.Level,
-                    Message = logItem.Message,
-                    Timestamp = logItem.Timestamp
+                    Id = item.Id,
+                    EnvironmentName = item.EnvironmentName,
+                    MachineName = item.MachineName,
+                    ApplicationName = item.ApplicationName,
+                    ProcessName = item.ProcessName,
+                    AssemblyName = item.AssemblyName,
+                    TypeName = item.TypeName,
+                    GroupName = item.GroupName,
+                    Code = item.Code,
+                    Exception = item.Exception,
+                    Level = item.Level,
+                    Message = item.Message,
+                    Timestamp = item.Timestamp
                 });
+            }
             return Task.CompletedTask;
         }
         /// <inheritdoc />
@@ -104,6 +108,28 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             return Task.CompletedTask;
         }
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public Task WriteAsync(IGroupMetadata item)
+        {
+            if (!_enabled) return Task.CompletedTask;
+            if (Interlocked.Increment(ref _count) < 10_000)
+            {
+                _items.Add(new GroupMetadata
+                {
+                    InstanceId = Core.InstanceId,
+                    Timestamp = item.Timestamp,
+                    GroupName = item.GroupName,
+                    Items = item.Items
+                });
+            }
+            return Task.CompletedTask;
+        }
+
+
         /// <inheritdoc />
         /// <summary>
         /// Dispose method
@@ -123,29 +149,39 @@ namespace TWCore.Diagnostics.Log.Storages
             _processing = true;
             try
             {
-                if (_logItems.Count == 0)
+                if (_items.Count == 0)
                 {
                     _processing = false;
                     return;
                 }
 
-                var itemsToSend = _pool.New();
-                while (itemsToSend.Count < 2048 && _logItems.TryTake(out var item, 10))
+                var logItemsToSend = _pool.New();
+                var metadataToSend = _poolGroup.New();
+                while (logItemsToSend.Count < 2048 && metadataToSend.Count < 2048 && _items.TryTake(out var item, 10))
                 {
-                    itemsToSend.Add(item);
+                    if (item is LogItem lItem)
+                        logItemsToSend.Add(lItem);
+                    else if (item is GroupMetadata gItem)
+                        metadataToSend.Add(gItem);
                     Interlocked.Decrement(ref _count);
                 }
 
-                Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
+                Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", logItemsToSend.Count + metadataToSend.Count);
                 if (_queueClient is null)
                 {
                     _queueClient = Core.Services.GetQueueClient(_queueName);
                     Core.Status.AttachChild(_queueClient, this);
                 }
-                _queueClient.SendAsync(itemsToSend).WaitAndResults();
 
-                itemsToSend.Clear();
-                _pool.Store(itemsToSend);
+                var tskLogs = logItemsToSend.Count > 0 ? _queueClient.SendAsync(logItemsToSend) : Task.CompletedTask;
+                var tskGroup = metadataToSend.Count > 0 ? _queueClient.SendAsync(metadataToSend) : Task.CompletedTask;
+
+                Task.WaitAll(tskLogs, tskGroup);
+
+                logItemsToSend.Clear();
+                metadataToSend.Clear();
+                _pool.Store(logItemsToSend);
+                _poolGroup.Store(metadataToSend);
             }
             catch (UriFormatException fException)
             {

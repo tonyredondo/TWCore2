@@ -21,6 +21,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable ClassNeverInstantiated.Local
@@ -42,7 +43,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly string _indexFormat;
         private volatile bool _processing;
         private int _count;
-        private readonly BlockingCollection<SourceData> _logItems;
+        private readonly BlockingCollection<object> _sourceItems;
         private bool _enabled = true;
         private StringBuilder _builderBuffer = new StringBuilder();
         private JsonTextSerializer serializer = new JsonTextSerializer
@@ -64,7 +65,7 @@ namespace TWCore.Diagnostics.Log.Storages
             _url = new UriBuilder(url) { Path = "_bulk" }.Uri;
             _indexFormat = indexFormat;
             _client = new WebClient();
-            _logItems = new BlockingCollection<SourceData>();
+            _sourceItems = new BlockingCollection<object>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
             Core.Status.Attach(collection =>
@@ -94,22 +95,24 @@ namespace TWCore.Diagnostics.Log.Storages
         public Task WriteAsync(ILogItem item)
         {
             if (!_enabled) return Task.CompletedTask;
-            if (item is LogItem logItem && Interlocked.Increment(ref _count) < 10_000)
-                _logItems.Add(new SourceData
+            if (Interlocked.Increment(ref _count) < 10_000)
+            {
+                _sourceItems.Add(new SourceData
                 {
-                    timestamp = logItem.Timestamp,
-                    level = logItem.Level,
-                    message = logItem.Message,
+                    timestamp = item.Timestamp,
+                    level = item.Level,
+                    message = item.Message,
                     instanceId = Core.InstanceId,
-                    environmentName = logItem.EnvironmentName,
-                    machineName = logItem.MachineName,
-                    applicationName = logItem.ApplicationName,
-                    processName = logItem.ProcessName,
-                    assemblyName = logItem.AssemblyName,
-                    code = logItem.Code,
-                    groupName = logItem.GroupName,
-                    exception = logItem.Exception
+                    environmentName = item.EnvironmentName,
+                    machineName = item.MachineName,
+                    applicationName = item.ApplicationName,
+                    processName = item.ProcessName,
+                    assemblyName = item.AssemblyName,
+                    code = item.Code,
+                    groupName = item.GroupName,
+                    exception = item.Exception
                 });
+            }
             return Task.CompletedTask;
         }
 
@@ -118,6 +121,26 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         public Task WriteEmptyLineAsync()
             => Task.CompletedTask;
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public Task WriteAsync(IGroupMetadata item)
+        {
+            if (!_enabled) return Task.CompletedTask;
+            if (Interlocked.Increment(ref _count) < 10_000)
+            {
+                _sourceItems.Add(new GroupSourceData
+                {
+                    instanceId = item.InstanceId,
+                    timestamp = item.Timestamp,
+                    groupName = item.GroupName,
+                    items = item.Items,
+                });
+            }
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -136,16 +159,20 @@ namespace TWCore.Diagnostics.Log.Storages
             _processing = true;
             try
             {
-                if (_logItems.Count == 0)
+                if (_sourceItems.Count == 0)
                 {
                     _processing = false;
                     return;
                 }
 
                 var count = 0;
-                while (count++ < 2048 && _logItems.TryTake(out var item, 10))
+                while (count++ < 2048 && _sourceItems.TryTake(out var item, 10))
                 {
-                    var index = _indexFormat.ApplyFormat(item.@timestamp, item.applicationName, item.environmentName).ToLowerInvariant();
+                    string index = null;
+                    if (item is SourceData sDataItem)
+                        index = _indexFormat.ApplyFormat(sDataItem.@timestamp, sDataItem.applicationName, sDataItem.environmentName).ToLowerInvariant();
+                    else if (item is GroupSourceData gDataItem)
+                        index = _indexFormat.ApplyFormat(gDataItem.@timestamp, Core.ApplicationName, Core.EnvironmentName).ToLowerInvariant();
                     _builderBuffer.Append("{\"index\":{\"_index\":\"" + index + "\",\"_type\":\"logevent\"}}\n");
                     _builderBuffer.Append(serializer.SerializeToString(item) + "\n");
                     Interlocked.Decrement(ref _count);
@@ -185,6 +212,14 @@ namespace TWCore.Diagnostics.Log.Storages
             public string code;
             public string groupName;
             public SerializableException exception;
+        }
+        private class GroupSourceData
+        {
+            [JsonProperty("@timestamp")]
+            public DateTime @timestamp;
+            public Guid instanceId;
+            public string groupName;
+            public KeyValue[] items;
         }
         #endregion
     }

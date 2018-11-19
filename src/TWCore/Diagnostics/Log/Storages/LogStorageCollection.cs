@@ -241,6 +241,16 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
             }
         }
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public Task WriteAsync(IGroupMetadata item)
+        {
+            return Task.CompletedTask;
+        }
+
         #endregion
 
         #region IDisposable Support

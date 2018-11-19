@@ -175,6 +175,7 @@ namespace TWCore.Diagnostics.Log.Storages
         .Stats { color: darkgreen; }
         .Verbose { color: gray; }
         .LibVerbose { color: darkgray; }
+        .GroupMetadata { color: darkyellow; }
     </style>
 </head>
 <body>
@@ -474,7 +475,21 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             while (true)
             {
-                sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                if (itemEx.Data == null || itemEx.Data.Count == 0)
+                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                else
+                {
+                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tData:\r\n",
+                        itemEx.ExceptionType,
+                        System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"));
+
+                    foreach (var dataItem in itemEx.Data)
+                        sbuilder.AppendFormat("\t\t{0}: {1}\r\n", dataItem.Key, System.Security.SecurityElement.Escape(dataItem.Value));
+
+                    sbuilder.AppendFormat("\tStack: {0}\r\n\r\n",
+                        itemEx.StackTrace);
+                }
+
                 if (itemEx.InnerException is null) break;
                 itemEx = itemEx.InnerException;
 
@@ -543,6 +558,52 @@ namespace TWCore.Diagnostics.Log.Storages
         public async Task WriteEmptyLineAsync()
         {
             await _sWriter.WriteAsync(string.Format(PreFormat, "EmptyLine", "<br/>")).ConfigureAwait(false);
+            Interlocked.Exchange(ref _shouldFlush, 1);
+        }
+        /// <summary>
+        /// Writes a group metadata item to the storage
+        /// </summary>
+        /// <param name="item">Group metadata item</param>
+        /// <returns>Task process</returns>
+        public async Task WriteAsync(IGroupMetadata item)
+        {
+            EnsureLogFile(FileName);
+            if (_sWriter is null) return;
+            if (!StringBuilderPool.TryPop(out var strBuffer))
+                strBuffer = new StringBuilder();
+            var time = item.Timestamp.GetTimeSpanFormat();
+            var format = PreFormat;
+            if (_firstWrite)
+            {
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
+                _firstWrite = false;
+            }
+            strBuffer.Append(time);
+            strBuffer.AppendFormat("{0, 11}: ", "GroupData");
+            strBuffer.Append(item.GroupName);
+            if (item.Items != null)
+            {
+                strBuffer.Append(" [");
+                var count = item.Items.Length;
+                for (var i = 0; i < count; i++)
+                {
+                    var keyValue = item.Items[i];
+                    strBuffer.AppendFormat("{0}={1}", keyValue.Key, System.Security.SecurityElement.Escape(keyValue.Value));
+                    if (i < count - 1)
+                        strBuffer.Append(", ");
+                }
+                strBuffer.Append("] ");
+            }
+
+            var message = strBuffer.ToString();
+            strBuffer.Clear();
+            StringBuilderPool.Push(strBuffer);
+            await _sWriter.WriteAsync(string.Format(format, "GroupMetadata", message)).ConfigureAwait(false);
             Interlocked.Exchange(ref _shouldFlush, 1);
         }
 

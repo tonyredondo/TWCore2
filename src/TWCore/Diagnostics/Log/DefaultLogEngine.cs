@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Diagnostics.Log.Storages;
 using TWCore.Diagnostics.Status;
 // ReSharper disable MemberCanBePrivate.Global
@@ -35,8 +36,8 @@ namespace TWCore.Diagnostics.Log
     public sealed class DefaultLogEngine : ILogEngine
     {
         #region Private fields
-        private readonly Worker<ILogItem> _itemsWorker;
-        private readonly ConcurrentQueue<ILogItem> _lastLogItems = new ConcurrentQueue<ILogItem>();
+        private readonly Worker<IGroupItem> _itemsWorker;
+        private readonly ConcurrentQueue<IGroupItem> _lastLogItems = new ConcurrentQueue<IGroupItem>();
         private readonly ManualResetEventSlim _completationHandler = new ManualResetEventSlim(true);
         #endregion
 
@@ -104,7 +105,7 @@ namespace TWCore.Diagnostics.Log
             Storage = new LogStorageCollection();
             if (itemFactory != null)
                 ItemFactory = itemFactory;
-            _itemsWorker = new Worker<ILogItem>(() => Storage?.Count > 0, item =>
+            _itemsWorker = new Worker<IGroupItem>(() => Storage?.Count > 0, item =>
             {
                 switch (item)
                 {
@@ -113,9 +114,13 @@ namespace TWCore.Diagnostics.Log
                     case NewLineLogItem _:
                         return Storage.WriteEmptyLineAsync();
                     case LogItem lItem:
-                        return Storage.WriteAsync(item).ContinueWith(_ => LogItem.Store(lItem), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                        return Storage.WriteAsync(lItem).ContinueWith(_ => LogItem.Store(lItem), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                    case ILogItem iLitem:
+                        return Storage.WriteAsync(iLitem);
+                    case IGroupMetadata gMeta:
+                        return Storage.WriteAsync(gMeta);
                     default:
-                        return Storage.WriteAsync(item);
+                        return Task.CompletedTask;
                 }
             }, false, true, false);
             _itemsWorker.OnWorkDone += (s, e) => _completationHandler.Set();
@@ -1635,8 +1640,46 @@ namespace TWCore.Diagnostics.Log
             Write(new NewLineLogItem());
         }
         #endregion
-        
+
         #endregion
+
+        #region Group Metadata
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="keyValues">Key value pairs to add</param>
+        public void AddGroupMetadata(string groupName, params KeyValue[] keyValues)
+        {
+            if (string.IsNullOrWhiteSpace(groupName) || keyValues is null) return;
+            _itemsWorker?.Enqueue(new GroupMetadata
+            {
+                InstanceId = Core.InstanceId,
+                Timestamp = Core.Now,
+                GroupName = groupName,
+                Items = keyValues
+            });
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="keyValues">Key value pairs to add</param>
+        public void AddGroupMetadata(string groupName, params (string Key, string Value)[] keyValues)
+        {
+            if (string.IsNullOrWhiteSpace(groupName) || keyValues is null) return;
+            _itemsWorker?.Enqueue(new GroupMetadata
+            {
+                InstanceId = Core.InstanceId,
+                Timestamp = Core.Now,
+                GroupName = groupName,
+                Items = keyValues.Select(i => new KeyValue(i.Key, i.Value)).ToArray()
+            });
+        }
+        #endregion
+
 
         #region Pending Items
         /// <inheritdoc />
@@ -1645,14 +1688,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <returns>Pending log items array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ILogItem[] GetPendingItems() => _itemsWorker?.QueueItems?.ToArray();
+        public IGroupItem[] GetPendingItems() => _itemsWorker?.QueueItems?.ToArray();
         /// <inheritdoc />
         /// <summary>
         /// Enqueue to write the log items to the log storages
         /// </summary>
         /// <param name="items">Log items range</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EnqueueItemsArray(ILogItem[] items) => items?.Each(i => _itemsWorker.Enqueue(i));
+		public void EnqueueItemsArray(IGroupItem[] items) => items?.Each(i => _itemsWorker.Enqueue(i));
         /// <inheritdoc />
         /// <summary>
         /// Starts the Log Engine

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,7 +27,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
 using TWCore.Services;
@@ -114,8 +114,6 @@ namespace TWCore
             if (Factory.PlatformType == PlatformType.Windows)
                 SequentialGuidGenerator = GetSequentialGuid;
 
-            Core.Log.ItemFactory = Factory.CreateLogItem;
-            Core.Trace.ItemFactory = Factory.CreateTraceItem;
             Core.MachineName = GetValueFromEnvironment(MachineVariableName) ?? Environment.MachineName;
             Core.ApplicationName = Assembly.GetEntryAssembly().GetName().Name;
             Core.ApplicationDisplayName = Core.ApplicationName;

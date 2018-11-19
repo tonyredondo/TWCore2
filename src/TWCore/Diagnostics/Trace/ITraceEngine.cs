@@ -32,10 +32,6 @@ namespace TWCore.Diagnostics.Trace
         /// </summary>
         TraceStorageCollection Storage { get; }
         /// <summary>
-        /// Gets or sets the trace item factory
-        /// </summary>
-        CreateTraceItemDelegate ItemFactory { get; set; }
-        /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>
         /// <param name="item">Trace item</param>

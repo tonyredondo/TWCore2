@@ -16,13 +16,16 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log.Storages;
 using TWCore.Diagnostics.Status;
+using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Diagnostics.Log
@@ -54,28 +57,6 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         [StatusProperty]
         public LogLevel MaxLogLevel { get; set; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets or sets the log item factory
-        /// </summary>
-        public CreateLogItemDelegate ItemFactory { get; set; } = (level, code, message, groupName, ex, assemblyName, typeName) =>
-        {
-            var lItem = LogItem.Retrieve();
-            lItem.InstanceId = Core.InstanceId;
-            lItem.Id = Guid.NewGuid();
-            lItem.EnvironmentName = Core.EnvironmentName;
-            lItem.MachineName = Core.MachineName;
-            lItem.Timestamp = Core.Now;
-            lItem.ApplicationName = Core.ApplicationName;
-            lItem.Level = level;
-            lItem.Code = code;
-            lItem.Message = message;
-            lItem.GroupName = groupName;
-            lItem.AssemblyName = assemblyName;
-            lItem.TypeName = typeName;
-            lItem.Exception = ex != null ? new SerializableException(ex) : null;
-            return lItem;
-        };
         /// <summary>
         /// Gets or sets the maximum items quantity on the queue
         /// </summary>
@@ -97,14 +78,11 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Default log engine
         /// </summary>
-        /// <param name="itemFactory">Log item factory</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DefaultLogEngine(CreateLogItemDelegate itemFactory = null)
+        public DefaultLogEngine()
         {
             MaxLogLevel = LogLevel.LibVerbose;
             Storage = new LogStorageCollection();
-            if (itemFactory != null)
-                ItemFactory = itemFactory;
             _itemsWorker = new Worker<IGroupItem>(() => Storage?.Count > 0, item =>
             {
                 switch (item)
@@ -199,7 +177,7 @@ namespace TWCore.Diagnostics.Log
         public void Write(LogLevel level, string code, string message, string groupName, Exception ex = null, string assemblyName = null, string typeName = null)
         {
             if (!Enabled || level > MaxLogLevel || level > Storage.GetMaxLogLevel()) return;
-            var item = ItemFactory(level, code, message, groupName, ex, assemblyName, typeName);
+            var item = CreateLogItem(level, code, message, groupName, ex, assemblyName, typeName);
             Write(item);
             if (level == LogLevel.Error)
                 Start();
@@ -1749,11 +1727,151 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteUnsafeInternal(LogLevel level, string groupName, string message, Exception ex = null)
         {
-            var item = ItemFactory(level, null, message, groupName, ex, null, null);
+            var item = CreateLogItem(level, null, message, groupName, ex, null, null);
             if (item is null) return;
             _itemsWorker?.Enqueue(item);
             if (item.Level != LogLevel.Error) return;
             Start();
+        }
+        #endregion
+
+        #region Log Item Creation
+        private static readonly (string AssemblyName, string TypeName) DefaultMValue = (null, null);
+        private static readonly ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)> MethodValues = new ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)>();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static LogItem CreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
+        {
+            if (assemblyName is null || typeName is null)
+            {
+                var stack = new StackTrace(2, false);
+                var frames = stack.GetFrames();
+                foreach (var frame in frames)
+                {
+                    var method = frame.GetMethod();
+                    if (method is null) continue;
+                    var value = MethodValues.GetOrAdd(method, cMethod =>
+                    {
+                        #region Name Attr
+                        var attrs = method.GetCustomAttributes(false);
+                        for (var i = 0; i < attrs.Length; i++)
+                        {
+                            switch (attrs[i])
+                            {
+                                case IgnoreStackFrameLogAttribute _:
+                                    return DefaultMValue;
+                                case StackFrameLogAttribute nA:
+                                    assemblyName = method.DeclaringType.Assembly.FullName;
+                                    typeName = nA.ClassName;
+                                    return (assemblyName, typeName);
+                            }
+                        }
+                        #endregion
+
+                        var declarationType = method.DeclaringType;
+                        if (declarationType is null) return DefaultMValue;
+
+                        #region Name Type Attr
+                        var typeAttrs = declarationType.GetCustomAttributes(false);
+                        for (var i = 0; i < typeAttrs.Length; i++)
+                        {
+                            switch (typeAttrs[i])
+                            {
+                                case IgnoreStackFrameLogAttribute _:
+                                    return DefaultMValue;
+                                case StackFrameLogAttribute nA:
+                                    assemblyName = declarationType.Assembly.FullName;
+                                    typeName = nA.ClassName;
+                                    return (assemblyName, typeName);
+                            }
+                        }
+                        #endregion
+
+                        if (method.Name.Contains("MoveNext"))
+                        {
+                            var actualType = declarationType.DeclaringType;
+                            if (actualType.Assembly == typeof(Core).Assembly) return DefaultMValue;
+
+                            #region Actual type attrs
+                            var actualTypeAttrs = actualType.GetCustomAttributes(false);
+                            for (var i = 0; i < actualTypeAttrs.Length; i++)
+                            {
+                                switch (actualTypeAttrs[i])
+                                {
+                                    case IgnoreStackFrameLogAttribute _:
+                                        return DefaultMValue;
+                                    case StackFrameLogAttribute nA:
+                                        assemblyName = actualType.Assembly.FullName;
+                                        typeName = nA.ClassName;
+                                        return (assemblyName, typeName);
+                                }
+                            }
+                            #endregion
+
+                            if (actualType.AssemblyQualifiedName.Contains("System.Private")) return DefaultMValue;
+                            if (actualType.AssemblyQualifiedName.Contains("mscorlib")) return DefaultMValue;
+
+                            assemblyName = actualType.Assembly.FullName;
+                            typeName = actualType.Name;
+                            if (actualType.ReflectedType != null && typeName?.Contains("<") == true)
+                                typeName = actualType.ReflectedType.Name;
+                            return(assemblyName, typeName);
+                        }
+
+                        if (!method.Name.Contains("<") &&
+                            !declarationType.Name.Contains("<") &&
+                            !declarationType.AssemblyQualifiedName.Contains("System.Private") &&
+                            !declarationType.AssemblyQualifiedName.Contains("mscorlib"))
+                        {
+                            if (declarationType.Name.Contains("ConcurrentDictionary"))
+                                return DefaultMValue;
+                            if (declarationType.Name.Contains("CacheCollectionBase`3"))
+                                return DefaultMValue;
+                            assemblyName = declarationType.Assembly.FullName;
+                            typeName = declarationType.Name;
+                            return (assemblyName, typeName);
+                        }
+
+                        return DefaultMValue;
+                    });
+                    if (value.AssemblyName == DefaultMValue.AssemblyName && value.TypeName == DefaultMValue.TypeName) continue;
+                    assemblyName = value.AssemblyName;
+                    typeName = value.TypeName;
+                    break;
+                }
+            }
+            if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.Stats)
+                return null;
+
+            var logId = Guid.NewGuid();
+
+            if (Core.GlobalSettings.DumpDeserializerExceptionGenericObject && ex is DeserializerException dEx)
+            {
+                try
+                {
+                    var file = $"{logId}.DEX.json";
+                    dEx.SerializeToJsonFile(file);
+                    ex.Data["ExceptionFileName"] = file;
+                }
+                catch
+                {
+                }
+            }
+
+            var lItem = LogItem.Retrieve();
+            lItem.InstanceId = Core.InstanceId;
+            lItem.Id = logId;
+            lItem.EnvironmentName = Core.EnvironmentName;
+            lItem.MachineName = Core.MachineName;
+            lItem.Timestamp = Core.Now;
+            lItem.ApplicationName = Core.ApplicationName;
+            lItem.Level = level;
+            lItem.Code = code;
+            lItem.Message = message;
+            lItem.GroupName = groupName;
+            lItem.AssemblyName = assemblyName;
+            lItem.TypeName = typeName;
+            lItem.Exception = ex != null ? new SerializableException(ex) : null;
+            return lItem;
         }
         #endregion
     }

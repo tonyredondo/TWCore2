@@ -19,19 +19,6 @@ using System;
 namespace TWCore.Diagnostics.Log
 {
     /// <summary>
-    /// Creates a new log item
-    /// </summary>
-    /// <param name="level">Item log level</param>
-    /// <param name="code">Item code</param>
-    /// <param name="message">Item message</param>
-    /// <param name="groupName">Item group name</param>
-    /// <param name="ex">Item exception</param>
-    /// <param name="assemblyName">Assembly name</param>
-    /// <param name="typeName">Type name</param>
-    /// <returns>LogItem instance</returns>
-    public delegate ILogItem CreateLogItemDelegate(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName);
-
-    /// <summary>
     /// Create new log engine delegate
     /// </summary>
     /// <returns>New Log engine</returns>

@@ -20,7 +20,6 @@ using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
 using TWCore.Reflection;
-using TWCore.Threading;
 
 namespace TWCore
 {
@@ -42,17 +41,9 @@ namespace TWCore
         /// </summary>
         public static IAccessorsFactory Accessors => _factories?.Accessors ?? throw new FrameworkNotInitializedException();
         /// <summary>
-        /// Log Item Factory
-        /// </summary>
-        public static CreateLogItemDelegate CreateLogItem => _factories?.CreateLogItem ?? throw new FrameworkNotInitializedException();
-        /// <summary>
         /// Default LogEngine factory
         /// </summary>
         public static CreateLogEngineDelegate CreateLogEngine => _factories?.CreateLogEngine ?? throw new FrameworkNotInitializedException();
-        /// <summary>
-        /// Trace Item Factory
-        /// </summary>
-        public static CreateTraceItemDelegate CreateTraceItem => _factories?.CreateTraceItem ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Default TraceEngine factory
         /// </summary>

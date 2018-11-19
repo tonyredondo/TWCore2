@@ -190,7 +190,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 _enabled = false;
                 _timer.Dispose();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //
             }

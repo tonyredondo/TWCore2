@@ -43,11 +43,6 @@ namespace TWCore.Diagnostics.Trace
         public TraceStorageCollection Storage { get; }
         /// <inheritdoc />
         /// <summary>
-        /// Gets or sets the trace item factory
-        /// </summary>
-        public CreateTraceItemDelegate ItemFactory { get; set; } = Factory.CreateTraceItem;
-        /// <inheritdoc />
-        /// <summary>
         /// Enable or Disable the Trace engine
         /// </summary>
         [StatusProperty]
@@ -58,14 +53,10 @@ namespace TWCore.Diagnostics.Trace
         /// <summary>
         /// Default trace engine
         /// </summary>
-        /// <param name="itemFactory">Trace item factory</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DefaultTraceEngine(CreateTraceItemDelegate itemFactory = null)
+        public DefaultTraceEngine()
         {
             Storage = new TraceStorageCollection();
-            if (itemFactory != null)
-                ItemFactory = itemFactory;
-
             _itemsWorker = new Worker<TraceItem>(() => !_disposed && Storage.Count > 0, async item =>
             {
                 if (item is null) return;
@@ -128,7 +119,7 @@ namespace TWCore.Diagnostics.Trace
         {
             if (_disposed) return;
             if (!Enabled) return;
-            var item = ItemFactory(groupName, traceName, traceObject, tags);
+            var item = CreateTraceItem(groupName, traceName, traceObject, tags);
             Write(item);
         }
         /// <inheritdoc />
@@ -143,7 +134,7 @@ namespace TWCore.Diagnostics.Trace
         {
             if (_disposed) return;
             if (!Enabled) return;
-            var item = ItemFactory(groupName, traceName, traceObject, null);
+            var item = CreateTraceItem(groupName, traceName, traceObject, null);
             Write(item);
         }
         /// <inheritdoc />
@@ -176,7 +167,7 @@ namespace TWCore.Diagnostics.Trace
             if (_disposed) return;
             if (!Enabled) return;
             if (!Core.DebugMode) return;
-            var item = ItemFactory(groupName, traceName, traceObject, tags);
+            var item = CreateTraceItem(groupName, traceName, traceObject, tags);
             Write(item);
         }
         /// <inheritdoc />
@@ -192,7 +183,7 @@ namespace TWCore.Diagnostics.Trace
             if (_disposed) return;
             if (!Enabled) return;
             if (!Core.DebugMode) return;
-            var item = ItemFactory(groupName, traceName, traceObject, null);
+            var item = CreateTraceItem(groupName, traceName, traceObject, null);
             Write(item);
         }
         /// <inheritdoc />
@@ -223,6 +214,23 @@ namespace TWCore.Diagnostics.Trace
             _itemsWorker?.StopAsync(50).WaitAsync();
             _itemsWorker?.Clear();
             Storage?.Clear();
+        }
+        #endregion
+
+        #region Trace
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static TraceItem CreateTraceItem(string groupName, string traceName, object traceObject, string[] tags)
+        {
+            return new TraceItem
+            {
+                InstanceId = Core.InstanceId,
+                Id = Factory.NewGuid(),
+                Tags = tags,
+                Timestamp = Core.Now,
+                GroupName = groupName,
+                TraceName = traceName,
+                TraceObject = traceObject
+            };
         }
         #endregion
     }

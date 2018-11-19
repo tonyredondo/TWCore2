@@ -20,15 +20,6 @@ using System;
 namespace TWCore.Diagnostics.Trace
 {
     /// <summary>
-    /// Creates a new trace item
-    /// </summary>
-    /// <param name="groupName">Trace group name</param>
-    /// <param name="traceName">Trace Name</param>
-    /// <param name="traceObject">Trace Object</param>
-    /// <param name="tags">Tags</param>
-    /// <returns>TraceItem instance</returns>
-    public delegate TraceItem CreateTraceItemDelegate(string groupName, string traceName, object traceObject, string[] tags);
-    /// <summary>
     /// Creates a new trace engine instance
     /// </summary>
     /// <returns>ITraceEngine instance</returns>

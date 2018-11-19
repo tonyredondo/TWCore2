@@ -37,10 +37,6 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         LogLevel MaxLogLevel { get; set; }
         /// <summary>
-        /// Gets or sets the log item factory
-        /// </summary>
-        CreateLogItemDelegate ItemFactory { get; set; }
-        /// <summary>
         /// Get all pending to write log items
         /// </summary>
         /// <returns>Pending log items array</returns>

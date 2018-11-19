@@ -92,6 +92,25 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }
         }
 
+        public async Task ProcessGroupMetadataMessageAsync(List<GroupMetadata> message)
+        {
+            using (Watch.Create("Processing GroupMetadata List Message", LogLevel.InfoBasic))
+            {
+                await RavenHelper.BulkInsertAsync(async bulkOp =>
+                {
+                    try 
+                    {
+                        foreach (var groupMetaItem in message)
+                            await bulkOp.StoreAsync(groupMetaItem).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }).ConfigureAwait(false);
+            }
+        }
+
         public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
         {
             using (Watch.Create("Processing TraceItems List Message", LogLevel.InfoBasic))

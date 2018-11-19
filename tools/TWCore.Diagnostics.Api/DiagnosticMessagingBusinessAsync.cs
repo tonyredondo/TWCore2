@@ -30,15 +30,21 @@ using TWCore.Services.Messaging;
 
 namespace TWCore.Diagnostics.Api
 {
-	public class DiagnosticMessagingBusinessAsync : BusinessAsyncBase<List<LogItem>, List<MessagingTraceItem>, StatusItemCollection>
+	public class DiagnosticMessagingBusinessAsync : BusinessAsyncBase<List<LogItem>, List<GroupMetadata>, List<MessagingTraceItem>, StatusItemCollection>
 	{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<object> OnProcessAsync(List<LogItem> message)
         {
 			if (message is null || message.Count == 0) return ResponseMessage.NoResponse;
-
 			await DbHandlers.Instance.Messages.ProcessLogItemsMessageAsync(message).ConfigureAwait(false);
-	        
+			return ResponseMessage.NoResponse;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override async Task<object> OnProcessAsync(List<GroupMetadata> message)
+        {
+			if (message is null || message.Count == 0) return ResponseMessage.NoResponse;
+			await DbHandlers.Instance.Messages.ProcessGroupMetadataMessageAsync(message).ConfigureAwait(false);
 			return ResponseMessage.NoResponse;
         }
 
@@ -46,9 +52,7 @@ namespace TWCore.Diagnostics.Api
         protected override async Task<object> OnProcessAsync(List<MessagingTraceItem> message)
         {
 	        if (message is null || message.Count == 0) return ResponseMessage.NoResponse;
-
 			await DbHandlers.Instance.Messages.ProcessTraceItemsMessageAsync(message).ConfigureAwait(false);
-
 	        return ResponseMessage.NoResponse;
         }
 
@@ -56,9 +60,7 @@ namespace TWCore.Diagnostics.Api
         protected override async Task<object> OnProcessAsync(StatusItemCollection message)
         {
 			if (message is null) return ResponseMessage.NoResponse;
-
 			await DbHandlers.Instance.Messages.ProcessStatusMessageAsync(message).ConfigureAwait(false);
-            
             return ResponseMessage.NoResponse;
         }
     }

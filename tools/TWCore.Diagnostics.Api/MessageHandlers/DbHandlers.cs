@@ -72,6 +72,11 @@ namespace TWCore.Diagnostics.Api
 				foreach (var item in _parent._messageHandlers)
 					await item.ProcessLogItemsMessageAsync(message).ConfigureAwait(false);
 			}
+            public async Task ProcessGroupMetadataMessageAsync(List<GroupMetadata> message)
+            {
+				foreach (var item in _parent._messageHandlers)
+					await item.ProcessGroupMetadataMessageAsync(message).ConfigureAwait(false);
+            }
 			public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
 			{
 				foreach (var item in _parent._messageHandlers)
@@ -82,8 +87,8 @@ namespace TWCore.Diagnostics.Api
 				foreach (var item in _parent._messageHandlers)
 					await item.ProcessStatusMessageAsync(message).ConfigureAwait(false);
 			}
-			#endregion
-		}
+            #endregion
+        }
 		#endregion
 	}
 }

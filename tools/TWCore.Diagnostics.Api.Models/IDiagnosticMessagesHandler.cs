@@ -35,6 +35,12 @@ namespace TWCore.Diagnostics.Api.Models
         /// <returns>Process task</returns>
         Task ProcessLogItemsMessageAsync(List<LogItem> message);
         /// <summary>
+        /// Process GroupMetadata message
+        /// </summary>
+        /// <param name="message">Message to handle</param>
+        /// <returns>Process task</returns>
+        Task ProcessGroupMetadataMessageAsync(List<GroupMetadata> message);
+        /// <summary>
         /// Process TraceItems message
         /// </summary>
         /// <param name="message">Message to handle</param>

@@ -80,6 +80,15 @@ namespace TWCore.Test.Core
 			var xmlKv3 = kv3.SerializeToXml();
 			var xmlKv4 = kv4.SerializeToXml();
 
+            var kv5List = new KeyValue<string, string>[]
+            {
+                new KeyValue<string, string>("Key1", null),
+                new KeyValue<string, string>("Key2", string.Empty),
+                new KeyValue<string, string>("Key3", "Value 3"),
+            };
+            var xmlkv5List = kv5List.SerializeToXml();
+            var kv5List2 = xmlkv5List.DeserializeFromXml<KeyValue<string, string>[]>();
+
             var kv1s = xmlKv1.DeserializeFromXml<KeyValue<string, DateTime?>>();
             var kv2s = xmlKv2.DeserializeFromXml<KeyValue<string, DateTime?>>();
             var kv3s = xmlKv3.DeserializeFromXml<KeyValue<string, string>>();

@@ -164,6 +164,7 @@ namespace TWCore.Collections
                 var vBox = (ValueBox)valueSerializer.Deserialize(reader);
                 Value = vBox.Content;
             }
+            reader.Read();
         }
         void IXmlSerializable.WriteXml(XmlWriter writer)
         {

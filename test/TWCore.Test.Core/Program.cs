@@ -71,8 +71,19 @@ namespace TWCore.Test.Core
         {
             Console.WriteLine("MAIN");
 
-			//var kv1 = new KeyValue<string, DateTime?>("Hola", TWCore.Core.Now);
-			//var xmlKv1 = kv1.SerializeToXml();
+			var kv1 = new KeyValue<string, DateTime?>("Hola", TWCore.Core.Now);
+			var kv2 = new KeyValue<string, DateTime?>("Hola", null);
+			var kv3 = new KeyValue<string, string>("Hola", null);
+			var kv4 = new KeyValue<string, string>("Hola", "");
+			var xmlKv1 = kv1.SerializeToXml();
+			var xmlKv2 = kv2.SerializeToXml();
+			var xmlKv3 = kv3.SerializeToXml();
+			var xmlKv4 = kv4.SerializeToXml();
+
+            var kv1s = xmlKv1.DeserializeFromXml<KeyValue<string, DateTime?>>();
+            var kv2s = xmlKv2.DeserializeFromXml<KeyValue<string, DateTime?>>();
+            var kv3s = xmlKv3.DeserializeFromXml<KeyValue<string, string>>();
+            var kv4s = xmlKv4.DeserializeFromXml<KeyValue<string, string>>();
 
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>

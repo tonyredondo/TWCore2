@@ -113,7 +113,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 strBuffer = new StringBuilder();
 
             strBuffer.Append(item.Timestamp.GetTimeSpanFormat());
-            strBuffer.AppendFormat("{0, 11}: ", "GroupData");
+            strBuffer.AppendFormat("{0, 11}: ", "GroupInfo");
             strBuffer.Append(item.GroupName);
             if (item.Items != null)
             {

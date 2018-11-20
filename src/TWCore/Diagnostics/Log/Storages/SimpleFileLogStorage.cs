@@ -337,7 +337,7 @@ namespace TWCore.Diagnostics.Log.Storages
             if (item == null || string.IsNullOrWhiteSpace(item.GroupName)) return;
 
             strBuffer.Append(item.Timestamp.GetTimeSpanFormat());
-            strBuffer.AppendFormat("{0, 11}: ", "GroupData");
+            strBuffer.AppendFormat("{0, 11}: ", "GroupInfo");
             strBuffer.Append(item.GroupName + " | ");
             if (item.Items != null)
             {

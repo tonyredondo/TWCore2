@@ -584,7 +584,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 _firstWrite = false;
             }
             strBuffer.Append(time);
-            strBuffer.AppendFormat("{0, 11}: ", "GroupData");
+            strBuffer.AppendFormat("{0, 11}: ", "GroupInfo");
             strBuffer.Append(item.GroupName + " | ");
             if (item.Items != null)
             {

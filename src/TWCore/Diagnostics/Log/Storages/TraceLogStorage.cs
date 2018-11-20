@@ -122,7 +122,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 for (var i = 0; i < count; i++)
                 {
                     var keyValue = item.Items[i];
-                    strBuffer.AppendFormat("{0}={1}", keyValue.Key, keyValue.Value);
+                    strBuffer.AppendFormat("{0} = {1}", keyValue.Key, keyValue.Value);
                     if (i < count - 1)
                         strBuffer.Append(", ");
                 }

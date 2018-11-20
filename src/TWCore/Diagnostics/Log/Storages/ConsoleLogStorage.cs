@@ -231,7 +231,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 for (var i = 0; i < count; i++)
                 {
                     var keyValue = item.Items[i];
-                    strBuffer.AppendFormat("{0}={1}", keyValue.Key, keyValue.Value);
+                    strBuffer.AppendFormat("{0} = {1}", keyValue.Key, keyValue.Value);
                     if (i < count - 1)
                         strBuffer.Append(", ");
                 }
@@ -245,7 +245,7 @@ namespace TWCore.Diagnostics.Log.Storages
             StringBuilderPool.Push(strBuffer);
 
             if (UseColor)
-                color = ConsoleColor.DarkYellow;
+                color = ConsoleColor.Cyan;
             NonBlockingConsole.WriteLine(message, color);
             return Task.CompletedTask;
         }

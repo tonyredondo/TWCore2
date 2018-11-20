@@ -175,7 +175,7 @@ namespace TWCore.Diagnostics.Log.Storages
         .Stats { color: darkgreen; }
         .Verbose { color: gray; }
         .LibVerbose { color: darkgray; }
-        .GroupMetadata { color: darkyellow; }
+        .GroupMetadata { color: cyan; }
     </style>
 </head>
 <body>
@@ -593,7 +593,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 for (var i = 0; i < count; i++)
                 {
                     var keyValue = item.Items[i];
-                    strBuffer.AppendFormat("{0}={1}", keyValue.Key, System.Security.SecurityElement.Escape(keyValue.Value));
+                    strBuffer.AppendFormat("{0} = {1}", keyValue.Key, System.Security.SecurityElement.Escape(keyValue.Value));
                     if (i < count - 1)
                         strBuffer.Append(", ");
                 }

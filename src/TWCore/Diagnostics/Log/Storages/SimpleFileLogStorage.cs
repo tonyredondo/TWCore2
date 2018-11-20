@@ -341,7 +341,7 @@ namespace TWCore.Diagnostics.Log.Storages
             strBuffer.Append(item.GroupName + " | ");
             if (item.Items != null)
             {
-                strBuffer.Append(" [");
+                strBuffer.Append("[");
                 var count = item.Items.Length;
                 for (var i = 0; i < count; i++)
                 {

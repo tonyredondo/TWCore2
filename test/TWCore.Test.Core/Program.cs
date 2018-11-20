@@ -109,6 +109,9 @@ namespace TWCore.Test.Core
                 var folder = Factory.ResolveLowLowPath("<</temp/copyright.txt");
                 var folder2 = Factory.ResolveLowLowPath("<<(Github)/logs");
 
+                TWCore.Core.Log.AddGroupMetadata("Group Name", ("Key", "Value"), ("Key2", "Value"));
+                TWCore.Core.Log.AddGroupMetadata("Group Name", ("Key3", "Value"));
+
                 var matchTest = "value value value {Env:CONFIG_CACHESERVERIP} value value \r\n{Env:CONFIG_CACHESERVERIP} values";
                 matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);
 

@@ -237,6 +237,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
                 strBuffer.Append("] ");
             }
+            strBuffer.AppendLine();
 
             var message = strBuffer.ToString();
             var color = DefaultColor;

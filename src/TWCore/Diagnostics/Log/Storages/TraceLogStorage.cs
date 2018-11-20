@@ -128,7 +128,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
                 strBuffer.Append("] ");
             }
-
+            strBuffer.AppendLine();
             System.Diagnostics.Trace.WriteLine(strBuffer.ToString());
             strBuffer.Clear();
             StringBuilderPool.Push(strBuffer);

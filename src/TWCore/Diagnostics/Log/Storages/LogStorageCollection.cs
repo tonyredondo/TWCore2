@@ -194,7 +194,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 if (_cItems[i].Item2.HasFlag(item.Level))
                     tsks.Add(InternalWriteAsync(_cItems[i].Item1, item));
             }
-            var resTask = Task.WhenAll(tsks).ContinueWith(_ => 
+            var resTask = Task.WhenAll(tsks).ContinueWith(_ =>
             {
                 tsks.Clear();
                 _procTaskPool.Store(tsks);
@@ -246,9 +246,28 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Group metadata item</param>
         /// <returns>Task process</returns>
-        public Task WriteAsync(IGroupMetadata item)
+        public async Task WriteAsync(IGroupMetadata item)
         {
-            return Task.CompletedTask;
+            if (_isDirty || _cItems is null)
+            {
+                if (_items is null) return;
+                lock (_locker)
+                {
+                    _cItems = new List<(ILogStorage, LogLevel)>(_items);
+                    _isDirty = false;
+                }
+            }
+            foreach (var sto in _cItems)
+            {
+                try
+                {
+                    await sto.Item1.WriteAsync(item).ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         #endregion

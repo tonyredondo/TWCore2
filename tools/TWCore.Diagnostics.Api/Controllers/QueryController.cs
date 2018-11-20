@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using TWCore.Collections;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
@@ -182,6 +183,19 @@ namespace TWCore.Diagnostics.Api.Controllers
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.SearchAsync(environment, searchTerm, fromDate, toDate);
+        }
+
+
+        /// <summary>
+        /// Gets the metadata from a group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <returns>Metadata results</returns>
+        [HttpGet("{environment}/search/{searchTerm}")]
+        public Task<KeyValue[]> GetMetadatasAsync([FromRoute]string groupName)
+        {
+            groupName = groupName?.Trim();
+            return DbHandlers.Instance.Query.GetMetadatas(groupName);
         }
 
 

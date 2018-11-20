@@ -191,8 +191,8 @@ namespace TWCore.Diagnostics.Api.Controllers
         /// </summary>
         /// <param name="groupName">Group name</param>
         /// <returns>Metadata results</returns>
-        [HttpGet("{environment}/search/{searchTerm}")]
-        public Task<KeyValue[]> GetMetadatasAsync([FromRoute]string groupName)
+        [HttpGet("{environment}/metadata/{groupName}")]
+        public Task<KeyValue[]> GetMetadatasAsync([FromRoute]string environment, [FromRoute]string groupName)
         {
             groupName = groupName?.Trim();
             return DbHandlers.Instance.Query.GetMetadatas(groupName);

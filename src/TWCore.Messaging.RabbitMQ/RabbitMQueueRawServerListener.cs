@@ -87,12 +87,13 @@ namespace TWCore.Messaging.RabbitMQ
             await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
             _receiver.EnsureQueue();
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
-            _receiverConsumer.Received += async (ch, ea) =>
+            _receiverConsumer.Received += (ch, ea) =>
             {
                 var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
-                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg).ConfigureAwait(false);
-            };
-            _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, true, _receiverConsumer);
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
+				_receiver.Channel.BasicAck(ea.DeliveryTag, false);
+			};
+            _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
             _monitorTask = Task.Run(MonitorProcess, _token);
 
             await token.WhenCanceledAsync().ConfigureAwait(false);
@@ -132,13 +133,15 @@ namespace TWCore.Messaging.RabbitMQ
                     {
                         if (_receiverConsumerTag != null)
                             _receiver.Channel.BasicCancel(_receiverConsumerTag);
-                        Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+						_receiver.Close();
+						Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
                         await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-                        _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+						await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
+						_receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
                         Core.Log.Warning("The listener has been resumed.");
                     }
 
-                    if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
+                    if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue && !_token.IsCancellationRequested)
                     {
                         if (_receiverConsumerTag != null)
                             _receiver.Channel.BasicCancel(_receiverConsumerTag);
@@ -151,8 +154,19 @@ namespace TWCore.Messaging.RabbitMQ
                         Core.Log.Warning("The listener has been resumed.");
                     }
 
-                    await Task.Delay(1000, _token).ConfigureAwait(false);
-                }
+					if (!_receiver.Channel.IsOpen && !_token.IsCancellationRequested)
+					{
+						Core.Log.Warning("The Receiver channel is closed and should be open, reconnecting.");
+						_receiver.Close();
+						await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
+						if (_receiverConsumerTag != null)
+							_receiver.Channel.BasicCancel(_receiverConsumerTag);
+						_receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+						Core.Log.Warning("The listener has been resumed.");
+					}
+
+					await Task.Delay(1000, _token).ConfigureAwait(false);
+				}
                 catch (TaskCanceledException) { }
                 catch (Exception ex)
                 {

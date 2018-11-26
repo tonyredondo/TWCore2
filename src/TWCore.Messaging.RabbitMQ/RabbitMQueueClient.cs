@@ -309,7 +309,7 @@ namespace TWCore.Messaging.RabbitMQ
                 if (!UseSingleResponseQueue)
                 {
                     rcvName += "-" + Core.InstanceId;
-                    _receiver.Channel.QueueDeclare(rcvName, _receiver.Durable, false, false, null);
+                    _receiver.Channel.QueueDeclare(rcvName, false, false, true, null);
                 }
                 _receiverConsumerTag = _receiver.Channel.BasicConsume(rcvName, false, _receiverConsumer);
                 Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been created.", rcvName);

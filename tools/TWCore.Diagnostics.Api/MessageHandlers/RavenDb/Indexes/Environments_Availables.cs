@@ -18,8 +18,6 @@ using System;
 using System.Linq;
 using Raven.Client.Documents.Indexes;
 using TWCore.Diagnostics.Api.Models.Log;
-using TWCore.Diagnostics.Api.Models.Status;
-using TWCore.Diagnostics.Api.Models.Trace;
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
 {
@@ -33,8 +31,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
         public Environments_Availables()
         {
             AddMap<NodeLogItem>(docs => docs.Where(i => i.Environment != null).Select(i => new { i.Environment }));
-            AddMap<NodeTraceItem>(docs => docs.Where(i => i.Environment != null).Select(i => new { i.Environment }));
-            AddMap<NodeStatusItem>(docs => docs.Where(i => i.Environment != null).Select(i => new { i.Environment }));
             Reduce = results => results.GroupBy(i => i.Environment).Select(i => new {Environment = i.Key});
         }
     }

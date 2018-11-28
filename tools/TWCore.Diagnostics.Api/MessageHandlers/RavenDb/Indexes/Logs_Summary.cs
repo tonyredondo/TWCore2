@@ -42,7 +42,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
         {
             Map = logs =>
                 from item in logs
-                group item by new {item.Environment, item.Application, item.Timestamp.Date} into g
+                group item by new { item.Environment, item.Application, item.Timestamp.Date } into g
                 select new
                 {
                     Environment = g.Key.Environment,
@@ -57,7 +57,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
 
             Reduce = results =>
                 from item in results
-                group item by new {item.Environment, item.Application, item.Date} into g
+                group item by new { item.Environment, item.Application, item.Date } into g
                 select new
                 {
                     Environment = g.Key.Environment,

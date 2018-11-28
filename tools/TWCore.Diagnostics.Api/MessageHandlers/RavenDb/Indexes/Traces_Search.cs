@@ -34,8 +34,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
                               Name = trace.Name,
                               Group = trace.Group,
                               Tags = trace.Tags,
-                              Application = trace.Application,
-                              Machine = trace.Machine
+                              //Application = trace.Application,
+                              //Machine = trace.Machine
                           };
 
             Index(x => x.Group, FieldIndexing.Search);

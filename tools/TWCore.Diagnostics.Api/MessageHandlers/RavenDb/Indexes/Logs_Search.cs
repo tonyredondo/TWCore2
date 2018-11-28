@@ -33,11 +33,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
                               Timestamp = log.Timestamp,
                               Message = log.Message,
                               Group = log.Group,
-                              Level = log.Level,
+                              //Level = log.Level,
                               Code = log.Code,
                               Type = log.Type,
-                              Application = log.Application,
-                              Machine = log.Machine
+                              //Application = log.Application,
+                              //Machine = log.Machine
                           };
 
             Index(x => x.Message, FieldIndexing.Search);

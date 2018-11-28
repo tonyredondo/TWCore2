@@ -41,10 +41,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
                           };
 
             Index(x => x.Message, FieldIndexing.Search);
+            Index(x => x.Code, FieldIndexing.Search);
             Index(x => x.Group, FieldIndexing.Search);
-            Index(x => x.Level, FieldIndexing.Search);
             Index(x => x.Type, FieldIndexing.Search);
-            Index(x => x.Application, FieldIndexing.Search);
         }
     }
 }

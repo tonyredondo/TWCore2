@@ -99,7 +99,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
+                var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem, Logs_ByApplicationLevelsAndEnvironments>();
                 var query = documentQuery
                         .Statistics(out var stats)
                         .WhereEquals(x => x.Environment, environment)
@@ -157,7 +157,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             var value = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
+                var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem, Traces_ByGroupId>();
                 var query = documentQuery
                     .WhereEquals(x => x.Environment, environment)
                     .WhereEquals(x => x.Group, groupName)
@@ -269,7 +269,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             var metas = await RavenHelper.ExecuteAndReturnAsync(async session => 
             {
-                return await session.Advanced.AsyncDocumentQuery<GroupMetadata>()
+                return await session.Advanced.AsyncDocumentQuery<GroupMetadata, Metadata_ByGroup>()
                     .WhereEquals(x => x.GroupName, groupName)
                     .OrderByDescending(x => x.Timestamp)
                     .ToListAsync().ConfigureAwait(false);

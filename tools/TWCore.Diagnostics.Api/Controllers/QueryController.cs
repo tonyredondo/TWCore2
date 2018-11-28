@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -192,10 +193,12 @@ namespace TWCore.Diagnostics.Api.Controllers
         /// <param name="groupName">Group name</param>
         /// <returns>Metadata results</returns>
         [HttpGet("{environment}/metadata/{groupName}")]
-        public Task<KeyValue[]> GetMetadatasAsync([FromRoute]string environment, [FromRoute]string groupName)
+        public async Task<KeyValue[]> GetMetadatasAsync([FromRoute]string environment, [FromRoute]string groupName)
         {
             groupName = groupName?.Trim();
-            return DbHandlers.Instance.Query.GetMetadatas(groupName);
+            if (groupName == null) return Array.Empty<KeyValue>();
+            var result = await DbHandlers.Instance.Query.GetMetadatas(groupName).ConfigureAwait(false);
+            return result.OrderBy(i => i.Key).ToArray();
         }
 
 

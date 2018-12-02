@@ -22,10 +22,10 @@ using System.Threading;
 
 namespace TWCore.Threading
 {
-    /// <summary>
-    /// Task helper
-    /// </summary>
-    public static class TaskHelper
+	/// <summary>
+	/// Task helper
+	/// </summary>
+	public static class TaskHelper
     {
         /// <summary>
         /// Sleep time between condition checks
@@ -119,5 +119,5 @@ namespace TWCore.Threading
             while (!condition())
                 await Task.Delay(SleepTimeBetweenConditionCheck).ConfigureAwait(false);
         }
-    }
+	}
 }

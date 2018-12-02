@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace TWCore.Diagnostics.Counters
 {
 	/// <summary>
-	/// Counter item.
+	/// Counter item
 	/// </summary>
 	public class CounterItem<T>
 	{
@@ -45,7 +45,9 @@ namespace TWCore.Diagnostics.Counters
 		/// <value>The counter values</value>
 		public CounterItemValue<T>[] Values { get; set; }
 	}
-
+	/// <summary>
+	/// Counter item value
+	/// </summary>
 	public class CounterItemValue<T>
 	{
 		/// <summary>

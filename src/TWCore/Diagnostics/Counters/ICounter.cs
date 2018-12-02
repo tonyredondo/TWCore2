@@ -45,7 +45,15 @@ namespace TWCore.Diagnostics.Counters
 	/// </summary>
 	public interface ICounter<T>
 	{
+		/// <summary>
+		/// Gets the values and reset the counter
+		/// </summary>
+		/// <returns>The counter value</returns>
 		IEnumerable<CounterItem<T>> GetValuesAndReset();
+		/// <summary>
+		/// Add the specified value
+		/// </summary>
+		/// <param name="value">Value to be added to the counter</param>
 		void Add(T value);
 	}
 	/// <summary>

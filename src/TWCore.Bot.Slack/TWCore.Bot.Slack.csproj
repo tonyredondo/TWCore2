@@ -5,7 +5,7 @@
     <Title>TWCore.Bot.Slack</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SlackAPI" Version="1.0.5.93" />
+    <PackageReference Include="SlackAPI" Version="1.0.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Bot\TWCore.Bot.csproj" />

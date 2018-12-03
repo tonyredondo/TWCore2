@@ -16,14 +16,13 @@ limitations under the License.
 
 
 using System;
-using System.Collections.Generic;
 
 namespace TWCore.Diagnostics.Counters
 {
-	/// <summary>
-	/// Counter interface
-	/// </summary>
-	public interface ICounter
+    /// <summary>
+    /// Counter interface
+    /// </summary>
+    public interface ICounter
 	{
 		/// <summary>
 		/// Gets the category.
@@ -52,28 +51,6 @@ namespace TWCore.Diagnostics.Counters
 		/// <param name="value">Value to be added to the counter</param>
 		void Add(T value);
 	}
-    /// <summary>
-    /// Counter reader interface
-    /// </summary>
-    public interface ICounterReader : ICounter
-    {
-        /// <summary>
-        /// Type of value
-        /// </summary>
-        Type TypeOfValue { get; }
-    }
-    /// <summary>
-    /// Counter reader interface
-    /// </summary>
-    /// <typeparam name="T">Type of value</typeparam>
-    public interface ICounterReader<T> : ICounterReader
-    {
-        /// <summary>
-		/// Gets the values and reset the counter
-		/// </summary>
-		/// <returns>The counter value</returns>
-		IEnumerable<CounterItem<T>> GetAndReset();
-    }
 	/// <summary>
 	/// Integer Counter interface
 	/// </summary>

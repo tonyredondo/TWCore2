@@ -37,14 +37,16 @@ namespace TWCore.Diagnostics.Counters
 		/// <param name="category">Counter category</param>
 		/// <param name="name">Counter name</param>
 		/// <param name="type">Counter type</param>
-		IIntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative);
+        /// <param name="level">Counter level</param>
+		IIntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 		/// <summary>
 		/// Gets an integer counter
 		/// </summary>
 		/// <returns>The integer counter</returns>
 		/// <param name="name">Counter name</param>
 		/// <param name="type">Counter type</param>
-		IIntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative);
+        /// <param name="level">Counter level</param>
+		IIntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 		/// <summary>
 		/// Gets an double counter
 		/// </summary>
@@ -52,14 +54,16 @@ namespace TWCore.Diagnostics.Counters
 		/// <param name="category">Counter category</param>
 		/// <param name="name">Counter name</param>
 		/// <param name="type">Counter type</param>
-		IDoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative);
+        /// <param name="level">Counter level</param>
+		IDoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 		/// <summary>
 		/// Gets an double counter
 		/// </summary>
 		/// <returns>The double counter</returns>
 		/// <param name="name">Counter name</param>
 		/// <param name="type">Counter type</param>
-		IDoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative);
+        /// <param name="level">Counter level</param>
+		IDoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 		/// <summary>
 		/// Gets an decimal counter
 		/// </summary>
@@ -67,13 +71,15 @@ namespace TWCore.Diagnostics.Counters
 		/// <param name="category">Counter category</param>
 		/// <param name="name">Counter name</param>
 		/// <param name="type">Counter type</param>
-		IDecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative);
+        /// <param name="level">Counter level</param>
+		IDecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 		/// <summary>
 		/// Gets an decimal counter
 		/// </summary>
 		/// <returns>The decimal counter</returns>
 		/// <param name="name">Counter name</param>
 		/// <param name="type">Counter type</param>
-		IDecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative);
+        /// <param name="level">Counter level</param>
+		IDecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 	}
 }

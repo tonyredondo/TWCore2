@@ -25,20 +25,24 @@ namespace TWCore.Diagnostics.Counters
     public interface ICounter
 	{
 		/// <summary>
-		/// Gets the category.
+		/// Gets the counter category
 		/// </summary>
 		/// <value>The category.</value>
 		string Category { get; }
 		/// <summary>
-		/// Gets the name.
+		/// Gets the counter name
 		/// </summary>
 		/// <value>The name.</value>
 		string Name { get; }
 		/// <summary>
-		/// Gets the type.
+		/// Gets the counter type
 		/// </summary>
 		/// <value>The type.</value>
 		CounterType Type { get; }
+        /// <summary>
+        /// Gets the counter level
+        /// </summary>
+        CounterLevel Level { get; }
 	}
 	/// <summary>
 	/// Counter interface

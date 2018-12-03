@@ -18,25 +18,17 @@ limitations under the License.
 namespace TWCore.Diagnostics.Counters
 {
     /// <summary>
-    /// Counter Type
+    /// Counter level
     /// </summary>
-    public enum CounterType
-	{
-		/// <summary>
-		/// Cumulative counter
-		/// </summary>
-		Cumulative,
-		/// <summary>
-		/// Average counter
-		/// </summary>
-		Average,
-		/// <summary>
-		/// Minimum counter
-		/// </summary>
-		Minimum,
-		/// <summary>
-		/// Maximum counter
-		/// </summary>
-		Maximum
-	}
+    public enum CounterLevel
+    {
+        /// <summary>
+        /// User level counter
+        /// </summary>
+        User,
+        /// <summary>
+        /// Framework level counter
+        /// </summary>
+        Framework
+    }
 }

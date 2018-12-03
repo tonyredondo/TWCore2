@@ -28,6 +28,6 @@ namespace TWCore.Diagnostics.Counters.Storages
 		/// Store counters 
 		/// </summary>
 		/// <param name="counters">Counters enumerable</param>
-		void Store(IEnumerable<ICounter> counters);
+		void Store(IEnumerable<ICounterReader> counters);
 	}
 }

@@ -25,20 +25,25 @@ namespace TWCore.Diagnostics.Counters
 	public class CounterItem<T>
 	{
 		/// <summary>
-		/// Gets or sets the category
+		/// Gets or sets the counter category
 		/// </summary>
 		/// <value>The counter category</value>
 		public string Category { get; set; }
 		/// <summary>
-		/// Gets or sets the name
+		/// Gets or sets the counter name
 		/// </summary>
 		/// <value>The counter name</value>
 		public string Name { get; set; }
 		/// <summary>
-		/// Gets or sets the type
+		/// Gets or sets the counter type
 		/// </summary>
 		/// <value>The counter type</value>
 		public CounterType Type { get; set; }
+        /// <summary>
+        /// Gets or sets the counter level
+        /// </summary>
+        /// <value>The counter level</value>
+        public CounterLevel Level { get; set; }
 		/// <summary>
 		/// Gets or sets the values
 		/// </summary>

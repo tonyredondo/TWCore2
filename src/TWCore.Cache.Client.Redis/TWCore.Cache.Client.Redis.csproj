@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;netstandard2.0;net461</TargetFrameworks>
     <Title>TWCore.Cache.Client.Redis</Title>
   </PropertyGroup>
   <ItemGroup>
@@ -9,6 +9,6 @@
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="StackExchange.Redis" Version="2.0.513" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.519" />
   </ItemGroup>
 </Project>

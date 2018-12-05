@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netstandard2.0;net461;net462</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.2;netstandard2.0;net461;net462</TargetFrameworks>
     <Title>TWCore.Diagnostics.Api.Models</Title>
   </PropertyGroup>
   <ItemGroup>

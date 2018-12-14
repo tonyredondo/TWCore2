@@ -669,14 +669,15 @@ namespace TWCore
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action CreateLock(this Action action, object @lock) => () => InvokeWithLock(action, @lock);
+        public static Action CreateLock<TLock>(this Action action, TLock @lock) where TLock: class
+            => () => InvokeWithLock(action, @lock);
         /// <summary>
         /// Invokes the action with a lock over an object reference
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void InvokeWithLock(this Action action, object @lock)
+        public static void InvokeWithLock<TLock>(this Action action, TLock @lock) where TLock: class
         {
             lock (@lock)
                 action();
@@ -689,7 +690,8 @@ namespace TWCore
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T> CreateLock<T>(this Func<T> function, object @lock) => () => InvokeWithLock(function, @lock);
+        public static Func<T> CreateLock<T, TLock>(this Func<T> function, TLock @lock) where TLock: class
+            => () => InvokeWithLock(function, @lock);
         /// <summary>
         /// Invokes the func with a lock over an object reference
         /// </summary>
@@ -697,7 +699,7 @@ namespace TWCore
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>Function invoke return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T InvokeWithLock<T>(this Func<T> function, object @lock)
+        public static T InvokeWithLock<T, TLock>(this Func<T> function, TLock @lock) where TLock: class
         {
             lock (@lock)
                 return function();
@@ -709,7 +711,8 @@ namespace TWCore
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<T, TR> CreateLock<T, TR>(this Func<T, TR> function, object @lock) => t => InvokeWithLock(function, t, @lock);
+        public static Func<T, TR> CreateLock<T, TR, TLock>(this Func<T, TR> function, TLock @lock) where TLock: class
+            => t => InvokeWithLock(function, t, @lock);
         /// <summary>
         /// Invokes the func with a lock over an object reference
         /// </summary>
@@ -718,7 +721,7 @@ namespace TWCore
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>Function invoke return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TR InvokeWithLock<T, TR>(this Func<T, TR> function, T state, object @lock)
+        public static TR InvokeWithLock<T, TR, TLock>(this Func<T, TR> function, T state, TLock @lock) where TLock: class
         {
             lock (@lock)
                 return function(state);

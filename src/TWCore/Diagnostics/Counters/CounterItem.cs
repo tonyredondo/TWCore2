@@ -22,7 +22,7 @@ namespace TWCore.Diagnostics.Counters
 	/// <summary>
 	/// Counter item
 	/// </summary>
-	public class CounterItem<T>
+	public sealed class CounterItem<T>
 	{
 		/// <summary>
 		/// Gets or sets the counter category
@@ -49,11 +49,32 @@ namespace TWCore.Diagnostics.Counters
 		/// </summary>
 		/// <value>The counter values</value>
 		public CounterItemValue<T>[] Values { get; set; }
-	}
+
+        /// <summary>
+        /// Counter item
+        /// </summary>
+        public CounterItem() { }
+        /// <summary>
+        /// Counter item
+        /// </summary>
+        /// <param name="category">Counter category</param>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
+        /// <param name="level">Counter level</param>
+        /// <param name="values">Counter values</param>
+        public CounterItem(string category, string name, CounterType type, CounterLevel level, CounterItemValue<T>[] values)
+        {
+            Category = category;
+            Name = name;
+            Type = type;
+            Level = level;
+            Values = values;
+        }
+    }
 	/// <summary>
 	/// Counter item value
 	/// </summary>
-	public class CounterItemValue<T>
+	public sealed class CounterItemValue<T>
 	{
 		/// <summary>
 		/// Counter value timestamp

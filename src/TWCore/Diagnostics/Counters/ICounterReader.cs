@@ -37,10 +37,10 @@ namespace TWCore.Diagnostics.Counters
     public interface ICounterReader<T> : ICounterReader
     {
         /// <summary>
-		/// Gets the values and reset the counter
+		/// Takes a maximum number of values from the counter
 		/// </summary>
 		/// <returns>The counter value</returns>
-		IEnumerable<CounterItem<T>> GetAndReset();
+		CounterItem<T> Take(int items);
     }
 
 }

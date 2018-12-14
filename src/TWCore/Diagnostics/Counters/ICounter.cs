@@ -16,6 +16,7 @@ limitations under the License.
 
 
 using System;
+using System.Collections.Generic;
 
 namespace TWCore.Diagnostics.Counters
 {
@@ -27,17 +28,14 @@ namespace TWCore.Diagnostics.Counters
 		/// <summary>
 		/// Gets the counter category
 		/// </summary>
-		/// <value>The category.</value>
 		string Category { get; }
 		/// <summary>
 		/// Gets the counter name
 		/// </summary>
-		/// <value>The name.</value>
 		string Name { get; }
 		/// <summary>
 		/// Gets the counter type
 		/// </summary>
-		/// <value>The type.</value>
 		CounterType Type { get; }
         /// <summary>
         /// Gets the counter level
@@ -55,16 +53,4 @@ namespace TWCore.Diagnostics.Counters
 		/// <param name="value">Value to be added to the counter</param>
 		void Add(T value);
 	}
-	/// <summary>
-	/// Integer Counter interface
-	/// </summary>
-	public interface IIntegerCounter: ICounter<int> { }
-	/// <summary>
-	/// Double Counter interface
-	/// </summary>
-	public interface IDoubleCounter : ICounter<double> { }
-	/// <summary>
-	/// Decimal Counter interface
-	/// </summary>
-	public interface IDecimalCounter : ICounter<decimal> { }
 }

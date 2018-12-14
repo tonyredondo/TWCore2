@@ -34,7 +34,17 @@ namespace TWCore.Diagnostics.Counters
         /// Gets the storages
         /// </summary>
         /// <value>The storages collection</value>
-        public ObservableCollection<ICountersStorage> Storages { get; }
+        public BlockingCollection<ICountersStorage> Storages { get; }
+
+        #region .ctor
+        /// <summary>
+        /// Counters engine
+        /// </summary>
+        public CountersEngine()
+        {
+            Storages = new BlockingCollection<ICountersStorage>();
+        }
+        #endregion
 
         #region Public Methods
         /// <summary>

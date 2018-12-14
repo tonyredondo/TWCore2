@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -37,7 +36,6 @@ namespace TWCore.Diagnostics.Log.Storages
     [StatusName("Console Log")]
     public class ConsoleLogStorage : ILogStorage
     {
-        private static readonly object PadLock = new object();
         private static readonly ConsoleColor DefaultColor;
         private static readonly ConcurrentStack<StringBuilder> StringBuilderPool;
         private static readonly bool HasConsole;
@@ -80,7 +78,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 thread.Start();
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void WriteLine(string line, ConsoleColor color)
+            public static void Write(string line, ConsoleColor color)
                 => _queue.Add((line, color));
 
             private static void ConsoleThread()
@@ -168,7 +166,7 @@ namespace TWCore.Diagnostics.Log.Storages
                         break;
                 }
             }
-            NonBlockingConsole.WriteLine(message, color);
+            NonBlockingConsole.Write(message, color);
             return Task.CompletedTask;
         }
 
@@ -204,8 +202,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteEmptyLineAsync()
         {
-            lock (PadLock)
-                Console.WriteLine();
+            NonBlockingConsole.Write("\r\n", DefaultColor);
             return Task.CompletedTask;
         }
         /// <summary>
@@ -246,7 +243,7 @@ namespace TWCore.Diagnostics.Log.Storages
 
             if (UseColor)
                 color = ConsoleColor.Cyan;
-            NonBlockingConsole.WriteLine(message, color);
+            NonBlockingConsole.Write(message, color);
             return Task.CompletedTask;
         }
         /// <inheritdoc />

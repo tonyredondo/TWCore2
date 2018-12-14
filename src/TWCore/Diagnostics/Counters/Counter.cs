@@ -106,7 +106,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
-        public IntegerCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
+        internal IntegerCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
         {
         }
     }
@@ -122,7 +122,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
-        public DoubleCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
+        internal DoubleCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
         {
         }
     }
@@ -138,7 +138,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
-        public DecimalCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
+        internal DecimalCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
         {
         }
     }

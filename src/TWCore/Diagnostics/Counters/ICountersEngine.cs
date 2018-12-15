@@ -25,11 +25,10 @@ namespace TWCore.Diagnostics.Counters
 	/// </summary>
 	public interface ICountersEngine
 	{
-		/// <summary>
-		/// Gets the storages
-		/// </summary>
-		/// <value>The storages collection</value>
-		ObservableCollection<ICountersStorage> Storages { get; }
+        /// <summary>
+        /// Gets the counter storage
+        /// </summary>
+        ICountersStorage Storage { get; set; }
 		/// <summary>
 		/// Gets an integer counter
 		/// </summary>

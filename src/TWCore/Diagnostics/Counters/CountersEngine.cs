@@ -29,15 +29,13 @@ namespace TWCore.Diagnostics.Counters
     /// </summary>
     public class CountersEngine : ICountersEngine
     {
-        private ICountersStorage[] _storages = null;
-        private ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
-        private BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
+        private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
 
         /// <summary>
-        /// Gets the storages
+        /// Gets the counter storage
         /// </summary>
-        /// <value>The storages collection</value>
-        public ObservableCollection<ICountersStorage> Storages { get; }
+        public ICountersStorage Storage { get; set; }
 
         #region .ctor
         /// <summary>
@@ -45,11 +43,14 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         public CountersEngine()
         {
-            Storages = new ObservableCollection<ICountersStorage>();
-            Storages.CollectionChanged += (sender, e) =>
-            {
-                _storages = Storages.ToArray();
-            };
+        }
+        /// <summary>
+        /// Counters engine
+        /// </summary>
+        /// <param name="storage">Counter storage</param>
+        public CountersEngine(ICountersStorage storage)
+        {
+            Storage = storage;
         }
         #endregion
 
@@ -184,10 +185,7 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessCounters()
         {
-            var storages = _storages;
-            if (storages == null) return;
-            foreach (var storage in storages)
-                storage.Store(_counterReaders);
+            Storage.Store(_counterReaders);
         }
         #endregion
     }

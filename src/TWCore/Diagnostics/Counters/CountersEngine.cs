@@ -18,6 +18,7 @@ limitations under the License.
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using TWCore.Diagnostics.Counters.Storages;
 
 namespace TWCore.Diagnostics.Counters
@@ -61,6 +62,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
@@ -80,6 +82,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
@@ -100,6 +103,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
@@ -120,6 +124,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
@@ -140,6 +145,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
@@ -159,6 +165,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
@@ -174,6 +181,7 @@ namespace TWCore.Diagnostics.Counters
         #endregion
 
         #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessCounters()
         {
             var storages = _storages;

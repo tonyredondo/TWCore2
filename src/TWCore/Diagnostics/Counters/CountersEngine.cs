@@ -17,6 +17,7 @@ limitations under the License.
 
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Linq;
 using TWCore.Diagnostics.Counters.Storages;
 
 namespace TWCore.Diagnostics.Counters
@@ -27,6 +28,7 @@ namespace TWCore.Diagnostics.Counters
     /// </summary>
     public class CountersEngine : ICountersEngine
     {
+        private ICountersStorage[] _storages = null;
         private ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
 
@@ -34,7 +36,7 @@ namespace TWCore.Diagnostics.Counters
         /// Gets the storages
         /// </summary>
         /// <value>The storages collection</value>
-        public BlockingCollection<ICountersStorage> Storages { get; }
+        public ObservableCollection<ICountersStorage> Storages { get; }
 
         #region .ctor
         /// <summary>
@@ -42,7 +44,11 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         public CountersEngine()
         {
-            Storages = new BlockingCollection<ICountersStorage>();
+            Storages = new ObservableCollection<ICountersStorage>();
+            Storages.CollectionChanged += (sender, e) =>
+            {
+                _storages = Storages.ToArray();
+            };
         }
         #endregion
 
@@ -170,8 +176,9 @@ namespace TWCore.Diagnostics.Counters
         #region Private Methods
         private void ProcessCounters()
         {
-            if (Storages == null) return;
-            foreach (var storage in Storages)
+            var storages = _storages;
+            if (storages == null) return;
+            foreach (var storage in storages)
                 storage.Store(_counterReaders);
         }
         #endregion

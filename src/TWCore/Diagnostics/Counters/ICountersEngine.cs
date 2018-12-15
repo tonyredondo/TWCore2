@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using TWCore.Diagnostics.Counters.Storages;
 
@@ -30,7 +29,7 @@ namespace TWCore.Diagnostics.Counters
 		/// Gets the storages
 		/// </summary>
 		/// <value>The storages collection</value>
-		BlockingCollection<ICountersStorage> Storages { get; }
+		ObservableCollection<ICountersStorage> Storages { get; }
 		/// <summary>
 		/// Gets an integer counter
 		/// </summary>

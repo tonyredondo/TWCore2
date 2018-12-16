@@ -20,6 +20,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Diagnostics.Counters.Storages;
+using TWCore.Settings;
 
 namespace TWCore.Diagnostics.Counters
 {
@@ -189,5 +190,20 @@ namespace TWCore.Diagnostics.Counters
             Storage.Store(counters);
         }
         #endregion
+
+        /// <summary>
+        /// Counters engine sttings
+        /// </summary>
+        public class CountersEngineSttings: SettingsBase
+        {
+            /// <summary>
+            /// Gets or sets the flush timeout in seconds
+            /// </summary>
+            public int FlushTimeoutInSeconds { get; set; } = 10;
+            /// <summary>
+            /// Gets or sets the maximum counter values batch per counter
+            /// </summary>
+            public int MaximumBatchPerCounter { get; set; } = 1000;
+        }
     }
 }

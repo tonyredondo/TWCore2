@@ -25,7 +25,7 @@ namespace TWCore.Diagnostics.Counters
     /// Abstract Counter
     /// </summary>
     /// <typeparam name="T">Type of counter</typeparam>
-    public abstract class Counter<T>: ICounter<T>, ICounterReader<T>
+    public abstract class Counter<T>: ICounter<T>, ICounterReader
     {
         private BlockingCollection<CounterItemValue<T>> _counterValues = new BlockingCollection<CounterItemValue<T>>();
 
@@ -46,10 +46,6 @@ namespace TWCore.Diagnostics.Counters
         /// Gets the counter level
         /// </summary>
         public CounterLevel Level { get; private set; }
-        /// <summary>
-        /// Type of value
-        /// </summary>
-        Type ICounterReader.TypeOfValue => typeof(T);
         #endregion
 
 
@@ -82,15 +78,17 @@ namespace TWCore.Diagnostics.Counters
         /// Takes a maximum number of values from the counter
         /// </summary>
         /// <returns>The counter value</returns>
-        CounterItem<T> ICounterReader<T>.Take(int items)
+        ICounterItem ICounterReader.Take(int items)
         {
-            var itemArray = new CounterItemValue<T>[items];
+            var lstItems = new List<CounterItemValue<T>>();
             var itemIdx = 0;
-            while(itemIdx < items && _counterValues.TryTake(out var item))
-                itemArray[itemIdx++] = item;
-            return new CounterItem<T>(Category, Name, Type, Level, itemArray);
+            while (itemIdx < items && _counterValues.TryTake(out var item))
+            {
+                lstItems.Add(item);
+                itemIdx++;
+            }
+            return new CounterItem<T>(Category, Name, Type, Level, lstItems);
         }
-
     }
 
 

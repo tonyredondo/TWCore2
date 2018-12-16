@@ -185,7 +185,8 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessCounters()
         {
-            Storage.Store(_counterReaders);
+            var counters = _counterReaders.Select(i => i.Take(1000));
+            Storage.Store(counters);
         }
         #endregion
     }

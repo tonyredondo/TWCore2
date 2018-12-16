@@ -14,17 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+
+using System;
+
 namespace TWCore.Diagnostics.Counters
 {
     /// <summary>
-    /// Counter reader interface
+    /// Counter item interface
     /// </summary>
-    public interface ICounterReader : ICounter
+    public interface ICounterItem
     {
         /// <summary>
-        /// Takes a maximum number of values from the counter
+        /// Gets or sets the counter category
         /// </summary>
-        /// <returns>The counter value</returns>
-        ICounterItem Take(int items);
+        string Category { get; set; }
+        /// <summary>
+        /// Gets or sets the counter name
+        /// </summary>
+        string Name { get; set; }
+        /// <summary>
+        /// Gets or sets the counter type
+        /// </summary>
+        CounterType Type { get; set; }
+        /// <summary>
+        /// Gets or sets the counter level
+        /// </summary>
+        CounterLevel Level { get; set; }
+        /// <summary>
+        /// Type of value
+        /// </summary>
+        Type TypeOfValue { get; }
     }
 }

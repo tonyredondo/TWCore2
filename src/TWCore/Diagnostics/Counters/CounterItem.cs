@@ -19,10 +19,10 @@ using System.Collections.Generic;
 
 namespace TWCore.Diagnostics.Counters
 {
-	/// <summary>
-	/// Counter item
-	/// </summary>
-	public sealed class CounterItem<T>
+    /// <summary>
+    /// Counter item
+    /// </summary>
+    public sealed class CounterItem<T> : ICounterItem
 	{
 		/// <summary>
 		/// Gets or sets the counter category
@@ -44,11 +44,15 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         /// <value>The counter level</value>
         public CounterLevel Level { get; set; }
-		/// <summary>
-		/// Gets or sets the values
-		/// </summary>
-		/// <value>The counter values</value>
-		public CounterItemValue<T>[] Values { get; set; }
+        /// <summary>
+        /// Type of value
+        /// </summary>
+        public Type TypeOfValue => typeof(T);
+        /// <summary>
+        /// Gets or sets the values
+        /// </summary>
+        /// <value>The counter values</value>
+        public List<CounterItemValue<T>> Values { get; set; }
 
         /// <summary>
         /// Counter item
@@ -62,7 +66,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="values">Counter values</param>
-        public CounterItem(string category, string name, CounterType type, CounterLevel level, CounterItemValue<T>[] values)
+        public CounterItem(string category, string name, CounterType type, CounterLevel level, List<CounterItemValue<T>> values)
         {
             Category = category;
             Name = name;

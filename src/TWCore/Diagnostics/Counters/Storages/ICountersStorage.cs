@@ -24,10 +24,10 @@ namespace TWCore.Diagnostics.Counters.Storages
 	/// </summary>
 	public interface ICountersStorage : IDisposable
 	{
-		/// <summary>
-		/// Store counters 
-		/// </summary>
-		/// <param name="counters">Counters enumerable</param>
-		void Store(IEnumerable<ICounterReader> counters);
+        /// <summary>
+        /// Store counters 
+        /// </summary>
+        /// <param name="counterItems">Counters items enumerables</param>
+        void Store(IEnumerable<ICounterItem> counterItems);
 	}
 }

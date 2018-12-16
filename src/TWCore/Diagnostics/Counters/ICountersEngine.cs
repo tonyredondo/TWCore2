@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 
-using System.Collections.ObjectModel;
 using TWCore.Diagnostics.Counters.Storages;
 
 namespace TWCore.Diagnostics.Counters

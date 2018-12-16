@@ -26,7 +26,6 @@ using TWCore.Settings;
 
 namespace TWCore.Diagnostics.Counters
 {
-
     /// <summary>
     /// Counters engine
     /// </summary>

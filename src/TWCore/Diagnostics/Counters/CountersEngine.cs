@@ -37,6 +37,10 @@ namespace TWCore.Diagnostics.Counters
         /// Gets the counter storage
         /// </summary>
         public ICountersStorage Storage { get; set; }
+        /// <summary>
+        /// Gets or sets the settings.
+        /// </summary>
+        public CountersEngineSettings Settings { get; } = Core.GetSettings<CountersEngineSettings>();
 
         #region .ctor
         /// <summary>
@@ -194,7 +198,7 @@ namespace TWCore.Diagnostics.Counters
         /// <summary>
         /// Counters engine sttings
         /// </summary>
-        public class CountersEngineSttings: SettingsBase
+        public class CountersEngineSettings: SettingsBase
         {
             /// <summary>
             /// Gets or sets the flush timeout in seconds

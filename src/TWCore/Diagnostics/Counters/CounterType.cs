@@ -30,13 +30,9 @@ namespace TWCore.Diagnostics.Counters
 		/// Average counter
 		/// </summary>
 		Average,
-		/// <summary>
-		/// Minimum counter
-		/// </summary>
-		Minimum,
-		/// <summary>
-		/// Maximum counter
-		/// </summary>
-		Maximum
+        /// <summary>
+        /// Current counter (Positive values are the cumulative; Positive + Negative values give us the Current Value)
+        /// </summary>
+        Current
 	}
 }

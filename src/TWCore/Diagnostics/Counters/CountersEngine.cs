@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using TWCore.Diagnostics.Counters.Storages;
 using TWCore.Settings;
 
@@ -33,6 +34,7 @@ namespace TWCore.Diagnostics.Counters
     {
         private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private Timer _timer = null;
         private bool _inProcess = false;
 
         /// <summary>
@@ -62,6 +64,19 @@ namespace TWCore.Diagnostics.Counters
         #endregion
 
         #region Public Methods
+        public void Start()
+        {
+            if (_timer == null)
+                _timer = new Timer(ProcessCounters);
+            _timer.Change(Settings.FlushTimeoutInSeconds * 1000, Settings.FlushTimeoutInSeconds * 1000);
+        }
+        public void Stop()
+        {
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+        #endregion 
+
+        #region ICountersEngine Methods
         /// <summary>
         /// Gets an integer counter
         /// </summary>
@@ -190,8 +205,9 @@ namespace TWCore.Diagnostics.Counters
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessCounters()
+        private void ProcessCounters(object state)
         {
+            if (Storage == null) return;
             if (_inProcess) return;
             _inProcess = true;
             try

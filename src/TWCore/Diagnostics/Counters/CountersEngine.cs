@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -32,6 +33,7 @@ namespace TWCore.Diagnostics.Counters
     {
         private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private bool _inProcess = false;
 
         /// <summary>
         /// Gets the counter storage
@@ -190,8 +192,18 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessCounters()
         {
-            var counters = _counterReaders.Select(i => i.Take(1000));
-            Storage.Store(counters);
+            if (_inProcess) return;
+            _inProcess = true;
+            try
+            {
+                var counters = _counterReaders.Select(i => i.Take(Settings.MaximumBatchPerCounter));
+                Storage.Store(counters);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            _inProcess = false;
         }
         #endregion
 

@@ -232,7 +232,7 @@ namespace TWCore.Diagnostics.Counters
         {
             var storages = _storages;
             if (storages == null) return;
-            if (storages.Length > 0) return;
+            if (storages.Length == 0) return;
             if (_inProcess) return;
             _inProcess = true;
             try

@@ -18,10 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Data.Schema;
@@ -46,6 +46,7 @@ namespace TWCore.Data
         private static readonly TimeoutDictionary<string, Dictionary<string, int>> ColumnsByNameOrQuery = new TimeoutDictionary<string, Dictionary<string, int>>();
         private static readonly DataAccessSettings Settings = Core.GetSettings<DataAccessSettings>();
         private string _connectionString;
+        private string _counterCategory;
 
         #region Properties
         /// <summary>
@@ -87,10 +88,6 @@ namespace TWCore.Data
         /// Cache for columns by name or query in seconds
         /// </summary>
         public int ColumnsByNameOrQueryCacheInSec { get; set; } = Settings.ColumnsByNameOrQueryCacheInSec;
-        /// <summary>
-        /// Cache timeout per command
-        /// </summary>
-        public TimeSpan CacheTimeout { get; set; }
         #endregion
 
         #region Events
@@ -107,10 +104,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected DataAccessBase()
         {
-            Core.Status.Attach(collection =>
-            {
-                collection.Add(nameof(CacheTimeout), CacheTimeout);
-            });
+            _counterCategory = GetType().Name + " DataAccess";
         }
         #endregion
 
@@ -167,12 +161,12 @@ namespace TWCore.Data
         protected virtual Dictionary<string, int> ExtractColumnNames(string nameOrQuery, DbDataReader reader)
         {
             if (ColumnsByNameOrQueryCacheInSec <= 0) return InternalExtractColumnNames(nameOrQuery, reader);
-            
+
             if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var result))
             {
-				if (result.Count == reader.FieldCount)
-					return result;
-				else
+                if (result.Count == reader.FieldCount)
+                    return result;
+                else
                     ColumnsByNameOrQuery.TryRemove(nameOrQuery, out result);
             }
             return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
@@ -200,73 +194,6 @@ namespace TWCore.Data
                 }
             }
             return dct;
-        }
-        #endregion
-
-        #region Cache Methods
-        private static readonly TimeoutDictionary<string, object> Caches = new TimeoutDictionary<string, object>();
-        /// <summary>
-        /// Gets the cache key for the name and input parameters
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <param name="fillMethod">Entity fill delegate</param>
-        /// <returns>Cache key string</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string GetCacheKey<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod)
-        {
-            var sb = new StringBuilder(nameOrQuery + ";");
-            if (parameters != null)
-            {
-                foreach (var item in parameters)
-                {
-                    sb.Append(item.Value != null ? $"{item.Key}:{item.Value};" : $"{item.Key};");
-                }
-            }
-            sb.Append($";{fillMethod?.GetType().FullName}");
-            return sb.ToString();
-        }
-        /// <summary>
-        /// Cache value
-        /// </summary>
-        /// <typeparam name="T">Entity type</typeparam>
-        protected class CacheValue<T>
-        {
-            /// <summary>
-            /// Response collection from a SelectElements method
-            /// </summary>
-            public readonly IEnumerable<T> ResponseCollection;
-            /// <summary>
-            /// Response from a SelectElement
-            /// </summary>
-            public readonly T Response;
-            /// <summary>
-            /// Return value object
-            /// </summary>
-            public readonly object ReturnValue;
-
-            #region .ctor
-            /// <summary>
-            /// Cache value
-            /// </summary>
-            /// <param name="responseCollection">Response collection from a SelectElements method</param>
-            /// <param name="returnValue">Return value object</param>
-            public CacheValue(IEnumerable<T> responseCollection, object returnValue)
-            {
-                ResponseCollection = responseCollection;
-                ReturnValue = returnValue;
-            }
-            /// <summary>
-            /// Cache value
-            /// </summary>
-            /// <param name="response">Response from a SelectElement</param>
-            /// <param name="returnValue">Return value object</param>
-            public CacheValue(T response, object returnValue)
-            {
-                Response = response;
-                ReturnValue = returnValue;
-            }
-            #endregion
         }
         #endregion
 
@@ -350,21 +277,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                    return OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
-
-                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out var cacheValue))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value = (CacheValue<T>)cacheValue;
-                    returnValue = value.ReturnValue;
-                    return value.ResponseCollection;
-                }
-
-                var col = OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
-                Caches.TryAdd(key, new CacheValue<T>(col, returnValue), CacheTimeout);
-                return col;
+                var sw = Stopwatch.StartNew();
+                var response = OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -434,18 +351,18 @@ namespace TWCore.Data
                         connection.Open();
                         using (var reader = command.ExecuteReader())
                         {
-							if (reader.Read())
-							{
-								var cIndex = ExtractColumnNames(nameOrQuery, reader);
-								var indexNumber = cIndex.Count;
-								entityBinder.ColumnIndex = cIndex;
-								do
-								{
-									var columns = new object[indexNumber];
-									reader.GetValues(columns);
-									lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
-								} while (reader.Read());
-							}
+                            if (reader.Read())
+                            {
+                                var cIndex = ExtractColumnNames(nameOrQuery, reader);
+                                var indexNumber = cIndex.Count;
+                                entityBinder.ColumnIndex = cIndex;
+                                do
+                                {
+                                    var columns = new object[indexNumber];
+                                    reader.GetValues(columns);
+                                    lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+                                } while (reader.Read());
+                            }
                         }
                         returnValue = returnValueParam?.Value;
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
@@ -546,21 +463,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                    return OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
-
-                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out var cacheValue))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value = (CacheValue<T>)cacheValue;
-                    returnValue = value.ReturnValue;
-                    return value.Response;
-                }
-
-                var item = OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
-                Caches.TryAdd(key, new CacheValue<T>(item, returnValue), CacheTimeout);
-                return item;
+                var sw = Stopwatch.StartNew();
+                var response = OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -681,7 +588,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Executing a non query sentence on the data source using: {0}", nameOrQuery);
-                return OnExecuteNonQuery(nameOrQuery, parameters);
+                var sw = Stopwatch.StartNew();
+                var response = OnExecuteNonQuery(nameOrQuery, parameters);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -767,7 +678,10 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Executing a non query sentence with IEnumerable of parameters on the data source using: {0}", nameOrQuery);
+                var sw = Stopwatch.StartNew();
                 OnExecuteNonQuery(nameOrQuery, parametersIEnumerable);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
             }
             catch (Exception ex)
             {
@@ -871,7 +785,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting an escalar value from the data source using: {0}", nameOrQuery);
-                return OnSelectScalar<T>(nameOrQuery, parameters);
+                var sw = Stopwatch.StartNew();
+                var response = OnSelectScalar<T>(nameOrQuery, parameters);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -1059,32 +977,13 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 1)
-                {
-                    var rs1 = new ResultSet<T1>(fillMethod1);
-                    var rs2 = new ResultSet<T2>(fillMethod2);
-                    OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }, out returnValue);
-                    return (rs1.Result, rs2.Result);
-                }
-                
-                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value1 = (CacheValue<T1>)cacheValue1;
-                    var value2 = (CacheValue<T2>)cacheValue2;
-                    returnValue = value1.ReturnValue;
-                    return (value1.ResponseCollection, value2.ResponseCollection);
-                }
-                    
-                var rs1T = new ResultSet<T1>(fillMethod1);
-                var rs2T = new ResultSet<T2>(fillMethod2);
-                OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T }, out returnValue);
-
-                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, returnValue), CacheTimeout);
-                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, returnValue), CacheTimeout);
-                return (rs1T.Result, rs2T.Result);
+                var sw = Stopwatch.StartNew();
+                var rs1 = new ResultSet<T1>(fillMethod1);
+                var rs2 = new ResultSet<T2>(fillMethod2);
+                OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }, out returnValue);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return (rs1.Result, rs2.Result);
             }
             catch (Exception ex)
             {
@@ -1234,36 +1133,14 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 1)
-                {
-                    var rs1 = new ResultSet<T1>(fillMethod1);
-                    var rs2 = new ResultSet<T2>(fillMethod2);
-                    var rs3 = new ResultSet<T3>(fillMethod3);
-                    OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }, out returnValue);
-                    return (rs1.Result, rs2.Result, rs3.Result);
-                }
-                
-                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                var key3 = GetCacheKey(nameOrQuery, parameters, fillMethod3);
-                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2) && Caches.TryGetValue(key3, out var cacheValue3))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value1 = (CacheValue<T1>)cacheValue1;
-                    var value2 = (CacheValue<T2>)cacheValue2;
-                    var value3 = (CacheValue<T3>)cacheValue3;
-                    returnValue = value1.ReturnValue;
-                    return (value1.ResponseCollection, value2.ResponseCollection, value3.ResponseCollection);
-                }
-                    
-                var rs1T = new ResultSet<T1>(fillMethod1);
-                var rs2T = new ResultSet<T2>(fillMethod2);
-                var rs3T = new ResultSet<T3>(fillMethod3);
-                OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T, rs3T }, out returnValue);
-
-                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, returnValue), CacheTimeout);
-                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, returnValue), CacheTimeout);
-                return (rs1T.Result, rs2T.Result, rs3T.Result);
+                var sw = Stopwatch.StartNew();
+                var rs1 = new ResultSet<T1>(fillMethod1);
+                var rs2 = new ResultSet<T2>(fillMethod2);
+                var rs3 = new ResultSet<T3>(fillMethod3);
+                OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }, out returnValue);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return (rs1.Result, rs2.Result, rs3.Result);
             }
             catch (Exception ex)
             {
@@ -1283,7 +1160,12 @@ namespace TWCore.Data
         /// <param name="returnValue">Return value from the data source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SelectResultSetsElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue)
-            => OnSelectElements(nameOrQuery, parameters, resultSets, out returnValue);
+        {
+            var sw = Stopwatch.StartNew();
+            OnSelectElements(nameOrQuery, parameters, resultSets, out returnValue);
+            sw.Stop();
+            Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+        }
         /// <summary>
         /// Selects a all Result sets with a collection of elements from the data source
         /// </summary>
@@ -1346,31 +1228,31 @@ namespace TWCore.Data
                             do
                             {
                                 var resultset = resultSets[resultSetIndex];
-								if (reader.Read())
-								{
-									var dct = new Dictionary<string, int>();
-									for (var i = 0; i < reader.FieldCount; i++)
-									{
-										var name = reader.GetName(i);
-										if (!dct.ContainsKey(name))
-											dct[name] = i;
-										else
-										{
-											var oIdx = dct[name];
-											var nIdx = i;
-											Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
-										}
-									}
-									var indexNumber = dct.Count;
-									resultset.SetColumnsOnBinder(dct);
+                                if (reader.Read())
+                                {
+                                    var dct = new Dictionary<string, int>();
+                                    for (var i = 0; i < reader.FieldCount; i++)
+                                    {
+                                        var name = reader.GetName(i);
+                                        if (!dct.ContainsKey(name))
+                                            dct[name] = i;
+                                        else
+                                        {
+                                            var oIdx = dct[name];
+                                            var nIdx = i;
+                                            Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+                                        }
+                                    }
+                                    var indexNumber = dct.Count;
+                                    resultset.SetColumnsOnBinder(dct);
 
-									do
-									{
-										var columns = new object[indexNumber];
-										reader.GetValues(columns);
-										resultset.AddRow(columns);
-									} while (reader.Read());
-								}
+                                    do
+                                    {
+                                        var columns = new object[indexNumber];
+                                        reader.GetValues(columns);
+                                        resultset.AddRow(columns);
+                                    } while (reader.Read());
+                                }
                                 resultSetIndex++;
                             } while (reader.NextResult() && resultSets.Length > resultSetIndex);
                         }
@@ -1430,20 +1312,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                    return await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-
-                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out var cacheValue))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value = (CacheValue<T>)cacheValue;
-                    return value.ResponseCollection;
-                }
-
-                var col = await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-                Caches.TryAdd(key, new CacheValue<T>(col, null), CacheTimeout);
-                return col;
+                var sw = Stopwatch.StartNew();
+                var response = await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -1502,18 +1375,18 @@ namespace TWCore.Data
                         await connection.OpenAsync().ConfigureAwait(false);
                         using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                         {
-							if (await reader.ReadAsync().ConfigureAwait(false))
-							{
-								var cIndex = ExtractColumnNames(nameOrQuery, reader);
-								var indexNumber = cIndex.Count;
-								entityBinder.ColumnIndex = cIndex;
-								do
-								{
-									var columns = new object[indexNumber];
-									reader.GetValues(columns);
-									lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
-								} while (await reader.ReadAsync().ConfigureAwait(false));
-							}
+                            if (await reader.ReadAsync().ConfigureAwait(false))
+                            {
+                                var cIndex = ExtractColumnNames(nameOrQuery, reader);
+                                var indexNumber = cIndex.Count;
+                                entityBinder.ColumnIndex = cIndex;
+                                do
+                                {
+                                    var columns = new object[indexNumber];
+                                    reader.GetValues(columns);
+                                    lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+                                } while (await reader.ReadAsync().ConfigureAwait(false));
+                            }
                         }
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
                         connection.Close();
@@ -1571,20 +1444,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                    return await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-
-                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out var cacheValue))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value = (CacheValue<T>)cacheValue;
-                    return value.Response;
-                }
-
-                var item = await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-                Caches.TryAdd(key, new CacheValue<T>(item, null), CacheTimeout);
-                return item;
+                var sw = Stopwatch.StartNew();
+                var response = await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -1692,7 +1556,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Executing a non query sentence on the data source using: {0}", nameOrQuery);
-                return await OnExecuteNonQueryAsync(nameOrQuery, parameters).ConfigureAwait(false);
+                var sw = Stopwatch.StartNew();
+                var response = await OnExecuteNonQueryAsync(nameOrQuery, parameters).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -1778,7 +1646,10 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Executing a non query sentence with IEnumerable of parameters on the data source using: {0}", nameOrQuery);
+                var sw = Stopwatch.StartNew();
                 await OnExecuteNonQueryAsync(nameOrQuery, parametersIEnumerable).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
             }
             catch (Exception ex)
             {
@@ -1839,7 +1710,7 @@ namespace TWCore.Data
                                 #endregion
                             }
                         }
-                        
+
                         try
                         {
                             transaction.Commit();
@@ -1886,7 +1757,11 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting an escalar value from the data source using: {0}", nameOrQuery);
-                return await OnSelectScalarAsync<T>(nameOrQuery, parameters).ConfigureAwait(false);
+                var sw = Stopwatch.StartNew();
+                var response = await OnSelectScalarAsync<T>(nameOrQuery, parameters).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return response;
             }
             catch (Exception ex)
             {
@@ -2059,31 +1934,13 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                {
-                    var rs1 = new ResultSet<T1>(fillMethod1);
-                    var rs2 = new ResultSet<T2>(fillMethod2);
-                    await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }).ConfigureAwait(false);
-                    return (rs1.Result, rs2.Result);
-                }
-                
-                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value1 = (CacheValue<T1>)cacheValue1;
-                    var value2 = (CacheValue<T2>)cacheValue2;
-                    return (value1.ResponseCollection, value2.ResponseCollection);
-                }
-                
-                var rs1T = new ResultSet<T1>(fillMethod1);
-                var rs2T = new ResultSet<T2>(fillMethod2);
-                await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T }).ConfigureAwait(false);
-
-                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, null), CacheTimeout);
-                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, null), CacheTimeout);
-                return (rs1T.Result, rs2T.Result);
+                var sw = Stopwatch.StartNew();
+                var rs1 = new ResultSet<T1>(fillMethod1);
+                var rs2 = new ResultSet<T2>(fillMethod2);
+                await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return (rs1.Result, rs2.Result);
             }
             catch (Exception ex)
             {
@@ -2216,35 +2073,14 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                {
-                    var rs1 = new ResultSet<T1>(fillMethod1);
-                    var rs2 = new ResultSet<T2>(fillMethod2);
-                    var rs3 = new ResultSet<T3>(fillMethod3);
-                    await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }).ConfigureAwait(false);
-                    return (rs1.Result, rs2.Result, rs3.Result);
-                }
-                
-                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                var key3 = GetCacheKey(nameOrQuery, parameters, fillMethod3);
-                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2) && Caches.TryGetValue(key3, out var cacheValue3))
-                {
-                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                    var value1 = (CacheValue<T1>)cacheValue1;
-                    var value2 = (CacheValue<T2>)cacheValue2;
-                    var value3 = (CacheValue<T3>)cacheValue3;
-                    return (value1.ResponseCollection, value2.ResponseCollection, value3.ResponseCollection);
-                }
-                
-                var rs1T = new ResultSet<T1>(fillMethod1);
-                var rs2T = new ResultSet<T2>(fillMethod2);
-                var rs3T = new ResultSet<T3>(fillMethod3);
-                await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T, rs3T }).ConfigureAwait(false);
-
-                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, null), CacheTimeout);
-                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, null), CacheTimeout);
-                return (rs1T.Result, rs2T.Result, rs3T.Result);
+                var sw = Stopwatch.StartNew();
+                var rs1 = new ResultSet<T1>(fillMethod1);
+                var rs2 = new ResultSet<T2>(fillMethod2);
+                var rs3 = new ResultSet<T3>(fillMethod3);
+                await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }).ConfigureAwait(false);
+                sw.Stop();
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+                return (rs1.Result, rs2.Result, rs3.Result);
             }
             catch (Exception ex)
             {
@@ -2262,8 +2098,13 @@ namespace TWCore.Data
         /// <param name="parameters">Inputs and outputs parameters</param>
         /// <param name="resultSets">Array of IResultSetItem instances to fill from the data source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task SelectResultSetsElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
-            => OnSelectElementsAsync(nameOrQuery, parameters, resultSets);
+        public async Task SelectResultSetsElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
+        {
+            var sw = Stopwatch.StartNew();
+            await OnSelectElementsAsync(nameOrQuery, parameters, resultSets).ConfigureAwait(false);
+            sw.Stop();
+            Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework).Add(sw.Elapsed.TotalMilliseconds);
+        }
         /// <summary>
         /// Selects a all Result sets with a collection of elements from the data source
         /// </summary>
@@ -2315,30 +2156,30 @@ namespace TWCore.Data
                             {
                                 var resultset = resultSets[resultSetIndex];
 
-								if (await reader.ReadAsync().ConfigureAwait(false))
-								{
-									var dct = new Dictionary<string, int>();
-									for (var i = 0; i < reader.FieldCount; i++)
-									{
-										var name = reader.GetName(i);
-										if (!dct.ContainsKey(name))
-											dct[name] = i;
-										else
-										{
-											var oIdx = dct[name];
-											var nIdx = i;
-											Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
-										}
-									}
-									var indexNumber = dct.Count;
-									resultset.SetColumnsOnBinder(dct);
-									do
-									{
-										var columns = new object[indexNumber];
-										reader.GetValues(columns);
-										resultset.AddRow(columns);
-									} while (await reader.ReadAsync().ConfigureAwait(false));
-								}
+                                if (await reader.ReadAsync().ConfigureAwait(false))
+                                {
+                                    var dct = new Dictionary<string, int>();
+                                    for (var i = 0; i < reader.FieldCount; i++)
+                                    {
+                                        var name = reader.GetName(i);
+                                        if (!dct.ContainsKey(name))
+                                            dct[name] = i;
+                                        else
+                                        {
+                                            var oIdx = dct[name];
+                                            var nIdx = i;
+                                            Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+                                        }
+                                    }
+                                    var indexNumber = dct.Count;
+                                    resultset.SetColumnsOnBinder(dct);
+                                    do
+                                    {
+                                        var columns = new object[indexNumber];
+                                        reader.GetValues(columns);
+                                        resultset.AddRow(columns);
+                                    } while (await reader.ReadAsync().ConfigureAwait(false));
+                                }
                                 resultSetIndex++;
                             } while (await reader.NextResultAsync().ConfigureAwait(false) && resultSets.Length > resultSetIndex);
                         }

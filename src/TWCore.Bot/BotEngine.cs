@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Collections;
+using TWCore.Diagnostics.Counters;
 
 namespace TWCore.Bot
 {
@@ -29,6 +30,11 @@ namespace TWCore.Bot
     /// </summary>
     public class BotEngine : IBotEngine
     {
+        const string CounterCategory = "Bot Engine";
+        private IntegerCounter _counterTrackedChat = Core.Counters.GetIntegerCounter(CounterCategory, "Tracked Chats", CounterType.Current, CounterLevel.Framework);
+        private IntegerCounter _counterMessagesSent = Core.Counters.GetIntegerCounter(CounterCategory, "Messages Sent", CounterType.Cumulative, CounterLevel.Framework);
+        private IntegerCounter _counterMessagesReceived = Core.Counters.GetIntegerCounter(CounterCategory, "Messages Received", CounterType.Cumulative, CounterLevel.Framework);
+
         #region Events
         /// <summary>
         /// Event when the tracked chats has been changed
@@ -103,6 +109,7 @@ namespace TWCore.Bot
 				if (TrackedChats.Contains(chat.Id)) return false;
                 TrackedChats.Add(chat);
                 Core.Log.LibVerbose("Chat Tracked");
+                _counterTrackedChat.Increment();
                 OnTrackedChatsChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -122,6 +129,7 @@ namespace TWCore.Bot
 				if (!TrackedChats.Contains(chat.Id)) return false;
                 TrackedChats.Remove(chat.Id);
                 Core.Log.LibVerbose("Chat UnTracked");
+                _counterTrackedChat.Decrement();
                 OnTrackedChatsChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -134,7 +142,11 @@ namespace TWCore.Bot
         public void UnTrackAllChats()
         {
             lock (TrackedChats)
+            {
+                var counts = TrackedChats.Count;
                 TrackedChats.Clear();
+                _counterTrackedChat.Add(-counts);
+            }
             OnTrackedChatsChanged?.Invoke(this, EventArgs.Empty);
             Core.Log.LibVerbose("All Chats UnTracked");
         }
@@ -190,6 +202,7 @@ namespace TWCore.Bot
             Core.Log.LibVerbose("Sending text message. ChatId = {0}, Message = {1}", chat?.Id, message);
             await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
             Core.Log.LibVerbose("Message sent.");
+            _counterMessagesSent.Increment();
         }
         /// <inheritdoc />
         /// <summary>
@@ -206,6 +219,7 @@ namespace TWCore.Bot
             foreach (var chat in TrackedChats)
 				await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
             Core.Log.LibVerbose("Messages sent.");
+            _counterMessagesSent.Increment();
         }
 		/// <inheritdoc />
 		/// <summary>
@@ -247,6 +261,7 @@ namespace TWCore.Bot
             if (!IsConnected) return;
             Core.Log.LibVerbose("Sending photo message. ChatId = {0}, FileName = {1}, Caption = {2}", chat?.Id, fileName, caption);
             await Transport.SendPhotoMessageAsync(chat, fileName, caption).ConfigureAwait(false);
+            _counterMessagesSent.Increment();
         }
         /// <inheritdoc />
         /// <summary>
@@ -262,6 +277,7 @@ namespace TWCore.Bot
             if (!IsConnected) return;
             Core.Log.LibVerbose("Sending photo message. ChatId = {0}, Caption = {1}", chat?.Id, caption);
             await Transport.SendPhotoMessageAsync(chat, fileStream, caption).ConfigureAwait(false);
+            _counterMessagesSent.Increment();
         }
         /// <inheritdoc />
         /// <summary>
@@ -275,8 +291,11 @@ namespace TWCore.Bot
         {
             if (!IsConnected) return;
             Core.Log.LibVerbose("Sending photo message to all tracked chats. FileName = {0}, Caption = {1}", fileName, caption);
-			foreach (var chat in TrackedChats)
+            foreach (var chat in TrackedChats)
+            {
                 await Transport.SendPhotoMessageAsync(chat, fileName, caption).ConfigureAwait(false);
+                _counterMessagesSent.Increment();
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -291,7 +310,10 @@ namespace TWCore.Bot
             if (!IsConnected) return;
             Core.Log.LibVerbose("Sending photo message to all tracked chats. Caption = {0}", caption);
             foreach (var chat in TrackedChats)
+            {
                 await Transport.SendPhotoMessageAsync(chat, fileStream, caption).ConfigureAwait(false);
+                _counterMessagesSent.Increment();
+            }
         }
         #endregion
 
@@ -301,6 +323,7 @@ namespace TWCore.Bot
             if (e?.Item1?.Text?.IsNullOrEmpty() != false) return;
 
             Core.Log.LibVerbose("Message received, looking for command...");
+            _counterMessagesReceived.Increment();
             var message = e.Item1;
             var sCommands = Commands.Where((cmd, sMessage) => cmd.Condition(sMessage.Text), message).ToArray();
             if (sCommands.Any())
@@ -336,6 +359,7 @@ namespace TWCore.Bot
         private void Transport_PhotoMessageReceived(object sender, EventArgs<BotPhotoMessage> e)
         {
             Core.Log.LibVerbose("Photo Message received...");
+            _counterMessagesReceived.Increment();
             var message = e.Item1;
 
             #region Get Chat

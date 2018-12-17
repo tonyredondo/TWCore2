@@ -240,9 +240,12 @@ namespace TWCore.Diagnostics.Counters
                 var counters = _counterReaders
                     .Select(i => i.Take(Settings.MaximumBatchPerCounter))
                     .RemoveNulls()
-                    .Enumerate();
-                foreach(var storage in storages)
-                    storage.Store(counters);
+                    .ToArray();
+                if (counters.Length > 0)
+                {
+                    foreach (var storage in storages)
+                        storage.Store(counters);
+                }
             }
             catch (Exception ex)
             {

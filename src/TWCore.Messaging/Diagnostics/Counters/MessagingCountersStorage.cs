@@ -27,7 +27,7 @@ using TWCore.Services;
 // ReSharper disable UnusedMember.Global
 
 
-namespace TWCore.Messaging.Diagnostics.Counters.Storages
+namespace TWCore.Diagnostics.Counters.Storages
 {
     /// <inheritdoc />
     /// <summary>
@@ -46,6 +46,14 @@ namespace TWCore.Messaging.Diagnostics.Counters.Storages
         public MessagingCountersStorage(string queueName)
         {
             _queueClient = Core.Services.GetQueueClient(queueName);
+        }
+        /// <summary>
+        /// Messaging log storage
+        /// </summary>
+        /// <param name="queueClient">Queue client</param>
+        public MessagingCountersStorage(IMQueueClient queueClient)
+        {
+            _queueClient = queueClient;
         }
         /// <summary>
         /// Messaging log storage finalizer

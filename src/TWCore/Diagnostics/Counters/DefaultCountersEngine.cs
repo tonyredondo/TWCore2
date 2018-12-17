@@ -277,7 +277,7 @@ namespace TWCore.Diagnostics.Counters
             /// <summary>
             /// Gets or sets the maximum counter values batch per counter
             /// </summary>
-            public int MaximumBatchPerCounter { get; set; } = 5000;
+            public int MaximumBatchPerCounter { get; set; } = 10000;
         }
     }
 }

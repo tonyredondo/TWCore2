@@ -39,6 +39,7 @@ namespace TWCore.Messaging.Client
     public abstract class MQueueClientBase : IMQueueClient
     {
         private readonly WeakDictionary<object, object> _receivedMessagesCache = new WeakDictionary<object, object>();
+        private MQClientCounters _counters;
 
         #region Properties
         /// <inheritdoc />
@@ -64,12 +65,6 @@ namespace TWCore.Messaging.Client
         /// Gets the current configuration
         /// </summary>
         public MQPairConfig Config { get; private set; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets the client counters
-        /// </summary>
-        [StatusReference]
-        public MQClientCounters Counters { get; }
         #endregion
 
         #region Events
@@ -96,7 +91,6 @@ namespace TWCore.Messaging.Client
         /// </summary>
         protected MQueueClientBase()
         {
-            Counters = new MQClientCounters();
 	        Core.Status.Attach(collection =>
 	        {
 		        collection.Add("Type", GetType().FullName);
@@ -125,6 +119,8 @@ namespace TWCore.Messaging.Client
             Config = config;
 
             Name = Config.Name;
+            _counters = new MQClientCounters(Name);
+
             SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
             if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
                 SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.RequestOptions?.CompressorEncodingType);
@@ -179,7 +175,7 @@ namespace TWCore.Messaging.Client
 			
             if (!await OnSendAsync(rqMsg).ConfigureAwait(false))
                 return Guid.Empty;
-            Counters.IncrementMessagesSent();
+            _counters.IncrementMessagesSent();
 
             if (rsea != null)
             {
@@ -217,8 +213,8 @@ namespace TWCore.Messaging.Client
             if (rsMsg is null) return default;
 
             rsMsg.Header.Response.ApplicationReceivedTime = Core.Now;
-            Counters.IncrementMessagesReceived();
-            Counters.IncrementReceivingTime(rsMsg.Header.Response.TotalTime);
+            _counters.IncrementMessagesReceived();
+            _counters.IncrementReceptionTime(rsMsg.Header.Response.TotalTime);
 
             if (OnResponseReceived != null || MQueueClientEvents.OnResponseReceived != null)
             {

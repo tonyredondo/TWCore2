@@ -32,13 +32,6 @@ namespace TWCore.Messaging.RawClient
     /// </summary>
     public interface IMQueueRawClient : IMQueue
     {
-        #region Properties
-        /// <summary>
-        /// Gets the client counters
-        /// </summary>
-        MQRawClientCounters Counters { get; }
-        #endregion
-
         #region Events
         /// <summary>
         /// Events that fires when a request message is sent

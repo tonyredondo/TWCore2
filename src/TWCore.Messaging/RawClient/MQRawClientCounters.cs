@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming
@@ -29,89 +30,23 @@ namespace TWCore.Messaging.RawClient
 	[StatusName("Counters")]
 	public class MQRawClientCounters
 	{
-		private Timer _timerTen;
-		private Timer _timerThirty;
-        private long _messagesSent;
-        private long _lastTenMinutesMessagesSent;
-        private long _lastThirtyMinutesMessagesSent;
-        private long _messagesReceived;
-        private long _lastTenMinutesMessagesReceived;
-        private long _lastThirtyMinutesMessagesReceived;
-        private long _totalBytesSent;
-        private long _totalBytesReceived;
-
-        #region Properties
-        /// <summary>
-        /// Number of messages Sent
-        /// </summary>
-        public long MessagesSent => _messagesSent;
-        /// <summary>
-        /// Number of messages sent in the last ten minutes
-        /// </summary>
-        public long LastTenMinutesMessagesSent => _lastTenMinutesMessagesSent;
-        /// <summary>
-        /// Number of messages sent in the last thirty minutes
-        /// </summary>
-        public long LastThirtyMinutesMessagesSent => _lastThirtyMinutesMessagesSent;
-
-        /// <summary>
-        /// Number of messages received
-        /// </summary>
-        public long MessagesReceived => _messagesReceived;
-        /// <summary>
-        /// Number of messages received in the last ten minutes
-        /// </summary>
-        public long LastTenMinutesMessagesReceived => _lastTenMinutesMessagesReceived;
-        /// <summary>
-        /// Number of messages received in the last thirty minutes
-        /// </summary>
-        public long LastThirtyMinutesMessagesReceived => _lastThirtyMinutesMessagesReceived;
-
-        /// <summary>
-        /// Total bytes sent
-        /// </summary>
-        public long TotalBytesSent => _totalBytesSent;
-        /// <summary>
-        /// Total bytes received
-        /// </summary>
-        public double TotalBytesReceived => _totalBytesReceived;
-        #endregion
+        const string Category = "Queue Raw Client";
+        private IntegerCounter _messagesSentCount;
+        private IntegerCounter _messagesReceivedCount;
+        private IntegerCounter _bytesSent;
+        private IntegerCounter _bytesReceived;
 
         #region .ctor
         /// <summary>
         /// Message queue server counters
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQRawClientCounters()
+		public MQRawClientCounters(string name)
 		{
-			_timerTen = new Timer(state =>
-			{
-                Interlocked.Exchange(ref _lastTenMinutesMessagesSent, 0);
-                Interlocked.Exchange(ref _lastTenMinutesMessagesReceived, 0);
-			}, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
-
-			_timerThirty = new Timer(state =>
-			{
-                Interlocked.Exchange(ref _lastThirtyMinutesMessagesSent, 0);
-                Interlocked.Exchange(ref _lastThirtyMinutesMessagesReceived, 0);
-			}, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
-
-			Core.Status.Attach(collection =>
-			{
-				collection.Add("Number of messages sent",
-					new StatusItemValueItem("Last 10 Minutes", LastTenMinutesMessagesSent, true),
-					new StatusItemValueItem("Last 30 Minutes", LastThirtyMinutesMessagesSent, true),
-					new StatusItemValueItem("Total", MessagesSent, true));
-
-				collection.Add("Number of messages received",
-					new StatusItemValueItem("Last 10 Minutes", LastTenMinutesMessagesReceived, true),
-					new StatusItemValueItem("Last 30 Minutes", LastThirtyMinutesMessagesReceived, true),
-					new StatusItemValueItem("Total", MessagesReceived, true));
-
-				collection.Add("Total Bytes",
-					new StatusItemValueItem("Sent bytes (MB)", TotalBytesSent.ToMegabytes(), true),
-					new StatusItemValueItem("Received bytes (MB)", TotalBytesReceived.ToMegabytes(), true));
-			});
+            _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework);
+            _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework);
+            _bytesSent = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework);
+            _bytesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework);
 		}
 		#endregion
 
@@ -121,18 +56,18 @@ namespace TWCore.Messaging.RawClient
 		/// </summary>
 		/// <param name="increment">Increment value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalBytesSent(long increment)
+		public void IncrementTotalBytesSent(int increment)
 		{
-            Interlocked.Add(ref _totalBytesSent, increment);
+            _bytesSent.Add(increment);
 		}
 		/// <summary>
 		/// Increments the total bytes received
 		/// </summary>
 		/// <param name="increment">Increment value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalBytesReceived(long increment)
+		public void IncrementTotalBytesReceived(int increment)
 		{
-            Interlocked.Add(ref _totalBytesReceived, increment);
+            _bytesReceived.Add(increment);
 		}
 		/// <summary>
 		/// Increments the messages sent
@@ -140,9 +75,7 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesSent()
 		{
-            Interlocked.Increment(ref _messagesSent);
-            Interlocked.Increment(ref _lastTenMinutesMessagesSent);
-            Interlocked.Increment(ref _lastThirtyMinutesMessagesSent);
+            _messagesSentCount.Increment();
 		}
 		/// <summary>
 		/// Increment the message received
@@ -150,9 +83,7 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesReceived()
 		{
-            Interlocked.Increment(ref _messagesReceived);
-            Interlocked.Increment(ref _lastTenMinutesMessagesReceived);
-            Interlocked.Increment(ref _lastThirtyMinutesMessagesReceived);
+            _messagesReceivedCount.Increment();
 		}
 		#endregion
 	}

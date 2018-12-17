@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
@@ -52,5 +53,11 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="message">Message to handle</param>
         /// <returns>Process task</returns>
 		Task ProcessStatusMessageAsync(StatusItemCollection message);
+        /// <summary>
+        /// Process Counters message
+        /// </summary>
+        /// <param name="message">Message to handle</param>
+        /// <returns>Process task</returns>
+        Task ProcessCountersMessageAsync(List<ICounterItem> message);
     }
 }

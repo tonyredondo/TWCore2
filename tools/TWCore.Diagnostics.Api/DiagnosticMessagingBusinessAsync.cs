@@ -22,6 +22,7 @@ using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
@@ -30,7 +31,7 @@ using TWCore.Services.Messaging;
 
 namespace TWCore.Diagnostics.Api
 {
-	public class DiagnosticMessagingBusinessAsync : BusinessAsyncBase<List<LogItem>, List<GroupMetadata>, List<MessagingTraceItem>, StatusItemCollection>
+	public class DiagnosticMessagingBusinessAsync : BusinessAsyncBase<List<LogItem>, List<GroupMetadata>, List<MessagingTraceItem>, StatusItemCollection, List<ICounterItem>>
 	{
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<object> OnProcessAsync(List<LogItem> message)
@@ -61,6 +62,14 @@ namespace TWCore.Diagnostics.Api
         {
 			if (message is null) return ResponseMessage.NoResponse;
 			await DbHandlers.Instance.Messages.ProcessStatusMessageAsync(message).ConfigureAwait(false);
+            return ResponseMessage.NoResponse;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override async Task<object> OnProcessAsync(List<ICounterItem> message)
+        {
+			if (message is null) return ResponseMessage.NoResponse;
+            await DbHandlers.Instance.Messages.ProcessCountersMessageAsync(message).ConfigureAwait(false);
             return ResponseMessage.NoResponse;
         }
     }

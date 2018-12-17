@@ -44,7 +44,7 @@ namespace TWCore.Messaging.Client
 		{
             _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework);
             _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework);
-            _receptionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Reception Time", CounterType.Cumulative, CounterLevel.Framework);
+            _receptionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Reception Time", CounterType.Average, CounterLevel.Framework);
 		}
 		#endregion
 

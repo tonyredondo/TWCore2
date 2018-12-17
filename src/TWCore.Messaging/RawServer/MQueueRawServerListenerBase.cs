@@ -91,7 +91,7 @@ namespace TWCore.Messaging.RawServer
         {
             Connection = connection;
             Config = server.Config;
-            Counters = new MQRawServerCounters();
+            Counters = new MQRawServerCounters(server.Name + "\\" + connection?.Route);
             ReceiverSerializer = server.ReceiverSerializer;
             ResponseServer = responseServer;
             Core.Status.Attach(collection =>

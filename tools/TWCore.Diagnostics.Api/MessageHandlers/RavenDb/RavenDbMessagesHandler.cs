@@ -320,7 +320,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
         public async Task ProcessCountersMessageAsync(List<ICounterItem> message)
         {
-            using (Watch.Create("Processing Counter item List Message", LogLevel.InfoBasic))
+            using (var watch = Watch.Create("Processing Counter item List Message", LogLevel.InfoBasic))
             {
                 foreach (var counter in message)
                 {
@@ -347,6 +347,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             await session.StoreAsync(cEntity).ConfigureAwait(false);
                         }
                     }).ConfigureAwait(false);
+                    watch.Tap("Ensuring counters");
+
 
                     if (counter is CounterItem<int> intCounter)
                     {
@@ -417,8 +419,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             }
                         }).ConfigureAwait(false);
                     }
-
-
+                    watch.Tap("Adding counters values");
                 }
             }
         }

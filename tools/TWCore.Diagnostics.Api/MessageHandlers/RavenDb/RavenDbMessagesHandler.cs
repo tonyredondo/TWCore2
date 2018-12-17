@@ -345,6 +345,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 TypeOfValue = counter.TypeOfValue.Name
                             };
                             await session.StoreAsync(cEntity).ConfigureAwait(false);
+                            await session.SaveChangesAsync().ConfigureAwait(false);
                         }
                     }).ConfigureAwait(false);
                     watch.Tap("Ensuring counters");

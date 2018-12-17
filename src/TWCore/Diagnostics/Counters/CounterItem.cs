@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Diagnostics.Counters
 {
@@ -49,6 +50,10 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         public Type TypeOfValue => typeof(T);
         /// <summary>
+        /// Values Count
+        /// </summary>
+        public int Count => Values.Count;
+        /// <summary>
         /// Gets or sets the values
         /// </summary>
         /// <value>The counter values</value>
@@ -57,6 +62,7 @@ namespace TWCore.Diagnostics.Counters
         /// <summary>
         /// Counter item
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CounterItem() { }
         /// <summary>
         /// Counter item
@@ -66,6 +72,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="values">Counter values</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CounterItem(string category, string name, CounterType type, CounterLevel level, List<CounterItemValue<T>> values)
         {
             Category = category;
@@ -93,13 +100,14 @@ namespace TWCore.Diagnostics.Counters
 		/// Counter item
 		/// </summary>
 		public CounterItemValue() { }
-		/// <summary>
-		/// Counter item
-		/// </summary>
-		/// <param name="timestamp">Counter value timestamp</param>
-		/// <param name="value">Counter value</param>
-		public CounterItemValue(DateTime timestamp, T value)
-		{
+        /// <summary>
+        /// Counter item
+        /// </summary>
+        /// <param name="timestamp">Counter value timestamp</param>
+        /// <param name="value">Counter value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public CounterItemValue(DateTime timestamp, T value)
+        {
 			Timestamp = timestamp;
 			Value = value;
 		}

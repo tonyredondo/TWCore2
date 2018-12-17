@@ -50,7 +50,7 @@ namespace TWCore.Diagnostics.Log
         /// Log storages items
         /// </summary>
         [StatusReference]
-        public LogStorageCollection Storage { get; }
+        public LogStorageCollection Storages { get; }
         /// <inheritdoc />
         /// <summary>
         /// Max log level to register in logs
@@ -82,21 +82,21 @@ namespace TWCore.Diagnostics.Log
         public DefaultLogEngine()
         {
             MaxLogLevel = LogLevel.LibVerbose;
-            Storage = new LogStorageCollection();
-            _itemsWorker = new Worker<IGroupItem>(() => Storage?.Count > 0, item =>
+            Storages = new LogStorageCollection();
+            _itemsWorker = new Worker<IGroupItem>(() => Storages?.Count > 0, item =>
             {
                 switch (item)
                 {
                     case null:
                         return Task.CompletedTask;
                     case NewLineLogItem _:
-                        return Storage.WriteEmptyLineAsync();
+                        return Storages.WriteEmptyLineAsync();
                     case LogItem lItem:
-                        return Storage.WriteAsync(lItem).ContinueWith(_ => LogItem.Store(lItem), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                        return Storages.WriteAsync(lItem).ContinueWith(_ => LogItem.Store(lItem), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     case ILogItem iLitem:
-                        return Storage.WriteAsync(iLitem);
+                        return Storages.WriteAsync(iLitem);
                     case IGroupMetadata gMeta:
-                        return Storage.WriteAsync(gMeta);
+                        return Storages.WriteAsync(gMeta);
                     default:
                         return Task.CompletedTask;
                 }
@@ -128,7 +128,7 @@ namespace TWCore.Diagnostics.Log
             {
                 _itemsWorker?.StopAsync(int.MaxValue).WaitAsync();
                 _itemsWorker?.Clear();
-                Storage?.Dispose();
+                Storages?.Dispose();
             }
             _disposedValue = true;
         }
@@ -155,7 +155,7 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(ILogItem item)
         {
-            if (!Enabled || item is null || item.Level > MaxLogLevel || item.Level > Storage.GetMaxLogLevel()) return;
+            if (!Enabled || item is null || item.Level > MaxLogLevel || item.Level > Storages.GetMaxLogLevel()) return;
             if (_itemsWorker?.Count < MaximumItemsInQueue)
             {
                 _completationHandler.Reset();
@@ -176,7 +176,7 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(LogLevel level, string code, string message, string groupName, Exception ex = null, string assemblyName = null, string typeName = null)
         {
-            if (!Enabled || level > MaxLogLevel || level > Storage.GetMaxLogLevel()) return;
+            if (!Enabled || level > MaxLogLevel || level > Storages.GetMaxLogLevel()) return;
             var item = CreateLogItem(level, code, message, groupName, ex, assemblyName, typeName);
             Write(item);
             if (level == LogLevel.Error)
@@ -1688,7 +1688,7 @@ namespace TWCore.Diagnostics.Log
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsLogLevelValid(LogLevel logLevel)
-            => Storage.Count <= 0 || (logLevel <= MaxLogLevel && logLevel <= Storage.GetMaxLogLevel());
+            => Storages.Count <= 0 || (logLevel <= MaxLogLevel && logLevel <= Storages.GetMaxLogLevel());
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteUnsafe(LogLevel level, string groupName, string message, Exception ex = null)
         {

@@ -18,6 +18,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Diagnostics.Counters
 {
@@ -57,6 +58,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Counter(string category, string name, CounterType type, CounterLevel level)
         {
             Category = category;
@@ -70,6 +72,7 @@ namespace TWCore.Diagnostics.Counters
         /// Add the specified value
         /// </summary>
         /// <param name="value">Value to be added to the counter</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T value)
         {
             _counterValues.Add(new CounterItemValue<T>(Core.Now, value));
@@ -78,8 +81,10 @@ namespace TWCore.Diagnostics.Counters
         /// Takes a maximum number of values from the counter
         /// </summary>
         /// <returns>The counter value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ICounterItem ICounterReader.Take(int items)
         {
+            if (_counterValues.Count == 0) return null;
             var lstItems = new List<CounterItemValue<T>>();
             var itemIdx = 0;
             while (itemIdx < items && _counterValues.TryTake(out var item))
@@ -104,8 +109,25 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal IntegerCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
         {
+        }
+        /// <summary>
+        /// Increment value
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Increment()
+        {
+            base.Add(1);
+        }
+        /// <summary>
+        /// Decrement value
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Decrement()
+        {
+            base.Add(-1);
         }
     }
     /// <summary>
@@ -120,6 +142,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal DoubleCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
         {
         }
@@ -136,6 +159,7 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal DecimalCounter(string category, string name, CounterType type, CounterLevel level) : base(category, name, type, level)
         {
         }

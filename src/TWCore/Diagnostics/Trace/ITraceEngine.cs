@@ -30,7 +30,7 @@ namespace TWCore.Diagnostics.Trace
         /// <summary>
         /// Trace storages items
         /// </summary>
-        TraceStorageCollection Storage { get; }
+        TraceStorageCollection Storages { get; }
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>

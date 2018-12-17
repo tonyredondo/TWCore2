@@ -15,19 +15,12 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Generic;
 
-namespace TWCore.Diagnostics.Counters.Storages
+namespace TWCore.Diagnostics.Counters
 {
     /// <summary>
-    /// Counters Storage interface
+    /// Create new counters engine delegate
     /// </summary>
-    public interface ICountersStorage : IDisposable
-	{
-        /// <summary>
-        /// Store counters 
-        /// </summary>
-        /// <param name="counterItems">Counters items enumerables</param>
-        void Store(IEnumerable<ICounterItem> counterItems);
-	}
+    /// <returns>New Counters engine</returns>
+    public delegate ICountersEngine CreateCountersEngineDelegate();
 }

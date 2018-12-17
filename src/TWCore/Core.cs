@@ -27,6 +27,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
+using TWCore.Diagnostics.Counters;
+using TWCore.Diagnostics.Counters.Storages;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Log.Storages;
 using TWCore.Diagnostics.Status;
@@ -99,6 +101,10 @@ namespace TWCore
         /// Default Status engine instance
         /// </summary>
         public static IStatusEngine Status { get; private set; }
+        /// <summary>
+        /// Default Counters engine instance
+        /// </summary>
+        public static ICountersEngine Counters { get; private set; }
         /// <summary>
         /// App global data dictionary
         /// </summary>
@@ -225,6 +231,7 @@ namespace TWCore
             Status = Factory.CreateStatusEngine();
             Log = Factory.CreateLogEngine();
             Trace = Factory.CreateTraceEngine();
+            Counters = Factory.CreateCountersEngine();
             factories.Init();
             GlobalSettings.ReloadSettings();
             DebugMode = DebugMode || GlobalSettings.DebugMode;
@@ -276,13 +283,13 @@ namespace TWCore
                             Log.LibDebug("Console log storage already added, ignoring.");
                             continue;
                         }
-                        Log.Storage.Add(lSto, Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
+                        Log.Storages.Add(lSto, Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
                     }
                 }
-                var logStorage = Log.Storage.Get(typeof(ConsoleLogStorage));
+                var logStorage = Log.Storages.Get(typeof(ConsoleLogStorage));
                 if (!Settings["Core.Log.Storage.Console.Enabled"].ParseTo(true))
-                    Log.Storage.Remove(logStorage);
-                Log.Storage.ChangeStorageLogLevel(logStorage, Settings["Core.Log.Storage.Console.LogLevel"].ParseTo(LogStorageCollection.AllLevels));
+                    Log.Storages.Remove(logStorage);
+                Log.Storages.ChangeStorageLogLevel(logStorage, Settings["Core.Log.Storage.Console.LogLevel"].ParseTo(LogStorageCollection.AllLevels));
                 Log.MaxLogLevel = (LogLevel)GlobalSettings.LogMaxLogLevel;
                 Log.Enabled = GlobalSettings.LogEnabled;
 
@@ -301,7 +308,7 @@ namespace TWCore
                             Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ITraceStorage).Name, name);
                             continue;
                         }
-                        Trace.Storage.Add(lTrace);
+                        Trace.Storages.Add(lTrace);
                     }
                 }
                 Trace.Enabled = GlobalSettings.TraceEnabled;
@@ -325,6 +332,25 @@ namespace TWCore
                     }
                 }
                 Status.Enabled = GlobalSettings.StatusEnabled;
+
+                //Init Counters
+                Log.LibDebug("Loading counters engine configuration");
+                var countersStorages = Injector.GetNames<ICountersStorage>();
+                if (countersStorages?.Any() == true)
+                {
+                    foreach(var name in countersStorages)
+                    {
+                        if (!Settings[$"Core.Counters.Storage.{name}.Enabled"].ParseTo(false)) continue;
+                        Log.LibDebug("Loading counter storage: {0}", name);
+                        var lCounter = Injector.New<ICountersStorage>(name);
+                        if (lCounter is null)
+                        {
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ICountersStorage).Name, name);
+                            continue;
+                        }
+                        Counters.Storages.Add(lCounter);
+                    }
+                }
             }
             #endregion
             
@@ -383,7 +409,8 @@ namespace TWCore
                 }
             }
             #endregion
-            
+
+            Counters.Start();
             Log.Start();
 
             if (onError)
@@ -669,6 +696,16 @@ namespace TWCore
         {
             if (engine != null)
                 Status = engine;
+        }
+        /// <summary>
+        /// Sets a new Counters Engine
+        /// </summary>
+        /// <param name="engine">Counters engine intance, if is null then is ignored</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetCountersEngine(ICountersEngine engine)
+        {
+            if (engine != null)
+                Counters = engine;
         }
         #endregion
 
@@ -1005,6 +1042,7 @@ namespace TWCore
             Log?.Dispose();
             Trace?.Dispose();
             Status?.Dispose();
+            Counters?.Dispose();
             Data?.Clear();
             Settings?.Clear();
             Injector?.Dispose();

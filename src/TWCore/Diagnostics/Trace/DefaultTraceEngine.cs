@@ -40,7 +40,7 @@ namespace TWCore.Diagnostics.Trace
         /// Trace storages items
         /// </summary>
         [StatusReference]
-        public TraceStorageCollection Storage { get; }
+        public TraceStorageCollection Storages { get; }
         /// <inheritdoc />
         /// <summary>
         /// Enable or Disable the Trace engine
@@ -56,13 +56,13 @@ namespace TWCore.Diagnostics.Trace
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DefaultTraceEngine()
         {
-            Storage = new TraceStorageCollection();
-            _itemsWorker = new Worker<TraceItem>(() => !_disposed && Storage.Count > 0, async item =>
+            Storages = new TraceStorageCollection();
+            _itemsWorker = new Worker<TraceItem>(() => !_disposed && Storages.Count > 0, async item =>
             {
                 if (item is null) return;
                 try
                 {
-                    await Storage.WriteAsync(item).ConfigureAwait(false);
+                    await Storages.WriteAsync(item).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -92,7 +92,7 @@ namespace TWCore.Diagnostics.Trace
         {
             if (_disposed) return;
             if (!Enabled || item is null) return;
-            if (Storage.Count == 0)
+            if (Storages.Count == 0)
             {
                 Core.Log.Warning("There are any trace storage defined. The item can't be traced.");
                 return;
@@ -213,7 +213,7 @@ namespace TWCore.Diagnostics.Trace
             _disposed = true;
             _itemsWorker?.StopAsync(50).WaitAsync();
             _itemsWorker?.Clear();
-            Storage?.Clear();
+            Storages?.Clear();
         }
         #endregion
 

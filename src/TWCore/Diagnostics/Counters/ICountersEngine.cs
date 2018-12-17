@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 
+using System;
+using System.Collections.ObjectModel;
 using TWCore.Diagnostics.Counters.Storages;
 
 namespace TWCore.Diagnostics.Counters
@@ -22,21 +24,29 @@ namespace TWCore.Diagnostics.Counters
 	/// <summary>
 	/// Counter engine interface
 	/// </summary>
-	public interface ICountersEngine
+	public interface ICountersEngine : IDisposable
 	{
         /// <summary>
         /// Gets the counter storage
         /// </summary>
-        ICountersStorage Storage { get; set; }
-		/// <summary>
-		/// Gets an integer counter
-		/// </summary>
-		/// <returns>The integer counter</returns>
-		/// <param name="category">Counter category</param>
-		/// <param name="name">Counter name</param>
-		/// <param name="type">Counter type</param>
+        ObservableCollection<ICountersStorage> Storages { get; set; }
+        /// <summary>
+        /// Start engine
+        /// </summary>
+        void Start();
+        /// <summary>
+        /// Stop engine
+        /// </summary>
+        void Stop();
+        /// <summary>
+        /// Gets an integer counter
+        /// </summary>
+        /// <returns>The integer counter</returns>
+        /// <param name="category">Counter category</param>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
-		IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
+        IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User);
 		/// <summary>
 		/// Gets an integer counter
 		/// </summary>

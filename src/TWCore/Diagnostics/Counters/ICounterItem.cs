@@ -44,5 +44,9 @@ namespace TWCore.Diagnostics.Counters
         /// Type of value
         /// </summary>
         Type TypeOfValue { get; }
+        /// <summary>
+        /// Values Count
+        /// </summary>
+        int Count { get; }
     }
 }

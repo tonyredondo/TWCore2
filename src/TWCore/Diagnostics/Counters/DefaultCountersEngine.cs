@@ -29,17 +29,18 @@ namespace TWCore.Diagnostics.Counters
     /// <summary>
     /// Counters engine
     /// </summary>
-    public class CountersEngine : ICountersEngine
+    public class DefaultCountersEngine : ICountersEngine
     {
         private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private ICountersStorage[] _storages = null;
         private Timer _timer = null;
         private bool _inProcess = false;
 
         /// <summary>
         /// Gets the counter storage
         /// </summary>
-        public ICountersStorage Storage { get; set; }
+        public ObservableCollection<ICountersStorage> Storages { get; set; }
         /// <summary>
         /// Gets or sets the settings.
         /// </summary>
@@ -49,26 +50,49 @@ namespace TWCore.Diagnostics.Counters
         /// <summary>
         /// Counters engine
         /// </summary>
-        public CountersEngine()
+        public DefaultCountersEngine()
         {
+            Storages = new ObservableCollection<ICountersStorage>();
+            Storages.CollectionChanged += (sender, e) => 
+            {
+                _storages = Storages.ToArray();
+            };
         }
         /// <summary>
         /// Counters engine
         /// </summary>
-        /// <param name="storage">Counter storage</param>
-        public CountersEngine(ICountersStorage storage)
+        /// <param name="storages">Counter storages</param>
+        public DefaultCountersEngine(params ICountersStorage[] storages)
         {
-            Storage = storage;
+            Storages = new ObservableCollection<ICountersStorage>();
+            if (storages != null)
+            {
+                foreach (var storage in storages)
+                    Storages.Add(storage);
+                _storages = Storages.ToArray();
+            }
+            Storages.CollectionChanged += (sender, e) =>
+           {
+               _storages = Storages.ToArray();
+           };
         }
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Start engine
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Start()
         {
             if (_timer == null)
                 _timer = new Timer(ProcessCounters);
             _timer.Change(Settings.FlushTimeoutInSeconds * 1000, Settings.FlushTimeoutInSeconds * 1000);
         }
+        /// <summary>
+        /// Stop engine
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Stop()
         {
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -206,19 +230,38 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessCounters(object state)
         {
-            if (Storage == null) return;
+            var storages = _storages;
+            if (storages == null) return;
+            if (storages.Length > 0) return;
             if (_inProcess) return;
             _inProcess = true;
             try
             {
-                var counters = _counterReaders.Select(i => i.Take(Settings.MaximumBatchPerCounter));
-                Storage.Store(counters);
+                var counters = _counterReaders
+                    .Select(i => i.Take(Settings.MaximumBatchPerCounter))
+                    .RemoveNulls()
+                    .Enumerate();
+                foreach(var storage in storages)
+                    storage.Store(counters);
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }
             _inProcess = false;
+        }
+        #endregion
+
+        #region Disposable
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Stop();
+            _counters.Clear();
+            _counterReaders.Dispose();
+            _storages = null;
         }
         #endregion
 
@@ -234,7 +277,7 @@ namespace TWCore.Diagnostics.Counters
             /// <summary>
             /// Gets or sets the maximum counter values batch per counter
             /// </summary>
-            public int MaximumBatchPerCounter { get; set; } = 1000;
+            public int MaximumBatchPerCounter { get; set; } = 2500;
         }
     }
 }

@@ -20,14 +20,27 @@ using System.Collections.Generic;
 namespace TWCore.Diagnostics.Counters.Storages
 {
     /// <summary>
-    /// Counters Storage interface
+    /// Console counters storage
     /// </summary>
-    public interface ICountersStorage : IDisposable
-	{
+    public class ConsoleCountersStorage : ICountersStorage
+    {
         /// <summary>
         /// Store counters 
         /// </summary>
         /// <param name="counterItems">Counters items enumerables</param>
-        void Store(IEnumerable<ICounterItem> counterItems);
-	}
+        public void Store(IEnumerable<ICounterItem> counterItems)
+        {
+            if (counterItems == null) return;
+            foreach(var counter in counterItems)
+            {
+                Console.WriteLine($"Category: {counter.Category}, Name: {counter.Name}, Type: {counter.Type}, ValueType: {counter.TypeOfValue.Name}, Count: {counter.Count}.");
+            }
+        }
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+        }
+    }
 }

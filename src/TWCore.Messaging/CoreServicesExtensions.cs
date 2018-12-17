@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
+using TWCore.Messaging.RawClient;
 using TWCore.Messaging.RawServer;
 using TWCore.Messaging.Server;
 using TWCore.Serialization;
@@ -94,6 +95,20 @@ namespace TWCore.Services
             Init();
             if (_queues?.Items?.Contains(queuePairName) == true)
                 return _queues.Items[queuePairName].GetClient();
+            throw new NullReferenceException($"The Queue Pair Name: {queuePairName} not found in the configuration file.");
+        }
+        /// <summary>
+        /// Gets a queue raw client instance
+        /// </summary>
+        /// <param name="services">CoreServices instance</param>
+        /// <param name="queuePairName">Queue config pair name</param>
+        /// <returns>IMQueueClient instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IMQueueRawClient GetQueueRawClient(this CoreServices services, string queuePairName)
+        {
+            Init();
+            if (_queues?.Items?.Contains(queuePairName) == true)
+                return _queues.Items[queuePairName].GetRawClient();
             throw new NullReferenceException($"The Queue Pair Name: {queuePairName} not found in the configuration file.");
         }
         /// <summary>

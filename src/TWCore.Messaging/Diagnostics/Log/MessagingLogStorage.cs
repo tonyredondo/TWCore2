@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
-using TWCore.Messaging.Client;
+using TWCore.Messaging.RawClient;
 using TWCore.Services;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable CheckNamespace
@@ -40,7 +40,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private volatile bool _processing;
         private int _count;
         private readonly BlockingCollection<object> _items;
-        private IMQueueClient _queueClient;
+        private IMQueueRawClient _queueClient;
         private readonly IPool<List<LogItem>> _pool;
         private readonly IPool<List<GroupMetadata>> _poolGroup;
         private bool _enabled = true;
@@ -169,7 +169,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", logItemsToSend.Count + metadataToSend.Count);
                 if (_queueClient is null)
                 {
-                    _queueClient = Core.Services.GetQueueClient(_queueName);
+                    _queueClient = Core.Services.GetQueueRawClient(_queueName);
                     Core.Status.AttachChild(_queueClient, this);
                 }
 

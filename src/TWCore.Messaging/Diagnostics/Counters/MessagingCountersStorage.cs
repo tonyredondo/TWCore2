@@ -17,10 +17,8 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TWCore.Diagnostics.Counters;
-using TWCore.Diagnostics.Counters.Storages;
 using TWCore.Diagnostics.Status;
-using TWCore.Messaging.Client;
+using TWCore.Messaging.RawClient;
 using TWCore.Services;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable CheckNamespace
@@ -36,7 +34,7 @@ namespace TWCore.Diagnostics.Counters.Storages
     [StatusName("Messaging Counters")]
     public class MessagingCountersStorage : ICountersStorage
     {
-        private IMQueueClient _queueClient;
+        private IMQueueRawClient _queueClient;
 
         #region .ctor
         /// <summary>
@@ -45,13 +43,13 @@ namespace TWCore.Diagnostics.Counters.Storages
         /// <param name="queueName">Queue pair config name</param>
         public MessagingCountersStorage(string queueName)
         {
-            _queueClient = Core.Services.GetQueueClient(queueName);
+            _queueClient = Core.Services.GetQueueRawClient(queueName);
         }
         /// <summary>
         /// Messaging log storage
         /// </summary>
         /// <param name="queueClient">Queue client</param>
-        public MessagingCountersStorage(IMQueueClient queueClient)
+        public MessagingCountersStorage(IMQueueRawClient queueClient)
         {
             _queueClient = queueClient;
         }

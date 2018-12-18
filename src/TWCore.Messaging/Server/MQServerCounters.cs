@@ -38,6 +38,7 @@ namespace TWCore.Messaging.Server
         private readonly IntegerCounter _totalMessagesProcessed = null;
         private readonly IntegerCounter _totalExceptions = null;
         private readonly DoubleCounter _totalReceivingTime = null;
+        private readonly IntegerCounter _totalReceivingBytes = null;
 
         /// <summary>
         /// Current Messages
@@ -59,10 +60,20 @@ namespace TWCore.Messaging.Server
             _totalMessagesProcessed = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Processed", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _totalExceptions = Core.Counters.GetIntegerCounter(Category, name + @"\Exceptions", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _totalReceivingTime = Core.Counters.GetDoubleCounter(Category, name + @"\Receiving Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging);
+            _totalReceivingBytes = Core.Counters.GetIntegerCounter(Category, name + @"\Receiving Bytes", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
         }
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Increments the total receiving time
+        /// </summary>
+        /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void IncrementTotalReceivingBytes(int increment)
+        {
+            _totalReceivingBytes?.Add(increment);
+        }
         /// <summary>
         /// Increments the receiving time
         /// </summary>

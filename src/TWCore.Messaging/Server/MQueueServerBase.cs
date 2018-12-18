@@ -276,6 +276,7 @@ namespace TWCore.Messaging.Server
             try
             {
                 Counters.IncrementReceivingTime(e.Request.Header.TotalTime);
+                Counters.IncrementTotalReceivingBytes(e.MessageLength);
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
 
@@ -352,6 +353,7 @@ namespace TWCore.Messaging.Server
             try
             {
                 Counters.IncrementReceivingTime(e.Message.Header.Response.TotalTime);
+                Counters.IncrementTotalReceivingBytes(e.MessageLength);
                 Core.Log.LibDebug("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.Message.CorrelationId, iMessages);
                 if (ResponseReceived != null)
                     await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);

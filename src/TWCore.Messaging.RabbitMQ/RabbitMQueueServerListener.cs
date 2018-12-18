@@ -193,6 +193,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (message.Body is null) return;
             try
             {
+                Counters.IncrementTotalReceivingBytes(message.Body.Length);
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
                 var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
                 switch (messageBody)

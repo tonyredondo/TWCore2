@@ -39,7 +39,10 @@ namespace TWCore.Messaging.Client
     public abstract class MQueueClientBase : IMQueueClient
     {
         private readonly WeakDictionary<object, object> _receivedMessagesCache = new WeakDictionary<object, object>();
-        private MQClientCounters _counters;
+        /// <summary>
+        /// Counters
+        /// </summary>
+        protected MQClientCounters Counters;
 
         #region Properties
         /// <inheritdoc />
@@ -119,7 +122,7 @@ namespace TWCore.Messaging.Client
             Config = config;
 
             Name = Config.Name;
-            _counters = new MQClientCounters(Name, Config.IgnoreClientCounters);
+            Counters = new MQClientCounters(Name, Config.IgnoreClientCounters);
 
             SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
             if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
@@ -175,7 +178,7 @@ namespace TWCore.Messaging.Client
 			
             if (!await OnSendAsync(rqMsg).ConfigureAwait(false))
                 return Guid.Empty;
-            _counters.IncrementMessagesSent();
+            Counters.IncrementMessagesSent();
 
             if (rsea != null)
             {
@@ -213,8 +216,8 @@ namespace TWCore.Messaging.Client
             if (rsMsg is null) return default;
 
             rsMsg.Header.Response.ApplicationReceivedTime = Core.Now;
-            _counters.IncrementMessagesReceived();
-            _counters.IncrementReceptionTime(rsMsg.Header.Response.TotalTime);
+            Counters.IncrementMessagesReceived();
+            Counters.IncrementReceptionTime(rsMsg.Header.Response.TotalTime);
 
             if (OnResponseReceived != null || MQueueClientEvents.OnResponseReceived != null)
             {

@@ -207,6 +207,7 @@ namespace TWCore.Messaging.RabbitMQ
 
             var senderTasks = _senders.Select(SendTaskAsync).ToArray();
             await Task.WhenAny(senderTasks).ConfigureAwait(false);
+            Counters.IncrementTotalBytesSent(data.Count);
             return true;
 
             async Task<bool> SendTaskAsync(RabbitMQueue sender)
@@ -268,6 +269,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (message.Body is null)
                 throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
+            Counters.IncrementTotalBytesReceived(message.Body.Length);
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2} at {3}ms", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
             var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
 

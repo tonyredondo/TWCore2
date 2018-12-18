@@ -34,6 +34,8 @@ namespace TWCore.Messaging.Client
         private readonly IntegerCounter _messagesSentCount = null;
         private readonly IntegerCounter _messagesReceivedCount = null;
         private readonly DoubleCounter _receptionTime = null;
+        private readonly IntegerCounter _bytesSent = null;
+        private readonly IntegerCounter _bytesReceived = null;
 
         #region .ctor
         /// <summary>
@@ -48,15 +50,17 @@ namespace TWCore.Messaging.Client
             _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _receptionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Reception Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging);
-		}
-		#endregion
+            _bytesSent = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
+            _bytesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
+        }
+        #endregion
 
-		#region Public Methods
-		/// <summary>
-		/// Increments the reception time
-		/// </summary>
-		/// <param name="increment">Increment value</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Public Methods
+        /// <summary>
+        /// Increments the reception time
+        /// </summary>
+        /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementReceptionTime(TimeSpan increment)
 		{
             _receptionTime?.Add(increment.TotalMilliseconds);
@@ -77,6 +81,24 @@ namespace TWCore.Messaging.Client
 		{
             _messagesReceivedCount?.Increment();
 		}
-		#endregion
-	}
+        /// <summary>
+        /// Increments the total bytes sent
+        /// </summary>
+        /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void IncrementTotalBytesSent(int increment)
+        {
+            _bytesSent?.Add(increment);
+        }
+        /// <summary>
+        /// Increments the total bytes received
+        /// </summary>
+        /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void IncrementTotalBytesReceived(int increment)
+        {
+            _bytesReceived?.Add(increment);
+        }
+        #endregion
+    }
 }

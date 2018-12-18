@@ -36,7 +36,10 @@ namespace TWCore.Messaging.RawClient
     [StatusName("Raw Queue Client")]
     public abstract class MQueueRawClientBase : IMQueueRawClient
     {
-        private MQRawClientCounters _counters;
+        /// <summary>
+        /// Counters
+        /// </summary>
+        protected MQRawClientCounters Counters;
 
         #region Properties
         /// <inheritdoc />
@@ -112,7 +115,7 @@ namespace TWCore.Messaging.RawClient
             Config = config;
 
             Name = Config.Name;
-            _counters = new MQRawClientCounters(Name, Config.IgnoreClientCounters);
+            Counters = new MQRawClientCounters(Name, Config.IgnoreClientCounters);
             SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
             if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
                 SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.RequestOptions?.CompressorEncodingType);
@@ -179,8 +182,8 @@ namespace TWCore.Messaging.RawClient
                 obj = rmea.Message;
             }
             if (!await OnSendAsync(obj, correlationId).ConfigureAwait(false)) return Guid.Empty;
-            _counters.IncrementMessagesSent();
-            _counters.IncrementTotalBytesSent(obj.Length);
+            Counters.IncrementMessagesSent();
+            Counters.IncrementTotalBytesSent(obj.Length);
             if (rmea != null)
             {
                 if (OnRequestSent != null)
@@ -239,8 +242,8 @@ namespace TWCore.Messaging.RawClient
             var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (bytes is null) return null;
 
-            _counters.IncrementMessagesReceived();
-            _counters.IncrementTotalBytesReceived(bytes.Length);
+            Counters.IncrementMessagesReceived();
+            Counters.IncrementTotalBytesReceived(bytes.Length);
 
             if (OnResponseReceived != null || MQueueRawClientEvents.OnResponseReceived != null)
             {

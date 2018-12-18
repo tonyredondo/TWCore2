@@ -211,6 +211,7 @@ namespace TWCore.Messaging.NSQ
                 await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
+            Counters.IncrementTotalBytesSent(data.Count);
             return true;
         }
         #endregion
@@ -239,6 +240,7 @@ namespace TWCore.Messaging.NSQ
                 if (message.Body == MultiArray<byte>.Empty)
                     throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
+                Counters.IncrementTotalBytesReceived(message.Body.Count);
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2} at {3}ms", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
                 var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 return rs;

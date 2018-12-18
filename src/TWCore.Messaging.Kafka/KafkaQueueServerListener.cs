@@ -118,6 +118,7 @@ namespace TWCore.Messaging.Kafka
             {
                 var body = message.Value;
 
+                Counters.IncrementTotalReceivingBytes(body.Length);
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Length, Connection.Route, Connection.Name);
                 var messageBody = ReceiverSerializer.Deserialize(body, _messageType);
                 switch (messageBody)

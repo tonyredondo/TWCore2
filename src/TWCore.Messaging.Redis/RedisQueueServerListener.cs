@@ -179,6 +179,7 @@ namespace TWCore.Messaging.Redis
             {
                 (var body, var correlationId) = RedisQueueClient.GetFromMessageBody(value);
 
+                Counters.IncrementTotalReceivingBytes(body.Count);
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Count, Connection.Route, Connection.Name);
                 var messageBody = ReceiverSerializer.Deserialize(body, _messageType);
                 switch (messageBody)

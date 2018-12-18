@@ -144,6 +144,8 @@ namespace TWCore.Messaging.RawClient
         {
             if (obj is byte[] bytes)
                 return SendBytesAsync(bytes, correlationId);
+            if (obj is MultiArray<byte> mArray)
+                return SendBytesAsync(mArray.AsArray(), correlationId);
             return SendBytesAsync(SenderSerializer.Serialize(obj).AsArray(), correlationId);
         }
         /// <inheritdoc />

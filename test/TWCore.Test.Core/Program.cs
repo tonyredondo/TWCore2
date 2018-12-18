@@ -277,7 +277,7 @@ namespace TWCore.Test.Core
             return new MQPairConfig
             {
                 Name = "TWCore.Diagnostics.Api",
-                Types = new MQObjectTypes { ClientType = typeof(RabbitMQueueClient), ServerType = typeof(RabbitMQueueServer) },
+                RawTypes = new MQObjectTypes { ClientType = typeof(RabbitMQueueRawClient), ServerType = typeof(RabbitMQueueRawServer) },
                 ClientQueues = new List<MQClientQueues>
                 {
                     new MQClientQueues

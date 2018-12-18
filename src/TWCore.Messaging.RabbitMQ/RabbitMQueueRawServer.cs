@@ -50,7 +50,7 @@ namespace TWCore.Messaging.RabbitMQ
 							senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
 			_expiration = (senderOptions.MessageExpirationInSec * 1000).ToString();
 			_deliveryMode = (byte)(senderOptions.Recoverable ? 2 : 1);
-			_label = senderOptions.Label;
+			_label = senderOptions.Label ?? string.Empty;
 		}
 
 		/// <inheritdoc />

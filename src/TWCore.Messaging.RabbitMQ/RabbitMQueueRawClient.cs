@@ -183,8 +183,8 @@ namespace TWCore.Messaging.RabbitMQ
 
             var recvQueue = _clientQueues.RecvQueue;
             var corrId = correlationId.ToString();
-            var replyTo = recvQueue.Name;
-            if (!UseSingleResponseQueue)
+            var replyTo = recvQueue?.Name;
+            if (replyTo != null && !UseSingleResponseQueue)
                 replyTo += "-" + Core.InstanceId;
 
             if (_senders.Count == 1)
@@ -210,7 +210,7 @@ namespace TWCore.Messaging.RabbitMQ
                         props.AppId = Core.ApplicationName;
                         props.ContentType = SenderSerializer.MimeTypes[0];
                         props.DeliveryMode = _deliveryMode;
-                        props.Type = _senderOptions.Label;
+                        props.Type = _senderOptions.Label ?? string.Empty;
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", message.Length, sender.Route, sender.Name, correlationId);
                         sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, message);
                         return true;

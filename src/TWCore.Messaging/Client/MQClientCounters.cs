@@ -31,17 +31,20 @@ namespace TWCore.Messaging.Client
 	public class MQClientCounters
 	{
         const string Category = "Queue Client";
-        private IntegerCounter _messagesSentCount;
-        private IntegerCounter _messagesReceivedCount;
-        private DoubleCounter _receptionTime;
+        private readonly IntegerCounter _messagesSentCount = null;
+        private readonly IntegerCounter _messagesReceivedCount = null;
+        private readonly DoubleCounter _receptionTime = null;
 
         #region .ctor
         /// <summary>
         /// Message queue server counters
         /// </summary>
+        /// <param name="name">Client name</param>
+        /// <param name="ignoreCounters">Ignore counters</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQClientCounters(string name)
+		public MQClientCounters(string name, bool ignoreCounters)
 		{
+            if (ignoreCounters) return;
             _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _receptionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Reception Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging);
@@ -56,7 +59,7 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementReceptionTime(TimeSpan increment)
 		{
-            _receptionTime.Add(increment.TotalMilliseconds);
+            _receptionTime?.Add(increment.TotalMilliseconds);
 		}
 		/// <summary>
 		/// Increments the messages sent
@@ -64,7 +67,7 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesSent()
 		{
-            _messagesSentCount.Increment();
+            _messagesSentCount?.Increment();
 		}
 		/// <summary>
 		/// Increment the message received
@@ -72,7 +75,7 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesReceived()
 		{
-            _messagesReceivedCount.Increment();
+            _messagesReceivedCount?.Increment();
 		}
 		#endregion
 	}

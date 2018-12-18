@@ -44,6 +44,20 @@ namespace TWCore.Messaging.Configuration
         [XmlAttribute, DataMember]
         public string Name { get; set; }
         /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:TWCore.Messaging.Configuration.MQPairConfig"/>
+        /// ignore client counters.
+        /// </summary>
+        /// <value><c>true</c> if ignore client counters; otherwise, <c>false</c>.</value>
+        [XmlAttribute, DataMember]
+        public bool IgnoreClientCounters { get; set; } = false;
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:TWCore.Messaging.Configuration.MQPairConfig"/>
+        /// ignore server counters.
+        /// </summary>
+        /// <value><c>true</c> if ignore server counters; otherwise, <c>false</c>.</value>
+        [XmlAttribute, DataMember]
+        public bool IgnoreServerCounters { get; set; } = false;
+        /// <summary>
         /// Message queue client/server types
         /// </summary>
         [XmlElement, DataMember]

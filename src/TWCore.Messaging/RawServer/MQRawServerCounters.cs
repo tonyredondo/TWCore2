@@ -34,11 +34,11 @@ namespace TWCore.Messaging.RawServer
 	public class MQRawServerCounters
 	{
         const string Category = "Queue Raw Server";
-        private IntegerCounter _currentMessages;
-        private IntegerCounter _totalMessagesReceived;
-        private IntegerCounter _totalMessagesProcessed;
-        private IntegerCounter _totalExceptions;
-        private IntegerCounter _totalReceivingBytes;
+        private readonly IntegerCounter _currentMessages = null;
+        private readonly IntegerCounter _totalMessagesReceived = null;
+        private readonly IntegerCounter _totalMessagesProcessed = null;
+        private readonly IntegerCounter _totalExceptions = null;
+        private readonly IntegerCounter _totalReceivingBytes = null;
 
         /// <summary>
         /// Current Messages
@@ -49,9 +49,12 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Message queue server counters
         /// </summary>
+        /// <param name="name">Client name</param>
+        /// <param name="ignoreCounters">Ignore counters</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQRawServerCounters(string name)
+		public MQRawServerCounters(string name, bool ignoreCounters)
 		{
+            if (ignoreCounters) return;
             _currentMessages = Core.Counters.GetIntegerCounter(Category, name + @"\Current Messages", CounterType.Current, CounterLevel.Framework, CounterKind.Messaging);
             _totalMessagesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _totalMessagesProcessed = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Processed", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
@@ -68,7 +71,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalReceivingBytes(int increment)
         {
-            _totalReceivingBytes.Add(increment);
+            _totalReceivingBytes?.Add(increment);
         }
         /// <summary>
         /// Increments the total exceptions number
@@ -76,7 +79,7 @@ namespace TWCore.Messaging.RawServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalExceptions()
         {
-            _totalExceptions.Increment();
+            _totalExceptions?.Increment();
         }
         /// <summary>
         /// Increments the total exceptions number
@@ -84,7 +87,7 @@ namespace TWCore.Messaging.RawServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalMessagesProccesed()
         {
-            _totalMessagesProcessed.Increment();
+            _totalMessagesProcessed?.Increment();
         }
 		/// <summary>
 		/// Increments the messages
@@ -92,8 +95,8 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int IncrementMessages()
 		{
-            _currentMessages.Increment();
-            _totalMessagesReceived.Increment();
+            _currentMessages?.Increment();
+            _totalMessagesReceived?.Increment();
             return Interlocked.Increment(ref CurrentMessages);
 		}
         /// <summary>
@@ -102,7 +105,7 @@ namespace TWCore.Messaging.RawServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int DecrementMessages()
         {
-            _currentMessages.Decrement();
+            _currentMessages?.Decrement();
             return Interlocked.Decrement(ref CurrentMessages);
         }
         #endregion

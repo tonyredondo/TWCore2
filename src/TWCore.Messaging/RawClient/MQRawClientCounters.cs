@@ -31,18 +31,21 @@ namespace TWCore.Messaging.RawClient
 	public class MQRawClientCounters
 	{
         const string Category = "Queue Raw Client";
-        private IntegerCounter _messagesSentCount;
-        private IntegerCounter _messagesReceivedCount;
-        private IntegerCounter _bytesSent;
-        private IntegerCounter _bytesReceived;
+        private readonly IntegerCounter _messagesSentCount = null;
+        private readonly IntegerCounter _messagesReceivedCount = null;
+        private readonly IntegerCounter _bytesSent = null;
+        private readonly IntegerCounter _bytesReceived = null;
 
         #region .ctor
         /// <summary>
         /// Message queue server counters
         /// </summary>
+        /// <param name="name">Client name</param>
+        /// <param name="ignoreCounters">Ignore counters</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQRawClientCounters(string name)
+		public MQRawClientCounters(string name, bool ignoreCounters)
 		{
+            if (ignoreCounters) return;
             _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
             _bytesSent = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
@@ -58,7 +61,7 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalBytesSent(int increment)
 		{
-            _bytesSent.Add(increment);
+            _bytesSent?.Add(increment);
 		}
 		/// <summary>
 		/// Increments the total bytes received
@@ -67,7 +70,7 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalBytesReceived(int increment)
 		{
-            _bytesReceived.Add(increment);
+            _bytesReceived?.Add(increment);
 		}
 		/// <summary>
 		/// Increments the messages sent
@@ -75,7 +78,7 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesSent()
 		{
-            _messagesSentCount.Increment();
+            _messagesSentCount?.Increment();
 		}
 		/// <summary>
 		/// Increment the message received
@@ -83,7 +86,7 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesReceived()
 		{
-            _messagesReceivedCount.Increment();
+            _messagesReceivedCount?.Increment();
 		}
 		#endregion
 	}

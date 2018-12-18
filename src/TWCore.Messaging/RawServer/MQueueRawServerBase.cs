@@ -142,7 +142,7 @@ namespace TWCore.Messaging.RawServer
 
 			Config = config;
 			Name = Config.Name;
-            Counters = new MQRawServerCounters(Name);
+            Counters = new MQRawServerCounters(Name, Config.IgnoreServerCounters);
 			OnInit();
 
 			Core.Status.Attach(collection =>

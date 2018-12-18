@@ -142,7 +142,7 @@ namespace TWCore.Messaging.Server
 
 			Config = config;
 			Name = Config.Name;
-            Counters = new MQServerCounters(Name);
+            Counters = new MQServerCounters(Name, Config.IgnoreServerCounters);
 
 			OnInit();
 

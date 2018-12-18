@@ -119,7 +119,7 @@ namespace TWCore.Messaging.Client
             Config = config;
 
             Name = Config.Name;
-            _counters = new MQClientCounters(Name);
+            _counters = new MQClientCounters(Name, Config.IgnoreClientCounters);
 
             SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
             if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)

@@ -75,7 +75,7 @@ namespace TWCore.Web
         /// <summary>
         /// Sets the default TWCoreValues
         /// </summary>
-        public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_1, CoreWebSettings settings = null)
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_2, CoreWebSettings settings = null)
         {
             settings = settings ?? new CoreWebSettings();
             services.AddMvc(options =>

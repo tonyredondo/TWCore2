@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
@@ -52,6 +53,10 @@ namespace TWCore
         /// Default StatusEngine factory
         /// </summary>
         public static CreateStatusEngineDelegate CreateStatusEngine => _factories?.CreateStatusEngine ?? throw new FrameworkNotInitializedException();
+        /// <summary>
+        /// Default CountersEngine factory
+        /// </summary>
+        public static CreateCountersEngineDelegate CreateCountersEngine => _factories?.CreateCountersEngine ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Gets the available assemblies loaded on the AppDomain
         /// </summary>

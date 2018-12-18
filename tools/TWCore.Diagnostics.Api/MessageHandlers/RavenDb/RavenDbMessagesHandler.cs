@@ -20,10 +20,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Compression;
+using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
+using TWCore.Diagnostics.Api.Models.Counters;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
@@ -313,6 +316,115 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     await session.StoreAsync(newStatus).ConfigureAwait(false);
                     await session.SaveChangesAsync().ConfigureAwait(false);
                 }).ConfigureAwait(false);
+            }
+        }
+
+        public async Task ProcessCountersMessageAsync(List<ICounterItem> message)
+        {
+            using (var watch = Watch.Create("Processing Counter item List Message", LogLevel.InfoBasic))
+            {
+                foreach (var counter in message)
+                {
+                    NodeCountersItem cEntity = null;
+
+                    await RavenHelper.ExecuteAsync(async session =>
+                    {
+                        cEntity = await session.Advanced.AsyncDocumentQuery<NodeCountersItem, Counters_CounterSelection>()
+                            .WhereEquals(item => item.Environment, counter.Environment)
+                            .WhereEquals(item => item.Application, counter.Application)
+                            .WhereEquals(item => item.Category, counter.Category)
+                            .WhereEquals(item => item.Name, counter.Name)
+                            .FirstOrDefaultAsync().ConfigureAwait(false);
+
+                        if (cEntity == null)
+                        {
+                            cEntity = new NodeCountersItem
+                            {
+                                Environment = counter.Environment,
+                                Application = counter.Application,
+                                CountersId = Guid.NewGuid(),
+                                Category = counter.Category,
+                                Name = counter.Name,
+                                Level = counter.Level,
+                                Type = counter.Type,
+                                TypeOfValue = counter.TypeOfValue.Name
+                            };
+                            await session.StoreAsync(cEntity).ConfigureAwait(false);
+                            await session.SaveChangesAsync().ConfigureAwait(false);
+                        }
+                    }).ConfigureAwait(false);
+
+
+                    if (counter is CounterItem<int> intCounter)
+                    {
+                        await RavenHelper.BulkInsertAsync(async bulkOp =>
+                        {
+                            try
+                            {
+                                foreach (var value in intCounter.Values)
+                                {
+                                    var nValue = new NodeCountersValue
+                                    {
+                                        CountersId = cEntity.CountersId,
+                                        Timestamp = value.Timestamp,
+                                        Value = value.Value
+                                    };
+                                    await bulkOp.StoreAsync(nValue).ConfigureAwait(false);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }).ConfigureAwait(false);   
+                    }
+                    else if (counter is CounterItem<double> doubleCounter)
+                    {
+                        await RavenHelper.BulkInsertAsync(async bulkOp =>
+                        {
+                            try
+                            {
+                                foreach (var value in doubleCounter.Values)
+                                {
+                                    var nValue = new NodeCountersValue
+                                    {
+                                        CountersId = cEntity.CountersId,
+                                        Timestamp = value.Timestamp,
+                                        Value = value.Value
+                                    };
+                                    await bulkOp.StoreAsync(nValue).ConfigureAwait(false);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }).ConfigureAwait(false);
+                    }
+                    else if (counter is CounterItem<decimal> decimalCounter)
+                    {
+                        await RavenHelper.BulkInsertAsync(async bulkOp =>
+                        {
+                            try
+                            {
+                                foreach (var value in decimalCounter.Values)
+                                {
+                                    var nValue = new NodeCountersValue
+                                    {
+                                        CountersId = cEntity.CountersId,
+                                        Timestamp = value.Timestamp,
+                                        Value = value.Value
+                                    };
+                                    await bulkOp.StoreAsync(nValue).ConfigureAwait(false);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }).ConfigureAwait(false);
+                    }
+                }
             }
         }
 

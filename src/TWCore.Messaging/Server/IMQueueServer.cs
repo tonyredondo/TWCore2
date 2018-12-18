@@ -35,6 +35,10 @@ namespace TWCore.Messaging.Server
         /// Gets if the server is configured as response server
         /// </summary>
         bool ResponseServer { get; set; }
+        /// <summary>
+        /// Message queue listener server counters
+        /// </summary>
+        MQServerCounters Counters { get; }
         #endregion
 
         #region Events

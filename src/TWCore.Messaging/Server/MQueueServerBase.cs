@@ -72,16 +72,16 @@ namespace TWCore.Messaging.Server
 		/// Gets the list of message queue server listeners
 		/// </summary>
 		public List<IMQueueServerListener> QueueServerListeners { get; } = new List<IMQueueServerListener>();
-        /// <summary>
-        /// Message queue listener server counters
-        /// </summary>
-        public MQServerCounters Counters { get; }
         /// <inheritdoc />
         /// <summary>
         /// Gets if the server is configured as response server
         /// </summary>
         [StatusProperty]
 		public bool ResponseServer { get; set; } = false;
+        /// <summary>
+        /// Message queue listener server counters
+        /// </summary>
+        public MQServerCounters Counters { get; private set; }
         #endregion
 
         #region Events
@@ -113,7 +113,6 @@ namespace TWCore.Messaging.Server
         /// </summary>
         protected MQueueServerBase()
         {
-            Counters = new MQServerCounters();
 	        Core.Status.Attach(collection =>
 	        {
 		        collection.Add("Type", GetType().FullName);
@@ -143,12 +142,12 @@ namespace TWCore.Messaging.Server
 
 			Config = config;
 			Name = Config.Name;
+            Counters = new MQServerCounters(Name);
 
 			OnInit();
 
 			Core.Status.Attach(collection =>
 			{
-                Core.Status.AttachChild(Counters, this);
 				if (QueueServerListeners?.Any() != true) return;
 				foreach (var listener in QueueServerListeners)
 					Core.Status.AttachChild(listener, this);

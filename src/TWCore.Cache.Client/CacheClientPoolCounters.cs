@@ -15,7 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
-using System.Threading;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Status;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -28,170 +28,49 @@ namespace TWCore.Cache.Client
     [StatusName("Counters")]
     public class CacheClientPoolCounters
     {
-        private readonly double?[] _times = new double?[16];
+        const string Category = "Cache Client";
 
-        #region Calls methods
-        /// <summary>
-        /// Calls to exist key method
-        /// </summary>
-        public long ExistKeyCalls;
-        /// <summary>
-        /// Calls to get method
-        /// </summary>
-        public long GetCalls;
-        /// <summary>
-        /// Calls to get by tag method
-        /// </summary>
-        public long GetByTagCalls;
-        /// <summary>
-        /// Calls to get creation date method
-        /// </summary>
-        public long GetCreationDateCalls;
-        /// <summary>
-        /// Calls to get expiration date method
-        /// </summary>
-        public long GetExpirationDateCalls;
-        /// <summary>
-        /// Calls to get keys method
-        /// </summary>
-        public long GetKeysCalls;
-        /// <summary>
-        /// Calls to get meta method
-        /// </summary>
-        public long GetMetaCalls;
-        /// <summary>
-        /// Calls to get meta by tag method
-        /// </summary>
-        public long GetMetaByTagCalls;
-        /// <summary>
-        /// Calls to get or set method
-        /// </summary>
-        public long GetOrSetCalls;
-        /// <summary>
-        /// Calls to remove method
-        /// </summary>
-        public long RemoveCalls;
-        /// <summary>
-        /// Calls to remove by tag method
-        /// </summary>
-        public long RemoveByTagCalls;
-        /// <summary>
-        /// Calls to set method
-        /// </summary>
-        public long SetCalls;
-        /// <summary>
-        /// Calls to update data method
-        /// </summary>
-        public long UpdateDataCalls;
-        /// <summary>
-        /// Calls to copy method
-        /// </summary>
-        public long CopyCalls;
-        /// <summary>
-        /// Calls to set multi method
-        /// </summary>
-        public long SetMultiCalls;
-        /// <summary>
-        /// Calls to Execute extension
-        /// </summary>
-        public long ExecuteExtensionCalls;
-        #endregion
-
-        #region Average time methods
-        /// <summary>
-        /// Average time on milliseconds of ExistKey execution
-        /// </summary>
-        public double ExistKeyAverageTime => _times[0] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of Get execution
-        /// </summary>
-        public double GetAverageTime => _times[1] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetByTag execution
-        /// </summary>
-        public double GetByTagAverageTime => _times[2] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetCreationDate execution
-        /// </summary>
-        public double GetCreationDateAverageTime => _times[3] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetExpirationDate execution
-        /// </summary>
-        public double GetExpirationDateAverageTime => _times[4] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetKeys execution
-        /// </summary>
-        public double GetKeysAverageTime => _times[5] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetMeta execution
-        /// </summary>
-        public double GetMetaAverageTime => _times[6] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetMetaByTag execution
-        /// </summary>
-        public double GetMetaByTagAverageTime => _times[7] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of GetOrSet execution
-        /// </summary>
-        public double GetOrSetAverageTime => _times[8] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of Remove execution
-        /// </summary>
-        public double RemoveAverageTime => _times[9] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of RemoveByTag execution
-        /// </summary>
-        public double RemoveByTagAverageTime => _times[10] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of Set execution
-        /// </summary>
-        public double SetAverageTime => _times[11] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of UpdateData execution
-        /// </summary>
-        public double UpdateDataAverageTime => _times[12] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of Copy execution
-        /// </summary>
-        public double CopyAverageTime => _times[13] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of Set multi execution
-        /// </summary>
-        public double SetMultiAverageTime => _times[14] ?? 0;
-        /// <summary>
-        /// Average time on milliseconds of Execute extension
-        /// </summary>
-        public double ExecuteExtensionAverageTime => _times[15] ?? 0;
-        #endregion
+        private DoubleCounter _existKeyTime;
+        private DoubleCounter _getTime;
+        private DoubleCounter _getByTagTime;
+        private DoubleCounter _getCreationDateTime;
+        private DoubleCounter _getExpirationDateTime;
+        private DoubleCounter _getKeysTime;
+        private DoubleCounter _getMetaTime;
+        private DoubleCounter _getMetaByTagTime;
+        private DoubleCounter _getOrSetTime;
+        private DoubleCounter _removeTime;
+        private DoubleCounter _removeByTagTime;
+        private DoubleCounter _setTime;
+        private DoubleCounter _updateDataTime;
+        private DoubleCounter _copyTime;
+        private DoubleCounter _setMultiTime;
+        private DoubleCounter _executeExtensionTime;
 
         #region .ctor
         /// <summary>
         /// Cache client Pool counters
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CacheClientPoolCounters()
+        public CacheClientPoolCounters(string name)
         {
-            Core.Status.Attach(collection =>
-            {
-                collection.SortValues = false;
+            _existKeyTime = Core.Counters.GetDoubleCounter(Category, name + @"\Exists Time", CounterType.Average, CounterLevel.Framework);
+            _getTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Time", CounterType.Average, CounterLevel.Framework);
+            _getByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get By Tag Time", CounterType.Average, CounterLevel.Framework);
+            _getCreationDateTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get CreationDate Time", CounterType.Average, CounterLevel.Framework);
+            _getExpirationDateTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get ExpirationDate Time", CounterType.Average, CounterLevel.Framework);
+            _getKeysTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Keys Time", CounterType.Average, CounterLevel.Framework);
+            _getMetaTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Meta Time", CounterType.Average, CounterLevel.Framework);
+            _getMetaByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Meta By Tag Time", CounterType.Average, CounterLevel.Framework);
+            _getOrSetTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Or Sets Time", CounterType.Average, CounterLevel.Framework);
+            _removeTime = Core.Counters.GetDoubleCounter(Category, name + @"\Remove Time", CounterType.Average, CounterLevel.Framework);
+            _removeByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Remove By Tag Time", CounterType.Average, CounterLevel.Framework);
+            _setTime = Core.Counters.GetDoubleCounter(Category, name + @"\Set Time", CounterType.Average, CounterLevel.Framework);
+            _updateDataTime = Core.Counters.GetDoubleCounter(Category, name + @"\Update Data Time", CounterType.Average, CounterLevel.Framework);
+            _copyTime = Core.Counters.GetDoubleCounter(Category, name + @"\Copy Time", CounterType.Average, CounterLevel.Framework);
+            _setMultiTime = Core.Counters.GetDoubleCounter(Category, name + @"\Set Multi Time", CounterType.Average, CounterLevel.Framework);
+            _executeExtensionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Execute Extension Time", CounterType.Average, CounterLevel.Framework);
 
-                collection.Add("ExistKey Method", new StatusItemValueItem("Calls", ExistKeyCalls, true), new StatusItemValueItem("Average time (ms)", ExistKeyAverageTime, true));
-                collection.Add("Get Method", new StatusItemValueItem("Calls", GetCalls, true), new StatusItemValueItem("Average time (ms)", GetAverageTime, true));
-                collection.Add("GetByTag Method", new StatusItemValueItem("Calls", GetByTagCalls, true), new StatusItemValueItem("Average time (ms)", GetByTagAverageTime, true));
-                collection.Add("GetCreationDate Method", new StatusItemValueItem("Calls", GetCreationDateCalls, true), new StatusItemValueItem("Average time (ms)", GetCreationDateAverageTime, true));
-                collection.Add("GetExpirationDate Method", new StatusItemValueItem("Calls", GetExpirationDateCalls, true), new StatusItemValueItem("Average time (ms)", GetExpirationDateAverageTime, true));
-                collection.Add("GetKeys Method", new StatusItemValueItem("Calls", GetKeysCalls, true), new StatusItemValueItem("Average time (ms)", GetKeysAverageTime, true));
-                collection.Add("GetMeta Method", new StatusItemValueItem("Calls", GetMetaCalls, true), new StatusItemValueItem("Average time (ms)", GetMetaAverageTime, true));
-                collection.Add("GetMetaByTag Method", new StatusItemValueItem("Calls", GetMetaByTagCalls, true), new StatusItemValueItem("Average time (ms)", GetMetaByTagAverageTime, true));
-                collection.Add("GetOrSet Method", new StatusItemValueItem("Calls", GetOrSetCalls, true), new StatusItemValueItem("Average time (ms)", GetOrSetAverageTime, true));
-                collection.Add("Remove Method", new StatusItemValueItem("Calls", RemoveCalls, true), new StatusItemValueItem("Average time (ms)", RemoveAverageTime, true));
-                collection.Add("RemoveByTag Method", new StatusItemValueItem("Calls", RemoveByTagCalls, true), new StatusItemValueItem("Average time (ms)", RemoveByTagAverageTime, true));
-                collection.Add("Set Method", new StatusItemValueItem("Calls", SetCalls, true), new StatusItemValueItem("Average time (ms)", SetAverageTime, true));
-                collection.Add("Update Method", new StatusItemValueItem("Calls", UpdateDataCalls, true), new StatusItemValueItem("Average time (ms)", UpdateDataAverageTime, true));
-                collection.Add("Copy Method", new StatusItemValueItem("Calls", CopyCalls, true), new StatusItemValueItem("Average time (ms)", CopyAverageTime, true));
-                collection.Add("Set Multi Method", new StatusItemValueItem("Calls", SetMultiCalls, true), new StatusItemValueItem("Average time (ms)", SetMultiAverageTime, true));
-                collection.Add("Execute Extension Method", new StatusItemValueItem("Calls", ExecuteExtensionCalls, true), new StatusItemValueItem("Average time (ms)", ExecuteExtensionAverageTime, true));
-            });
         }
         #endregion
 
@@ -203,8 +82,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementExistKey(double executionTime)
         {
-            Interlocked.Increment(ref ExistKeyCalls);
-            IncrementQueue(0, executionTime);
+            _existKeyTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -213,8 +91,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGet(double executionTime)
         {
-            Interlocked.Increment(ref GetCalls);
-            IncrementQueue(1, executionTime);
+            _getTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -223,8 +100,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetByTag(double executionTime)
         {
-            Interlocked.Increment(ref GetByTagCalls);
-            IncrementQueue(2, executionTime);
+            _getByTagTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -233,8 +109,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetCreationDate(double executionTime)
         {
-            Interlocked.Increment(ref GetCreationDateCalls);
-            IncrementQueue(3, executionTime);
+            _getCreationDateTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -243,8 +118,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetExpirationDate(double executionTime)
         {
-            Interlocked.Increment(ref GetExpirationDateCalls);
-            IncrementQueue(4, executionTime);
+            _getExpirationDateTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -253,8 +127,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetKeys(double executionTime)
         {
-            Interlocked.Increment(ref GetKeysCalls);
-            IncrementQueue(5, executionTime);
+            _getKeysTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -263,8 +136,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetMeta(double executionTime)
         {
-            Interlocked.Increment(ref GetMetaCalls);
-            IncrementQueue(6, executionTime);
+            _getMetaTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -273,8 +145,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetMetaByTag(double executionTime)
         {
-            Interlocked.Increment(ref GetMetaByTagCalls);
-            IncrementQueue(7, executionTime);
+            _getMetaByTagTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -283,8 +154,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGetOrSet(double executionTime)
         {
-            Interlocked.Increment(ref GetOrSetCalls);
-            IncrementQueue(8, executionTime);
+            _getOrSetTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -293,8 +163,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementRemove(double executionTime)
         {
-            Interlocked.Increment(ref RemoveCalls);
-            IncrementQueue(9, executionTime);
+            _removeTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -303,8 +172,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementRemoveByTag(double executionTime)
         {
-            Interlocked.Increment(ref RemoveByTagCalls);
-            IncrementQueue(10, executionTime);
+            _removeByTagTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -313,8 +181,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementSet(double executionTime)
         {
-            Interlocked.Increment(ref SetCalls);
-            IncrementQueue(11, executionTime);
+            _setTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -323,8 +190,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementUpdateData(double executionTime)
         {
-            Interlocked.Increment(ref UpdateDataCalls);
-            IncrementQueue(12, executionTime);
+            _updateDataTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -333,8 +199,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementCopy(double executionTime)
         {
-            Interlocked.Increment(ref CopyCalls);
-            IncrementQueue(13, executionTime);
+            _copyTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -343,8 +208,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementSetMulti(double executionTime)
         {
-            Interlocked.Increment(ref SetMultiCalls);
-            IncrementQueue(14, executionTime);
+            _setMultiTime.Add(executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -353,15 +217,9 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementExecuteExtension(double executionTime)
         {
-            Interlocked.Increment(ref ExecuteExtensionCalls);
-            IncrementQueue(15, executionTime);
+            _executeExtensionTime.Add(executionTime);
         }
         #endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void IncrementQueue(int idx, double executionTime)
-        {
-            _times[idx] = _times[idx].HasValue ? (_times[idx] * 0.8) + (executionTime * 0.2) : executionTime;
-        }
     }
 }

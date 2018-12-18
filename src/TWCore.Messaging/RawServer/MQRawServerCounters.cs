@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming
@@ -32,105 +33,30 @@ namespace TWCore.Messaging.RawServer
 	[StatusName("Counters")]
 	public class MQRawServerCounters
 	{
-		private Timer _timerThirtyMinutes;
-        private long _currentMessages;
-        private long _peakCurrentMessages;
-        private long _lastThirtyMinutesMessages;
-        private long _peakLastThirtyMinutesMessages;
-        private long _totalMessagesReceived;
-        private long _totalMessagesProccesed;
-        private long _totalExceptions;
-        private long _totalReceivingBytes;
-
-        #region Messages On Process
-        /// <summary>
-        /// Number of Messages on process
-        /// </summary>
-        public long CurrentMessages => _currentMessages;
-        /// <summary>
-        /// Peak value of number of messages on process
-        /// </summary>
-        public long PeakCurrentMessages => _peakCurrentMessages;
-		/// <summary>
-		/// Date and time of the peak value of number of message on process
-		/// </summary>
-		public DateTime PeakCurrentMessagesLastDate { get; private set; }
+        const string Category = "Queue Raw Server";
+        private IntegerCounter _currentMessages;
+        private IntegerCounter _totalMessagesReceived;
+        private IntegerCounter _totalMessagesProcessed;
+        private IntegerCounter _totalExceptions;
+        private IntegerCounter _totalReceivingBytes;
 
         /// <summary>
-        /// Number of messages processed on the last thirty minutes
+        /// Current Messages
         /// </summary>
-        public long LastThirtyMinutesMessages => _lastThirtyMinutesMessages;
-        /// <summary>
-        /// Peak value of number of message processed on the last thirty minutes
-        /// </summary>
-        public long PeakLastThirtyMinutesMessages => _peakLastThirtyMinutesMessages;
-        /// <summary>
-        /// Date and time of the peak value of number of message processed on the last thirty minutes
-        /// </summary>
-        public DateTime PeakLastThirtyMinutesMessagesLastDate { get; private set; }
-        #endregion
-
-		#region Properties
-		/// <summary>
-		/// Date and time of the last received message
-		/// </summary>
-		public DateTime LastMessageDateTime { get; private set; }
-        /// <summary>
-        /// Number of received messages
-        /// </summary>
-        public long TotalMessagesReceived => _totalMessagesReceived;
-        /// <summary>
-        /// Number of processed messages
-        /// </summary>
-        public long TotalMessagesProccesed => _totalMessagesProccesed;
-        /// <summary>
-        /// Number of exceptions
-        /// </summary>
-        public long TotalExceptions => _totalExceptions;
-        /// <summary>
-        /// Total receiving time
-        /// </summary>
-        public long TotalReceivingBytes => _totalReceivingBytes;
-        #endregion
+        public int CurrentMessages;
 
         #region .ctor
         /// <summary>
         /// Message queue server counters
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQRawServerCounters()
+		public MQRawServerCounters(string name)
 		{
-			_timerThirtyMinutes = new Timer(state =>
-			{
-                Interlocked.Exchange(ref _lastThirtyMinutesMessages, Interlocked.Read(ref _currentMessages));
-                Interlocked.Exchange(ref _peakLastThirtyMinutesMessages, Interlocked.Read(ref _currentMessages));
-				PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
-			}, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
-
-			Core.Status.Attach(collection =>
-			{
-				collection.SortValues = false;
-
-				#region Messages On Process
-				collection.Add("Current messages on process",
-					new StatusItemValueItem("Quantity", CurrentMessages, true),
-					new StatusItemValueItem("Peak Quantity", PeakCurrentMessages, true),
-					new StatusItemValueItem("Peak DateTime", PeakCurrentMessagesLastDate));
-
-				collection.Add("Last thirty minutes processed messages",
-					new StatusItemValueItem("Quantity", LastThirtyMinutesMessages, true),
-					new StatusItemValueItem("Peak Quantity", PeakLastThirtyMinutesMessages, true),
-					new StatusItemValueItem("Peak DateTime", PeakLastThirtyMinutesMessagesLastDate));
-                #endregion
-
-                collection.Add("Last Message Received DateTime", LastMessageDateTime);
-
-				collection.Add("Totals",
-					new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
-					new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
-					new StatusItemValueItem("Exceptions", TotalExceptions, true),
-					new StatusItemValueItem("Receiving Bytes (MB)", TotalReceivingBytes.ToMegabytes(), true));
-			});
+            _currentMessages = Core.Counters.GetIntegerCounter(Category, name + @"\Current Messages", CounterType.Current, CounterLevel.Framework);
+            _totalMessagesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework);
+            _totalMessagesProcessed = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Processed", CounterType.Cumulative, CounterLevel.Framework);
+            _totalExceptions = Core.Counters.GetIntegerCounter(Category, name + @"\Exceptions", CounterType.Cumulative, CounterLevel.Framework);
+            _totalReceivingBytes = Core.Counters.GetIntegerCounter(Category, name + @"\Receiving Bytes", CounterType.Cumulative, CounterLevel.Framework);
 		}
 		#endregion
 
@@ -140,48 +66,45 @@ namespace TWCore.Messaging.RawServer
 		/// </summary>
 		/// <param name="increment">Increment value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public long IncrementTotalReceivingBytes(long increment)
-            => Interlocked.Add(ref _totalReceivingBytes, increment);
+		public void IncrementTotalReceivingBytes(int increment)
+        {
+            _totalReceivingBytes.Add(increment);
+        }
         /// <summary>
         /// Increments the total exceptions number
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long IncrementTotalExceptions()
-            => Interlocked.Increment(ref _totalExceptions);
+        public void IncrementTotalExceptions()
+        {
+            _totalExceptions.Increment();
+        }
         /// <summary>
         /// Increments the total exceptions number
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long IncrementTotalMessagesProccesed()
-            => Interlocked.Increment(ref _totalMessagesProccesed);
+        public void IncrementTotalMessagesProccesed()
+        {
+            _totalMessagesProcessed.Increment();
+        }
 		/// <summary>
 		/// Increments the messages
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public long IncrementMessages()
+		public int IncrementMessages()
 		{
-            var cM = Interlocked.Increment(ref _currentMessages);
-            var l30MM = Interlocked.Increment(ref _lastThirtyMinutesMessages);
-		    Interlocked.Increment(ref _totalMessagesReceived);
-            LastMessageDateTime = Core.Now;
-			if (cM >= Interlocked.Read(ref _peakCurrentMessages))
-			{
-                Interlocked.Exchange(ref _peakCurrentMessages, cM);
-				PeakCurrentMessagesLastDate = LastMessageDateTime;
-			}
-			if (l30MM >= Interlocked.Read(ref _peakLastThirtyMinutesMessages))
-			{
-                Interlocked.Exchange(ref _peakLastThirtyMinutesMessages, l30MM);
-				PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
-			}
-            return cM;
+            _currentMessages.Increment();
+            _totalMessagesReceived.Increment();
+            return Interlocked.Increment(ref CurrentMessages);
 		}
         /// <summary>
         /// Decrement the current messages
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long DecrementMessages()
-            => Interlocked.Decrement(ref _currentMessages);
-		#endregion
-	}
+        public int DecrementMessages()
+        {
+            _currentMessages.Decrement();
+            return Interlocked.Decrement(ref CurrentMessages);
+        }
+        #endregion
+    }
 }

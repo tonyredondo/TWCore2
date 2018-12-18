@@ -25,6 +25,8 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Messaging;
+using TWCore.Messaging.Configuration;
+using TWCore.Messaging.RabbitMQ;
 using TWCore.Net.Multicast;
 using TWCore.Reflection;
 using TWCore.Serialization;
@@ -32,6 +34,7 @@ using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
+using TWCore.Tests;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedVariable
 
@@ -102,8 +105,10 @@ namespace TWCore.Test.Core
                 TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");
                 TWCore.Core.Trace.AddSimpleFileStorage("./traces");
 
-                TWCore.Core.Log.AddElasticSearchStorage("http://10.10.1.52:9200", "TestIndex{0:yyyy.MM}");
-
+                // TWCore.Core.Log.AddElasticSearchStorage("http://10.10.1.52:9200", "TestIndex{0:yyyy.MM}");
+                TWCore.Core.Counters.Storages.Add(new TWCore.Diagnostics.Counters.Storages.ConsoleCountersStorage());
+                var queue = GetConfig().GetRawClient();
+                TWCore.Core.Counters.Storages.Add(new TWCore.Diagnostics.Counters.Storages.MessagingCountersStorage(queue));
 
                 var path = Factory.ResolveLowLowFilePath("<</temp/copyright.txt");
                 var folder = Factory.ResolveLowLowPath("<</temp/copyright.txt");
@@ -265,6 +270,41 @@ namespace TWCore.Test.Core
                 await Task.Delay(10000, token).ConfigureAwait(false);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
             }
+        }
+
+        public static MQPairConfig GetConfig()
+        {
+            return new MQPairConfig
+            {
+                Name = "TWCore.Diagnostics.Api",
+                RawTypes = new MQObjectTypes { ClientType = typeof(RabbitMQueueRawClient), ServerType = typeof(RabbitMQueueRawServer) },
+                ClientQueues = new List<MQClientQueues>
+                {
+                    new MQClientQueues
+                    {
+                        EnvironmentName = "",
+                        MachineName = "",
+                        SendQueues = new List<MQConnection> { new MQConnection("amqp://test:test@127.0.0.1:5672/", "DIAGNOSTICS_RQ", null) },
+                    }
+                },
+                RequestOptions = new MQRequestOptions
+                {
+                    SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
+                    CompressorEncodingType = "deflate",
+                    ClientSenderOptions = new MQClientSenderOptions
+                    {
+                        MessageExpirationInSec = 30,
+                        MessagePriority = MQMessagePriority.Normal,
+                        Recoverable = false
+                    },
+                    ServerReceiverOptions = new MQServerReceiverOptions
+                    {
+                        MaxSimultaneousMessagesPerQueue = 2000,
+                        ProcessingWaitOnFinalizeInSec = 10,
+                        SleepOnExceptionInSec = 1000
+                    }
+                }
+            };
         }
     }
 }

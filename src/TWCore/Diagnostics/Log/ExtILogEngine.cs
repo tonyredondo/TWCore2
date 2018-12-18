@@ -32,8 +32,8 @@ namespace TWCore
         /// <param name="logEngine">Log engine</param>
         public static void AddConsoleStorage(this ILogEngine logEngine)
         {
-            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is ConsoleLogStorage) == false)
-                logEngine.Storage.Add(new ConsoleLogStorage());
+            if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is ConsoleLogStorage) == false)
+                logEngine.Storages.Add(new ConsoleLogStorage());
         }
         /// <summary>
         /// Adds a console log storage instance to the log engine
@@ -42,8 +42,8 @@ namespace TWCore
         /// <param name="writeLevel">Write level for the log storage</param>
         public static void AddConsoleStorage(this ILogEngine logEngine, LogLevel writeLevel)
         {
-            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is ConsoleLogStorage) == false)
-                logEngine.Storage.Add(new ConsoleLogStorage(), writeLevel);
+            if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is ConsoleLogStorage) == false)
+                logEngine.Storages.Add(new ConsoleLogStorage(), writeLevel);
         }
         /// <summary>
         /// Adds a simple file log storage instance to the log engine
@@ -53,8 +53,8 @@ namespace TWCore
         /// <param name="createByDay">True if a new log file is created each day; otherwise, false</param>
         public static void AddSimpleFileStorage(this ILogEngine logEngine, string fileName, bool createByDay = true)
         {
-            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is SimpleFileLogStorage) == false)
-                logEngine.Storage.Add(new SimpleFileLogStorage(fileName, createByDay));
+            if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is SimpleFileLogStorage) == false)
+                logEngine.Storages.Add(new SimpleFileLogStorage(fileName, createByDay));
         }
         /// <summary>
         /// Adds a simple file log storage instance to the log engine
@@ -65,8 +65,8 @@ namespace TWCore
         /// <param name="writeLevel">Write level for the log storage</param>
         public static void AddSimpleFileStorage(this ILogEngine logEngine, string fileName, bool createByDay, LogLevel writeLevel)
         {
-            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is SimpleFileLogStorage) == false)
-                logEngine.Storage.Add(new SimpleFileLogStorage(fileName, createByDay), writeLevel);
+            if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is SimpleFileLogStorage) == false)
+                logEngine.Storages.Add(new SimpleFileLogStorage(fileName, createByDay), writeLevel);
         }
 		/// <summary>
 		/// Adds an html log storage instance to the log engine
@@ -76,8 +76,8 @@ namespace TWCore
 		/// <param name="createByDay">True if a new log file is created each day; otherwise, false</param>
 		public static void AddHtmlFileStorage(this ILogEngine logEngine, string fileName, bool createByDay = true)
 		{
-			if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is HtmlFileLogStorage) == false)
-				logEngine.Storage.Add(new HtmlFileLogStorage(fileName, createByDay));
+			if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is HtmlFileLogStorage) == false)
+				logEngine.Storages.Add(new HtmlFileLogStorage(fileName, createByDay));
 		}
 		/// <summary>
 		/// Adds an html log storage instance to the log engine
@@ -88,8 +88,8 @@ namespace TWCore
 		/// <param name="writeLevel">Write level for the log storage</param>
 		public static void AddHtmlFileStorage(this ILogEngine logEngine, string fileName, bool createByDay, LogLevel writeLevel)
 		{
-			if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is HtmlFileLogStorage) == false)
-				logEngine.Storage.Add(new HtmlFileLogStorage(fileName, createByDay), writeLevel);
+			if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is HtmlFileLogStorage) == false)
+				logEngine.Storages.Add(new HtmlFileLogStorage(fileName, createByDay), writeLevel);
 		}
 
 
@@ -101,8 +101,8 @@ namespace TWCore
         /// <param name="indexName">Index name</param>
         public static void AddElasticSearchStorage(this ILogEngine logEngine, string url, string indexName)
         {
-            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is ElasticSearchLogStorage) == false)
-                logEngine.Storage.Add(new ElasticSearchLogStorage(url, indexName));
+            if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is ElasticSearchLogStorage) == false)
+                logEngine.Storages.Add(new ElasticSearchLogStorage(url, indexName));
         }
 
         /// <summary>
@@ -114,8 +114,8 @@ namespace TWCore
         /// <param name="writeLevel">Write level for the log storage</param>
         public static void AddElasticSearchStorage(this ILogEngine logEngine, string url, string indexName, LogLevel writeLevel)
         {
-            if (logEngine?.Storage?.GetAllStorages()?.Any(s => s is ElasticSearchLogStorage) == false)
-                logEngine.Storage.Add(new ElasticSearchLogStorage(url, indexName), writeLevel);
+            if (logEngine?.Storages?.GetAllStorages()?.Any(s => s is ElasticSearchLogStorage) == false)
+                logEngine.Storages.Add(new ElasticSearchLogStorage(url, indexName), writeLevel);
         }
 
     }

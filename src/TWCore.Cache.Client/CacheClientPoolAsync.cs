@@ -81,7 +81,7 @@ namespace TWCore.Cache.Client
         {
             Name = name;
             _pool = new PoolAsyncItemCollection(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder);
-            _counters = new CacheClientPoolCounters();
+            _counters = new CacheClientPoolCounters(name);
             Core.Log.LibVerbose("CachePool.PingDelay = {0}", pingDelay);
             Core.Log.LibVerbose("CachePool.PingDelayOnError = {0}", pingDelayOnError);
             Core.Log.LibVerbose("CachePool.ReadMode = {0}", readMode);
@@ -91,7 +91,6 @@ namespace TWCore.Cache.Client
                 col.Add(nameof(Name), Name);
                 col.Add(nameof(WriteNetworkItemsToMemoryOnGet), WriteNetworkItemsToMemoryOnGet);
                 Core.Status.AttachChild(_pool, this);
-                Core.Status.AttachChild(_counters, this);
             }, this);
         }
         #endregion

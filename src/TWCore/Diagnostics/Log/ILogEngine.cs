@@ -31,7 +31,7 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Log storages items
         /// </summary>
-        LogStorageCollection Storage { get; }
+        LogStorageCollection Storages { get; }
         /// <summary>
         /// Max log level to register in logs
         /// </summary>

@@ -19,6 +19,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
@@ -55,6 +56,10 @@ namespace TWCore
         /// Default StatusEngine factory
         /// </summary>
         public CreateStatusEngineDelegate CreateStatusEngine { get; set; } = () => new DefaultStatusEngine();
+        /// <summary>
+        /// Default CountersEngine factory
+        /// </summary>
+        public CreateCountersEngineDelegate CreateCountersEngine { get; set; } = () => new DefaultCountersEngine();
         /// <summary>
         /// Gets the available assemblies loaded on the AppDomain
         /// </summary>

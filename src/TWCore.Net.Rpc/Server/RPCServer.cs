@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -317,6 +318,7 @@ namespace TWCore.Net.RPC.Server
                 {
 					lock (_threadClientId) _threadClientId[Environment.CurrentManagedThreadId] = clientId;
                     ConnectionCancellationToken = cancellationToken;
+                    var execTime = Stopwatch.StartNew();
                     var results = mDesc.Method(ServiceInstance, request.Parameters);
                     if (results is Task resultTask)
                     {
@@ -332,6 +334,9 @@ namespace TWCore.Net.RPC.Server
                     }
                     else
                         response.ReturnValue = results;
+                    execTime.Stop();
+                    var counter = Core.Counters.GetDoubleCounter("RPC Server", Descriptor.Name + "\\" + mDesc.Name, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework);
+                    counter.Add(execTime.Elapsed.TotalMilliseconds);
                 }
                 catch (TargetInvocationException ex)
                 {

@@ -25,63 +25,7 @@ namespace TWCore.Tests
             Core.Log.Warning("Starting MemoryQueue Test");
 
             #region Set Config
-            var mqConfig = new MQPairConfig
-            {
-                Name = "QueueTest",
-                Types = new MQObjectTypes { ClientType = typeof(MemoryQueueClient), ServerType = typeof(MemoryQueueServer) },
-                ClientQueues = new List<MQClientQueues>
-                {
-                    new MQClientQueues
-                    {
-                        EnvironmentName = "",
-                        MachineName = "",
-                        SendQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) },
-                        RecvQueue = new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RS", null)
-                    }
-                },
-                ServerQueues = new List<MQServerQueues>
-                {
-                    new MQServerQueues
-                    {
-                        EnvironmentName = "",
-                        MachineName = "",
-                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) }
-                    }
-                },
-                RequestOptions = new MQRequestOptions
-                {
-                    SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
-                    CompressorEncodingType = string.Empty, // "gzip",
-                    ClientSenderOptions = new MQClientSenderOptions
-                    {
-                        Label = "TEST REQUEST",
-                        MessageExpirationInSec = 30,
-                        MessagePriority = MQMessagePriority.Normal,
-                        Recoverable = false
-                    },
-                    ServerReceiverOptions = new MQServerReceiverOptions
-                    {
-                        MaxSimultaneousMessagesPerQueue = 2000,
-                        ProcessingWaitOnFinalizeInSec = 10,
-                        SleepOnExceptionInSec = 1000
-                    }
-                },
-                ResponseOptions = new MQResponseOptions
-                {
-                    SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
-                    CompressorEncodingType = string.Empty, // "gzip",
-                    ClientReceiverOptions = new MQClientReceiverOptions(60,
-                        new KeyValue<string, string>("SingleResponseQueue", "true")
-                    ),
-                    ServerSenderOptions = new MQServerSenderOptions
-                    {
-                        Label = "TEST RESPONSE",
-                        MessageExpirationInSec = 30,
-                        MessagePriority = MQMessagePriority.Normal,
-                        Recoverable = false
-                    }
-                }
-            };
+            var mqConfig = GetConfig();
             #endregion
 
             JsonTextSerializerExtensions.Serializer.Indent = true;
@@ -143,6 +87,67 @@ namespace TWCore.Tests
                     #endregion
                 }
             }
+        }
+
+        public static MQPairConfig GetConfig()
+        {
+            return new MQPairConfig
+            {
+                Name = "QueueTest",
+                Types = new MQObjectTypes { ClientType = typeof(MemoryQueueClient), ServerType = typeof(MemoryQueueServer) },
+                ClientQueues = new List<MQClientQueues>
+                {
+                    new MQClientQueues
+                    {
+                        EnvironmentName = "",
+                        MachineName = "",
+                        SendQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) },
+                        RecvQueue = new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RS", null)
+                    }
+                },
+                ServerQueues = new List<MQServerQueues>
+                {
+                    new MQServerQueues
+                    {
+                        EnvironmentName = "",
+                        MachineName = "",
+                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) }
+                    }
+                },
+                RequestOptions = new MQRequestOptions
+                {
+                    SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
+                    CompressorEncodingType = string.Empty, // "gzip",
+                    ClientSenderOptions = new MQClientSenderOptions
+                    {
+                        Label = "TEST REQUEST",
+                        MessageExpirationInSec = 30,
+                        MessagePriority = MQMessagePriority.Normal,
+                        Recoverable = false
+                    },
+                    ServerReceiverOptions = new MQServerReceiverOptions
+                    {
+                        MaxSimultaneousMessagesPerQueue = 2000,
+                        ProcessingWaitOnFinalizeInSec = 10,
+                        SleepOnExceptionInSec = 1000
+                    }
+                },
+                ResponseOptions = new MQResponseOptions
+                {
+                    SerializerMimeType = SerializerManager.DefaultBinarySerializer.MimeTypes[0],
+                    CompressorEncodingType = string.Empty, // "gzip",
+                    ClientReceiverOptions = new MQClientReceiverOptions(60,
+                        new KeyValue<string, string>("SingleResponseQueue", "true")
+                    ),
+                    ServerSenderOptions = new MQServerSenderOptions
+                    {
+                        Label = "TEST RESPONSE",
+                        MessageExpirationInSec = 30,
+                        MessagePriority = MQMessagePriority.Normal,
+                        Recoverable = false
+                    }
+                }
+            };
         }
     }
 }

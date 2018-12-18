@@ -36,6 +36,8 @@ namespace TWCore.Messaging.RawClient
     [StatusName("Raw Queue Client")]
     public abstract class MQueueRawClientBase : IMQueueRawClient
     {
+        private MQRawClientCounters _counters;
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -60,12 +62,6 @@ namespace TWCore.Messaging.RawClient
         /// Gets the current configuration
         /// </summary>
         public MQPairConfig Config { get; private set; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets the client counters
-        /// </summary>
-        [StatusReference]
-        public MQRawClientCounters Counters { get; }
         #endregion
 
         #region Events
@@ -96,7 +92,6 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected MQueueRawClientBase()
         {
-            Counters = new MQRawClientCounters();
             Core.Status.Attach(collection =>
             {
                 collection.Add("Type", GetType().FullName);
@@ -117,6 +112,7 @@ namespace TWCore.Messaging.RawClient
             Config = config;
 
             Name = Config.Name;
+            _counters = new MQRawClientCounters(Name);
             SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
             if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
                 SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.RequestOptions?.CompressorEncodingType);
@@ -148,6 +144,8 @@ namespace TWCore.Messaging.RawClient
         {
             if (obj is byte[] bytes)
                 return SendBytesAsync(bytes, correlationId);
+            if (obj is MultiArray<byte> mArray)
+                return SendBytesAsync(mArray.AsArray(), correlationId);
             return SendBytesAsync(SenderSerializer.Serialize(obj).AsArray(), correlationId);
         }
         /// <inheritdoc />
@@ -181,8 +179,8 @@ namespace TWCore.Messaging.RawClient
                 obj = rmea.Message;
             }
             if (!await OnSendAsync(obj, correlationId).ConfigureAwait(false)) return Guid.Empty;
-            Counters.IncrementMessagesSent();
-            Counters.IncrementTotalBytesSent(obj.Length);
+            _counters.IncrementMessagesSent();
+            _counters.IncrementTotalBytesSent(obj.Length);
             if (rmea != null)
             {
                 if (OnRequestSent != null)
@@ -241,8 +239,8 @@ namespace TWCore.Messaging.RawClient
             var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (bytes is null) return null;
 
-            Counters.IncrementMessagesReceived();
-            Counters.IncrementTotalBytesReceived(bytes.Length);
+            _counters.IncrementMessagesReceived();
+            _counters.IncrementTotalBytesReceived(bytes.Length);
 
             if (OnResponseReceived != null || MQueueRawClientEvents.OnResponseReceived != null)
             {

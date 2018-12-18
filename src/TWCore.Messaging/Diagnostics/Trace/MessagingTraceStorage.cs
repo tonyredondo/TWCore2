@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
-using TWCore.Messaging.Client;
+using TWCore.Messaging.RawClient;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable CheckNamespace
@@ -43,7 +43,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         private int _count;
         private readonly bool _sendCompleteTrace;
         private readonly BlockingCollection<MessagingTraceItem> _traceItems;
-        private IMQueueClient _queueClient;
+        private IMQueueRawClient _queueClient;
         private readonly IPool<List<MessagingTraceItem>> _pool;
         private bool _enabled = true;
 
@@ -132,7 +132,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                 Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
                 if (_queueClient is null)
                 {
-                    _queueClient = Core.Services.GetQueueClient(_queueName);
+                    _queueClient = Core.Services.GetQueueRawClient(_queueName);
                     Core.Status.AttachChild(_queueClient, this);
                 }
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();

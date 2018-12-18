@@ -29,13 +29,6 @@ namespace TWCore.Messaging.Client
     /// </summary>
     public interface IMQueueClient : IMQueue
     {
-        #region Properties
-        /// <summary>
-        /// Gets the client counters
-        /// </summary>
-        MQClientCounters Counters { get; }
-        #endregion
-
         #region Events
         /// <summary>
         /// Events that fires when a request message is sent

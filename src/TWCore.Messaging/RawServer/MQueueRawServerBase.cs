@@ -43,12 +43,12 @@ namespace TWCore.Messaging.RawServer
 		private MQClientQueues _clientQueues;
 		private MQServerQueues _serverQueues;
 
-		#region Properties
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets or Sets the client name
-		/// </summary>
-		[StatusProperty]
+        #region Properties
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets or Sets the client name
+        /// </summary>
+        [StatusProperty]
 		public string Name { get; set; }
 		/// <inheritdoc />
 		/// <summary>
@@ -72,16 +72,16 @@ namespace TWCore.Messaging.RawServer
 		/// Gets the list of message queue server listeners
 		/// </summary>
 		public List<IMQueueRawServerListener> QueueServerListeners { get; } = new List<IMQueueRawServerListener>();
-        /// <summary>
-        /// Message queue listener server counters
-        /// </summary>
-        public MQRawServerCounters Counters { get; }
         /// <inheritdoc />
         /// <summary>
         /// Gets if the server is configured as response server
         /// </summary>
         [StatusProperty]
 		public bool ResponseServer { get; set; } = false;
+        /// <summary>
+        /// Message queue listener server counters
+        /// </summary>
+        public MQRawServerCounters Counters { get; private set; }
         #endregion
 
         #region Events
@@ -89,25 +89,21 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Events that fires when a request message is received
         /// </summary>
-        //public event AsyncEventHandler<RawRequestReceivedEventArgs> RequestReceived;
         public AsyncEvent<RawRequestReceivedEventArgs> RequestReceived { get; set; }
         /// <inheritdoc />
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        //public event AsyncEventHandler<RawResponseReceivedEventArgs> ResponseReceived;
         public AsyncEvent<RawResponseReceivedEventArgs> ResponseReceived { get; set; }
         /// <inheritdoc />
 		/// <summary>
 		/// Events that fires when a response message is sent
 		/// </summary>
-		//public event AsyncEventHandler<RawResponseSentEventArgs> ResponseSent;
         public AsyncEvent<RawResponseSentEventArgs> ResponseSent { get; set; }
         /// <inheritdoc />
 		/// <summary>
 		/// Events that fires when a response message is about to be sent
 		/// </summary>
-		//public event AsyncEventHandler<RawResponseSentEventArgs> BeforeSendResponse;
         public AsyncEvent<RawResponseSentEventArgs> BeforeSendResponse { get; set; }
         #endregion
 
@@ -117,7 +113,6 @@ namespace TWCore.Messaging.RawServer
         /// </summary>
         protected MQueueRawServerBase()
         {
-            Counters = new MQRawServerCounters();
 	        Core.Status.Attach(collection =>
 	        {
 		        collection.Add("Type", GetType().FullName);
@@ -147,12 +142,11 @@ namespace TWCore.Messaging.RawServer
 
 			Config = config;
 			Name = Config.Name;
-
+            Counters = new MQRawServerCounters(Name);
 			OnInit();
 
 			Core.Status.Attach(collection =>
 			{
-                Core.Status.AttachChild(Counters, this);
                 if (QueueServerListeners?.Any() != true) return;
 				foreach (var listener in QueueServerListeners)
 					Core.Status.AttachChild(listener, this);
@@ -349,7 +343,7 @@ namespace TWCore.Messaging.RawServer
                 throw;
             }
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
 		{
             var iMessages = Counters.IncrementMessages();
@@ -371,16 +365,16 @@ namespace TWCore.Messaging.RawServer
                 throw;
             }
         }
-		#endregion
+        #endregion
 
-		#region Abstract Methods
-		/// <summary>
-		/// On Create all server listeners
-		/// </summary>
-		/// <param name="connection">Queue server listener</param>
-		/// <param name="responseServer">true if the server is going to act as a response server</param>
-		/// <returns>IMQueueServerListener</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Abstract Methods
+        /// <summary>
+        /// On Create all server listeners
+        /// </summary>
+        /// <param name="connection">Queue server listener</param>
+        /// <param name="responseServer">true if the server is going to act as a response server</param>
+        /// <returns>IMQueueServerListener</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false);
 		/// <summary>
 		/// On client initialization

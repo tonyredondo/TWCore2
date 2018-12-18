@@ -18,8 +18,8 @@ namespace TWCore
         /// <param name="serializer">Serializer used for writing the trace item data</param>
         public static void AddSimpleFileStorage(this ITraceEngine traceEngine, string basePath, ISerializer serializer = null)
         {
-            if (traceEngine?.Storage?.GetAllStorages()?.Any(s => s is SimpleFileTraceStorage) == false)
-                traceEngine.Storage.Add(new SimpleFileTraceStorage(basePath, serializer ?? SerializerManager.DefaultBinarySerializer));
+            if (traceEngine?.Storages?.GetAllStorages()?.Any(s => s is SimpleFileTraceStorage) == false)
+                traceEngine.Storages.Add(new SimpleFileTraceStorage(basePath, serializer ?? SerializerManager.DefaultBinarySerializer));
         }
     }
 }

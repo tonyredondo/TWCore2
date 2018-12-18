@@ -26,6 +26,7 @@ using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Serialization;
+using TWCore.Diagnostics.Counters;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -87,6 +88,11 @@ namespace TWCore.Diagnostics.Api
 				foreach (var item in _parent._messageHandlers)
 					await item.ProcessStatusMessageAsync(message).ConfigureAwait(false);
 			}
+            public async Task ProcessCountersMessageAsync(List<ICounterItem> message)
+            {
+                foreach (var item in _parent._messageHandlers)
+                    await item.ProcessCountersMessageAsync(message).ConfigureAwait(false);
+            }
             #endregion
         }
 		#endregion

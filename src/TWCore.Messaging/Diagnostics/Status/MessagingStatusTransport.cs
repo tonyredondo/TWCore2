@@ -16,7 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading;
-using TWCore.Messaging.Client;
+using TWCore.Messaging.RawClient;
 using TWCore.Services;
 
 // ReSharper disable UnusedMember.Global
@@ -35,7 +35,7 @@ namespace TWCore.Diagnostics.Status.Transports
         private readonly string _queueName;
         private readonly Timer _timer;
         private volatile bool _processing;
-        private IMQueueClient _queueClient;
+        private IMQueueRawClient _queueClient;
         private bool _enabled = true;
 
         #region Events
@@ -84,7 +84,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
                 if (_queueClient is null)
                 {
-                    _queueClient = Core.Services.GetQueueClient(_queueName);
+                    _queueClient = Core.Services.GetQueueRawClient(_queueName);
                     Core.Status.AttachChild(_queueClient, this);
                 }
                 _queueClient.SendAsync(statusData).WaitAndResults();

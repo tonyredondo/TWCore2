@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Net.RPC.Descriptors;
@@ -43,6 +44,9 @@ namespace TWCore.Net.RPC.Server
     {
         private readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
         private readonly Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)> _methods = new Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)>(100);
+        private string _counterCategory = "RPC Server";
+        private CounterLevel _counterLevel = CounterLevel.Framework;
+        private CounterKind _counterKind = CounterKind.RPC;
         private ITransportServer _transport;
 
         /// <summary>
@@ -179,6 +183,19 @@ namespace TWCore.Net.RPC.Server
             if (interfaces is null) return;
             foreach (var iface in interfaces)
                 AddService(iface, serviceInstance);
+        }
+        /// <summary>
+        /// Sets the Counter info
+        /// </summary>
+        /// <param name="category">Counter category</param>
+        /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetCounterInfo(string category, CounterLevel level, CounterKind kind)
+        {
+            _counterCategory = category;
+            _counterLevel = level;
+            _counterKind = kind;
         }
         #endregion
 
@@ -335,7 +352,7 @@ namespace TWCore.Net.RPC.Server
                     else
                         response.ReturnValue = results;
                     execTime.Stop();
-                    var counter = Core.Counters.GetDoubleCounter("RPC Server", Descriptor.Name + "\\" + mDesc.Name, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework);
+                    var counter = Core.Counters.GetDoubleCounter(_server._counterCategory, Descriptor.Name + "\\" + mDesc.Name, CounterType.Average, _server._counterLevel, _server._counterKind);
                     counter.Add(execTime.Elapsed.TotalMilliseconds);
                 }
                 catch (TargetInvocationException ex)

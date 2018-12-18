@@ -41,6 +41,8 @@ namespace TWCore.Diagnostics.Api.Models.Counters
         [XmlAttribute, DataMember]
         public CounterLevel Level { get; set; }
         [XmlAttribute, DataMember]
+        public CounterKind Kind { get; set; }
+        [XmlAttribute, DataMember]
         public string TypeOfValue { get; set; }
     }
 
@@ -74,6 +76,8 @@ namespace TWCore.Diagnostics.Api.Models.Counters
         public CounterType Type { get; set; }
         [XmlAttribute, DataMember]
         public CounterLevel Level { get; set; }
+        [XmlAttribute, DataMember]
+        public CounterKind Kind { get; set; }
         [XmlAttribute, DataMember]
         public string TypeOfValue { get; set; }
     }

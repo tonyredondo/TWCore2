@@ -80,6 +80,7 @@ namespace TWCore.Services
                 Transports.Each(transport.Add);
                 server = new RPCServer(transport);
             }
+            server.SetCounterInfo("Cache Server", Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.Cache);
             server.AddService(typeof(IStorage), Manager);
             server.AddService(typeof(IStorageWithExtensionExecution), Manager);
             return server;

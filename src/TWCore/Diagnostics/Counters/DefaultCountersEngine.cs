@@ -97,7 +97,7 @@ namespace TWCore.Diagnostics.Counters
         {
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
         }
-        #endregion 
+        #endregion
 
         #region ICountersEngine Methods
         /// <summary>
@@ -108,12 +108,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
+        public IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
             {
-                var item = new IntegerCounter(category, name, type, level);
+                var item = new IntegerCounter(category, name, type, level, kind);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -128,12 +129,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
+        public IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
             {
-                var item = new IntegerCounter(string.Empty, name, type, level);
+                var item = new IntegerCounter(string.Empty, name, type, level, kind);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -149,12 +151,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
+        public DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
             {
-                var item = new DoubleCounter(category, name, type, level);
+                var item = new DoubleCounter(category, name, type, level, kind);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -170,12 +173,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
+        public DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
             {
-                var item = new DoubleCounter(string.Empty, name, type, level);
+                var item = new DoubleCounter(string.Empty, name, type, level, kind);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -191,12 +195,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
+        public DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
             {
-                var item = new DecimalCounter(category, name, type, level);
+                var item = new DecimalCounter(category, name, type, level, kind);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -211,12 +216,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="name">Counter name</param>
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
+        /// <param name="kind">Counter kind</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User)
+        public DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
             {
-                var item = new DecimalCounter(string.Empty, name, type, level);
+                var item = new DecimalCounter(string.Empty, name, type, level, kind);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -240,8 +246,8 @@ namespace TWCore.Diagnostics.Counters
                 var counters = _counterReaders
                     .Select(i => i.Take(Settings.MaximumBatchPerCounter))
                     .RemoveNulls()
-                    .ToArray();
-                if (counters.Length > 0)
+                    .ToList();
+                if (counters.Count > 0)
                 {
                     foreach (var storage in storages)
                         storage.Store(counters);

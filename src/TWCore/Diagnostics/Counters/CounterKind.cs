@@ -15,50 +15,40 @@ limitations under the License.
  */
 
 
-using System;
-
 namespace TWCore.Diagnostics.Counters
 {
     /// <summary>
-    /// Counter item interface
+    /// Counter Kind
     /// </summary>
-    public interface ICounterItem
+    public enum CounterKind
     {
         /// <summary>
-        /// Gets or sets the counter environment
+        /// Unknown
         /// </summary>
-        string Environment { get; }
+        Unknown,
         /// <summary>
-        /// Gets or sets the counter application name
+        /// Application
         /// </summary>
-        string Application { get; }
+        Application,
         /// <summary>
-        /// Gets or sets the counter category
+        /// Data access
         /// </summary>
-        string Category { get; set; }
+        DataAccess,
         /// <summary>
-        /// Gets or sets the counter name
+        /// Messaging
         /// </summary>
-        string Name { get; set; }
+        Messaging,
         /// <summary>
-        /// Gets or sets the counter type
+        /// Cache
         /// </summary>
-        CounterType Type { get; set; }
+        Cache,
         /// <summary>
-        /// Gets or sets the counter level
+        /// Remote procedure call
         /// </summary>
-        CounterLevel Level { get; set; }
+        RPC,
         /// <summary>
-        /// Gets the counter kind
+        /// Bot
         /// </summary>
-        CounterKind Kind { get; set; }
-        /// <summary>
-        /// Type of value
-        /// </summary>
-        Type TypeOfValue { get; }
-        /// <summary>
-        /// Values Count
-        /// </summary>
-        int Count { get; }
+        Bot
     }
 }

@@ -72,7 +72,14 @@ namespace TWCore.Diagnostics.Counters.Storages
             if (_queueClient == null) return;
             try
             {
-                var cItems = counterItems.ToList();
+                var cItems = counterItems
+                    .Where(i =>
+                    {
+                        if (i.Kind == CounterKind.Messaging && i.Name.Contains(_queueClient.Name))
+                            return false;
+                        return true;
+                    })
+                    .ToList();
                 _queueClient.SendAsync(cItems);
             }
             catch(Exception ex)

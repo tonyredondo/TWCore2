@@ -958,7 +958,7 @@ namespace TWCore
         /// <param name="enumerable">IEnumerable source object</param>
         /// <returns>ReadOnlyCollection instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> ToReadOnly<T>(this IEnumerable<T> enumerable) => new ReadOnlyCollection<T>(enumerable.ToArray());
+        public static IEnumerable<T> ToReadOnly<T>(this IEnumerable<T> enumerable) => new ReadOnlyCollection<T>(enumerable.ToList());
         /// <summary>
         /// Validates that the <paramref name="enumerable"/> is not null and contains items.
         /// </summary>

@@ -41,7 +41,11 @@ namespace TWCore.Diagnostics.Counters
         /// Gets the counter level
         /// </summary>
         CounterLevel Level { get; }
-	}
+        /// <summary>
+        /// Gets the counter kind
+        /// </summary>
+        CounterKind Kind { get; }
+    }
 	/// <summary>
 	/// Counter interface
 	/// </summary>

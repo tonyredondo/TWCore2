@@ -348,7 +348,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             await session.SaveChangesAsync().ConfigureAwait(false);
                         }
                     }).ConfigureAwait(false);
-                    watch.Tap("Ensuring counters");
 
 
                     if (counter is CounterItem<int> intCounter)
@@ -420,7 +419,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             }
                         }).ConfigureAwait(false);
                     }
-                    watch.Tap("Adding counters values");
                 }
             }
         }

@@ -24,6 +24,7 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
+using TWCore.Diagnostics.Api.Models.Counters;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
@@ -42,7 +43,17 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             Compressor = Compressor
         };
 
-        // Environments
+        /// <summary>
+        /// Initialize handler
+        /// </summary>
+        public void Init()
+        {
+            RavenHelper.Init();
+        }
+        /// <summary>
+        /// Gets the environments
+        /// </summary>
+        /// <returns>List of BasicInfo</returns>
         public Task<List<string>> GetEnvironmentsAsync()
         {
             return RavenHelper.ExecuteAndReturnAsync(session =>
@@ -50,8 +61,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 return session.Query<Environments_Availables.Result, Environments_Availables>().Select(x => x.Environment).ToListAsync();
             });
         }
-
-        // Logs
+        /// <summary>
+        /// Gets the Applications with logs by environment
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>List of applications</returns>
         public async Task<LogSummary> GetLogsApplicationsLevelsByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
         {
             var values = await RavenHelper.ExecuteAndReturnAsync(session =>
@@ -95,6 +111,17 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 Levels = levels
             };
         }
+        /// <summary>
+        /// Gets the Logs by Application Levels and Environment
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="application">Application name</param>
+        /// <param name="level">Log level</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Logs</returns>
         public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel? level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -124,7 +151,15 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             });
         }
 
-        // Traces
+        /// <summary>
+        /// Gets the traces objects by environment and dates
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Traces</returns>
         public Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -153,6 +188,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 };
             });
         }
+        /// <summary>
+        /// Get the traces from a Trace Group
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="groupName">Group name</param>
+        /// <returns>Traces from that group</returns>
         public async Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName)
         {
             var value = await RavenHelper.ExecuteAndReturnAsync(session =>
@@ -166,6 +207,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             });
             return value;
         }
+        /// <summary>
+        /// Gets the Trace object
+        /// </summary>
+        /// <returns>The trace object</returns>
+        /// <param name="id">Trace object id</param>
         public Task<SerializedObject> GetTraceObjectAsync(string id)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -179,6 +225,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     return bytes.DeserializeFromNBinary<SerializedObject>();
             });
         }
+        /// <summary>
+        /// Gets the Trace object
+        /// </summary>
+        /// <returns>The trace object</returns>
+        /// <param name="id">Trace object id</param>
         public Task<string> GetTraceAsync(string id, string traceName)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -197,24 +248,35 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 }
             });
         }
+        /// <summary>
+        /// Gets the Trace object in xml
+        /// </summary>
+        /// <returns>The trace object</returns>
+        /// <param name="id">Trace object id</param>
         public Task<string> GetTraceXmlAsync(string id)
             => GetTraceAsync(id, "TraceXml");
+        /// <summary>
+        /// Gets the Trace object in json
+        /// </summary>
+        /// <returns>The trace object</returns>
+        /// <param name="id">Trace object id</param>
         public Task<string> GetTraceJsonAsync(string id)
             => GetTraceAsync(id, "TraceJson");
+        /// <summary>
+		/// Gets the Trace object in txt
+		/// </summary>
+		/// <returns>The trace object</returns>
+		/// <param name="id">Trace object id</param>
         public Task<string> GetTraceTxtAsync(string id)
             => GetTraceAsync(id, "TraceTxt");
-
-
-
-        private class TraceTempResult
-        {
-            public string Group { get; set; }
-            public DateTime Timestamp { get; set; }
-            public string Tags { get; set; }
-        }
-
-
-        // Search
+        /// <summary>
+        /// Search a term in the database
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="searchTerm">Term to search in the database</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>Search results</returns>
         public Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -263,11 +325,14 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 };
             });
         }
-
-        // Group metadata
+        /// <summary>
+        /// Get metadata from a group name
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <returns>List of metadatas</returns>
         public async Task<KeyValue[]> GetMetadatas(string groupName)
         {
-            var metas = await RavenHelper.ExecuteAndReturnAsync(async session => 
+            var metas = await RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 return await session.Advanced.AsyncDocumentQuery<GroupMetadata, Metadata_ByGroup>()
                     .WhereEquals(x => x.GroupName, groupName)
@@ -276,11 +341,17 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }).ConfigureAwait(false);
             return metas.SelectMany(m => m.Items).GroupBy(m => m.Key).Select(m => m.First()).ToArray();
         }
-
-
-
-
-        //Others
+        /// <summary>
+        /// Gets the statuses
+        /// </summary>
+        /// <returns>The statuses from the query</returns>
+        /// <param name="environment">Environment name</param>
+        /// <param name="machine">Machine name or null</param>
+        /// <param name="application">Application name or null</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
         public async Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -311,6 +382,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
             }).ConfigureAwait(false);
         }
+        /// <summary>
+        /// Get Current Statuses
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="machine">Machine name or null</param>
+        /// <param name="application">Application name or null</param>
+        /// <returns>Get Current Status list</returns>
         public async Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -338,5 +416,67 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 return rData;
             }).ConfigureAwait(false);
         }
+        /// <summary>
+        /// Get Counters
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <returns>List of counters</returns>
+        public async Task<List<NodeCountersQueryItem>> GetCounters(string environment)
+        {
+            return await RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                return await session.Query<NodeCountersItem, Counters_CounterSelection>()
+                    .Where(x => x.Environment == environment)
+                    .OrderBy(x => x.Category)
+                    .ThenBy(x => x.Name)
+                    .Select(i => new NodeCountersQueryItem
+                    {
+                        Application = i.Application,
+                        CountersId = i.CountersId,
+                        Category = i.Category,
+                        Name = i.Name,
+                        Type = i.Type,
+                        Level = i.Level,
+                        TypeOfValue = i.TypeOfValue
+                    })
+                    .ToListAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Get Counter Values
+        /// </summary>
+        /// <param name="counterId">Counter id</param>
+        /// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+        /// <param name="limit">Value limit</param>
+        /// <returns>List of counter values</returns>
+        public async Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 1000)
+        {
+            return await RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                return await session.Query<NodeCountersValue, Counters_ValueSelection>()
+                    .Where(x => x.CountersId == counterId)
+                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
+                    .OrderByDescending(x => x.Timestamp)
+                    .Take(limit)
+                    .Select(i => new NodeCountersQueryValue
+                    {
+                        Id = i.Id,
+                        Timestamp = i.Timestamp,
+                        Value = i.Value
+                    })
+                    .ToListAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
+        }
+
+
+        #region Nested Types
+        private class TraceTempResult
+        {
+            public string Group { get; set; }
+            public DateTime Timestamp { get; set; }
+            public string Tags { get; set; }
+        }
+        #endregion
     }
 }

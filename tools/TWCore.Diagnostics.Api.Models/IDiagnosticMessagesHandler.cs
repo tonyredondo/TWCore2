@@ -30,6 +30,10 @@ namespace TWCore.Diagnostics.Api.Models
 	public interface IDiagnosticMessagesHandler
     {
         /// <summary>
+        /// Initialize handler
+        /// </summary>
+        void Init();
+        /// <summary>
         /// Process LogItems message
         /// </summary>
         /// <param name="message">Message to handle</param>

@@ -35,6 +35,8 @@ namespace TWCore.Diagnostics.Api
             Core.GlobalSettings.ReloadSettings();
             SerializerManager.SupressFileExtensionWarning = true;
             base.OnInit(args);
+
+            DbHandlers.Instance.Messages.Init();
         }
 
         #region Overrides

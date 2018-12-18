@@ -24,21 +24,23 @@ namespace TWCore.Diagnostics.Api.Models.Counters
     [DataContract]
     public class NodeCountersItem
     {
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
+        public string Id { get; set; }
+        [XmlAttribute, DataMember]
         public string Environment { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public string Application { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public Guid CountersId { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public string Category { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public string Name { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public CounterType Type { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public CounterLevel Level { get; set; }
-		[XmlAttribute, DataMember]
+        [XmlAttribute, DataMember]
         public string TypeOfValue { get; set; }
     }
 
@@ -46,11 +48,43 @@ namespace TWCore.Diagnostics.Api.Models.Counters
     public class NodeCountersValue
     {
         [XmlAttribute, DataMember]
+        public string Id { get; set; }
+        [XmlAttribute, DataMember]
         public Guid CountersId { get; set; }
         [XmlAttribute, DataMember]
         public DateTime Timestamp { get; set; }
         [XmlAttribute, DataMember]
         public object Value { get; set; }
 
+    }
+
+
+    [DataContract]
+    public class NodeCountersQueryItem
+    {
+        [XmlAttribute, DataMember]
+        public string Application { get; set; }
+        [XmlAttribute, DataMember]
+        public Guid CountersId { get; set; }
+        [XmlAttribute, DataMember]
+        public string Category { get; set; }
+        [XmlAttribute, DataMember]
+        public string Name { get; set; }
+        [XmlAttribute, DataMember]
+        public CounterType Type { get; set; }
+        [XmlAttribute, DataMember]
+        public CounterLevel Level { get; set; }
+        [XmlAttribute, DataMember]
+        public string TypeOfValue { get; set; }
+    }
+    [DataContract]
+    public class NodeCountersQueryValue
+    {
+        [XmlAttribute, DataMember]
+        public string Id { get; set; }
+        [XmlAttribute, DataMember]
+        public DateTime Timestamp { get; set; }
+        [XmlAttribute, DataMember]
+        public object Value { get; set; }
     }
 }

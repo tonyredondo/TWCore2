@@ -81,6 +81,8 @@ namespace TWCore.Diagnostics.Api
                     }
                 });
             });
+
+            DbHandlers.Instance.Query.Init();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

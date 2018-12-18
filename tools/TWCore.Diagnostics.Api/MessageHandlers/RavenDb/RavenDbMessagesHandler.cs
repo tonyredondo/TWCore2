@@ -58,6 +58,14 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             UseCamelCase = true
         };
 
+        /// <summary>
+        /// Initialize handler
+        /// </summary>
+        public void Init()
+        {
+            RavenHelper.Init();
+        }
+
         public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
         {
             using (Watch.Create("Processing LogItems List Message", LogLevel.InfoBasic))

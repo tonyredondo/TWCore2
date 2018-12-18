@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TWCore.Collections;
+using TWCore.Diagnostics.Api.Models.Counters;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
@@ -32,6 +33,10 @@ namespace TWCore.Diagnostics.Api.Models
 	/// </summary>
 	public interface IDiagnosticQueryHandler
 	{
+        /// <summary>
+        /// Initialize handler
+        /// </summary>
+        void Init();
         /// <summary>
         /// Gets the environments
         /// </summary>
@@ -135,5 +140,20 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
         /// <returns>Get Current Status list</returns>
         Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application);
+        /// <summary>
+        /// Get Counters
+        /// </summary>
+		/// <param name="environment">Environment name</param>
+        /// <returns>List of counters</returns>
+        Task<List<NodeCountersQueryItem>> GetCounters(string environment);
+        /// <summary>
+        /// Get Counter Values
+        /// </summary>
+        /// <param name="counterId">Counter id</param>
+        /// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+        /// <param name="limit">Value limit</param>
+        /// <returns>List of counter values</returns>
+        Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 1000);
     }
 }

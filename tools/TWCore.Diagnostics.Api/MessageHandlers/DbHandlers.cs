@@ -68,7 +68,12 @@ namespace TWCore.Diagnostics.Api
 			}
 
 			#region IDiagnosticMessagesHandler
-			public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
+            public void Init()
+            {
+                foreach (var item in _parent._messageHandlers)
+                    item.Init();
+            }
+            public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
 			{
 				foreach (var item in _parent._messageHandlers)
 					await item.ProcessLogItemsMessageAsync(message).ConfigureAwait(false);

@@ -33,13 +33,15 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         private static Lazy<DocumentStore> _documentStoreLazy = new Lazy<DocumentStore>(CreateDocumentStore);
         private static DocumentStore CreateDocumentStore()
         {
+            Core.Log.InfoBasic("Creating RavenDB document store");
             var store = new DocumentStore
             {
                 Urls = Settings.Urls, 
                 Database = Settings.Database
             };
             store.Initialize();
-            
+
+            Core.Log.InfoBasic("Creating RavenDB indexes");
             IndexCreation.CreateIndexes(typeof(RavenHelper).Assembly, store);
             
             return store;
@@ -51,6 +53,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             _documentStoreLazy = new Lazy<DocumentStore>(CreateDocumentStore);
         }
         #endregion
+
+        public static void Init()
+        {
+            var value = _documentStoreLazy.Value;
+        }
 
         public static async Task ExecuteAsync(Func<IAsyncDocumentSession, Task> sessionFunc)
         {

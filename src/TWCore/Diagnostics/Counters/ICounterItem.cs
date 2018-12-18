@@ -25,6 +25,14 @@ namespace TWCore.Diagnostics.Counters
     public interface ICounterItem
     {
         /// <summary>
+        /// Gets or sets the counter environment
+        /// </summary>
+        string Environment { get; }
+        /// <summary>
+        /// Gets or sets the counter application name
+        /// </summary>
+        string Application { get; }
+        /// <summary>
         /// Gets or sets the counter category
         /// </summary>
         string Category { get; set; }

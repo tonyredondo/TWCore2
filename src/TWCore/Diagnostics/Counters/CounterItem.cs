@@ -25,6 +25,14 @@ namespace TWCore.Diagnostics.Counters
     /// </summary>
     public sealed class CounterItem<T> : ICounterItem
 	{
+        /// <summary>
+        /// Gets or sets the counter environment
+        /// </summary>
+        public string Environment { get; set; }
+        /// <summary>
+        /// Gets or sets the counter application name
+        /// </summary>
+        public string Application { get; set; }
 		/// <summary>
 		/// Gets or sets the counter category
 		/// </summary>
@@ -75,6 +83,8 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CounterItem(string category, string name, CounterType type, CounterLevel level, List<CounterItemValue<T>> values)
         {
+            Environment = Core.EnvironmentName;
+            Application = Core.ApplicationName;
             Category = category;
             Name = name;
             Type = type;

@@ -329,6 +329,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     await RavenHelper.ExecuteAsync(async session =>
                     {
                         cEntity = await session.Advanced.AsyncDocumentQuery<NodeCountersItem>()
+                            .WhereEquals(item => item.Environment, counter.Environment)
+                            .WhereEquals(item => item.Application, counter.Application)
                             .WhereEquals(item => item.Category, counter.Category)
                             .WhereEquals(item => item.Name, counter.Name)
                             .FirstOrDefaultAsync().ConfigureAwait(false);
@@ -337,6 +339,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         {
                             cEntity = new NodeCountersItem
                             {
+                                Environment = counter.Environment,
+                                Application = counter.Application,
                                 CountersId = Guid.NewGuid(),
                                 Category = counter.Category,
                                 Name = counter.Name,

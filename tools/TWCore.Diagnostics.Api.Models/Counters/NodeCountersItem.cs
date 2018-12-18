@@ -25,6 +25,10 @@ namespace TWCore.Diagnostics.Api.Models.Counters
     public class NodeCountersItem
     {
 		[XmlAttribute, DataMember]
+        public string Environment { get; set; }
+		[XmlAttribute, DataMember]
+        public string Application { get; set; }
+		[XmlAttribute, DataMember]
         public Guid CountersId { get; set; }
 		[XmlAttribute, DataMember]
         public string Category { get; set; }

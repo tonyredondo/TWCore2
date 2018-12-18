@@ -95,7 +95,7 @@ namespace TWCore.Messaging.Server
         {
             Connection = connection;
             Config = server.Config;
-            Counters = new MQServerCounters(server.Name + "\\Listener (" + connection?.Route + ")");
+            Counters = new MQServerCounters(server.Name + "\\Listener (" + connection?.Route + ")", server.Config.IgnoreServerCounters);
             ReceiverSerializer = server.ReceiverSerializer;
             SenderSerializer = server.SenderSerializer;
             ResponseServer = responseServer;

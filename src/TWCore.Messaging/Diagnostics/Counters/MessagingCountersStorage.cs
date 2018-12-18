@@ -67,21 +67,12 @@ namespace TWCore.Diagnostics.Counters.Storages
         /// Store counters 
         /// </summary>
         /// <param name="counterItems">Counters items enumerables</param>
-        public void Store(IEnumerable<ICounterItem> counterItems)
+        public void Store(List<ICounterItem> counterItems)
         {
             if (_queueClient == null) return;
             try
             {
-                var cItems = counterItems
-                    .Where(i =>
-                    {
-                        if (i.Kind == CounterKind.Messaging && i.Name.Contains(_queueClient.Name))
-                            return false;
-                        return true;
-                    })
-                    .ToList();
-                if (cItems.Count > 0)
-                    _queueClient.SendAsync(cItems);
+                _queueClient.SendAsync(counterItems);
             }
             catch (Exception ex)
             {

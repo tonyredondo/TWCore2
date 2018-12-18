@@ -28,7 +28,7 @@ namespace TWCore.Diagnostics.Counters.Storages
         /// Store counters 
         /// </summary>
         /// <param name="counterItems">Counters items enumerables</param>
-        public void Store(IEnumerable<ICounterItem> counterItems)
+        public void Store(List<ICounterItem> counterItems)
         {
             if (counterItems == null) return;
             foreach(var counter in counterItems)

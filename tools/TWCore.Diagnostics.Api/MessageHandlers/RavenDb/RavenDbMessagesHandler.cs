@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Compression;
+using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Counters;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -328,7 +329,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                     await RavenHelper.ExecuteAsync(async session =>
                     {
-                        cEntity = await session.Advanced.AsyncDocumentQuery<NodeCountersItem>()
+                        cEntity = await session.Advanced.AsyncDocumentQuery<NodeCountersItem, Counters_CounterSelection>()
                             .WhereEquals(item => item.Environment, counter.Environment)
                             .WhereEquals(item => item.Application, counter.Application)
                             .WhereEquals(item => item.Category, counter.Category)

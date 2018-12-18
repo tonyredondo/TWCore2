@@ -80,9 +80,10 @@ namespace TWCore.Diagnostics.Counters.Storages
                         return true;
                     })
                     .ToList();
-                _queueClient.SendAsync(cItems);
+                if (cItems.Count > 0)
+                    _queueClient.SendAsync(cItems);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }

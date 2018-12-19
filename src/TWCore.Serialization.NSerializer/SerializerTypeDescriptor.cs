@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -32,6 +33,7 @@ namespace TWCore.Serialization.NSerializer
     public class SerializerTypeDescriptor
     {
         private static readonly MethodInfo NSerializableSerializeMInfo = typeof(INSerializable).GetMethod("Serialize", BindingFlags.Public | BindingFlags.Instance);
+        private static readonly ConcurrentDictionary<Type, bool> CreatedDescriptors = new ConcurrentDictionary<Type, bool>();
 
         public readonly bool IsNSerializable;
         public readonly byte[] Definition;
@@ -42,7 +44,6 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerTypeDescriptor(Type type)
         {
-            var createdDescriptors = new HashSet<Type>();
             Type = type;
             var ifaces = type.GetInterfaces();
             var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
@@ -211,8 +212,9 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (itemType == type)
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
-                if (!createdDescriptors.Add(itemType))
+                if (CreatedDescriptors.TryGetValue(itemType, out _))
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+                CreatedDescriptors.TryAdd(itemType, true);
 
                 var innerDescriptor = SerializersTable.Descriptors.GetOrAdd(itemType, tp => new SerializerTypeDescriptor(tp));
 
@@ -288,7 +290,7 @@ namespace TWCore.Serialization.NSerializer
                 innerSerExpressions.Add(Expression.Label(returnLabel));
                 var innerExpression = Expression.Block(innerVarExpressions, innerSerExpressions).Reduce();
 
-                createdDescriptors.Remove(itemType);
+                CreatedDescriptors.Clear();
                 return innerExpression;
             }
 
@@ -296,8 +298,9 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (itemType == type)
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
-                if (!createdDescriptors.Add(itemType))
+                if (CreatedDescriptors.TryGetValue(itemType, out _))
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+                CreatedDescriptors.TryAdd(itemType, true);
 
                 var innerDescriptor = SerializersTable.Descriptors.GetOrAdd(itemType, tp => new SerializerTypeDescriptor(tp));
 
@@ -354,7 +357,7 @@ namespace TWCore.Serialization.NSerializer
                 innerSerExpressions.Add(Expression.Label(returnLabel));
                 var innerExpression = Expression.Block(innerVarExpressions, innerSerExpressions).Reduce();
 
-                createdDescriptors.Remove(itemType);
+                CreatedDescriptors.Clear();
                 return innerExpression;
             }
             Expression WriteShortSealedExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression, LabelTarget returnLabel, SerializerTypeDescriptor innerDescriptor)

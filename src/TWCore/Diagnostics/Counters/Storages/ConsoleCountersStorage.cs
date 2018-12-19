@@ -33,7 +33,7 @@ namespace TWCore.Diagnostics.Counters.Storages
             if (counterItems == null) return;
             foreach(var counter in counterItems)
             {
-                Console.WriteLine($"Category: {counter.Category}, Name: {counter.Name}, Type: {counter.Type}, ValueType: {counter.TypeOfValue.Name}, Count: {counter.Count}.");
+                Console.WriteLine($"Kind: {counter.Kind}, Category: {counter.Category}, Name: {counter.Name}, Type: {counter.Type}, ValueType: {counter.TypeOfValue.Name}, Count: {counter.Count}.");
             }
         }
         /// <summary>

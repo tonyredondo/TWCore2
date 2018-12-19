@@ -27,8 +27,11 @@ namespace TWCore.Diagnostics.Counters
     /// </summary>
     /// <typeparam name="T">Type of counter</typeparam>
     public abstract class Counter<T>: ICounter<T>, ICounterReader
+        where T: IConvertible
     {
         private BlockingCollection<CounterItemValue<T>> _counterValues = new BlockingCollection<CounterItemValue<T>>();
+        private volatile CounterItemValue<T> _lastValue = null;
+        private readonly object _valueLock = new object();
 
         #region Properties
         /// <summary>
@@ -81,7 +84,24 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T value)
         {
-            _counterValues.Add(new CounterItemValue<T>(Core.Now, value));
+            //Now with a truncate to a second
+            var now = Core.Now.TruncateTo(TimeSpan.FromSeconds(1));
+            var lastValue = _lastValue;
+            if (lastValue?.Timestamp == now)
+            {
+                var nValue = MergeValues(lastValue.Value, value);
+                lock (_valueLock)
+                {
+                    if (_lastValue != null)
+                    {
+                        _lastValue.Value = nValue;
+                        return;
+                    }
+                }
+            }
+            var newItem = new CounterItemValue<T>(now, value);
+            _lastValue = newItem;
+            _counterValues.Add(newItem);
         }
         /// <summary>
         /// Takes a maximum number of values from the counter
@@ -95,11 +115,27 @@ namespace TWCore.Diagnostics.Counters
             var itemIdx = 0;
             while (itemIdx < items && _counterValues.TryTake(out var item))
             {
+                if (item == _lastValue)
+                {
+                    lock (_valueLock)
+                    {
+                        _lastValue = null;
+                    }
+                }
                 lstItems.Add(item);
                 itemIdx++;
             }
             return new CounterItem<T>(Category, Name, Type, Level, Kind, lstItems);
         }
+
+        /// <summary>
+        /// Merge values
+        /// </summary>
+        /// <returns>The value merged</returns>
+        /// <param name="oldValue">Old value</param>
+        /// <param name="newValue">New value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract T MergeValues(T oldValue, T newValue);
     }
 
 
@@ -136,6 +172,19 @@ namespace TWCore.Diagnostics.Counters
         {
             base.Add(-1);
         }
+        /// <summary>
+        /// Merge values
+        /// </summary>
+        /// <returns>The value merged</returns>
+        /// <param name="oldValue">Old value</param>
+        /// <param name="newValue">New value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override int MergeValues(int oldValue, int newValue)
+        {
+            if (Type == CounterType.Average)
+                return (oldValue + newValue) / 2;
+            return oldValue + newValue;
+        }
     }
     /// <summary>
     /// Double Counter
@@ -154,6 +203,19 @@ namespace TWCore.Diagnostics.Counters
         internal DoubleCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind) : base(category, name, type, level, kind)
         {
         }
+        /// <summary>
+        /// Merge values
+        /// </summary>
+        /// <returns>The value merged</returns>
+        /// <param name="oldValue">Old value</param>
+        /// <param name="newValue">New value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override double MergeValues(double oldValue, double newValue)
+        {
+            if (Type == CounterType.Average)
+                return (oldValue + newValue) / 2;
+            return oldValue + newValue;
+        }
     }
     /// <summary>
     /// Decimal Counter
@@ -171,6 +233,19 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal DecimalCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind) : base(category, name, type, level, kind)
         {
+        }
+        /// <summary>
+        /// Merge values
+        /// </summary>
+        /// <returns>The value merged</returns>
+        /// <param name="oldValue">Old value</param>
+        /// <param name="newValue">New value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override decimal MergeValues(decimal oldValue, decimal newValue)
+        {
+            if (Type == CounterType.Average)
+                return (oldValue + newValue) / 2;
+            return oldValue + newValue;
         }
     }
 

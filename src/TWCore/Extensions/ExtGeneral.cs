@@ -997,5 +997,41 @@ namespace TWCore
         private static void FinalizeTaskCompletionObject(object state, bool isTimeout)
             => ((TaskCompletionSource<object>)state).TrySetResult(null);
         #endregion
+
+        #region DateTime
+        /// <summary>
+        /// Truncates a DateTime using the TimeSpan value
+        /// </summary>
+        /// <returns>The result DateTime</returns>
+        /// <param name="dateTime">DateTime value</param>
+        /// <param name="timeSpan">TimeSpan value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DateTime TruncateTo(this DateTime dateTime, TimeSpan timeSpan)
+        {
+            if (timeSpan == TimeSpan.Zero)
+                return dateTime;
+            if (dateTime == DateTime.MinValue || dateTime == DateTime.MaxValue)
+                return dateTime;
+            return dateTime.AddTicks(-(dateTime.Ticks % timeSpan.Ticks));
+        }
+        #endregion
+
+        #region TimeSpan
+        /// <summary>
+        /// Truncates a TimeSpan using the TimeSpan value
+        /// </summary>
+        /// <returns>The result TimeSpan</returns>
+        /// <param name="timeSpan">TimeSpan value</param>
+        /// <param name="spanValue">TimeSpan value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TimeSpan TruncateTo(this TimeSpan timeSpan, TimeSpan spanValue)
+        {
+            if (spanValue == TimeSpan.Zero)
+                return timeSpan;
+            if (timeSpan == TimeSpan.MinValue || timeSpan == TimeSpan.MaxValue)
+                return timeSpan;
+            return timeSpan.Add(TimeSpan.FromTicks(-(timeSpan.Ticks % spanValue.Ticks)));
+        }
+        #endregion
     }
 }

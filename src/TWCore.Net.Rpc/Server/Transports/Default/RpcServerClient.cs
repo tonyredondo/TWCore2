@@ -180,6 +180,20 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
                     Task.Factory.StartNew(MessageReceivedHandler, message, _tokenSource.Token);
                 }
+                catch (DeserializerException dEx)
+                {
+                    var innerEx = dEx.InnerException;
+                    if (innerEx is IOException || innerEx is FormatException)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (_tokenSource?.IsCancellationRequested != true && _client.Connected && !_isDisposing)
+                            Core.Log.Write(innerEx);
+                        break;
+                    }
+                }
                 catch (IOException)
                 {
                     break;

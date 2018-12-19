@@ -247,6 +247,21 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         var message = _serializer.Deserialize<RPCMessage>(_readStream);
                         Task.Factory.StartNew(MessageReceivedHandler, message, _connectionCancellationToken);
                     }
+                    catch(DeserializerException dEx)
+                    {
+                        var innerEx = dEx.InnerException;
+                        if (innerEx is IOException)
+                        {
+                            OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(innerEx) });
+                            break;
+                        }
+                        else
+                        {
+                            if (!(innerEx is FormatException))
+                                Core.Log.Write(innerEx);
+                            _client?.Close();
+                        }
+                    }
                     catch (IOException ex)
                     {
                         OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });

@@ -80,9 +80,10 @@ namespace TWCore.Diagnostics
                     throw new Exception($"Trace data folder '{folderPath}' doesn't exist.");
             }
 
-            var filePath = Path.Combine(folderPath, traceItem.Name + extension.ToLowerInvariant());
-            filePath = filePath.RemoveFileNameInvalidChars();
+            var fileName = traceItem.Name + extension.ToLowerInvariant();
+            fileName = fileName.RemoveFileNameInvalidChars();
 
+            var filePath = Path.Combine(folderPath, fileName);
             return filePath;
         }
     }

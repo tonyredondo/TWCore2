@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <QueuesConfiguration>
   
-  <QueueConfig Name="TWCore.Diagnostics.Api">
+  <QueueConfig Name="TWCore.Diagnostics.Api"  IgnoreClientCounters="true">
 
     <Types Client="TWCore.Messaging.RabbitMQ.RabbitMQueueClient, TWCore.Messaging.RabbitMQ"
            Server="TWCore.Messaging.RabbitMQ.RabbitMQueueServer, TWCore.Messaging.RabbitMQ"
@@ -26,6 +26,12 @@
       <RecvQueue Route="{Env:DIAGNOSTICS_QUEUE_ROUTE}" Name="{Env:DIAGNOSTICS_QUEUE_NAME}" />
     </ServerQueues>
     
+    <ClientQueues EnvironmentName="REMOTE" MachineName="">
+      <SendQueue Route="amqp://agsw:agsw@10.10.1.52:5672/" Name="DIAGNOSTICS_RQ" />
+    </ClientQueues>
+    <ServerQueues EnvironmentName="REMOTE" MachineName="">
+      <RecvQueue Route="amqp://agsw:agsw@10.10.1.52:5672/" Name="DIAGNOSTICS_RQ" />
+    </ServerQueues>
 
     <RequestOptions SerializerMimeType="application/n-binary" CompressorEncodingType="deflate">
       <ClientSenderOptions MessageExpirationInSec="30" MessagePriority="Normal" UseDeadLetter="true" Recoverable="false" Label="DIAGNOSTICS REQUEST" />

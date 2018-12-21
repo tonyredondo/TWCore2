@@ -41,6 +41,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
     {
+        private static readonly DiagnosticsSettings Settings = Core.GetSettings<DiagnosticsSettings>();
         private static readonly ICompressor Compressor = new GZipCompressor();
         private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
         {
@@ -157,7 +158,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 {
                                     NBinarySerializer.Serialize(traceItem.TraceObject, msNBinary);
                                     msNBinary.Position = 0;
-                                    session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
+                                    if (Settings.StoreTracesToDisk)
+                                        await TraceDiskStorage.StoreAsync(traceInfo, msNBinary, ".nbin.gz").ConfigureAwait(false);
+                                    else
+                                        session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
                                 }
                                 catch (Exception ex)
                                 {
@@ -200,7 +204,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                     if (bXml)
                                     {
                                         msXml.Position = 0;
-                                        session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
+                                        if (Settings.StoreTracesToDisk)
+                                            await TraceDiskStorage.StoreAsync(traceInfo, msXml, ".xml.gz").ConfigureAwait(false);
+                                        else
+                                            session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
                                         lstExtensions.Add("XML");
                                     }
                                 }
@@ -245,7 +252,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                     if (bJson)
                                     {
                                         msJson.Position = 0;
-                                        session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
+                                        if (Settings.StoreTracesToDisk)
+                                            await TraceDiskStorage.StoreAsync(traceInfo, msJson, ".json.gz").ConfigureAwait(false);
+                                        else
+                                            session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
                                         lstExtensions.Add("JSON");
                                     }
                                 }
@@ -264,20 +274,23 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                         var value = serObj.GetValue();
                                         if (value is string txtValue)
                                         {
-                                            msTxt.Write(Encoding.UTF8.GetBytes(txtValue));
+                                            msTxt.Write(Encoding.UTF8.GetBytes(txtValue).ToGzip().AsReadOnlySpan());
                                             bTxt = true;
                                         }
                                     }
                                     else if (traceItem.TraceObject is string strObj)
                                     {
-                                        msTxt.Write(Encoding.UTF8.GetBytes(strObj));
+                                        msTxt.Write(Encoding.UTF8.GetBytes(strObj).ToGzip().AsReadOnlySpan());
                                         bTxt = true;
                                     }
 
                                     if (bTxt)
                                     {
                                         msTxt.Position = 0;
-                                        session.Advanced.Attachments.Store(traceInfo.Id, "TraceTxt", msTxt, traceItem.TraceObject?.GetType().FullName);
+                                        if (Settings.StoreTracesToDisk)
+                                            await TraceDiskStorage.StoreAsync(traceInfo, msTxt, ".txt.gz").ConfigureAwait(false);
+                                        else
+                                            session.Advanced.Attachments.Store(traceInfo.Id, "TraceTxt", msTxt, traceItem.TraceObject?.GetType().FullName);
                                         lstExtensions.Add("TXT");
                                     }
                                 }

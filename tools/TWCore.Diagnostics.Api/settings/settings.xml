@@ -38,6 +38,9 @@
       <Item Key="Core.Status.Transport.Http.Port" Value="28905" />
       <Item Key="RavenDb.Database" Value="Diagnostics" />
       <Item Key="RavenDb.Urls" Value="http://10.10.1.52:8080" />
+
+      <Item Key="Diagnostics.TracesFolderPath" Value="./tracesdata" />
+      <Item Key="Diagnostics.StoreTracesToDisk" Value="true" />
     </Items>
     <Overwrite EnvironmentName="Docker" MachineName="">
       <Item Key="Core.Status.Transport.Http.Port" Value="{Env:DIAGNOSTICS_STATUS_HTTP_PORT}" />

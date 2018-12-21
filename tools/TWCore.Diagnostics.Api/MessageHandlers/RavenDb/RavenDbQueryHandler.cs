@@ -37,6 +37,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbQueryHandler : IDiagnosticQueryHandler
     {
+        private static readonly DiagnosticsSettings Settings = Core.GetSettings<DiagnosticsSettings>();
         private static readonly ICompressor Compressor = new GZipCompressor();
         private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
         {
@@ -212,31 +213,90 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         /// </summary>
         /// <returns>The trace object</returns>
         /// <param name="id">Trace object id</param>
-        public Task<SerializedObject> GetTraceObjectAsync(string id)
+        public async Task<SerializedObject> GetTraceObjectAsync(string id)
         {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            if (Settings.StoreTracesToDisk)
             {
-                var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
-                if (attachment?.Stream is null) return null;
-                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                var traceItem = await RavenHelper.ExecuteAndReturnAsync(async session =>
+                {
+                    return await session.LoadAsync<NodeTraceItem>(id).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+
+                try
+                {
+                    return await GetFromDisk(traceItem, ".nbin.gz").ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    Core.Log.Write(ex);
+                    return await GetFromDatabase().ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                return await GetFromDatabase().ConfigureAwait(false);
+            }
+
+            #region Inner Methods
+            async Task<SerializedObject> GetFromDisk(NodeTraceItem nodeTraceItem, string extension)
+            {
+                var bytes = await TraceDiskStorage.GetAsync(nodeTraceItem, extension).ConfigureAwait(false);
                 if (bytes.IsGzip())
                     return NBinarySerializer.Deserialize<SerializedObject>(bytes);
                 else
                     return bytes.DeserializeFromNBinary<SerializedObject>();
-            });
+            }
+            Task<SerializedObject> GetFromDatabase()
+            {
+                return RavenHelper.ExecuteAndReturnAsync(async session =>
+                {
+                    using (var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false))
+                    {
+                        if (attachment?.Stream is null) return null;
+                        var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                        if (bytes.IsGzip())
+                            return NBinarySerializer.Deserialize<SerializedObject>(bytes);
+                        else
+                            return bytes.DeserializeFromNBinary<SerializedObject>();
+                    }
+                });
+            }
+            #endregion
         }
         /// <summary>
         /// Gets the Trace object
         /// </summary>
         /// <returns>The trace object</returns>
         /// <param name="id">Trace object id</param>
-        public Task<string> GetTraceAsync(string id, string traceName)
+        public async Task<string> GetTraceAsync(string id, string traceName)
         {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            if (Settings.StoreTracesToDisk)
             {
-                var attachment = await session.Advanced.Attachments.GetAsync(id, traceName).ConfigureAwait(false);
-                if (attachment?.Stream is null) return null;
-                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                var traceItem = await RavenHelper.ExecuteAndReturnAsync(async session =>
+                {
+                    return await session.LoadAsync<NodeTraceItem>(id).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+
+                var extension = traceName == "TraceXml" ? ".xml.gz" : traceName == "TraceJson" ? ".json.gz" : ".txt.gz";
+                try
+                {
+                    return await GetFromDisk(traceItem, extension).ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    Core.Log.Write(ex);
+                    return await GetFromDatabase().ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                return await GetFromDatabase().ConfigureAwait(false);
+            }
+
+            #region Inner Methods
+            async Task<string> GetFromDisk(NodeTraceItem nodeTraceItem, string extension)
+            {
+                var bytes = await TraceDiskStorage.GetAsync(nodeTraceItem, extension).ConfigureAwait(false);
                 if (bytes.IsGzip())
                 {
                     var desBytes = Compressor.Decompress(bytes);
@@ -246,7 +306,28 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 {
                     return Encoding.UTF8.GetString(bytes.AsSpan());
                 }
-            });
+            }
+            async Task<string> GetFromDatabase()
+            {
+                return await RavenHelper.ExecuteAndReturnAsync(async session =>
+                {
+                    using (var attachment = await session.Advanced.Attachments.GetAsync(id, traceName).ConfigureAwait(false))
+                    {
+                        if (attachment?.Stream is null) return null;
+                        var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                        if (bytes.IsGzip())
+                        {
+                            var desBytes = Compressor.Decompress(bytes);
+                            return Encoding.UTF8.GetString(desBytes.AsSpan());
+                        }
+                        else
+                        {
+                            return Encoding.UTF8.GetString(bytes.AsSpan());
+                        }
+                    }
+                }).ConfigureAwait(false);
+            }
+            #endregion
         }
         /// <summary>
         /// Gets the Trace object in xml

@@ -153,117 +153,130 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             using (var msJson = new RecycleMemoryStream())
                             using (var msTxt = new RecycleMemoryStream())
                             {
-                                #region NBinary
-                                try
-                                {
-                                    NBinarySerializer.Serialize(traceItem.TraceObject, msNBinary);
-                                    msNBinary.Position = 0;
-                                    if (Settings.StoreTracesToDisk)
-                                        await TraceDiskStorage.StoreAsync(traceInfo, msNBinary, ".nbin.gz").ConfigureAwait(false);
-                                    else
-                                        session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Core.Log.Write(ex);
-                                }
-                                #endregion
 
-                                #region Xml Serializer
-                                try
+                                var writeBinary = Settings.WriteInBinary || Settings.ForceBinaryOnApp.Contains(traceItem.ApplicationName, StringComparer.OrdinalIgnoreCase);
+                                if (writeBinary)
                                 {
-                                    var bXml = false;
-                                    if (traceItem.TraceObject is SerializedObject serObj)
+                                    #region NBinary
+                                    try
                                     {
-                                        var value = serObj.GetValue();
-                                        switch (value)
+                                        NBinarySerializer.Serialize(traceItem.TraceObject, msNBinary);
+                                        msNBinary.Position = 0;
+                                        if (Settings.StoreTracesToDisk)
+                                            await TraceDiskStorage.StoreAsync(traceInfo, msNBinary, ".nbin.gz").ConfigureAwait(false);
+                                        else
+                                            session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Core.Log.Write(ex);
+                                    }
+                                    #endregion
+                                }
+
+                                var writeInXml = Settings.WriteInXml || Settings.ForceXmlOnApp.Contains(traceItem.ApplicationName, StringComparer.OrdinalIgnoreCase);
+                                if (writeInXml)
+                                {
+                                    #region Xml Serializer
+                                    try
+                                    {
+                                        var bXml = false;
+                                        if (traceItem.TraceObject is SerializedObject serObj)
                                         {
-                                            case ResponseMessage rsMessage when rsMessage?.Body != null:
-                                                XmlSerializer.Serialize(rsMessage.Body.GetValue(), msXml);
-                                                bXml = true;
-                                                break;
-                                            case RequestMessage rqMessage when rqMessage?.Body != null:
-                                                XmlSerializer.Serialize(rqMessage.Body.GetValue(), msXml);
-                                                bXml = true;
-                                                break;
-                                            default:
-                                                if (value != null && value.GetType() != typeof(string))
-                                                {
-                                                    XmlSerializer.Serialize(value, msXml);
+                                            var value = serObj.GetValue();
+                                            switch (value)
+                                            {
+                                                case ResponseMessage rsMessage when rsMessage?.Body != null:
+                                                    XmlSerializer.Serialize(rsMessage.Body.GetValue(), msXml);
                                                     bXml = true;
-                                                }
-                                                break;
+                                                    break;
+                                                case RequestMessage rqMessage when rqMessage?.Body != null:
+                                                    XmlSerializer.Serialize(rqMessage.Body.GetValue(), msXml);
+                                                    bXml = true;
+                                                    break;
+                                                default:
+                                                    if (value != null && value.GetType() != typeof(string))
+                                                    {
+                                                        XmlSerializer.Serialize(value, msXml);
+                                                        bXml = true;
+                                                    }
+                                                    break;
+                                            }
                                         }
-                                    }
-                                    else if (!(traceItem.TraceObject is string))
-                                    {
-                                        XmlSerializer.Serialize(traceItem.TraceObject, msXml);
-                                        bXml = true;
-                                    }
-
-                                    if (bXml)
-                                    {
-                                        msXml.Position = 0;
-                                        if (Settings.StoreTracesToDisk)
-                                            await TraceDiskStorage.StoreAsync(traceInfo, msXml, ".xml.gz").ConfigureAwait(false);
-                                        else
-                                            session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
-                                        lstExtensions.Add("XML");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Core.Log.Write(ex);
-                                }
-                                #endregion
-
-                                #region Json Serializer
-                                try
-                                {
-                                    var bJson = false;
-                                    if (traceItem.TraceObject is SerializedObject serObj)
-                                    {
-                                        var value = serObj.GetValue();
-                                        switch (value)
+                                        else if (!(traceItem.TraceObject is string))
                                         {
-                                            case ResponseMessage rsMessage when rsMessage?.Body != null:
-                                                JsonSerializer.Serialize(rsMessage.Body.GetValue(), msJson);
-                                                bJson = true;
-                                                break;
-                                            case RequestMessage rqMessage when rqMessage?.Body != null:
-                                                JsonSerializer.Serialize(rqMessage.Body.GetValue(), msJson);
-                                                bJson = true;
-                                                break;
-                                            default:
-                                                if (value != null && value.GetType() != typeof(string))
-                                                {
-                                                    JsonSerializer.Serialize(value, msJson);
-                                                    bJson = true;
-                                                }
-                                                break;
+                                            XmlSerializer.Serialize(traceItem.TraceObject, msXml);
+                                            bXml = true;
+                                        }
+
+                                        if (bXml)
+                                        {
+                                            msXml.Position = 0;
+                                            if (Settings.StoreTracesToDisk)
+                                                await TraceDiskStorage.StoreAsync(traceInfo, msXml, ".xml.gz").ConfigureAwait(false);
+                                            else
+                                                session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
+                                            lstExtensions.Add("XML");
                                         }
                                     }
-                                    else if (!(traceItem.TraceObject is string))
+                                    catch (Exception ex)
                                     {
-                                        JsonSerializer.Serialize(traceItem.TraceObject, msJson);
-                                        bJson = true;
+                                        Core.Log.Write(ex);
                                     }
+                                    #endregion
+                                }
 
-                                    if (bJson)
-                                    {
-                                        msJson.Position = 0;
-                                        if (Settings.StoreTracesToDisk)
-                                            await TraceDiskStorage.StoreAsync(traceInfo, msJson, ".json.gz").ConfigureAwait(false);
-                                        else
-                                            session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
-                                        lstExtensions.Add("JSON");
-                                    }
-                                }
-                                catch (Exception ex)
+                                var writeInJson = Settings.WriteInJson || Settings.ForceJsonOnApp.Contains(traceItem.ApplicationName, StringComparer.OrdinalIgnoreCase);
+                                if (writeInJson)
                                 {
-                                    Core.Log.Write(ex);
+                                    #region Json Serializer
+                                    try
+                                    {
+                                        var bJson = false;
+                                        if (traceItem.TraceObject is SerializedObject serObj)
+                                        {
+                                            var value = serObj.GetValue();
+                                            switch (value)
+                                            {
+                                                case ResponseMessage rsMessage when rsMessage?.Body != null:
+                                                    JsonSerializer.Serialize(rsMessage.Body.GetValue(), msJson);
+                                                    bJson = true;
+                                                    break;
+                                                case RequestMessage rqMessage when rqMessage?.Body != null:
+                                                    JsonSerializer.Serialize(rqMessage.Body.GetValue(), msJson);
+                                                    bJson = true;
+                                                    break;
+                                                default:
+                                                    if (value != null && value.GetType() != typeof(string))
+                                                    {
+                                                        JsonSerializer.Serialize(value, msJson);
+                                                        bJson = true;
+                                                    }
+                                                    break;
+                                            }
+                                        }
+                                        else if (!(traceItem.TraceObject is string))
+                                        {
+                                            JsonSerializer.Serialize(traceItem.TraceObject, msJson);
+                                            bJson = true;
+                                        }
+
+                                        if (bJson)
+                                        {
+                                            msJson.Position = 0;
+                                            if (Settings.StoreTracesToDisk)
+                                                await TraceDiskStorage.StoreAsync(traceInfo, msJson, ".json.gz").ConfigureAwait(false);
+                                            else
+                                                session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
+                                            lstExtensions.Add("JSON");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Core.Log.Write(ex);
+                                    }
+                                    #endregion
                                 }
-                                #endregion
 
                                 #region String Serializer
                                 try

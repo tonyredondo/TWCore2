@@ -34,5 +34,32 @@ namespace TWCore.Diagnostics
         /// Traces folder path
         /// </summary>
         public string TracesFolderPath { get; set; } = Environment.CurrentDirectory;
+        /// <summary>
+        /// Binary data
+        /// </summary>
+        public bool WriteInBinary { get; set; } = false;
+        /// <summary>
+        /// Xml data
+        /// </summary>
+        public bool WriteInXml { get; set; } = true;
+        /// <summary>
+        /// Json data
+        /// </summary>
+        public bool WriteInJson { get; set; } = true;
+        /// <summary>
+        /// Force write binary on app
+        /// </summary>
+        [SettingsArray(';')]
+        public string[] ForceBinaryOnApp { get; set; } = new string[0];
+        /// <summary>
+        /// Force write xml on app
+        /// </summary>
+        [SettingsArray(';')]
+        public string[] ForceXmlOnApp { get; set; } = new string[0];
+        /// <summary>
+        /// Force write json on app
+        /// </summary>
+        [SettingsArray(';')]
+        public string[] ForceJsonOnApp { get; set; } = new string[0];
     }
 }

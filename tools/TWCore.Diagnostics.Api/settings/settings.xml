@@ -41,6 +41,12 @@
 
       <Item Key="Diagnostics.TracesFolderPath" Value="./tracesdata" />
       <Item Key="Diagnostics.StoreTracesToDisk" Value="true" />
+      <Item Key="Diagnostics.WriteInBinary" Value="false" />
+      <Item Key="Diagnostics.WriteInXml" Value="true" />
+      <Item Key="Diagnostics.WriteInJson" Value="false" />
+      <Item Key="Diagnostics.ForceBinaryOnApp" Value="" />
+      <Item Key="Diagnostics.ForceXmlOnApp" Value="" />
+      <Item Key="Diagnostics.ForceJsonOnApp" Value="Agsw.Travel.Api;" />
     </Items>
     <Overwrite EnvironmentName="Docker" MachineName="">
       <Item Key="Core.Status.Transport.Http.Port" Value="{Env:DIAGNOSTICS_STATUS_HTTP_PORT}" />

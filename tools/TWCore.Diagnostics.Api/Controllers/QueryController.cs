@@ -271,7 +271,7 @@ namespace TWCore.Diagnostics.Api.Controllers
 		/// <param name="limit">Values count limit</param>
         /// <returns>List of counter values</returns>
         [HttpGet("{environment}/counters/{counterId}")]
-        public Task<List<NodeCountersQueryValue>> GetCounterValues([FromRoute] string environment, [FromRoute] Guid counterId, DateTime fromDate, DateTime toDate, int limit = 1000)
+        public Task<List<NodeCountersQueryValue>> GetCounterValues([FromRoute] string environment, [FromRoute] Guid counterId, DateTime fromDate, DateTime toDate, int limit = 3600)
         {
             if (toDate == DateTime.MinValue) toDate = Core.Now.Date;
             fromDate = fromDate.Date;

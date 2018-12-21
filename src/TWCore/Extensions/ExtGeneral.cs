@@ -864,6 +864,19 @@ namespace TWCore
             dateData[22] = (char)(millisecond % 10 + 48);
             return dateData.ToString();
         }
+
+        /// <summary>
+        /// Maps an object instance to other type
+        /// </summary>
+        /// <typeparam name="TFrom">Source type</typeparam>
+        /// <typeparam name="TTo">Destination type</typeparam>
+        /// <param name="from">Source object instance</param>
+        /// <returns>Destination object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TTo MapTo<TFrom, TTo>(this TFrom from)
+        {
+            return Map<TFrom, TTo>.Apply(from);
+        }
         #endregion
 
         #region WaitHandles Extensions

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ using TWCore.Tests;
 // ReSharper disable UnusedVariable
 
 namespace TWCore.Test.Core
-{
+{    
     internal class Program
     {
         private static readonly ICompressor Compressor = new GZipCompressor();
@@ -70,11 +71,21 @@ namespace TWCore.Test.Core
             public T5 Item5 { get; set; }
         }
 
+        
+        public class AItem
+        {
+            public string Name { get; set; }
+        }
+        public class BItem
+        {
+            public string Name { get; set; }
+        }
+
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
 
-			var kv1 = new KeyValue<string, DateTime?>("Hola", TWCore.Core.Now);
+            var kv1 = new KeyValue<string, DateTime?>("Hola", TWCore.Core.Now);
 			var kv2 = new KeyValue<string, DateTime?>("Hola", null);
 			var kv3 = new KeyValue<string, string>("Hola", null);
 			var kv4 = new KeyValue<string, string>("Hola", "");

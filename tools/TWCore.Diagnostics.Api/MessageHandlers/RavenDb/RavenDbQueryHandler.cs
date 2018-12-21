@@ -451,7 +451,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
         /// <param name="limit">Value limit</param>
         /// <returns>List of counter values</returns>
-        public async Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 1000)
+        public async Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 3600)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
             {

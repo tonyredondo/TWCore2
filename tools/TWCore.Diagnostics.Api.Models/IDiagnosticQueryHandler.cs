@@ -154,6 +154,6 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="toDate">To date and time</param>
         /// <param name="limit">Value limit</param>
         /// <returns>List of counter values</returns>
-        Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 1000);
+        Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 3600);
     }
 }

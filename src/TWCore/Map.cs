@@ -35,11 +35,21 @@ namespace TWCore
         /// Sets the Map expression to convert an object from one Type to another
         /// </summary>
         /// <param name="mapExpression">Map expression</param>
-        public static void Set(Expression<Func<TFrom, TTo>> mapExpression)
+        public static void SetExpression(Expression<Func<TFrom, TTo>> mapExpression)
         {
             if (mapExpression == null)
                 throw new ArgumentNullException("mapExpression", "The expression can't be null");
             MapFunc = mapExpression.Compile();
+        }
+        /// <summary>
+        /// Sets the Map func to convert an object from one Type to another
+        /// </summary>
+        /// <param name="mapFunc">Map func</param>
+        public static void Set(Func<TFrom, TTo> mapFunc)
+        {
+            if (mapFunc == null)
+                throw new ArgumentNullException("mapFunc", "The Func can't be null");
+            MapFunc = mapFunc;
         }
 
         /// <summary>

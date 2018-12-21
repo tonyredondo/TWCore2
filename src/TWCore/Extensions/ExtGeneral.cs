@@ -877,6 +877,23 @@ namespace TWCore
         {
             return Map<TFrom, TTo>.Apply(from);
         }
+        /// <summary>
+        /// Maps an object instance to other type
+        /// </summary>
+        /// <typeparam name="TFrom">Source type</typeparam>
+        /// <typeparam name="TTo">Destination type</typeparam>
+        /// <param name="from">Source object instance</param>
+        /// <param name="mapFunc">Map func</param>
+        /// <returns>Destination object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TTo MapTo<TFrom, TTo>(this TFrom from, Func<TFrom, TTo> mapFunc) 
+            where TFrom: class
+            where TTo: class
+        {
+            if (from == default)
+                return default;
+            return mapFunc(from);
+        }
         #endregion
 
         #region WaitHandles Extensions

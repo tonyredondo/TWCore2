@@ -85,6 +85,9 @@ namespace TWCore.Test.Core
         {
             Console.WriteLine("MAIN");
 
+            var aValue = new AItem { Name = "Test" };
+            var bValue = aValue.MapTo(i => new BItem { Name = i.Name });
+
             var kv1 = new KeyValue<string, DateTime?>("Hola", TWCore.Core.Now);
 			var kv2 = new KeyValue<string, DateTime?>("Hola", null);
 			var kv3 = new KeyValue<string, string>("Hola", null);

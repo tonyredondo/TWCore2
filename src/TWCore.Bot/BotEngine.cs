@@ -31,9 +31,9 @@ namespace TWCore.Bot
     public class BotEngine : IBotEngine
     {
         const string CounterCategory = "Bot Engine";
-        private IntegerCounter _counterTrackedChat = Core.Counters.GetIntegerCounter(CounterCategory, "Tracked Chats", CounterType.Current, CounterLevel.Framework, CounterKind.Bot);
-        private IntegerCounter _counterMessagesSent = Core.Counters.GetIntegerCounter(CounterCategory, "Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Bot);
-        private IntegerCounter _counterMessagesReceived = Core.Counters.GetIntegerCounter(CounterCategory, "Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Bot);
+        private IntegerCounter _counterTrackedChat = Core.Counters.GetIntegerCounter(CounterCategory, "Tracked Chats", CounterType.Current, CounterLevel.Framework, CounterKind.Bot, CounterUnit.Items);
+        private IntegerCounter _counterMessagesSent = Core.Counters.GetIntegerCounter(CounterCategory, "Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Bot, CounterUnit.Messages);
+        private IntegerCounter _counterMessagesReceived = Core.Counters.GetIntegerCounter(CounterCategory, "Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Bot, CounterUnit.Messages);
 
         #region Events
         /// <summary>

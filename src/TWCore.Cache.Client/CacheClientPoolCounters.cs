@@ -54,22 +54,22 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CacheClientPoolCounters(string name)
         {
-            _existKeyTime = Core.Counters.GetDoubleCounter(Category, name + @"\Exists Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get By Tag Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getCreationDateTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get CreationDate Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getExpirationDateTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get ExpirationDate Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getKeysTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Keys Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getMetaTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Meta Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getMetaByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Meta By Tag Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _getOrSetTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Or Sets Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _removeTime = Core.Counters.GetDoubleCounter(Category, name + @"\Remove Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _removeByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Remove By Tag Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _setTime = Core.Counters.GetDoubleCounter(Category, name + @"\Set Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _updateDataTime = Core.Counters.GetDoubleCounter(Category, name + @"\Update Data Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _copyTime = Core.Counters.GetDoubleCounter(Category, name + @"\Copy Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _setMultiTime = Core.Counters.GetDoubleCounter(Category, name + @"\Set Multi Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
-            _executeExtensionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Execute Extension Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache);
+            _existKeyTime = Core.Counters.GetDoubleCounter(Category, name + @"\Exists Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get By Tag Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getCreationDateTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get CreationDate Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getExpirationDateTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get ExpirationDate Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getKeysTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Keys Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getMetaTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Meta Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getMetaByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Meta By Tag Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _getOrSetTime = Core.Counters.GetDoubleCounter(Category, name + @"\Get Or Sets Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _removeTime = Core.Counters.GetDoubleCounter(Category, name + @"\Remove Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _removeByTagTime = Core.Counters.GetDoubleCounter(Category, name + @"\Remove By Tag Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _setTime = Core.Counters.GetDoubleCounter(Category, name + @"\Set Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _updateDataTime = Core.Counters.GetDoubleCounter(Category, name + @"\Update Data Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _copyTime = Core.Counters.GetDoubleCounter(Category, name + @"\Copy Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _setMultiTime = Core.Counters.GetDoubleCounter(Category, name + @"\Set Multi Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
+            _executeExtensionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Execute Extension Time", CounterType.Average, CounterLevel.Framework, CounterKind.Cache, CounterUnit.Milliseconds);
 
         }
         #endregion

@@ -37,8 +37,8 @@ namespace TWCore.Net.RPC
         /// </summary>
         public RPCTransportCounters()
         {
-            _bytesSent = Core.Counters.GetIntegerCounter(Category, @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.RPC);
-            _bytesReceived = Core.Counters.GetIntegerCounter(Category, @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.RPC);
+            _bytesSent = Core.Counters.GetIntegerCounter(Category, @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.RPC, CounterUnit.Bytes);
+            _bytesReceived = Core.Counters.GetIntegerCounter(Category, @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.RPC, CounterUnit.Bytes);
         }
         #endregion
 

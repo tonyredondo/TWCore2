@@ -55,12 +55,12 @@ namespace TWCore.Messaging.Server
         public MQServerCounters(string name, bool ignoreCounters)
         {
             if (ignoreCounters) return;
-            _currentMessages = Core.Counters.GetIntegerCounter(Category, name + @"\Current Messages", CounterType.Current, CounterLevel.Framework, CounterKind.Messaging);
-            _totalMessagesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
-            _totalMessagesProcessed = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Processed", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
-            _totalExceptions = Core.Counters.GetIntegerCounter(Category, name + @"\Exceptions", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
-            _totalReceivingTime = Core.Counters.GetDoubleCounter(Category, name + @"\Receiving Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging);
-            _totalReceivingBytes = Core.Counters.GetIntegerCounter(Category, name + @"\Receiving Bytes", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
+            _currentMessages = Core.Counters.GetIntegerCounter(Category, name + @"\Current Messages", CounterType.Current, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Messages);
+            _totalMessagesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Messages);
+            _totalMessagesProcessed = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Processed", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Messages);
+            _totalExceptions = Core.Counters.GetIntegerCounter(Category, name + @"\Exceptions", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Exceptions);
+            _totalReceivingTime = Core.Counters.GetDoubleCounter(Category, name + @"\Receiving Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Milliseconds);
+            _totalReceivingBytes = Core.Counters.GetIntegerCounter(Category, name + @"\Receiving Bytes", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Bytes);
         }
         #endregion
 

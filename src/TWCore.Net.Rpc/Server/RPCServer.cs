@@ -352,7 +352,7 @@ namespace TWCore.Net.RPC.Server
                     else
                         response.ReturnValue = results;
                     execTime.Stop();
-                    var counter = Core.Counters.GetDoubleCounter(_server._counterCategory, Descriptor.Name + "\\" + mDesc.Name, CounterType.Average, _server._counterLevel, _server._counterKind);
+                    var counter = Core.Counters.GetDoubleCounter(_server._counterCategory, Descriptor.Name + "\\" + mDesc.Name, CounterType.Average, _server._counterLevel, _server._counterKind, CounterUnit.Milliseconds);
                     counter.Add(execTime.Elapsed.TotalMilliseconds);
                 }
                 catch (TargetInvocationException ex)

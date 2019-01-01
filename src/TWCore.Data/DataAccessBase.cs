@@ -280,7 +280,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -466,7 +466,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -591,7 +591,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = OnExecuteNonQuery(nameOrQuery, parameters);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -681,7 +681,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 OnExecuteNonQuery(nameOrQuery, parametersIEnumerable);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
             }
             catch (Exception ex)
             {
@@ -788,7 +788,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = OnSelectScalar<T>(nameOrQuery, parameters);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -982,7 +982,7 @@ namespace TWCore.Data
                 var rs2 = new ResultSet<T2>(fillMethod2);
                 OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }, out returnValue);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return (rs1.Result, rs2.Result);
             }
             catch (Exception ex)
@@ -1139,7 +1139,7 @@ namespace TWCore.Data
                 var rs3 = new ResultSet<T3>(fillMethod3);
                 OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }, out returnValue);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return (rs1.Result, rs2.Result, rs3.Result);
             }
             catch (Exception ex)
@@ -1164,7 +1164,7 @@ namespace TWCore.Data
             var sw = Stopwatch.StartNew();
             OnSelectElements(nameOrQuery, parameters, resultSets, out returnValue);
             sw.Stop();
-            Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+            Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
         }
         /// <summary>
         /// Selects a all Result sets with a collection of elements from the data source
@@ -1315,7 +1315,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -1447,7 +1447,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -1559,7 +1559,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = await OnExecuteNonQueryAsync(nameOrQuery, parameters).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -1649,7 +1649,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 await OnExecuteNonQueryAsync(nameOrQuery, parametersIEnumerable).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
             }
             catch (Exception ex)
             {
@@ -1760,7 +1760,7 @@ namespace TWCore.Data
                 var sw = Stopwatch.StartNew();
                 var response = await OnSelectScalarAsync<T>(nameOrQuery, parameters).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return response;
             }
             catch (Exception ex)
@@ -1939,7 +1939,7 @@ namespace TWCore.Data
                 var rs2 = new ResultSet<T2>(fillMethod2);
                 await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return (rs1.Result, rs2.Result);
             }
             catch (Exception ex)
@@ -2079,7 +2079,7 @@ namespace TWCore.Data
                 var rs3 = new ResultSet<T3>(fillMethod3);
                 await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }).ConfigureAwait(false);
                 sw.Stop();
-                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+                Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
                 return (rs1.Result, rs2.Result, rs3.Result);
             }
             catch (Exception ex)
@@ -2103,7 +2103,7 @@ namespace TWCore.Data
             var sw = Stopwatch.StartNew();
             await OnSelectElementsAsync(nameOrQuery, parameters, resultSets).ConfigureAwait(false);
             sw.Stop();
-            Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess).Add(sw.Elapsed.TotalMilliseconds);
+            Core.Counters.GetDoubleCounter(_counterCategory, nameOrQuery, Diagnostics.Counters.CounterType.Average, Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.DataAccess, Diagnostics.Counters.CounterUnit.Milliseconds).Add(sw.Elapsed.TotalMilliseconds);
         }
         /// <summary>
         /// Selects a all Result sets with a collection of elements from the data source

@@ -47,11 +47,11 @@ namespace TWCore.Messaging.Client
 		public MQClientCounters(string name, bool ignoreCounters)
 		{
             if (ignoreCounters) return;
-            _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
-            _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
-            _receptionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Reception Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging);
-            _bytesSent = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
-            _bytesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging);
+            _messagesSentCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Messages);
+            _messagesReceivedCount = Core.Counters.GetIntegerCounter(Category, name + @"\Messages Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Messages);
+            _receptionTime = Core.Counters.GetDoubleCounter(Category, name + @"\Reception Time", CounterType.Average, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Milliseconds);
+            _bytesSent = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Bytes);
+            _bytesReceived = Core.Counters.GetIntegerCounter(Category, name + @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.Messaging, CounterUnit.Bytes);
         }
         #endregion
 

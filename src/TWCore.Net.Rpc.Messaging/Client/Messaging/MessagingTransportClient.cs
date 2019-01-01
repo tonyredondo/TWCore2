@@ -40,7 +40,12 @@ namespace TWCore.Net.RPC.Client.Transports
         private readonly IMQueueClient _queueClient;
         private readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
         private ServiceDescriptorCollection _descriptors;
-        
+
+        /// <summary>
+        /// Transport Counters
+        /// </summary>
+        protected RPCTransportCounters Counters = new RPCTransportCounters();
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -84,11 +89,6 @@ namespace TWCore.Net.RPC.Client.Transports
                 }
             }
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
         #endregion
 
         #region Events

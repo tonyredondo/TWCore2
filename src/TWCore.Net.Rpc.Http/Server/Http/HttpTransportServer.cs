@@ -35,6 +35,11 @@ namespace TWCore.Net.RPC.Server.Transports
     {
         private readonly SimpleHttpServer _httpServer;
 
+        /// <summary>
+        /// Transport Counters
+        /// </summary>
+        protected RPCTransportCounters Counters = new RPCTransportCounters();
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -55,11 +60,6 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Http server port
         /// </summary>
         public int Port { get; set; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
         #endregion
 
         #region Events
@@ -96,8 +96,6 @@ namespace TWCore.Net.RPC.Server.Transports
                 collection.Add(nameof(Name), Name);
                 collection.Add(nameof(Port), Port);
                 collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
-                collection.Add("Bytes Sent", Counters.BytesSent, true);
-                collection.Add("Bytes Received", Counters.BytesReceived, true);
                 Core.Status.AttachChild(_httpServer, this);
                 Core.Status.AttachChild(Serializer, this);
             });

@@ -59,11 +59,6 @@ namespace TWCore.Net.RPC.Server.Transports
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => this.Each(i => i.Serializer = value);
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        public RPCTransportCounters Counters { get; } = null;
         #endregion
 
         #region Events

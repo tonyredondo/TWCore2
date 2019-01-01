@@ -15,8 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
-using System.Threading;
-using TWCore.Diagnostics.Status;
+using TWCore.Diagnostics.Counters;
 
 // ReSharper disable InconsistentNaming
 
@@ -27,19 +26,10 @@ namespace TWCore.Net.RPC
     /// </summary>
     public class RPCTransportCounters
     {
-        private long _bytesSent;
-        private long _bytesReceived;
+        const string Category = "RPC Transport";
 
-        #region Properties
-        /// <summary>
-        /// Bytes sent
-        /// </summary>
-        public long BytesSent => _bytesSent;
-        /// <summary>
-        /// Bytes received
-        /// </summary>
-        public long BytesReceived => _bytesReceived;
-        #endregion
+        private readonly IntegerCounter _bytesSent = null;
+        private readonly IntegerCounter _bytesReceived = null;
 
         #region .ctor
         /// <summary>
@@ -47,44 +37,30 @@ namespace TWCore.Net.RPC
         /// </summary>
         public RPCTransportCounters()
         {
-            Core.Status.Attach(collection =>
-            {
-                collection.Add("Data Transfer",
-                    new StatusItemValueItem("Megabytes Sent", BytesSent.ToMegabytes(), true),
-                    new StatusItemValueItem("Megabytes Received", BytesReceived.ToMegabytes(), true));
-            });
+            _bytesSent = Core.Counters.GetIntegerCounter(Category, @"\Bytes Sent", CounterType.Cumulative, CounterLevel.Framework, CounterKind.RPC);
+            _bytesReceived = Core.Counters.GetIntegerCounter(Category, @"\Bytes Received", CounterType.Cumulative, CounterLevel.Framework, CounterKind.RPC);
         }
         #endregion
 
         #region Public Methods
         /// <summary>
-        /// Set Bytes Sent
-        /// </summary>
-        /// <param name="bytes">Bytes sent</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetBytesSent(long bytes)
-            => Interlocked.Exchange(ref _bytesSent, bytes);
-        /// <summary>
-        /// Set Bytes Received
-        /// </summary>
-        /// <param name="bytes">Bytes received</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetBytesReceived(long bytes)
-            => Interlocked.Exchange(ref _bytesReceived, bytes);
-        /// <summary>
         /// Increment Bytes Sent
         /// </summary>
         /// <param name="bytes">Bytes sent</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncrementBytesSent(long bytes)
-            => Interlocked.Add(ref _bytesSent, bytes);
+        public void IncrementBytesSent(int bytes)
+        {
+            _bytesSent.Add(bytes);
+        }
         /// <summary>
         /// Increment Bytes Received
         /// </summary>
         /// <param name="bytes">Bytes received</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncrementBytesReceived(long bytes)
-            => Interlocked.Add(ref _bytesReceived, bytes);
+        public void IncrementBytesReceived(int bytes)
+        {
+            _bytesReceived.Add(bytes);
+        }
         #endregion
     }
 }

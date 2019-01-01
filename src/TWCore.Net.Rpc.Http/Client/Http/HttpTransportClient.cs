@@ -42,6 +42,11 @@ namespace TWCore.Net.RPC.Client.Transports
 	    private ServiceDescriptorCollection _descriptors;
 	    private HttpClient _httpClient;
 
+        /// <summary>
+        /// Transport Counters
+        /// </summary>
+        protected RPCTransportCounters Counters = new RPCTransportCounters();
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -81,11 +86,6 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         [StatusProperty]
         public string Url { get; set; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
         #endregion
 
         #region Events
@@ -110,12 +110,7 @@ namespace TWCore.Net.RPC.Client.Transports
             _httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             Serializer = new JsonTextSerializer();
 
-            Core.Status.Attach(collection =>
-            {
-                collection.Add("Bytes Sent", Counters.BytesSent, true);
-                collection.Add("Bytes Received", Counters.BytesReceived, true);
-                Core.Status.AttachChild(_httpClient, this);
-            }, this);
+            Core.Status.AttachChild(_httpClient, this);
         }
         /// <inheritdoc />
         /// <summary>

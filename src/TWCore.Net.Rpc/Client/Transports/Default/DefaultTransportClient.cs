@@ -86,12 +86,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         [StatusProperty]
         public int Port { get; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        [StatusReference]
-        public RPCTransportCounters Counters { get; }
         /// <summary>
         /// Invoke Method Timeout
         /// </summary>

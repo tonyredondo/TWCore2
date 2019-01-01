@@ -35,7 +35,12 @@ namespace TWCore.Net.RPC.Server.Transports
     public class MessagingTransportServer : ITransportServer
     {
         private readonly IMQueueServer _queueServer;
-        
+
+        /// <summary>
+        /// Transport Counters
+        /// </summary>
+        protected RPCTransportCounters Counters = new RPCTransportCounters();
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -61,11 +66,6 @@ namespace TWCore.Net.RPC.Server.Transports
                 _queueServer.ReceiverSerializer = value;
             }
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
         #endregion
 
         #region Events
@@ -99,8 +99,6 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 collection.Add(nameof(Name), Name);
                 collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
-                collection.Add("Bytes Sent", Counters.BytesSent, true);
-                collection.Add("Bytes Received", Counters.BytesReceived, true);
                 Core.Status.AttachChild(Serializer, this);
                 Core.Status.AttachChild(_queueServer, this);
             }, this);
@@ -118,8 +116,6 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 collection.Add(nameof(Name), Name);
                 collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
-                collection.Add("Bytes Sent", Counters.BytesSent, true);
-                collection.Add("Bytes Received", Counters.BytesReceived, true);
                 Core.Status.AttachChild(Serializer, this);
                 Core.Status.AttachChild(_queueServer, this);
             }, this);

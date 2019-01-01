@@ -76,12 +76,6 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// </summary>
         [StatusProperty]
         public int Port { get; set; }
-        /// <inheritdoc />
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        [StatusReference]
-        public RPCTransportCounters Counters { get; }
         #endregion
 
         #region Events

@@ -41,10 +41,6 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
         ISerializer Serializer { get; set; }
-        /// <summary>
-        /// Transport Counters
-        /// </summary>
-        RPCTransportCounters Counters { get; }
 
         /// <summary>
         /// Event that fires when a Descriptor request is received.

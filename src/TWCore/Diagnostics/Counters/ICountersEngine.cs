@@ -47,53 +47,59 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
-        IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application);
-		/// <summary>
-		/// Gets an integer counter
-		/// </summary>
-		/// <returns>The integer counter</returns>
-		/// <param name="name">Counter name</param>
-		/// <param name="type">Counter type</param>
+        /// <param name="unit">Counter unit</param>
+        IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown);
+        /// <summary>
+        /// Gets an integer counter
+        /// </summary>
+        /// <returns>The integer counter</returns>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
-		IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application);
-		/// <summary>
-		/// Gets an double counter
-		/// </summary>
-		/// <returns>The double counter</returns>
-		/// <param name="category">Counter category</param>
-		/// <param name="name">Counter name</param>
-		/// <param name="type">Counter type</param>
+        /// <param name="unit">Counter unit</param>
+        IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown);
+        /// <summary>
+        /// Gets an double counter
+        /// </summary>
+        /// <returns>The double counter</returns>
+        /// <param name="category">Counter category</param>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
-		DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application);
-		/// <summary>
-		/// Gets an double counter
-		/// </summary>
-		/// <returns>The double counter</returns>
-		/// <param name="name">Counter name</param>
-		/// <param name="type">Counter type</param>
+        /// <param name="unit">Counter unit</param>
+        DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown);
+        /// <summary>
+        /// Gets an double counter
+        /// </summary>
+        /// <returns>The double counter</returns>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
-		DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application);
-		/// <summary>
-		/// Gets an decimal counter
-		/// </summary>
-		/// <returns>The decimal counter</returns>
-		/// <param name="category">Counter category</param>
-		/// <param name="name">Counter name</param>
-		/// <param name="type">Counter type</param>
+        /// <param name="unit">Counter unit</param>
+        DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown);
+        /// <summary>
+        /// Gets an decimal counter
+        /// </summary>
+        /// <returns>The decimal counter</returns>
+        /// <param name="category">Counter category</param>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
-		DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application);
-		/// <summary>
-		/// Gets an decimal counter
-		/// </summary>
-		/// <returns>The decimal counter</returns>
-		/// <param name="name">Counter name</param>
-		/// <param name="type">Counter type</param>
+        /// <param name="unit">Counter unit</param>
+        DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown);
+        /// <summary>
+        /// Gets an decimal counter
+        /// </summary>
+        /// <returns>The decimal counter</returns>
+        /// <param name="name">Counter name</param>
+        /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
-		DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application);
+        /// <param name="unit">Counter unit</param>
+        DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown);
 	}
 }

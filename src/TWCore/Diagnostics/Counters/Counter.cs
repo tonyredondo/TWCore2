@@ -54,6 +54,10 @@ namespace TWCore.Diagnostics.Counters
         /// Gets the counter kind
         /// </summary>
         public CounterKind Kind { get; private set; }
+        /// <summary>
+        /// Gets the counter value unit
+        /// </summary>
+        public CounterUnit Unit { get; private set; }
         #endregion
 
 
@@ -66,14 +70,16 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Counter(string category, string name, CounterType type, CounterLevel level, CounterKind kind)
+        protected Counter(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit)
         {
             Category = category;
             Name = name;
             Type = type;
             Level = level;
             Kind = kind;
+            Unit = unit;
         }
         #endregion
 
@@ -125,7 +131,7 @@ namespace TWCore.Diagnostics.Counters
                 lstItems.Add(item);
                 itemIdx++;
             }
-            return new CounterItem<T>(Category, Name, Type, Level, Kind, lstItems);
+            return new CounterItem<T>(Category, Name, Type, Level, Kind, Unit, lstItems);
         }
 
         /// <summary>
@@ -152,8 +158,9 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal IntegerCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind) : base(category, name, type, level, kind)
+        internal IntegerCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit) : base(category, name, type, level, kind, unit)
         {
         }
         /// <summary>
@@ -199,8 +206,9 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal DoubleCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind) : base(category, name, type, level, kind)
+        internal DoubleCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit) : base(category, name, type, level, kind, unit)
         {
         }
         /// <summary>
@@ -230,8 +238,9 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal DecimalCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind) : base(category, name, type, level, kind)
+        internal DecimalCounter(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit) : base(category, name, type, level, kind, unit)
         {
         }
         /// <summary>

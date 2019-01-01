@@ -58,6 +58,10 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         public CounterKind Kind { get; set; }
         /// <summary>
+        /// Gets or sets the counter unit
+        /// </summary>
+        public CounterUnit Unit { get; set; }
+        /// <summary>
         /// Type of value
         /// </summary>
         public Type TypeOfValue => typeof(T);
@@ -84,9 +88,10 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         /// <param name="values">Counter values</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CounterItem(string category, string name, CounterType type, CounterLevel level, CounterKind kind, List<CounterItemValue<T>> values)
+        public CounterItem(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit, List<CounterItemValue<T>> values)
         {
             Environment = Core.EnvironmentName;
             Application = Core.ApplicationName;
@@ -95,6 +100,7 @@ namespace TWCore.Diagnostics.Counters
             Type = type;
             Level = level;
             Kind = kind;
+            Unit = unit;
             Values = values;
         }
     }

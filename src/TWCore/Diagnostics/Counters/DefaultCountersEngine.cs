@@ -109,12 +109,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
+        public IntegerCounter GetIntegerCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
             {
-                var item = new IntegerCounter(category, name, type, level, kind);
+                var item = new IntegerCounter(category, name, type, level, kind, unit);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -130,12 +131,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
+        public IntegerCounter GetIntegerCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
             {
-                var item = new IntegerCounter(string.Empty, name, type, level, kind);
+                var item = new IntegerCounter(string.Empty, name, type, level, kind, unit);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -152,12 +154,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
+        public DoubleCounter GetDoubleCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
             {
-                var item = new DoubleCounter(category, name, type, level, kind);
+                var item = new DoubleCounter(category, name, type, level, kind, unit);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -174,12 +177,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
+        public DoubleCounter GetDoubleCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
             {
-                var item = new DoubleCounter(string.Empty, name, type, level, kind);
+                var item = new DoubleCounter(string.Empty, name, type, level, kind, unit);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -196,12 +200,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
+        public DecimalCounter GetDecimalCounter(string category, string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown)
         {
             var counter = _counters.GetOrAdd((category, name), _ =>
             {
-                var item = new DecimalCounter(category, name, type, level, kind);
+                var item = new DecimalCounter(category, name, type, level, kind, unit);
                 _counterReaders.Add(item);
                 return item;
             });
@@ -217,12 +222,13 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="type">Counter type</param>
         /// <param name="level">Counter level</param>
         /// <param name="kind">Counter kind</param>
+        /// <param name="unit">Counter unit</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application)
+        public DecimalCounter GetDecimalCounter(string name, CounterType type = CounterType.Cumulative, CounterLevel level = CounterLevel.User, CounterKind kind = CounterKind.Application, CounterUnit unit = CounterUnit.Unknown)
         {
             var counter = _counters.GetOrAdd((string.Empty, name), _ =>
             {
-                var item = new DecimalCounter(string.Empty, name, type, level, kind);
+                var item = new DecimalCounter(string.Empty, name, type, level, kind, unit);
                 _counterReaders.Add(item);
                 return item;
             });

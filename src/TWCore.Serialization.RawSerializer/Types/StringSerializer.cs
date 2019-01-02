@@ -52,7 +52,7 @@ namespace TWCore.Serialization.RawSerializer
             ArrayPool<byte>.Shared.Return(buffer);
 #else
             var length = Encoding.UTF8.GetByteCount(value);
-            if (length <= 16384)
+            if (length <= 2048)
             {
                 Span<byte> bufferSpan = stackalloc byte[length + 5];
                 bufferSpan[0] = DataBytesDefinition.StringLength;
@@ -117,7 +117,7 @@ namespace TWCore.Serialization.RawSerializer
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 #else
-            if (length <= 16384)
+            if (length <= 2048)
             {
                 Span<byte> bufferSpan = stackalloc byte[length];
                 Stream.Fill(bufferSpan);

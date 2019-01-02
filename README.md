@@ -9,7 +9,6 @@ A multipurpose framework library for dotnet core 2.1, dotnet standard 2.0 and ne
 - A bot subsystem to create bot services on Telegram and Slack
 - Extensions methods for objects, strings, and IEnumerables.
 - Aspnet Core object viewer and compiler developer tool.
-- Fast and fewer allocations.
 
 #### Supported log storages
 - Console

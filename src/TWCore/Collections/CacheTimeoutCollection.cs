@@ -294,7 +294,7 @@ namespace TWCore.Collections
         /// <returns>The value for the key. This will be either the existing value for the key if the key is already in the dictionary, or the new value if the key was not in the dictionary.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetOrAdd(TKey key, TValue value, TimeSpan valueTimeout)
-            => _collection.GetOrAdd(key, k => Create(key, value, valueTimeout)).Value;
+            => _collection.GetOrAdd(key, _ => Create(key, value, valueTimeout)).Value;
         /// <summary>
         /// Adds a key/value pair to the TimeoutDictionary by using the specified function, if the key does not already exist.
         /// </summary>

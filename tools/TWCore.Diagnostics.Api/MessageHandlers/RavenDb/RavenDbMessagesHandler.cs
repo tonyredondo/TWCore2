@@ -381,6 +381,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 Name = counter.Name,
                                 Level = counter.Level,
                                 Kind = counter.Kind,
+                                Unit = counter.Unit,
                                 Type = counter.Type,
                                 TypeOfValue = counter.TypeOfValue.Name
                             };

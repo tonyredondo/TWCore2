@@ -519,6 +519,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         Type = i.Type,
                         Level = i.Level,
                         Kind = i.Kind,
+                        Unit = i.Unit,
                         TypeOfValue = i.TypeOfValue
                     })
                     .ToListAsync().ConfigureAwait(false);

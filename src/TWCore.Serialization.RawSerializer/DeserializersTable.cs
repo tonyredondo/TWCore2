@@ -157,6 +157,10 @@ namespace TWCore.Serialization.RawSerializer
             {
                 metadata = _typeCache.Get(StreamReadInt());
             }
+            else
+            {
+                throw new Exception($"Unexpected byte type: {type}.");
+            }
             if (metadata.Descriptor.IsNSerializable)
             {
                 var value = (IRawSerializable)metadata.Descriptor.Activator();
@@ -1067,6 +1071,10 @@ namespace TWCore.Serialization.RawSerializer
             else if (type == DataBytesDefinition.RefType)
             {
                 metadata = _genericTypeCache.Get(StreamReadInt());
+            }
+            else
+            {
+                throw new Exception($"Unexpected byte type: {type}.");
             }
             return GenericFillObject(metadata);
 

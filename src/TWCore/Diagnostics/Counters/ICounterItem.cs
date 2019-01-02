@@ -53,6 +53,10 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         CounterKind Kind { get; set; }
         /// <summary>
+        /// Gets the counter unit
+        /// </summary>
+        CounterUnit Unit { get; set; }
+        /// <summary>
         /// Type of value
         /// </summary>
         Type TypeOfValue { get; }

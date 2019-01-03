@@ -36,7 +36,7 @@ namespace TWCore.Serialization
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
         private static readonly ConcurrentDictionary<string, ISerializer> SerializerCache = new ConcurrentDictionary<string, ISerializer>();
-        private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(32768);
+        private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(4096);
         
         /// <summary>
         /// Serialized Object File Extension

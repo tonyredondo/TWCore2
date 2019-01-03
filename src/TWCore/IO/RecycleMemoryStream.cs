@@ -140,14 +140,14 @@ namespace TWCore.IO
             if (buffer != null)
                 Write(buffer.AsSpan(index, count));
         }
-        /// <summary>
-        /// RecycleMemoryStream finalizer
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~RecycleMemoryStream()
-        {
-            Dispose(true);
-        }
+        ///// <summary>
+        ///// RecycleMemoryStream finalizer
+        ///// </summary>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //~RecycleMemoryStream()
+        //{
+        //    Dispose(true);
+        //}
         /// <summary>
         /// Dispose all internal resources
         /// </summary>
@@ -156,6 +156,7 @@ namespace TWCore.IO
         protected override void Dispose(bool disposing)
         {
             Close();
+            GC.SuppressFinalize(this);
         }
         #endregion
 

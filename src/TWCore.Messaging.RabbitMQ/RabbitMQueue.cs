@@ -76,10 +76,10 @@ namespace TWCore.Messaging.RabbitMQ
             Durable = Parameters[nameof(Durable)].ParseTo(true);
             _autoCloseAction = ActionDelegate.Create(Close).CreateBufferedAction(60000);
         }
-        ~RabbitMQueue()
-        {
-            Close();
-        }
+        //~RabbitMQueue()
+        //{
+        //    Close();
+        //}
         #endregion
 
         #region Public Methods

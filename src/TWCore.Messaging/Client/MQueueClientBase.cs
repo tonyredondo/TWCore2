@@ -68,6 +68,12 @@ namespace TWCore.Messaging.Client
         /// Gets the current configuration
         /// </summary>
         public MQPairConfig Config { get; private set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Enables the Complete Message cache
+        /// </summary>
+        [StatusProperty]
+        public bool EnableCompleteMessageCache { get; set; }
         #endregion
 
         #region Events
@@ -239,7 +245,7 @@ namespace TWCore.Messaging.Client
             {
                 Core.Log.Write(ex);
             }
-            if (res != null)
+            if (EnableCompleteMessageCache && res != null)
                 _receivedMessagesCache.TryAdd(res, rsMsg);
             return res;
         }
@@ -375,7 +381,7 @@ namespace TWCore.Messaging.Client
         {
             if (messageBody is null)
                 return null;
-            if (_receivedMessagesCache.TryGetValue(messageBody, out var _out))
+            if (EnableCompleteMessageCache && _receivedMessagesCache.TryGetValue(messageBody, out var _out))
                 return (ResponseMessage)_out;
             return null;
         }

@@ -95,14 +95,14 @@ namespace TWCore.Injector
         {
             Settings = settings;
         }
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~InjectorEngine()
-        {
-            Dispose();
-        }
+        ///// <summary>
+        ///// Destructor
+        ///// </summary>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //~InjectorEngine()
+        //{
+        //    Dispose();
+        //}
         #endregion
 
         #region Public Methods

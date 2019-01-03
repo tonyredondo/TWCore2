@@ -70,9 +70,25 @@ namespace TWCore.Messaging.RabbitMQ
         #region Nested Type
         private class RabbitResponseMessage
         {
+            private static readonly ObjectPool<RabbitResponseMessage> _pool = new ObjectPool<RabbitResponseMessage>(_ => new RabbitResponseMessage());
             public IBasicProperties Properties;
             public byte[] Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
+
+            private RabbitResponseMessage() { }
+
+            //
+            public static RabbitResponseMessage Rent()
+            {
+                return _pool.New();
+            }
+            public static void Free(RabbitResponseMessage item)
+            {
+                item.Properties = null;
+                item.Body = null;
+                item.WaitHandler.Reset();
+                _pool.Store(item);
+            }
         }
         #endregion
 
@@ -240,7 +256,7 @@ namespace TWCore.Messaging.RabbitMQ
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
-            var message = ReceivedMessages.GetOrAdd(correlationId, _ => new RabbitResponseMessage());
+            var message = ReceivedMessages.GetOrAdd(correlationId, _ => RabbitResponseMessage.Rent());
             Interlocked.Increment(ref _receiverThreads);
             await CreateReceiverConsumerAsync().ConfigureAwait(false);
 
@@ -254,7 +270,9 @@ namespace TWCore.Messaging.RabbitMQ
             if (Interlocked.Decrement(ref _receiverThreads) <= 0)
                 _receiverStopBuffered();
 
-            return message.Body;
+            var body = message.Body;
+            RabbitResponseMessage.Free(message);
+            return body;
         }
         #endregion
 

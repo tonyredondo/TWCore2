@@ -82,6 +82,11 @@ namespace TWCore.Services
         /// </summary>
         /// <value><c>true</c> if enable messages trace; otherwise, <c>false</c>.</value>
         public bool EnableMessagesTrace { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Enables the Complete Message cache
+        /// </summary>
+        public bool EnableCompleteMessageCache { get; set; }
         #endregion
 
         #region Public Methods
@@ -115,7 +120,8 @@ namespace TWCore.Services
                                 await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
                             if (e.Message?.Body is null) return;
                             var body = e.Message.Body.GetValue();
-                            ReceivedMessagesCache.TryAdd(body, e.Message);
+                            if (EnableCompleteMessageCache)
+                                ReceivedMessagesCache.TryAdd(body, e.Message);
                             Status.IncrementCurrentMessagesBeingProcessed();
                             try
                             {
@@ -130,7 +136,8 @@ namespace TWCore.Services
                             Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
                             Status.DecrementCurrentMessagesBeingProcessed();
                             Status.IncrementTotalMessagesProccesed();
-                            ReceivedMessagesCache.TryRemove(body, out object _);
+                            if (EnableCompleteMessageCache)
+                                ReceivedMessagesCache.TryRemove(body, out object _);
                         }
                         catch (Exception ex)
                         {
@@ -150,7 +157,8 @@ namespace TWCore.Services
                                 await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Request)).ConfigureAwait(false);
                             if (e.Request?.Body is null) return;
                             var body = e.Request.Body.GetValue();
-                            ReceivedMessagesCache.TryAdd(body, e.Request);
+                            if (EnableCompleteMessageCache)
+                                ReceivedMessagesCache.TryAdd(body, e.Request);
                             object result;
                             Status.IncrementCurrentMessagesBeingProcessed();
                             try
@@ -167,7 +175,8 @@ namespace TWCore.Services
                             Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
                             Status.DecrementCurrentMessagesBeingProcessed();
                             Status.IncrementTotalMessagesProccesed();
-                            ReceivedMessagesCache.TryRemove(body, out object _);
+                            if (EnableCompleteMessageCache)
+                                ReceivedMessagesCache.TryRemove(body, out object _);
                         }
                         catch (Exception ex)
                         {

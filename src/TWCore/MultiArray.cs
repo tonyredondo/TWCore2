@@ -704,17 +704,17 @@ namespace TWCore
             private MultiArrayReadOnlyStream()
             {
             }
-            /// <summary>
-            /// MultiArray Readonly stream finalizer
-            /// </summary>
-            ~MultiArrayReadOnlyStream()
-            {
-                if (_disposed) return;
-                _source = MultiArray<byte>.Empty;
-                _position = 0;
-                _disposed = true;
-                StreamPool.Store(this);
-            }
+            ///// <summary>
+            ///// MultiArray Readonly stream finalizer
+            ///// </summary>
+            //~MultiArrayReadOnlyStream()
+            //{
+            //    if (_disposed) return;
+            //    _source = MultiArray<byte>.Empty;
+            //    _position = 0;
+            //    _disposed = true;
+            //    StreamPool.Store(this);
+            //}
             /// <summary>
             /// Creates a MultiArrayReadOnlyStream instance from a MultiArray source
             /// </summary>

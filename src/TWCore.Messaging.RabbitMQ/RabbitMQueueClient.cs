@@ -190,7 +190,7 @@ namespace TWCore.Messaging.RabbitMQ
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
-                        message.Header.ResponseQueue.Name += "-" + Core.InstanceId;
+                        message.Header.ResponseQueue.Name += "-" + Core.InstanceIdString;
                 }
                 else
                 {
@@ -310,7 +310,7 @@ namespace TWCore.Messaging.RabbitMQ
                 var rcvName = _receiver.Name;
                 if (!UseSingleResponseQueue)
                 {
-                    rcvName += "-" + Core.InstanceId;
+                    rcvName += "-" + Core.InstanceIdString;
                     _receiver.Channel.QueueDeclare(rcvName, false, false, true, null);
                 }
                 _receiverConsumerTag = _receiver.Channel.BasicConsume(rcvName, false, _receiverConsumer);
@@ -331,7 +331,7 @@ namespace TWCore.Messaging.RabbitMQ
             _receiver.Close();
             var rcvName = _receiver.Name;
             if (!UseSingleResponseQueue)
-                rcvName += "-" + Core.InstanceId;
+                rcvName += "-" + Core.InstanceIdString;
             Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", rcvName);
         }
         #endregion

@@ -185,7 +185,7 @@ namespace TWCore.Messaging.RabbitMQ
             var corrId = correlationId.ToString();
             var replyTo = recvQueue?.Name;
             if (replyTo != null && !UseSingleResponseQueue)
-                replyTo += "-" + Core.InstanceId;
+                replyTo += "-" + Core.InstanceIdString;
 
             if (_senders.Count == 1)
                 return await SendTaskAsync(_senders[0]).ConfigureAwait(false);
@@ -288,7 +288,7 @@ namespace TWCore.Messaging.RabbitMQ
                 var rcvName = _receiver.Name;
                 if (!UseSingleResponseQueue)
                 {
-                    rcvName += "-" + Core.InstanceId;
+                    rcvName += "-" + Core.InstanceIdString;
                     _receiver.Channel.QueueDeclare(rcvName, false, false, true, null);
                 }
                 _receiverConsumerTag = _receiver.Channel.BasicConsume(rcvName, false, _receiverConsumer);
@@ -309,7 +309,7 @@ namespace TWCore.Messaging.RabbitMQ
             _receiver.Close();
             var rcvName = _receiver.Name;
             if (!UseSingleResponseQueue)
-                rcvName += "-" + Core.InstanceId;
+                rcvName += "-" + Core.InstanceIdString;
             Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", rcvName);
         }
         #endregion

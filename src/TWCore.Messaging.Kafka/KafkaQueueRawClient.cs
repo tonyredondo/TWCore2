@@ -129,7 +129,7 @@ namespace TWCore.Messaging.Kafka
                         var rcvName = _receiverConnection.Name;
                         if (!UseSingleResponseQueue)
                         {
-                            rcvName += "-" + Core.InstanceId;
+                            rcvName += "-" + Core.InstanceIdString;
                             Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                         }
                         var consumer = Extensions.InvokeWithRetry(() => new Consumer(new ConsumerOptions(rcvName, router)), 5000, int.MaxValue).WaitAsync();
@@ -202,7 +202,7 @@ namespace TWCore.Messaging.Kafka
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.InstanceId;
+                name += "-" + Core.InstanceIdString;
 
             var key = CreateRawMessageHeader(correlationId, name);
 

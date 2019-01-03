@@ -180,6 +180,10 @@ namespace TWCore
         /// </summary>
         public static Guid InstanceId { get; } = Guid.NewGuid();
         /// <summary>
+        /// Instance identifier string
+        /// </summary>
+        public static string InstanceIdString { get; private set; }
+        /// <summary>
         /// Get if the optimized version is loaded
         /// </summary>
         public static bool IsOptimizedVersion
@@ -210,6 +214,7 @@ namespace TWCore
         {
             if (_initialized) return;
             _initialized = true;
+            InstanceIdString = InstanceId.ToString();
             UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
             Factory.SetFactories(factories);
             var (coreInits, coreInitsExceptions) = GetCoreInits();

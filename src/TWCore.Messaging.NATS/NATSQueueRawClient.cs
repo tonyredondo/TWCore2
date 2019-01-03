@@ -139,7 +139,7 @@ namespace TWCore.Messaging.NATS
                     _receiverNASTConnection = Extensions.InvokeWithRetry(() => _factory.CreateConnection(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
                     if (!UseSingleResponseQueue)
                     {
-                        var rcvName = _receiverConnection.Name + "-" + Core.InstanceId;
+                        var rcvName = _receiverConnection.Name + "-" + Core.InstanceIdString;
                         Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
                         _receiver = _receiverNASTConnection.SubscribeAsync(rcvName, MessageHandler);
                     }
@@ -202,7 +202,7 @@ namespace TWCore.Messaging.NATS
             var recvQueue = _clientQueues.RecvQueue;
             var name = recvQueue.Name;
             if (!UseSingleResponseQueue)
-                name += "-" + Core.InstanceId;
+                name += "-" + Core.InstanceIdString;
             var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var producer) in _senders)

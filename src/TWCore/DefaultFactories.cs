@@ -450,7 +450,7 @@ namespace TWCore
             new StatusItemValueItem("Debug Mode", Core.DebugMode),
             new StatusItemValueItem("Environment", Core.EnvironmentName),
             new StatusItemValueItem("MachineName", Core.MachineName),
-            new StatusItemValueItem("InstanceId", Core.InstanceId),
+            new StatusItemValueItem("InstanceId", Core.InstanceIdString),
             new StatusItemValueItem("ApplicationName", Core.ApplicationName),
             new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
         });

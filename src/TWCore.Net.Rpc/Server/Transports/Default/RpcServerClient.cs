@@ -58,6 +58,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         #region Private fields
         private readonly AsyncLock _sendLocker = new AsyncLock();
         private readonly BinarySerializer _serializer;
+        private readonly Func<object, Task> _messageReceivedHandlerDelegate;
+
         private TcpClient _client;
         private Stream _networkStream;
         private BufferedStream _readStream;
@@ -117,6 +119,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RpcServerClient(TcpClient client, BinarySerializer serializer)
         {
+            _messageReceivedHandlerDelegate = new Func<object, Task>(MessageReceivedHandler);
             _client = client;
             _serializer = serializer;
             _networkStream = _client.GetStream();
@@ -178,7 +181,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 try
                 {
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    Task.Factory.StartNew(MessageReceivedHandler, message, _tokenSource.Token);
+                    Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _tokenSource.Token);
                 }
                 catch (DeserializerException dEx)
                 {

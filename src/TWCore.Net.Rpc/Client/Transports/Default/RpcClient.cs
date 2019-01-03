@@ -55,6 +55,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private readonly string _host;
         private readonly int _port;
         private readonly BinarySerializer _serializer;
+        private readonly Func<object, Task> _messageReceivedHandlerDelegate;
+
         private TcpClient _client;
         private Stream _networkStream;
         private BufferedStream _writeStream;
@@ -66,6 +68,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private bool _onSession;
         private string _hub;
         private Guid _sessionId;
+
         #endregion
 
         #region Properties
@@ -122,6 +125,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             _host = host;
             _port = port;
             _hub = "Default";
+            _messageReceivedHandlerDelegate = new Func<object, Task>(MessageReceivedHandler);
         }
         #endregion
 
@@ -228,6 +232,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (_receiveTask is null || _receiveTask.IsCompleted)
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ReceiveThread()
         {
@@ -239,15 +244,15 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     if (_client is null || !_client.Connected)
                     {
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
-                        await ConnectAsync().ConfigureAwait(false);
+                        await ReconnectAsync().ConfigureAwait(false);
+                        Core.Log.InfoBasic("Reconnection succeded!");
                     }
-
                     try
                     {
                         var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                        Task.Factory.StartNew(MessageReceivedHandler, message, _connectionCancellationToken);
+                        Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _connectionCancellationToken);
                     }
-                    catch(DeserializerException dEx)
+                    catch (DeserializerException dEx)
                     {
                         var innerEx = dEx.InnerException;
                         if (innerEx is IOException)
@@ -289,6 +294,44 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             }
             Dispose();
         }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task ReconnectAsync()
+        {
+            using (await _connectionLocker.LockAsync().ConfigureAwait(false))
+            {
+                if (_client?.Connected != true)
+                {
+                    _onSession = false;
+                    _sessionEvent.Reset();
+                    _client = new TcpClient
+                    {
+                        NoDelay = true
+                    };
+                    Factory.SetSocketLoopbackFastPath(_client.Client);
+                    await _client.ConnectAsync(_host, _port).ConfigureAwait(false);
+                    _networkStream = _client.GetStream();
+                    _readStream = new BufferedStream(_networkStream);
+                    _writeStream = new BufferedStream(_networkStream);
+                    if (_connectionCancellationTokenSource is null || _connectionCancellationTokenSource.IsCancellationRequested)
+                    {
+                        _connectionCancellationTokenSource = new CancellationTokenSource();
+                        _connectionCancellationToken = _connectionCancellationTokenSource.Token;
+                    }
+                    Core.Log.InfoBasic("Reconnected to server: {0}:{1}", _host, _port);
+                    _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _writeStream);
+                    await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
+                    _ = Task.Run(async () =>
+                    {
+                        await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
+                        OnConnect?.Invoke(this, EventArgs.Empty);
+                        Core.Log.InfoBasic("RPC reconnection started with: {0}:{1}", _host, _port);
+                    });
+                }
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task MessageReceivedHandler(object rawMessage)
         {

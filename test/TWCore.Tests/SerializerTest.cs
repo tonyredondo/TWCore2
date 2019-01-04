@@ -140,7 +140,7 @@ namespace TWCore.Tests
                 Core.Log.InfoBasic("Press ENTER to Start:");
                 Console.ReadLine();
                 Task.WaitAll(
-                    Enumerable.Range(0, Environment.ProcessorCount).Select(i => Task.Run(() => RunSingleTest(collection[0], 200_000, false))).ToArray()
+                    Enumerable.Range(0, 8).Select(i => Task.Run(() => RunSingleTest(collection[0], 200_000, false))).ToArray()
                 );
                 Console.ReadLine();
                 return;

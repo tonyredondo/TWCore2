@@ -97,6 +97,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
+            if (_serCurrentIndex == 0) return;
             _serCurrentIndex = 0;
             _full = false;
             _serializationCache.Clear();

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Compression;
 using TWCore.IO;
 using TWCore.Messaging;
@@ -69,8 +70,6 @@ namespace TWCore.Tests
 
                 return;
             }
-            
-
 
             var sTest = new STest
             {
@@ -132,7 +131,21 @@ namespace TWCore.Tests
 
             var colClone = collection[0].DeepClone();
             var clone = collection.DeepClone();
-            
+
+
+
+            if (info.Arguments?.Contains("/parallel") == true)
+            {
+                RunSingleTest(collection[0], 2, false);
+                Core.Log.InfoBasic("Press ENTER to Start:");
+                Console.ReadLine();
+                Task.WaitAll(
+                    Enumerable.Range(0, Environment.ProcessorCount).Select(i => Task.Run(() => RunSingleTest(collection[0], 200_000, false))).ToArray()
+                );
+                Console.ReadLine();
+                return;
+            }
+
             RunTest(collection[0], 200_000, false);
         }
 
@@ -195,6 +208,17 @@ namespace TWCore.Tests
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RunSingleTest(object value, int times, bool useGZip)
+        {
+            var vType = value?.GetType() ?? typeof(object);
+            var memStream = new RecycleMemoryStream();
+            var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
+            var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
+            Core.Log.Warning("Running Serializer Test. Use GZIP = {0}, Times = {1}", useGZip, times);
+            SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream, false);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string SerializerSizeProcess(object value, Type valueType, ISerializer serializer)
         {
             var memStream = new MemoryStream();
@@ -204,13 +228,16 @@ namespace TWCore.Tests
             return memStream.Length.ToReadableBytes().Text;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, Stream memStream)
+        private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, Stream memStream, bool sleep = true)
         {
             double totalValue;
             memStream.Position = 0;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1500);
+            if (sleep)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                Thread.Sleep(1500);
+            }
             using (var w = Watch.Create(name + " SERIALIZER"))
             {
                 for (var i = 0; i < times; i++)
@@ -221,9 +248,12 @@ namespace TWCore.Tests
                 totalValue = w.GlobalElapsedMilliseconds;
             }
             Core.Log.InfoBasic("\t" + name + " SERIALIZER - Average Time: {0}ms", totalValue / times);
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1500);
+            if (sleep)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                Thread.Sleep(1500);
+            }
             using (var w = Watch.Create(name + " DESERIALIZER"))
             {
                 for (var i = 0; i < times; i++)
@@ -234,7 +264,8 @@ namespace TWCore.Tests
                 totalValue = w.GlobalElapsedMilliseconds;
             }
             Core.Log.InfoBasic("\t"+ name + " DESERIALIZER - Average Time: {0}ms", totalValue / times);
-            Thread.Sleep(1000);
+            if (sleep)
+                Thread.Sleep(1000);
             Core.Log.WriteEmptyLine();
         }
     }

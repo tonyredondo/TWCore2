@@ -32,6 +32,7 @@ namespace TWCore.Messaging.Server
     public class RequestReceivedEventArgs : EventArgs
     {
         private ISerializer _senderSerializer;
+        private CancellationTokenSource _cancellationTokenSource = null;
 
         /// <summary>
         /// Client name
@@ -97,9 +98,9 @@ namespace TWCore.Messaging.Server
             Response = new ResponseMessage(request, null);
             if (ProcessResponseTimeoutInSeconds > 0)
             {
-                var cTokenSource = new CancellationTokenSource();
-                ProcessResponseTimeoutCancellationToken = cTokenSource.Token;
-                cTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));
+                _cancellationTokenSource = new CancellationTokenSource();
+                ProcessResponseTimeoutCancellationToken = _cancellationTokenSource.Token;
+                _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));
             }
             else
                 ProcessResponseTimeoutCancellationToken = CancellationToken.None;
@@ -119,6 +120,7 @@ namespace TWCore.Messaging.Server
                 Response.Body = _senderSerializer.GetSerializedObject(obj);
             else
                 Response.Body = ResponseMessage.NoResponseSerialized;
+            _cancellationTokenSource?.Cancel();
         }
     }
 }

@@ -53,7 +53,7 @@ namespace TWCore.Messaging
         /// <summary>
         /// Request identifier
         /// </summary>
-        [XmlAttribute, DataMember]
+        [XmlAttribute, DataMember, NonSerialize]
         public Guid CorrelationId
         {
             get => Header.Request.CorrelationId;

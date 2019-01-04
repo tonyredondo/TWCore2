@@ -32,7 +32,7 @@ namespace TWCore.Messaging
         /// <summary>
         /// Request Id
         /// </summary>
-        [XmlAttribute, DataMember]
+        [XmlAttribute, DataMember, NonSerialize]
         public Guid CorrelationId
         {
             get => Header.CorrelationId;

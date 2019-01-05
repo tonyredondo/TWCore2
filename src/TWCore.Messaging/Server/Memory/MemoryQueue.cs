@@ -103,12 +103,13 @@ namespace TWCore.Messaging
         {
             try
             {
-                var tokenTask = CancellationTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
                 var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
+                var delayCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken.None);
                 var wTask = message.TaskSource.Task;
-                var dTask = Task.Delay(waitTime);
-                var rTask = await Task.WhenAny(wTask, tokenTask, dTask).ConfigureAwait(false);
+                var dTask = Task.Delay(waitTime, delayCancellation.Token);
+                var rTask = await Task.WhenAny(wTask, dTask).ConfigureAwait(false);
                 if (rTask != wTask) return null;
+                delayCancellation.Cancel();
                 _messageStorage.TryRemove(correlationId, out var _);
                 return message;
             }

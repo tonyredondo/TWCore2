@@ -865,8 +865,8 @@ namespace TWCore.Serialization.NSerializer
             {
                 Stream = stream;
                 Stream.WriteByte(DataBytesDefinition.Start);
-
-                if (typeof(T).IsClass && value == default)
+                
+                if (typeof(T).IsClass && EqualityComparer<T>.Default.Equals(value, default))
                 {
                     Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;

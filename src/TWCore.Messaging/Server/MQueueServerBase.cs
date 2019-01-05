@@ -281,7 +281,7 @@ namespace TWCore.Messaging.Server
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
 
                 #region Client Queues Routes Rebindings
-                if (_serverQueues.ClientQueuesRoutesRebindings != null)
+                if (_serverQueues?.ClientQueuesRoutesRebindings != null)
                 {
                     Core.Log.LibDebug("Processing ClientQueues Route Rebinding");
                     foreach(var queue in e.ResponseQueues)

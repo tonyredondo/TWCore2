@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace TWCore
@@ -29,7 +30,7 @@ namespace TWCore
         /// <summary>
         /// Mapping function
         /// </summary>
-        private static Func<TFrom, TTo> MapFunc;
+        private static Func<TFrom, TTo> _mapFunc;
 
         /// <summary>
         /// Sets the Map expression to convert an object from one Type to another
@@ -38,8 +39,8 @@ namespace TWCore
         public static void SetExpression(Expression<Func<TFrom, TTo>> mapExpression)
         {
             if (mapExpression == null)
-                throw new ArgumentNullException("mapExpression", "The expression can't be null");
-            MapFunc = mapExpression.Compile();
+                throw new ArgumentNullException(nameof(mapExpression), "The expression can't be null");
+            _mapFunc = mapExpression.Compile();
         }
         /// <summary>
         /// Sets the Map func to convert an object from one Type to another
@@ -48,8 +49,8 @@ namespace TWCore
         public static void Set(Func<TFrom, TTo> mapFunc)
         {
             if (mapFunc == null)
-                throw new ArgumentNullException("mapFunc", "The Func can't be null");
-            MapFunc = mapFunc;
+                throw new ArgumentNullException(nameof(mapFunc), "The Func can't be null");
+            _mapFunc = mapFunc;
         }
 
         /// <summary>
@@ -60,11 +61,11 @@ namespace TWCore
         /// <returns>Object destination instance </returns>
         public static TTo Apply(TFrom from, bool handleDefault = true)
         {
-            if (MapFunc == null)
+            if (_mapFunc == null)
                 throw new NullReferenceException($"A Map func can't be found to cast the item of type {typeof(TFrom).FullName} to {typeof(TTo).FullName}.");
-            if (handleDefault && from == default)
+            if (handleDefault && EqualityComparer<TFrom>.Default.Equals(from, default))
                 return default;
-            return MapFunc(from);
+            return _mapFunc(from);
         }
     }
 }

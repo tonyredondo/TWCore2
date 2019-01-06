@@ -6,6 +6,8 @@
     <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;net472;net461</TargetFrameworks>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <TieredCompilation>true</TieredCompilation>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

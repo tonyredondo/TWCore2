@@ -26,6 +26,7 @@ using TWCore.Text;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable InconsistentNaming
 
 // ReSharper disable CheckNamespace
 

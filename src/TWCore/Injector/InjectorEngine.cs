@@ -28,6 +28,7 @@ using TWCore.Text;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Injector
 {

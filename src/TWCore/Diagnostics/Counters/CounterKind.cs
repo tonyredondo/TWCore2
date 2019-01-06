@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 
+// ReSharper disable InconsistentNaming
 namespace TWCore.Diagnostics.Counters
 {
     /// <summary>

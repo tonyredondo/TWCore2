@@ -70,7 +70,7 @@ namespace TWCore.Messaging.RabbitMQ
         #region Nested Type
         private class RabbitResponseMessage
         {
-            private static readonly ObjectPool<RabbitResponseMessage> _pool = new ObjectPool<RabbitResponseMessage>(_ => new RabbitResponseMessage());
+            private static readonly ObjectPool<RabbitResponseMessage> Pool = new ObjectPool<RabbitResponseMessage>(_ => new RabbitResponseMessage());
             public IBasicProperties Properties;
             public byte[] Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
@@ -80,14 +80,14 @@ namespace TWCore.Messaging.RabbitMQ
             //
             public static RabbitResponseMessage Rent()
             {
-                return _pool.New();
+                return Pool.New();
             }
             public static void Free(RabbitResponseMessage item)
             {
                 item.Properties = null;
                 item.Body = null;
                 item.WaitHandler.Reset();
-                _pool.Store(item);
+                Pool.Store(item);
             }
         }
         #endregion

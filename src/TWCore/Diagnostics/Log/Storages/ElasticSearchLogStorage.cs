@@ -28,6 +28,8 @@ using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable SwitchStatementMissingSomeCases
+// ReSharper disable InconsistentNaming
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Diagnostics.Log.Storages
 {

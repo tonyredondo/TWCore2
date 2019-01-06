@@ -33,7 +33,7 @@ namespace TWCore.Data
     /// </summary>
     public class EntityBinder
     {
-        private static volatile int HasInvalidCast;
+        private static volatile int _hasInvalidCast;
 
         #region Statics
         /// <summary>
@@ -127,7 +127,7 @@ namespace TWCore.Data
                         result = Enum.Parse(propertyType, value.ToString());
                     else if (valueConverter != null && valueConverter.Convert(value, valueType, dataPattern.Property.PropertyType, dataPattern.DefaultValue, out var valueConverterResult))
                         result = valueConverterResult;
-                    else if (HasInvalidCast == 0 || !InvalidCastList.TryGetValue((valueType, propertyType), out _))
+                    else if (_hasInvalidCast == 0 || !InvalidCastList.TryGetValue((valueType, propertyType), out _))
                     {
                         try
                         {
@@ -136,7 +136,7 @@ namespace TWCore.Data
                         catch (InvalidCastException exCast)
                         {
                             Core.Log.Write(exCast);
-                            Interlocked.Increment(ref HasInvalidCast);
+                            Interlocked.Increment(ref _hasInvalidCast);
                             InvalidCastList.TryAdd((valueType, propertyType), new InvalidCast(valueType, propertyType));
                         }
                         catch (Exception ex)

@@ -1325,70 +1325,70 @@ namespace TWCore
             return parallelEach;
         }
 
-        private struct ParallelSimpleExecutor<T>
+        private readonly struct ParallelSimpleExecutor<T>
         {
-            private readonly Action<T> Action;
-            private readonly CancellationToken Token;
+            private readonly Action<T> _action;
+            private readonly CancellationToken _token;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ParallelSimpleExecutor(in Action<T> action, in CancellationToken token = default)
             {
-                Action = action;
-                Token = token;
+                _action = action;
+                _token = token;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithCancellationToken(T item, ParallelLoopState state)
             {
-                if (!Token.IsCancellationRequested)
-                    Action(item);
+                if (!_token.IsCancellationRequested)
+                    _action(item);
                 else if (!state.IsStopped)
                     state.Stop();
             }
         }
-        private struct ParallelExecutor<T>
+        private readonly struct ParallelExecutor<T>
         {
-            private readonly Action<T, long> Action;
-            private readonly CancellationToken Token;
+            private readonly Action<T, long> _action;
+            private readonly CancellationToken _token;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ParallelExecutor(in Action<T, long> action, in CancellationToken token = default)
             {
-                Action = action;
-                Token = token;
+                _action = action;
+                _token = token;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Execute(T item, ParallelLoopState state, long index)
-                => Action(item, index);
+                => _action(item, index);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithCancellationToken(T item, ParallelLoopState state, long index)
             {
-                if (!Token.IsCancellationRequested)
-                    Action(item, index);
+                if (!_token.IsCancellationRequested)
+                    _action(item, index);
                 else if (!state.IsStopped)
                     state.Stop();
             }
         }
-        private struct ParallelStateExecutor<T, TArg>
+        private readonly struct ParallelStateExecutor<T, TArg>
         {
-            private readonly TArg State;
-            private readonly Action<T, long, TArg> Action;
-            private readonly CancellationToken Token;
+            private readonly TArg _state;
+            private readonly Action<T, long, TArg> _action;
+            private readonly CancellationToken _token;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ParallelStateExecutor(in TArg state, in Action<T, long, TArg> action, in CancellationToken token = default)
             {
-                State = state;
-                Action = action;
-                Token = token;
+                _state = state;
+                _action = action;
+                _token = token;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithState(T item, ParallelLoopState state, long index)
-                => Action(item, index, State);
+                => _action(item, index, _state);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithStateAndCancellationToken(T item, ParallelLoopState state, long index)
             {
-                if (!Token.IsCancellationRequested)
-                    Action(item, index, State);
+                if (!_token.IsCancellationRequested)
+                    _action(item, index, _state);
                 else if (!state.IsStopped)
                     state.Stop();
             }
@@ -1443,35 +1443,35 @@ namespace TWCore
             return executor.Response;
         }
 
-        private struct ParallelInvokeSimpleExecutor
+        private readonly struct ParallelInvokeSimpleExecutor
         {
-            private readonly CancellationToken Token;
+            private readonly CancellationToken _token;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ParallelInvokeSimpleExecutor(in CancellationToken token = default)
             {
-                Token = token;
+                _token = token;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithCancellationToken(Action item, ParallelLoopState state)
             {
-                if (!Token.IsCancellationRequested)
+                if (!_token.IsCancellationRequested)
                     item();
                 else if (!state.IsStopped)
                     state.Stop();
             }
         }
-        private struct ParallelInvokeExecutor<T>
+        private readonly struct ParallelInvokeExecutor<T>
         {
             private readonly object _locker;
-            private readonly CancellationToken Token;
+            private readonly CancellationToken _token;
             public readonly T[] Response;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ParallelInvokeExecutor(int count, CancellationToken token = default)
             {
                 _locker = new object();
-                Token = token;
+                _token = token;
                 Response = new T[count];
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1479,16 +1479,16 @@ namespace TWCore
             {
                 var res = item();
                 lock (_locker)
-                    Response.SetValue(res, (int)index);
+                    Response[(int) index] = res;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithCancellationToken(Func<T> item, ParallelLoopState state, long index)
             {
-                if (!Token.IsCancellationRequested)
+                if (!_token.IsCancellationRequested)
                 {
                     var res = item();
                     lock (_locker)
-                        Response.SetValue(res, (int)index);
+                        Response[(int) index] = res;
                 }
                 else if (!state.IsStopped)
                     state.Stop();

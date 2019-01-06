@@ -46,7 +46,7 @@ namespace TWCore.Net.Multicast
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
         private readonly List<Task> _clientsReceiveTasks = new List<Task>();
         private readonly HashSet<EndPoint> _endpointErrors = new HashSet<EndPoint>();
-        private readonly TimeSpan TimeoutTime = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan _timeoutTime = TimeSpan.FromSeconds(5);
 
         private IPAddress _multicastIp;
         private IPEndPoint _sendEndpoint;
@@ -417,7 +417,7 @@ namespace TWCore.Net.Multicast
                     var buffer = datagram.AsMemory(22, dataSize);
                     var key = (guid, numMsgs);
 
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), TimeoutTime));
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), TimeoutTime: _timeoutTime));
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;

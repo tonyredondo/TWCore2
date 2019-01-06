@@ -68,7 +68,7 @@ namespace TWCore
         private static AsyncLocal<Dictionary<object, object>> _taskObjectData;
         private static volatile bool _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
-        private static Timer UpdateLocalUtcTimer;
+        private static Timer _updateLocalUtcTimer;
         internal static Dictionary<string, string> DefaultEnvironmentVariables = null;
         internal static string EncryptionKey = null;
 
@@ -215,7 +215,7 @@ namespace TWCore
             if (_initialized) return;
             _initialized = true;
             InstanceIdString = InstanceId.ToString();
-            UpdateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
+            _updateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
             Factory.SetFactories(factories);
             var (coreInits, coreInitsExceptions) = GetCoreInits();
 
@@ -1051,7 +1051,7 @@ namespace TWCore
             Data?.Clear();
             Settings?.Clear();
             Injector?.Dispose();
-            UpdateLocalUtcTimer?.Dispose();
+            _updateLocalUtcTimer?.Dispose();
         }
         #endregion
     }

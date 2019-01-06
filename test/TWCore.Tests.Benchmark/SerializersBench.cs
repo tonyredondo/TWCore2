@@ -19,6 +19,8 @@ namespace TWCore.Tests.Benchmark
         [GlobalSetup]
         public void Setup()
         {
+            Core.InitDefaults();
+
             var sTest = new STest
             {
                 FirstName = "Daniel",

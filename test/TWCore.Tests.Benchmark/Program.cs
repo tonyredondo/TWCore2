@@ -1,4 +1,5 @@
 ﻿using System;
+using BenchmarkDotNet.Running;
 
 namespace TWCore.Tests.Benchmark
 {
@@ -6,7 +7,7 @@ namespace TWCore.Tests.Benchmark
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var summary = BenchmarkRunner.Run<SerializersBench>();
         }
     }
 }

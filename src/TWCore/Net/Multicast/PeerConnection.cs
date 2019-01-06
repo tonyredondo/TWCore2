@@ -417,7 +417,7 @@ namespace TWCore.Net.Multicast
                     var buffer = datagram.AsMemory(22, dataSize);
                     var key = (guid, numMsgs);
 
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), TimeoutTime: _timeoutTime));
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), _timeoutTime));
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;

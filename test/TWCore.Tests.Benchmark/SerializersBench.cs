@@ -6,14 +6,14 @@ using TWCore.Serialization.NSerializer;
 namespace TWCore.Tests.Benchmark
 {
     [ClrJob(baseline: true), CoreJob, MonoJob]
-    [RPlotExporter, RankColumn]
+    [RPlotExporter, RankColumn, MinColumn, MaxColumn, MemoryDiagnoser]
     public class SerializersBench
     {
         private List<STest> _data;
         private MultiArray<byte> _binData;
         private NBinarySerializer _nBinary;
 
-        [Params(1000, 10000, 100000)]
+        [Params(1, 100, 1000)]
         public int N;
         
         [GlobalSetup]
@@ -59,10 +59,22 @@ namespace TWCore.Tests.Benchmark
         }
 
         [Benchmark]
-        public MultiArray<byte> Serialize() => _nBinary.Serialize(_data);
-        
+        public MultiArray<byte> Serialize()
+        {
+            var data = MultiArray<byte>.Empty;
+            for(var i = 0; i < N; i ++)
+                data = _nBinary.Serialize(_data);
+            return data;
+        }
+
         [Benchmark]
-        public object Deserialize() => _nBinary.Deserialize<object>(_binData);
+        public object Deserialize()
+        {
+            object data = null;
+            for(var i = 0; i < N; i++)
+                data = _nBinary.Deserialize<object>(_binData);
+            return data;
+        }
     }
     
     [Serializable]

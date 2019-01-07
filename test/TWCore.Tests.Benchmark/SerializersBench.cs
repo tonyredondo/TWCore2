@@ -19,7 +19,7 @@ namespace TWCore.Tests.Benchmark
         private MemoryStream _memStream;
         private RecycleMemoryStream _recmemStream;
 
-        [Params(1, 100, 1000, 10000)]
+        [Params(1, 100)]
         public int N;
         
         [GlobalSetup]

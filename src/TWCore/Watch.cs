@@ -266,7 +266,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<int, string> IndentTexts = new ConcurrentDictionary<int, string>();
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly double FrequencyTime = 1000d / Stopwatch.Frequency;
 
-            private struct ItemPoolAllocator : IPoolObjectLifecycle<WItem>
+            private readonly struct ItemPoolAllocator : IPoolObjectLifecycle<WItem>
             {
                 public int InitialSize => 0;
                 public PoolResetMode ResetMode => PoolResetMode.BeforeUse;

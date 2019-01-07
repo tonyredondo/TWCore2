@@ -33,7 +33,7 @@ namespace TWCore.Serialization.WSerializer.Types
         private static readonly ObjectPool<SerializersTable, TableNoCacheAllocator> NoCachedTablePool = new ObjectPool<SerializersTable, TableNoCacheAllocator>();
 
         #region Allocators
-        private struct TableUshortAllocator : IPoolObjectLifecycle<SerializersTable>
+        private readonly struct TableUshortAllocator : IPoolObjectLifecycle<SerializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -46,7 +46,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct Table2048Allocator : IPoolObjectLifecycle<SerializersTable>
+        private readonly struct Table2048Allocator : IPoolObjectLifecycle<SerializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -59,7 +59,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct Table1024Allocator : IPoolObjectLifecycle<SerializersTable>
+        private readonly struct Table1024Allocator : IPoolObjectLifecycle<SerializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -72,7 +72,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct Table512Allocator : IPoolObjectLifecycle<SerializersTable>
+        private readonly struct Table512Allocator : IPoolObjectLifecycle<SerializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -85,7 +85,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct TableNoCacheAllocator : IPoolObjectLifecycle<SerializersTable>
+        private readonly struct TableNoCacheAllocator : IPoolObjectLifecycle<SerializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -284,7 +284,7 @@ namespace TWCore.Serialization.WSerializer.Types
         private static readonly ObjectPool<DeserializersTable, TableNoCacheAllocator> NoCachedTablePool = new ObjectPool<DeserializersTable, TableNoCacheAllocator>();
 
         #region Allocators
-        private struct TableUshortAllocator : IPoolObjectLifecycle<DeserializersTable>
+        private readonly struct TableUshortAllocator : IPoolObjectLifecycle<DeserializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -297,7 +297,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct Table2048Allocator : IPoolObjectLifecycle<DeserializersTable>
+        private readonly struct Table2048Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -310,7 +310,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct Table1024Allocator : IPoolObjectLifecycle<DeserializersTable>
+        private readonly struct Table1024Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -323,7 +323,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct Table512Allocator : IPoolObjectLifecycle<DeserializersTable>
+        private readonly struct Table512Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -336,7 +336,7 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
         }
-        private struct TableNoCacheAllocator : IPoolObjectLifecycle<DeserializersTable>
+        private readonly struct TableNoCacheAllocator : IPoolObjectLifecycle<DeserializersTable>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;

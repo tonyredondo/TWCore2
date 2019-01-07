@@ -42,7 +42,7 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _totalLength;
 
         #region Allocators
-        private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
+        private readonly struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
         {
             public int InitialSize => 4;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -51,7 +51,7 @@ namespace TWCore.IO
             public byte[] New() => new byte[MaxLength];
             public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
         }
-        private struct ListBytePoolAllocator : IPoolObjectLifecycle<List<byte[]>>
+        private readonly struct ListBytePoolAllocator : IPoolObjectLifecycle<List<byte[]>>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;

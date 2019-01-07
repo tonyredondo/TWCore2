@@ -25,7 +25,7 @@ namespace TWCore
     /// <summary>
     /// DateTimeSpan Structure for comparing a get differences of dates
     /// </summary>
-    public struct DateTimeSpan : IEquatable<DateTimeSpan>
+    public readonly struct DateTimeSpan : IEquatable<DateTimeSpan>
     {
         #region Private fields
         private readonly int _years;

@@ -7,7 +7,7 @@ using TWCore.Serialization.NSerializer;
 
 namespace TWCore.Tests.Benchmark
 {
-    [ClrJob(baseline: true), CoreJob, MonoJob]
+    [ClrJob, CoreJob(baseline: true), MonoJob]
     [RPlotExporter, RankColumn, MinColumn, MaxColumn, MemoryDiagnoser]
     public class SerializersBench
     {

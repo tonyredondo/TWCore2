@@ -120,36 +120,36 @@ namespace TWCore
         /// <summary>
         /// Action Worker queue item where is stored the action to be executed and the action when an exception occurs
         /// </summary>
-        public struct WorkerItem
+        public readonly struct WorkerItem
         {
             /// <summary>
             /// Function to be executed
             /// </summary>
-            public Func<object, Task> Function { get; }
+            public readonly Func<object, Task> Function;
             /// <summary>
             /// Function to be executed
             /// </summary>
-            public Func<Task> FunctionAlt { get; }
+            public readonly Func<Task> FunctionAlt;
             /// <summary>
             /// Action to be executed
             /// </summary>
-            public Action<object> Action { get; }
+            public readonly Action<object> Action;
             /// <summary>
             /// Action to be executed
             /// </summary>
-            public Action ActionAlt { get; }
+            public readonly Action ActionAlt;
             /// <summary>
             /// Saves the state to be used by the action
             /// </summary>
-            public object State { get; }
+            public readonly object State;
             /// <summary>
             /// Action executed in case of an Exception
             /// </summary>
-            public Action<Exception> OnExceptionCallback { get; }
+            public readonly Action<Exception> OnExceptionCallback;
             /// <summary>
             /// Type of Worker
             /// </summary>
-            public byte Type { get; }
+            public readonly byte Type;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal WorkerItem(Func<object, Task> function, object state, Action<Exception> onExceptionCallback)
@@ -288,36 +288,36 @@ namespace TWCore
         /// <summary>
         /// Action Worker queue item where is stored the action to be executed and the action when an exception occurs
         /// </summary>
-        public struct WorkerItem
+        public readonly struct WorkerItem
         {
             /// <summary>
             /// Function to be executed
             /// </summary>
-            public Func<T, Task> Function { get; }
+            public readonly Func<T, Task> Function;
             /// <summary>
             /// Function to be executed
             /// </summary>
-            public Func<Task> FunctionAlt { get; }
+            public readonly Func<Task> FunctionAlt;
             /// <summary>
             /// Action to be executed
             /// </summary>
-            public Action<T> Action { get; }
+            public readonly Action<T> Action;
             /// <summary>
             /// Action to be executed
             /// </summary>
-            public Action ActionAlt { get; }
+            public readonly Action ActionAlt;
             /// <summary>
             /// Saves the state to be used by the action
             /// </summary>
-            public T State { get; }
+            public readonly T State;
             /// <summary>
             /// Action executed in case of an Exception
             /// </summary>
-            public Action<Exception> OnExceptionCallback { get; }
+            public readonly Action<Exception> OnExceptionCallback;
             /// <summary>
             /// Type of Worker
             /// </summary>
-            public byte Type { get; }
+            public readonly byte Type;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal WorkerItem(Func<T, Task> function, T state, Action<Exception> onExceptionCallback)

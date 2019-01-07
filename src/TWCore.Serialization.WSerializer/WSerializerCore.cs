@@ -58,7 +58,7 @@ namespace TWCore.Serialization.WSerializer
         private readonly byte[] _buffer = new byte[3];
 
         #region Allocators
-        private struct CachePoolItem
+        private readonly struct CachePoolItem
         {
             public readonly SerializerCache<Type> TypeCache;
             public readonly SerializerCache<object> ObjectCache;
@@ -69,7 +69,7 @@ namespace TWCore.Serialization.WSerializer
                 ObjectCache = objectCache;
             }
         }
-        private struct DesCachePoolItem
+        private readonly struct DesCachePoolItem
         {
             public readonly SerializerCache<DeserializerTypeDefinition> TypeCache;
             public readonly SerializerCache<object> ObjectCache;
@@ -81,7 +81,7 @@ namespace TWCore.Serialization.WSerializer
             }
         }
         
-        private struct CachePoolAllocator : IPoolObjectLifecycle<CachePoolItem>
+        private readonly struct CachePoolAllocator : IPoolObjectLifecycle<CachePoolItem>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -99,7 +99,7 @@ namespace TWCore.Serialization.WSerializer
             {
             }
         }
-        private struct StackPoolAllocator : IPoolObjectLifecycle<Stack<SerializerScope>>
+        private readonly struct StackPoolAllocator : IPoolObjectLifecycle<Stack<SerializerScope>>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;

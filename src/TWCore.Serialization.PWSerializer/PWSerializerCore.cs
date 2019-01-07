@@ -107,7 +107,7 @@ namespace TWCore.Serialization.PWSerializer
             }
         }
 
-        private struct SerPoolAllocator : IPoolObjectLifecycle<SerPoolItem>
+        private readonly struct SerPoolAllocator : IPoolObjectLifecycle<SerPoolItem>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -120,7 +120,7 @@ namespace TWCore.Serialization.PWSerializer
             {
             }
         }
-        private struct DesPoolAllocator : IPoolObjectLifecycle<DesPoolItem>
+        private readonly struct DesPoolAllocator : IPoolObjectLifecycle<DesPoolItem>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -133,7 +133,7 @@ namespace TWCore.Serialization.PWSerializer
             {
             }
         }
-        private struct SerializerScopeAllocator : IPoolObjectLifecycle<SerializerScope>
+        private readonly struct SerializerScopeAllocator : IPoolObjectLifecycle<SerializerScope>
         {
             public int InitialSize => 15;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -146,7 +146,7 @@ namespace TWCore.Serialization.PWSerializer
             {
             }
         }
-        private struct RuntimeValueAllocator : IPoolObjectLifecycle<SerializerPlanItem.RuntimeValue>
+        private readonly struct RuntimeValueAllocator : IPoolObjectLifecycle<SerializerPlanItem.RuntimeValue>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;

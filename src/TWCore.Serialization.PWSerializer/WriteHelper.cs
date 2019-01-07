@@ -24,7 +24,7 @@ namespace TWCore.Serialization.PWSerializer
     internal static class WriteHelper
     {
         private static ObjectPool<byte[], ByteArrayAllocator> Pool = new ObjectPool<byte[], ByteArrayAllocator>();
-        private struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
+        private readonly struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;

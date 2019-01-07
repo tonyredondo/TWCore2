@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using BenchmarkDotNet.Attributes;
+using TWCore.IO;
 using TWCore.Serialization.NSerializer;
 
 namespace TWCore.Tests.Benchmark
@@ -12,8 +14,11 @@ namespace TWCore.Tests.Benchmark
         private List<STest> _data;
         private MultiArray<byte> _binData;
         private NBinarySerializer _nBinary;
+        private SerializersTable _nBinarySerTable;
+        private DeserializersTable _nBinaryDSerTable;
+        private MemoryStream _memStream;
 
-        [Params(1, 100, 1000)]
+        [Params(1, 100)]
         public int N;
         
         [GlobalSetup]
@@ -56,6 +61,13 @@ namespace TWCore.Tests.Benchmark
             _nBinary = new NBinarySerializer();
 
             _binData = _nBinary.Serialize(_data);
+            
+            _nBinarySerTable = new SerializersTable();
+            _memStream = new MemoryStream();
+            _nBinarySerTable.Serialize(_memStream, _data);
+            _memStream.Position = 0;
+            
+            _nBinaryDSerTable = new DeserializersTable();
         }
 
         [Benchmark]
@@ -73,6 +85,27 @@ namespace TWCore.Tests.Benchmark
             object data = null;
             for(var i = 0; i < N; i++)
                 data = _nBinary.Deserialize<object>(_binData);
+            return data;
+        }
+        
+        [Benchmark]
+        public void SerializerTable()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                _nBinarySerTable.Serialize(_memStream, _data);
+                _memStream.Position = 0;
+            }
+        }
+        [Benchmark]
+        public object DeserializerTable()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+            {
+                _memStream.Position = 0;
+                data = _nBinaryDSerTable.Deserialize(_memStream);
+            }
             return data;
         }
     }

@@ -29,11 +29,26 @@ namespace TWCore.Serialization.NSerializer
     {
         private static readonly string[] SExtensions = { ".nbin" };
         private static readonly string[] SMimeTypes = { SerializerMimeTypes.NBinary };
-        [ThreadStatic]
-        private static SerializersTable _serializer;
-        [ThreadStatic]
-        private static DeserializersTable _deserializer;
-
+        [ThreadStatic] 
+        private static SerTools _tools;
+        
+        #region Nested Type
+        private class SerTools
+        {
+            public readonly SerializersTable Serializer;
+            public readonly DeserializersTable Deserializer;
+            public readonly RecycleMemoryStream SerStream;
+            public readonly RecycleMemoryStream ComStream;
+            public SerTools()
+            {
+                Serializer = new SerializersTable();
+                Deserializer = new DeserializersTable();
+                SerStream = new RecycleMemoryStream();
+                ComStream = new RecycleMemoryStream();
+            }
+        }
+        #endregion
+        
         #region Properties
 
         /// <inheritdoc />
@@ -59,15 +74,15 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var des = _deserializer;
-            if (des is null)
+            var tools = _tools;
+            if (tools is null)
             {
-                des = new DeserializersTable();
-                _deserializer = des;
+                tools = new SerTools();
+                _tools = tools;
             }
             if (itemType == typeof(GenericObject))
-                return des.GenericObjectDeserialize(stream);
-            return des.Deserialize(stream);
+                return tools.Deserializer.GenericObjectDeserialize(stream);
+            return tools.Deserializer.Deserialize(stream);
         }
 
         /// <summary>
@@ -80,13 +95,13 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = _serializer;
-            if (ser is null)
+            var tools = _tools;
+            if (tools is null)
             {
-                ser = new SerializersTable();
-                _serializer = ser;
+                tools = new SerTools();
+                _tools = tools;
             }
-            ser.Serialize(stream, item, itemType);
+            tools.Serializer.Serialize(stream, item, itemType);
         }
 
         /// <inheritdoc />
@@ -99,27 +114,26 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override MultiArray<byte> Serialize<T>(T item)
         {
-            var ser = _serializer;
-            if (ser is null)
+            var tools = _tools;
+            if (tools is null)
             {
-                ser = new SerializersTable();
-                _serializer = ser;
+                tools = new SerTools();
+                _tools = tools;
             }
-            using (var stream = new RecycleMemoryStream())
+            else
             {
-                if (Compressor is null)
-                {
-                    ser.Serialize(stream, item);
-                    return stream.GetMultiArray();
-                }
-                using (var ms = new RecycleMemoryStream())
-                {
-                    ser.Serialize(ms, item);
-                    ms.Position = 0;
-                    Compressor.Compress(ms, stream);
-                }
-                return stream.GetMultiArray();
+                tools.SerStream.Reset();                 
             }
+            if (Compressor is null)
+            {
+                tools.Serializer.Serialize(tools.SerStream, item);
+                return tools.SerStream.GetMultiArray();
+            }
+            tools.ComStream.Reset();
+            tools.Serializer.Serialize(tools.SerStream, item);
+            tools.SerStream.Position = 0;
+            Compressor.Compress(tools.SerStream, tools.ComStream);
+            return tools.ComStream.GetMultiArray();
         }
         /// <inheritdoc />
         /// <summary>
@@ -131,24 +145,63 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Serialize<T>(T item, Stream stream)
         {
-            var ser = _serializer;
-            if (ser is null)
+            var tools = _tools;
+            if (tools is null)
             {
-                ser = new SerializersTable();
-                _serializer = ser;
+                tools = new SerTools();
+                _tools = tools;
             }
             if (Compressor is null)
             {
-                ser.Serialize(stream, item);
+                tools.Serializer.Serialize(stream, item);
                 return;
             }
-            using (var ms = new RecycleMemoryStream())
-            {
-                ser.Serialize(ms, item);
-                ms.Position = 0;
-                Compressor.Compress(ms, stream);
-            }
+            tools.SerStream.Reset();
+            tools.Serializer.Serialize(tools.SerStream, item);
+            tools.SerStream.Position = 0;
+            Compressor.Compress(tools.SerStream, stream);
         }
+        
+        /// <inheritdoc />
+        /// <summary>
+        /// Deserialize a stream content to a object
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="stream">Stream data source</param>
+        /// <returns>Deserialized object</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override T Deserialize<T>(Stream stream)
+        {
+            var tools = _tools;
+            if (tools is null)
+            {
+                tools = new SerTools();
+                _tools = tools;
+            }
+            if (typeof(T) == typeof(GenericObject))
+                return (T)tools.Deserializer.GenericObjectDeserialize(stream);
+            return (T)tools.Deserializer.Deserialize(stream);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Deserialize a byte array value to an item type
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="value">Byte array to deserialize</param>
+        /// <returns>Deserialized object</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override T Deserialize<T>(MultiArray<byte> value)
+        {
+            var tools = _tools;
+            if (tools is null)
+            {
+                tools = new SerTools();
+                _tools = tools;
+            }
+            using (var stream = value.AsReadOnlyStream())
+                return (T) tools.Deserializer.Deserialize(stream);
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object

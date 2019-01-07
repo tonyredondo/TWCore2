@@ -33,7 +33,7 @@ namespace TWCore.IO
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 8192;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 512;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
@@ -140,14 +140,6 @@ namespace TWCore.IO
             if (buffer != null)
                 Write(buffer.AsSpan(index, count));
         }
-        ///// <summary>
-        ///// RecycleMemoryStream finalizer
-        ///// </summary>
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //~RecycleMemoryStream()
-        //{
-        //    Dispose(true);
-        //}
         /// <summary>
         /// Dispose all internal resources
         /// </summary>
@@ -515,6 +507,20 @@ namespace TWCore.IO
         {
             _collectPoolItems = false;
             return new MultiArray<byte>(_buffers, 0, _totalLength);
+        }
+        /// <summary>
+        /// Get the internal buffer as MultiArray
+        /// </summary>
+        /// <returns>MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Reset()
+        {
+            _currentPosition = 0;
+            _totalLength = 0;
+            if (_collectPoolItems) return;
+            _buffers = ListByteArrayPool.New();
+            _buffers.Add(ByteArrayPool.New());
+            _collectPoolItems = true;
         }
         #endregion
     }

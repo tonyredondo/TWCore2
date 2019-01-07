@@ -484,7 +484,7 @@ namespace TWCore
         /// </summary>
         /// <returns>Readonly stream</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Stream AsReadOnlyStream()
+        public MultiArrayReadOnlyStream AsReadOnlyStream()
         {
             if (this is MultiArray<byte> mBytes)
                 return MultiArrayReadOnlyStream.New(mBytes);
@@ -643,7 +643,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal (int ArrayIndex, int Position) FromGlobalIndex(int globalIndex)
         {
-            return (globalIndex / _segmentsLength, globalIndex % _segmentsLength);
+            var index = Math.DivRem(globalIndex, _segmentsLength, out var pos);
+            return (index, pos);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal int ToGlobalIndex(int arrayIndex, int position)
@@ -704,17 +705,6 @@ namespace TWCore
             private MultiArrayReadOnlyStream()
             {
             }
-            ///// <summary>
-            ///// MultiArray Readonly stream finalizer
-            ///// </summary>
-            //~MultiArrayReadOnlyStream()
-            //{
-            //    if (_disposed) return;
-            //    _source = MultiArray<byte>.Empty;
-            //    _position = 0;
-            //    _disposed = true;
-            //    StreamPool.Store(this);
-            //}
             /// <summary>
             /// Creates a MultiArrayReadOnlyStream instance from a MultiArray source
             /// </summary>
@@ -777,8 +767,10 @@ namespace TWCore
             /// <param name="buffer">Span buffer to fill</param>
             /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
 #if COMPATIBILITY
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Read(Span<byte> buffer)
 #else
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override int Read(Span<byte> buffer)
 #endif
             {

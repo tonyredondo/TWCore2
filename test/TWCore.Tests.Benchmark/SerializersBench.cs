@@ -19,7 +19,7 @@ namespace TWCore.Tests.Benchmark
         private MemoryStream _memStream;
         private RecycleMemoryStream _recmemStream;
 
-        [Params(1, 100)]
+        [Params(1)]
         public int N;
         
         [GlobalSetup]
@@ -93,6 +93,28 @@ namespace TWCore.Tests.Benchmark
             return data;
         }
         
+        [Benchmark]
+        public void RecycleSerialize()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                _nBinary.Serialize(_data, _recmemStream);
+                _recmemStream.Position = 0;
+            }
+        }
+
+        [Benchmark]
+        public object RecycleDeserialize()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+            {
+                _recmemStream.Position = 0;
+                data = _nBinary.Deserialize<object>(_recmemStream);
+            }
+            return data;
+        }
+
         [Benchmark]
         public void SerializerTable()
         {

@@ -68,12 +68,12 @@ namespace TWCore.Tests
             var rtest = (string)hClient.SayHi("MyName");
             using (var watch = Watch.Create("IHello Time - SayHi | TestAsync"))
             {
-                for (var i = 0; i < 5000; i++)
+                for (var i = 0; i < 10000; i++)
                 {
                     var rHClient = (string) hClient.SayHi("MyName");
                 }
 
-                for (var i = 0; i < 5000; i++)
+                for (var i = 0; i < 10000; i++)
                 {
                     var rHClient = await ((Task<object>) hClient.TestAsync()).ConfigureAwait(false);
                 }
@@ -87,7 +87,7 @@ namespace TWCore.Tests
             dynamic dClient = await rpcClient.CreateDynamicProxyAsync<IMyService>().ConfigureAwait(false);
             using (var watch = Watch.Create("IMyService Time - GetAllAsync"))
             {
-                for (var i = 0; i < 5000; i++)
+                for (var i = 0; i < 10000; i++)
                 {
                     var aLst = await ((Task<object>) dClient.GetAllAsync()).ConfigureAwait(false);
                 }
@@ -99,7 +99,7 @@ namespace TWCore.Tests
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
             using (var watch = Watch.Create("Proxy class Time - GetAllAsync"))
             {
-                for (var i = 0; i < 5000; i++)
+                for (var i = 0; i < 10000; i++)
                 {
                     var resp = await client.GetAllAsync().ConfigureAwait(false);
                 }
@@ -108,7 +108,7 @@ namespace TWCore.Tests
 
             using (var watch = Watch.Create("Parallel GetAllAsync Time"))
             {
-                var rAwait = await Enumerable.Range(0, 50)
+                var rAwait = await Enumerable.Range(0, 100)
                     .Select(i => client.GetAllAsync())
                     .ConfigureAwait(false);
                 Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 100);
@@ -122,7 +122,7 @@ namespace TWCore.Tests
                 {
                     //Core.Log.Warning("On Add SimplePersona was fired!!!");
                 };
-                for (var i = 0; i < 5000; i++)
+                for (var i = 0; i < 10000; i++)
                 {
                     client.AddSimplePersona(new SimplePerson {Lastname = "Test", Firstname = "Test"});
                 }

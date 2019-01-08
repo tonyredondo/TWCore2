@@ -69,6 +69,7 @@ namespace TWCore
         private static volatile bool _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
         private static Timer _updateLocalUtcTimer;
+        private static TimeSpan _localUtcOffset;
         internal static Dictionary<string, string> DefaultEnvironmentVariables = null;
         internal static string EncryptionKey = null;
 
@@ -161,11 +162,11 @@ namespace TWCore
         /// <summary>
         /// Faster DateTime.Now
         /// </summary>
-        public static DateTime Now => DateTime.SpecifyKind(DateTime.UtcNow + LocalUtcOffset, DateTimeKind.Local);
+        public static DateTime Now => DateTime.SpecifyKind(DateTime.UtcNow.Add(_localUtcOffset), DateTimeKind.Local);
         /// <summary>
         /// Local UTC Offset
         /// </summary>
-        public static TimeSpan LocalUtcOffset { get; private set; }
+        public static TimeSpan LocalUtcOffset => _localUtcOffset;
         /// <summary>
         /// Gets or Sets if the Library is in Debug mode
         /// </summary>
@@ -664,7 +665,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void UpdateLocalUtc(object state)
         {
-            LocalUtcOffset = TimeSpan.FromMinutes(Math.Round((DateTime.Now - DateTime.UtcNow).TotalMinutes));
+            _localUtcOffset = TimeSpan.FromMinutes(Math.Round((DateTime.Now - DateTime.UtcNow).TotalMinutes));
         }
         #endregion
 

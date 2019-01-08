@@ -178,9 +178,18 @@ namespace TWCore.Serialization.NSerializer
                 tools = new SerTools();
                 _tools = tools;
             }
+            if (Compressor is null)
+            {
+                if (typeof(T) == typeof(GenericObject))
+                    return (T) tools.Deserializer.GenericObjectDeserialize(stream);
+                return (T) tools.Deserializer.Deserialize(stream);
+            }
+            tools.ComStream.Reset();
+            Compressor.Decompress(stream, tools.ComStream);
+            tools.ComStream.Position = 0;
             if (typeof(T) == typeof(GenericObject))
-                return (T)tools.Deserializer.GenericObjectDeserialize(stream);
-            return (T)tools.Deserializer.Deserialize(stream);
+                return (T) tools.Deserializer.GenericObjectDeserialize(tools.ComStream);
+            return (T) tools.Deserializer.Deserialize(tools.ComStream);
         }
         /// <inheritdoc />
         /// <summary>
@@ -198,8 +207,16 @@ namespace TWCore.Serialization.NSerializer
                 tools = new SerTools();
                 _tools = tools;
             }
-            using (var stream = value.AsReadOnlyStream())
-                return (T) tools.Deserializer.Deserialize(stream);
+            if (Compressor is null)
+            {
+                using (var stream = value.AsReadOnlyStream())
+                    return (T) tools.Deserializer.Deserialize(stream);
+            }
+            tools.ComStream.Reset();
+            using(var stream = value.AsReadOnlyStream())
+                Compressor.Decompress(stream, tools.ComStream);
+            tools.ComStream.Position = 0;
+            return (T) tools.Deserializer.Deserialize(tools.ComStream);
         }
 
         /// <inheritdoc />

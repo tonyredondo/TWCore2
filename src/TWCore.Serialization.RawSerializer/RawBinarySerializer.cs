@@ -161,7 +161,6 @@ namespace TWCore.Serialization.RawSerializer
             tools.SerStream.Position = 0;
             Compressor.Compress(tools.SerStream, stream);
         }
-        
         /// <inheritdoc />
         /// <summary>
         /// Deserialize a stream content to a object
@@ -178,9 +177,18 @@ namespace TWCore.Serialization.RawSerializer
                 tools = new SerTools();
                 _tools = tools;
             }
+            if (Compressor is null)
+            {
+                if (typeof(T) == typeof(GenericObject))
+                    return (T) tools.Deserializer.GenericObjectDeserialize(stream);
+                return (T) tools.Deserializer.Deserialize(stream);
+            }
+            tools.ComStream.Reset();
+            Compressor.Decompress(stream, tools.ComStream);
+            tools.ComStream.Position = 0;
             if (typeof(T) == typeof(GenericObject))
-                return (T)tools.Deserializer.GenericObjectDeserialize(stream);
-            return (T)tools.Deserializer.Deserialize(stream);
+                return (T) tools.Deserializer.GenericObjectDeserialize(tools.ComStream);
+            return (T) tools.Deserializer.Deserialize(tools.ComStream);
         }
         /// <inheritdoc />
         /// <summary>
@@ -198,8 +206,16 @@ namespace TWCore.Serialization.RawSerializer
                 tools = new SerTools();
                 _tools = tools;
             }
-            using (var stream = value.AsReadOnlyStream())
-                return (T) tools.Deserializer.Deserialize(stream);
+            if (Compressor is null)
+            {
+                using (var stream = value.AsReadOnlyStream())
+                    return (T) tools.Deserializer.Deserialize(stream);
+            }
+            tools.ComStream.Reset();
+            using(var stream = value.AsReadOnlyStream())
+                Compressor.Decompress(stream, tools.ComStream);
+            tools.ComStream.Position = 0;
+            return (T) tools.Deserializer.Deserialize(tools.ComStream);
         }
         /// <inheritdoc />
         /// <summary>

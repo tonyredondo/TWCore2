@@ -30,11 +30,11 @@ namespace TWCore
         /// <summary>
         /// Bytes Value
         /// </summary>
-        public long Value { get; }
+        public readonly long Value;
         /// <summary>
         /// Human redable bytes text
         /// </summary>
-        public string Text { get; }
+        public readonly string Text;
 
         #region .ctor
         /// <summary>

@@ -243,16 +243,16 @@ namespace TWCore.Injector
         /// <summary>
         /// Type Load Result
         /// </summary>
-        public struct TypeLoadResult
+        public readonly struct TypeLoadResult
         {
             /// <summary>
             /// Type AssemblyQualifiedName
             /// </summary>
-            public string Type { get; }
+            public readonly string Type;
             /// <summary>
             /// Get if the Type is Loaded
             /// </summary>
-            public bool Loaded { get; }
+            public readonly bool Loaded;
             /// <summary>
             /// Type Load Result
             /// </summary>

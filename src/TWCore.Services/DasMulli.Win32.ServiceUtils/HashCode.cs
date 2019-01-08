@@ -8,7 +8,7 @@ namespace DasMulli.Win32.ServiceUtils
     /// <summary>
     /// Simplifies the work of hashing.
     /// </summary>
-    public struct HashCode
+    public readonly struct HashCode
     {
         private readonly int _value;
 

@@ -62,7 +62,7 @@ namespace TWCore.Net.Multicast
         public event EventHandler<PeerConnectionMessageReceivedEventArgs> OnReceive;
 
         #region Allocators
-        private struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
+        private readonly struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
         {
             public int InitialSize => 1;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -455,9 +455,9 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Nested Types
-        private struct ReceivedDatagrams
+        private readonly struct ReceivedDatagrams
         {
-            public Memory<byte>[] Datagrams { get; private set; }
+            public readonly Memory<byte>[] Datagrams;
             public bool Complete => !Datagrams?.Any(i => i.IsEmpty) ?? false;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

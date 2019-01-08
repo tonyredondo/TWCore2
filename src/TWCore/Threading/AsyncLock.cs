@@ -149,7 +149,7 @@ namespace TWCore.Threading
         /// <summary>
         /// <see cref="T:TWCore.AsyncLock.Releaser" /> enables holding an <see cref="T:TWCore.AsyncLock" /> with a using scope.
         /// </summary>
-        public struct Releaser : IDisposable
+        public readonly struct Releaser : IDisposable
         {
             private readonly AsyncLock _asyncLock;
             internal Releaser(AsyncLock asyncLock)

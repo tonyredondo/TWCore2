@@ -112,7 +112,7 @@ namespace TWCore.Serialization.WSerializer
             {
             }
         }
-        private struct DesCachePoolAllocator : IPoolObjectLifecycle<DesCachePoolItem>
+        private readonly struct DesCachePoolAllocator : IPoolObjectLifecycle<DesCachePoolItem>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -126,11 +126,12 @@ namespace TWCore.Serialization.WSerializer
                 value.ObjectCache.Clear(SerializerMode.CachedUShort);
             }
             public int DropTimeFrequencyInSeconds => 60;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void DropAction(DesCachePoolItem value)
             {
             }
         }
-        private struct DesStackPoolAllocator : IPoolObjectLifecycle<Stack<DeserializerTypeItem>>
+        private readonly struct DesStackPoolAllocator : IPoolObjectLifecycle<Stack<DeserializerTypeItem>>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
@@ -139,6 +140,7 @@ namespace TWCore.Serialization.WSerializer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(Stack<DeserializerTypeItem> value) => value.Clear();
             public int DropTimeFrequencyInSeconds => 60;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void DropAction(Stack<DeserializerTypeItem> value)
             {
             }

@@ -248,7 +248,7 @@ namespace TWCore.Diagnostics.Status
             }
 
         }
-        private struct ItemValue<T>
+        private readonly struct ItemValue<T>
         {
             public readonly T Value;
             public readonly DateTime ValueDate;

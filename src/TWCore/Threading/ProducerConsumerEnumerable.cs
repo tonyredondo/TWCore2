@@ -198,7 +198,7 @@ namespace TWCore.Threading
         /// <summary>
         /// Methods to be called from the producer thread
         /// </summary>
-        public struct ProducerMethods
+        public readonly struct ProducerMethods
         {
             private readonly ProducerConsumerEnumerable<T> _data;
 

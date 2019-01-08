@@ -874,16 +874,16 @@ namespace TWCore
         /// </summary>
         /// <typeparam name="T">Type of item of the IEnumerable</typeparam>
         /// <typeparam name="TKey">Key to do the sort</typeparam>
-        public struct SortOption<T, TKey>
+        public readonly struct SortOption<T, TKey>
         {
             /// <summary>
             /// Direction of the Sort
             /// </summary>
-            public SortDirection Direction { get; set; }
+            public readonly SortDirection Direction;
             /// <summary>
             /// Key Selector of sorting
             /// </summary>
-            public Func<T, TKey> Selector { get; set; }
+            public readonly Func<T, TKey> Selector;
             /// <summary>
             /// Option to do the sort, indicates the direction of the sort and the Key selector.
             /// </summary>
@@ -1087,7 +1087,7 @@ namespace TWCore
             }
             return true;
         }
-        private struct SequenceEqualFuncComparer<TSource, TSourceKey> : IEqualityComparer<TSource>
+        private readonly struct SequenceEqualFuncComparer<TSource, TSourceKey> : IEqualityComparer<TSource>
         {
             private readonly Func<TSource, TSourceKey> _keySelector;
 

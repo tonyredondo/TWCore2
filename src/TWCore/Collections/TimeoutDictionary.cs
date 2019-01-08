@@ -53,17 +53,31 @@ namespace TWCore.Collections
         /// <summary>
         /// Internal dictionary item
         /// </summary>
-        private struct TimeoutStruct
+        private readonly struct TimeoutStruct
         {
-            public TValue Value;
-            public Task Task;
-            public TimeSpan Timeout;
-            public CancellationTokenSource TokenSource;
+            public readonly TValue Value;
+            public readonly Task Task;
+            public readonly TimeSpan Timeout;
+            public readonly CancellationTokenSource TokenSource;
 
+            /// <summary>
+            /// Internal dictionary item
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public TimeoutStruct(TValue value, Task task, TimeSpan timeout, CancellationTokenSource tokenSource)
+            {
+                Value = value;
+                Task = task;
+                Timeout = timeout;
+                TokenSource = tokenSource;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override int GetHashCode()
             {
                 return Value.GetHashCode() + Timeout.GetHashCode();
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override bool Equals(object obj)
             {
                 return obj is TimeoutStruct tStruct &&
@@ -293,11 +307,9 @@ namespace TWCore.Collections
         {
             var cts = new CancellationTokenSource();
             return new TimeoutStruct
-            {
-                Value = value,
-                TokenSource = cts,
-                Timeout = valueTimeout,
-                Task = Task.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
+            (
+                value,
+                Task.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
                 {
                     var objArray = (object[])obj;
                     var mDictio = (ConcurrentDictionary<TKey, TimeoutStruct>)objArray[0];
@@ -306,8 +318,10 @@ namespace TWCore.Collections
                         OnItemTimeout?.Invoke(this, new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });
                 }, new object[] { _dictionary, key }, CancellationToken.None,
                         TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
-                        TaskScheduler.Default)
-            };
+                        TaskScheduler.Default),
+                valueTimeout,
+                cts
+            );
         }
 
         private class TimeoutDictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>

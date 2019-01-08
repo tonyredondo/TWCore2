@@ -359,18 +359,18 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     value.Event.Set();
                     break;
                 case RPCEventMessage eventMessage:
-                    _previousMessages.GetOrAdd(eventMessage.MessageId, mId =>
+                    if (!_previousMessages.TryGetValue(eventMessage.MessageId, out _))
                     {
-                        OnEventReceived?.InvokeAsync(this, new EventDataEventArgs(eventMessage.ServiceName, eventMessage.EventName, eventMessage.EventArgs));
-                        return null;
-                    });
+                        _previousMessages.TryAdd(eventMessage.MessageId, null);
+                        OnEventReceived?.Invoke(this, new EventDataEventArgs(eventMessage.ServiceName, eventMessage.EventName, eventMessage.EventArgs));
+                    }
                     break;
                 case RPCPushMessage pushMessage:
-                    _previousMessages.GetOrAdd(pushMessage.MessageId, mId =>
+                    if (!_previousMessages.TryGetValue(pushMessage.MessageId, out _))
                     {
-                        OnPushMessageReceived?.InvokeAsync(this, new EventArgs<RPCPushMessage>(pushMessage));
-                        return null;
-                    });
+                        _previousMessages.TryAdd(pushMessage.MessageId, null);
+                        OnPushMessageReceived?.Invoke(this, new EventArgs<RPCPushMessage>(pushMessage));
+                    }
                     break;
                 case RPCError errorMessage:
                     var respMsg = new RPCResponseMessage { Exception = errorMessage.Exception };

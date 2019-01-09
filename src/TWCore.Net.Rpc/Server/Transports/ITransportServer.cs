@@ -18,6 +18,8 @@ using System;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+using TWCore.Threading;
+// ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedParameter.Global
 // ReSharper disable UnusedMember.Global
@@ -49,7 +51,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
-        event EventHandler<MethodEventArgs> OnMethodCall;
+        AsyncEvent<MethodEventArgs> OnMethodCallAsync { get; set; }
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
@@ -68,7 +70,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <param name="eventName">Event name</param>
         /// <param name="sender">Sender information</param>
         /// <param name="e">Event args</param>
-        void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e);
+        Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e);
 
         /// <summary>
         /// Starts the server listener

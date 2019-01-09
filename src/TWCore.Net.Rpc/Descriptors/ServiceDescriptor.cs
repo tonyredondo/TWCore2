@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Security;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -84,6 +85,14 @@ namespace TWCore.Net.RPC.Descriptors
                     ReturnType = GetTypeName(mInfo.ReturnType),
                     TypeOfReturnType = mInfo.ReturnType
                 };
+                if (mInfo.ReturnType == typeof(Task) || mInfo.ReturnType.BaseType == typeof(Task))
+                {
+                    mDesc.ReturnIsTask = true;
+                    if (mInfo.ReturnType.GenericTypeArguments.Length > 0)
+                        mDesc.ReturnTaskResult = mInfo.ReturnType.GetProperty("Result").GetFastPropertyInfo();
+                    else
+                        mDesc.ReturnTaskResult = null;
+                }
                 RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 
                 var pars = mInfo.GetParameters();

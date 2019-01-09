@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using TWCore.Messaging.Server;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+using TWCore.Threading;
 
 // ReSharper disable RedundantAssignment
 // ReSharper disable CheckNamespace
@@ -70,13 +71,13 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Events
         /// <summary>
-        /// Event that fires when a Descriptors request is received.
+        /// Event that fires when a Descriptor request is received.
         /// </summary>
         public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
-        public event EventHandler<MethodEventArgs> OnMethodCall;
+        public AsyncEvent<MethodEventArgs> OnMethodCallAsync { get; set; }
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
@@ -166,14 +167,15 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <param name="sender">Sender information</param>
         /// <param name="e">Event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        public Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
             Core.Log.Warning("Events is not supported on MessagingTransportServer");
+            return Task.CompletedTask;
         }
         #endregion
         
         #region Private Methods
-        private Task QueueServerOnRequestReceived(object sender, RequestReceivedEventArgs requestReceivedEventArgs)
+        private async Task QueueServerOnRequestReceived(object sender, RequestReceivedEventArgs requestReceivedEventArgs)
         {
             var body = requestReceivedEventArgs.Request.Body?.GetValue();
             Counters.IncrementBytesReceived(requestReceivedEventArgs.MessageLength);
@@ -192,14 +194,13 @@ namespace TWCore.Net.RPC.Server.Transports
                     break;
                 case RPCRequestMessage rqMessage:
                     var mEvent = new MethodEventArgs(requestReceivedEventArgs.Request.CorrelationId, rqMessage, requestReceivedEventArgs.ProcessResponseTimeoutCancellationToken);
-                    if (OnMethodCall != null)
+                    if (!(OnMethodCallAsync is null))
                     {
-                        OnMethodCall(this, mEvent);
+                        await OnMethodCallAsync.InvokeAsync(this, mEvent).ConfigureAwait(false);
                         requestReceivedEventArgs.Response.Body = _queueServer.SenderSerializer.GetSerializedObject(mEvent.Response);
                     }
                     break;
             }
-            return Task.CompletedTask;
         }
         private Task QueueServerOnResponseSent(object sender, ResponseSentEventArgs responseSentEventArgs)
         {

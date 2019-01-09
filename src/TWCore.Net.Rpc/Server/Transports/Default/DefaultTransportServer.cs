@@ -26,9 +26,12 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+using TWCore.Threading;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedGetOnlyAutoProperty
 // ReSharper disable MethodSupportsCancellation
+// ReSharper disable InconsistentNaming
 #pragma warning disable 4014
 
 namespace TWCore.Net.RPC.Server.Transports.Default
@@ -79,22 +82,18 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         #endregion
 
         #region Events
-        /// <inheritdoc />
         /// <summary>
-        /// Event that fires when a Descriptors request is received.
+        /// Event that fires when a Descriptor request is received.
         /// </summary>
         public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
-        /// <inheritdoc />
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
-        public event EventHandler<MethodEventArgs> OnMethodCall;
-        /// <inheritdoc />
+        public AsyncEvent<MethodEventArgs> OnMethodCallAsync { get; set; }
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
         public event EventHandler<RPCResponseMessage> OnResponseSent;
-        /// <inheritdoc />
         /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
@@ -202,7 +201,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <param name="sender">Sender information</param>
         /// <param name="e">Event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        public async Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
             try
             {
@@ -211,10 +210,17 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 switch (eventAttribute.Scope)
                 {
                     case RPCMessageScope.Session:
-                        RpcServerClient client;
+                        RpcServerClient client = null;
                         lock (_locker)
                         {
-                            client = _sessions.Find(s => s.OnSession && s.SessionId == clientId);
+                            foreach (var s in _sessions)
+                            {
+                                if (s.OnSession && s.SessionId == clientId)
+                                {
+                                    client = s;
+                                    break;
+                                }
+                            }
                         }
                         if (client != null)
                         {
@@ -224,24 +230,32 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         break;
                     case RPCMessageScope.Hub:
                         var hubName = eventAttribute.HubName;
-                        RpcServerClient[] clients;
+                        var clients = new List<RpcServerClient>();
                         lock (_locker)
                         {
-                            clients = _sessions.Where((s, mHubName) => s.OnSession && s.Hub == mHubName, hubName).ToArray();
+                            foreach (var s in _sessions)
+                            {
+                                if (s.OnSession && s.Hub == hubName)
+                                    clients.Add(s);
+                            }
                         }
-                        if (clients.Length > 0)
+                        if (clients.Count > 0)
                         {
                             await Task.WhenAll(clients.Select((s, eMessage) => s.SendRpcMessageAsync(eMessage), eventMessage)).ConfigureAwait(false);
                             Core.Log.LibVerbose($"Sending event trigger to Hub='{hubName}' on event '{eventName}'");
                         }
                         break;
                     case RPCMessageScope.Global:
-                        RpcServerClient[] gClients;
+                        var gClients = new List<RpcServerClient>();
                         lock (_locker)
                         {
-                            gClients = _sessions.Where(s => s.OnSession).ToArray();
+                            foreach (var s in _sessions)
+                            {
+                                if (s.OnSession)
+                                    gClients.Add(s);
+                            }
                         }
-                        if (gClients.Length > 0)
+                        if (gClients.Count > 0)
                         {
                             await Task.WhenAll(gClients.Select((s, eMessage) => s.SendRpcMessageAsync(eMessage), eventMessage)).ConfigureAwait(false);
                             Core.Log.LibVerbose($"Sending event trigger to all sessions on event '{eventName}'");
@@ -298,10 +312,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 //
             }
             var serverClient = new RpcServerClient(client, (BinarySerializer)Serializer);
-            serverClient.OnSessionMessageReceived += ServerClient_OnSessionMessageReceived;
+            serverClient.OnSessionMessageReceivedAsync += ServerClient_OnSessionMessageReceivedAsync;
             serverClient.OnConnect += ServerClient_OnConnect;
             serverClient.OnDisconnect += ServerClient_OnDisconnect;
-            serverClient.OnMessageReceived += ServerClient_OnMessageReceived;
+            serverClient.OnMessageReceivedAsync += ServerClient_OnMessageReceivedAsync;
             lock (_locker)
             {
                 _sessions.Add(serverClient);
@@ -309,9 +323,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool ServerClient_OnSessionMessageReceived(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage)
+        private Task<bool> ServerClient_OnSessionMessageReceivedAsync(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage)
         {
-            return true;
+            return TaskHelper.CompleteTrue;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ServerClient_OnConnect(RpcServerClient rpcServerClient, EventArgs e)
@@ -320,7 +334,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async void ServerClient_OnMessageReceived(RpcServerClient rpcServerClient, RPCMessage e)
+        private async Task ServerClient_OnMessageReceivedAsync(RpcServerClient rpcServerClient, RPCMessage e)
         {
             try
             {
@@ -334,10 +348,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         if (request.MethodId == Guid.Empty)
                         {
                             var dEventArgs = new ServerDescriptorsEventArgs();
-                            OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
+                            OnGetDescriptorsRequest?.InvokeAsync(this, dEventArgs);
                             var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
                             await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
-                            OnResponseSent?.Invoke(this, response);
+                            OnResponseSent?.InvokeAsync(this, response);
                             break;
                         }
                         if (request.CancellationToken)
@@ -346,19 +360,21 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                             {
                                 _rpcMessagesCancellations.TryAdd(request.MessageId, tokenSource);
                                 var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, tokenSource.Token);
-                                OnMethodCall?.Invoke(this, mEventArgs);
+                                if (!(OnMethodCallAsync is null))
+                                    await OnMethodCallAsync.InvokeAsync(this, mEventArgs).ConfigureAwait(false);
                                 if (!tokenSource.Token.IsCancellationRequested)
                                     await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
                                 _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
-                                OnResponseSent?.Invoke(this, mEventArgs.Response);
+                                OnResponseSent?.InvokeAsync(this, mEventArgs.Response);
                             }
                             break;
                         }
                         var mEventArgs2 = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
-                        OnMethodCall?.Invoke(this, mEventArgs2);
+                        if (!(OnMethodCallAsync is null))
+                            await OnMethodCallAsync.InvokeAsync(this, mEventArgs2).ConfigureAwait(false);
                         if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
                             await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
-                        OnResponseSent?.Invoke(this, mEventArgs2.Response);
+                        OnResponseSent?.InvokeAsync(this, mEventArgs2.Response);
                         break;
                 }
             }
@@ -370,10 +386,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ServerClient_OnDisconnect(RpcServerClient rpcServerClient, EventArgs e)
         {
-            rpcServerClient.OnSessionMessageReceived -= ServerClient_OnSessionMessageReceived;
+            rpcServerClient.OnSessionMessageReceivedAsync -= ServerClient_OnSessionMessageReceivedAsync;
             rpcServerClient.OnConnect -= ServerClient_OnConnect;
             rpcServerClient.OnDisconnect -= ServerClient_OnDisconnect;
-            rpcServerClient.OnMessageReceived -= ServerClient_OnMessageReceived;
+            rpcServerClient.OnMessageReceivedAsync -= ServerClient_OnMessageReceivedAsync;
             lock (_locker)
             {
                 _sessions.Remove(rpcServerClient);

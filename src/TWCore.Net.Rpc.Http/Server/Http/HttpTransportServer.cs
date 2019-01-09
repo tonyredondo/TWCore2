@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+using TWCore.Threading;
+
 // ReSharper disable RedundantAssignment
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -64,13 +66,13 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Events
         /// <summary>
-        /// Event that fires when a Descriptors request is received.
+        /// Event that fires when a Descriptor request is received.
         /// </summary>
         public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
-        public event EventHandler<MethodEventArgs> OnMethodCall;
+        public AsyncEvent<MethodEventArgs> OnMethodCallAsync { get; set; }
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
@@ -152,9 +154,10 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <param name="sender">Sender information</param>
         /// <param name="e">Event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        public Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
             Core.Log.Warning("Events is not supported on HttpTransportServer");
+            return Task.CompletedTask;
         }
         #endregion
 
@@ -184,12 +187,12 @@ namespace TWCore.Net.RPC.Server.Transports
                 OnGetDescriptorsRequest(this, eArgs);
                 responseBuffer = Serializer.Serialize(eArgs.Descriptors);
             }
-            if (context.Request.Method == HttpMethod.POST && OnMethodCall != null)
+            if (context.Request.Method == HttpMethod.POST && !(OnMethodCallAsync is null))
             {
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
                 var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
                 var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
-                OnMethodCall(this, eArgs);
+                OnMethodCallAsync.InvokeAsync(this, eArgs).WaitAsync();
                 if (eArgs.Response != null)
                 {
                     responseBuffer = Serializer.Serialize(eArgs.Response);

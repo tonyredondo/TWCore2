@@ -40,14 +40,14 @@ namespace TWCore.Net.RPC.Server.Transports.Default
     /// <param name="rpcServerClient">RpcServerClient instance</param>
     /// <param name="sessionMessage">Session request message</param>
     /// <returns>True if the session is accepted; otherwise, false.</returns>
-    public delegate bool RpcServerClientSessionEvent(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage);
+    public delegate Task<bool> RpcServerClientSessionEvent(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage);
     /// <summary>
     /// Rpc server client session event
     /// </summary>
     /// <typeparam name="TEventArgs">Event args object type</typeparam>
     /// <param name="rpcServerClient">RpcServerClient instance</param>
     /// <param name="e">Event args</param>
-    public delegate void RpcServerClientEvent<in TEventArgs>(RpcServerClient rpcServerClient, TEventArgs e);
+    public delegate Task RpcServerClientEvent<in TEventArgs>(RpcServerClient rpcServerClient, TEventArgs e);
 
     /// <inheritdoc />
     /// <summary>
@@ -103,11 +103,11 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <summary>
         /// Event when a message has been received
         /// </summary>
-        public event RpcServerClientEvent<RPCMessage> OnMessageReceived;
+        public event RpcServerClientEvent<RPCMessage> OnMessageReceivedAsync;
         /// <summary>
         /// Event when the session request message has been received
         /// </summary>
-        public event RpcServerClientSessionEvent OnSessionMessageReceived;
+        public event RpcServerClientSessionEvent OnSessionMessageReceivedAsync;
         #endregion
 
         #region .ctor
@@ -119,7 +119,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RpcServerClient(TcpClient client, BinarySerializer serializer)
         {
-            _messageReceivedHandlerDelegate = new Func<object, Task>(MessageReceivedHandler);
+            _messageReceivedHandlerDelegate = MessageReceivedHandler;
             _client = client;
             _serializer = serializer;
             _networkStream = _client.GetStream();
@@ -187,15 +187,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 {
                     var innerEx = dEx.InnerException;
                     if (innerEx is IOException || innerEx is FormatException)
-                    {
                         break;
-                    }
-                    else
-                    {
-                        if (_tokenSource?.IsCancellationRequested != true && _client.Connected && !_isDisposing)
-                            Core.Log.Write(innerEx);
-                        break;
-                    }
+                    if (_tokenSource?.IsCancellationRequested != true && _client.Connected && !_isDisposing)
+                        Core.Log.Write(innerEx);
+                    break;
                 }
                 catch (IOException)
                 {
@@ -222,7 +217,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 switch (rawMessage)
                 {
                     case RPCSessionRequestMessage sessionMessage:
-                        if (OnSessionMessageReceived?.Invoke(this, sessionMessage) ?? true)
+                        var sessionOk = true;
+                        if (!(OnSessionMessageReceivedAsync is null))
+                            sessionOk = await OnSessionMessageReceivedAsync(this, sessionMessage).ConfigureAwait(false);
+                        if (sessionOk)
                         {
                             _hub = sessionMessage.Hub;
                             _sessionId = sessionMessage.SessionId == Guid.Empty
@@ -243,7 +241,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         break;
                     case RPCMessage message:
                         if (!_onSession) return;
-                        OnMessageReceived?.Invoke(this, message);
+                        if (!(OnMessageReceivedAsync is null))
+                            await OnMessageReceivedAsync(this, message).ConfigureAwait(false);
                         break;
                 }
             }
@@ -282,7 +281,6 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             {
                 //
             }
-
             OnDisconnect?.Invoke(this, EventArgs.Empty);
         }
     }

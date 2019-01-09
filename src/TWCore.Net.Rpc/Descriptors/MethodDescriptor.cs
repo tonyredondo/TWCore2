@@ -50,7 +50,7 @@ namespace TWCore.Net.RPC.Descriptors
         public string ReturnType { get; set; }
 
         /// <summary>
-        /// Reflected method acessor delegate for direct access.
+        /// Reflected method accessor delegate for direct access.
         /// </summary>
         [XmlIgnore, NonSerialize]
         public MethodAccessorDelegate Method { get; internal set; }
@@ -59,5 +59,16 @@ namespace TWCore.Net.RPC.Descriptors
         /// </summary>
         [XmlIgnore, NonSerialize]
         public Type TypeOfReturnType { get; internal set; }
+
+        /// <summary>
+        /// Return is Task
+        /// </summary>
+        [XmlIgnore, NonSerialize]
+        public bool ReturnIsTask { get; internal set; }
+        /// <summary>
+        /// Return Task Result
+        /// </summary>
+        [XmlIgnore, NonSerialize]
+        public FastPropertyInfo ReturnTaskResult { get; internal set; }
     }
 }

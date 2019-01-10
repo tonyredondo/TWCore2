@@ -64,6 +64,9 @@ namespace TWCore.Net.RPC.Descriptors
         /// Gets a service descriptor from a service type
         /// </summary>
         /// <param name="serviceType">Object service type for descriptor creation</param>
+        /// <param name="counterCategory">Counter category</param>
+        /// <param name="counterLevel">Counter level</param>
+        /// <param name="counterKind">Counter kind</param>
         /// <returns>Service descriptor instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ServiceDescriptor GetDescriptor(Type serviceType, string counterCategory = null, CounterLevel counterLevel = CounterLevel.User, CounterKind counterKind = CounterKind.Application)

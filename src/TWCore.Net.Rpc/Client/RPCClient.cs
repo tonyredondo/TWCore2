@@ -265,8 +265,6 @@ namespace TWCore.Net.RPC.Client
         public async Task<TReturn> ServerInvokeNoArgumentsAsync<TReturn>(string serviceName, string method, CancellationToken? cancellationToken = null)
         {
             var request = CreateRequest(serviceName, method, null, null, cancellationToken != null);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
@@ -364,8 +362,6 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item1[0] = arg1;
             arrayArgs.Item2[0] = typeof(TArg1);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
@@ -399,8 +395,6 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item2[0] = typeof(TArg1);
             arrayArgs.Item2[1] = typeof(TArg2);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
@@ -439,8 +433,6 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item2[1] = typeof(TArg2);
             arrayArgs.Item2[2] = typeof(TArg3);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
@@ -484,8 +476,6 @@ namespace TWCore.Net.RPC.Client
             arrayArgs.Item2[2] = typeof(TArg3);
             arrayArgs.Item2[3] = typeof(TArg4);
             var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = cancellationToken.HasValue ?
                 await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
@@ -521,13 +511,7 @@ namespace TWCore.Net.RPC.Client
                         types[i] = args[i].GetType();
                 }
             }
-            var key = (serviceName, method, types);
-            if (!_methodDescriptorCache.TryGetValue(key, out var mDesc))
-            {
-                var methodDescriptorCreator = new MethodDescriptorCreator(args, Descriptors);
-                mDesc = _methodDescriptorCache.GetOrAdd(key, methodDescriptorCreator.Create);
-            }
-            return mDesc;
+            return _methodDescriptorCache.GetOrAdd((serviceName, method, types), GetMethodDescriptor);
         }
         #endregion
 
@@ -540,7 +524,7 @@ namespace TWCore.Net.RPC.Client
             _transportInit = true;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
+        private async ValueTask<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
             if (_descriptors != null) return _descriptors;
             if (_serverDescriptors is null && UseServerDescriptor)
@@ -586,11 +570,7 @@ namespace TWCore.Net.RPC.Client
                 }
             }
             var key = (serviceName, method, types);
-            if (!_methodDescriptorCache.TryGetValue(key, out var mDesc))
-            {
-                var methodDescriptorCreator = new MethodDescriptorCreator(args, Descriptors);
-                mDesc = _methodDescriptorCache.GetOrAdd(key, methodDescriptorCreator.Create);
-            }
+            var mDesc = _methodDescriptorCache.GetOrAdd(key, GetMethodDescriptor);
             if (mDesc is null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
@@ -598,54 +578,50 @@ namespace TWCore.Net.RPC.Client
                 args = _nullItemArgs;
 
             return RPCRequestMessage.Retrieve(mDesc.Id, args, useCancellationToken);
+
         }
 
-        private readonly struct MethodDescriptorCreator
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private MethodDescriptor GetMethodDescriptor((string ServiceName, string Method, Type[] Types) key)
         {
-            private readonly object[] Args;
-            private readonly ServiceDescriptorCollection Descriptors;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public MethodDescriptorCreator(object[] args, ServiceDescriptorCollection descriptors)
+            if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
+            var lstMethods = new List<MethodDescriptor>();
+            var types = key.Types ?? Array.Empty<Type>();
+            foreach (var method in descriptor.Methods.Values)
             {
-                Args = args ?? _emptyArgs;
-                Descriptors = descriptors;
+                if (method.Name == key.Method && (method.Parameters?.Length ?? 0) == types.Length)
+                    lstMethods.Add(method);
             }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public MethodDescriptor Create((string ServiceName, string Method, Type[] Types) key)
+            var mCount = lstMethods.Count;
+            if (mCount == 0)
+                return null;
+            else if (mCount == 1)
+                return lstMethods[0];
+            else
             {
-                if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
-                var methods = descriptor.Methods.Values.Where(MethodsWhere, key).ToArray();
-                switch (methods.Length)
+                foreach (var method in lstMethods)
                 {
-                    case 0:
-                        return null;
-                    case 1:
-                        return methods[0];
-                    default:
-                        return methods.FirstOrDefault(FirstMethodWithParameter);
+                    var found = true;
+                    for (var i = 0; i < method.Parameters.Length; i++)
+                    {
+                        var p1 = method.Parameters[i].Parameter;
+                        var t2 = types[i];
+                        if (t2 != null && !p1.ParameterType.IsAssignableFrom(t2))
+                        {
+                            found = false;
+                            break;
+                        }
+                        if (t2 != null || !p1.ParameterType.IsValueType) continue;
+                        if (!p1.ParameterType.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found)
+                        return method;
                 }
-            }
-            
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool MethodsWhere(MethodDescriptor method, (string ServiceName, string Method, Type[] Types) key)
-                => method.Name == key.Method && (method.Parameters?.Length ?? 0) == Args.Length;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool FirstMethodWithParameter(MethodDescriptor method)
-            {
-                for (var i = 0; i < method.Parameters.Length; i++)
-                {
-                    var p1 = method.Parameters[i].Parameter;
-                    var v2 = Args[i];
-                    if (v2 != null && !p1.ParameterType.IsAssignableFrom(v2.GetType()))
-                        return false;
-                    if (v2 != null || !p1.ParameterType.IsValueType) continue;
-                    if (!p1.ParameterType.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
-                        return false;
-                }
-                return true;
+                return null;
             }
         }
         #endregion

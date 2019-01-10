@@ -137,7 +137,9 @@ namespace TWCore.Reflection
         public MethodAccessorDelegate BuildMethodAccessor(MethodInfo method)
         {
             var obj = Expression.Parameter(typeof(object), "o");
-            var castedObject = Expression.Convert(obj, method.DeclaringType);
+            Expression castedObject = null;
+            if (!method.IsStatic)
+                castedObject = Expression.Convert(obj, method.DeclaringType);
 
             var parameters = method.GetParameters();
             var paramExp = Expression.Parameter(typeof(object[]), "args");
@@ -166,6 +168,8 @@ namespace TWCore.Reflection
                 callExpression = Expression.Convert(callExpression, typeof(object));
             else
                 callExpression = Expression.Block(callExpression, Expression.Constant(null, typeof(object)));
+            if (method.IsStatic)
+                return Expression.Lambda<MethodAccessorDelegate>(callExpression, "Call+" + method.Name, new[] { obj, paramExp }).Compile();
             return Expression.Lambda<MethodAccessorDelegate>(callExpression, "Call+" + method.Name, new[] { obj, paramExp }).Compile();
         }
 

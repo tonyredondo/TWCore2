@@ -256,32 +256,11 @@ namespace TWCore.Net.RPC.Client
         #endregion
 
         #region Alternative ServerInvoke Async
-        /// <summary>
-        /// Invokes a Server RPC method with no arguments
-        /// </summary>
-        /// <param name="serviceName">Service name</param>
-        /// <param name="method">Server method name</param>
-        /// <param name="cancellationToken">Cancellation Token instance</param>
-        /// <returns>Server method return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TReturn> ServerInvokeNoArgumentsAsync<TReturn>(string serviceName, string method, CancellationToken? cancellationToken = null)
-        {
-            var request = CreateRequest(serviceName, method, null, null, cancellationToken != null);
-            var response = cancellationToken.HasValue ?
-                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
-                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
-            RPCRequestMessage.Store(request);
-            if (response is null)
-                throw new Exception("RPC Response is null.");
-            if (response.Exception != null)
-                throw response.Exception.GetException();
-            return (TReturn)response.ReturnValue;
-        }
-
         private static readonly ObjectPool<(object[], Type[]), Args1Allocator> ServiceInvokeArgs1Pool = new ObjectPool<(object[], Type[]), Args1Allocator>();
         private static readonly ObjectPool<(object[], Type[]), Args2Allocator> ServiceInvokeArgs2Pool = new ObjectPool<(object[], Type[]), Args2Allocator>();
         private static readonly ObjectPool<(object[], Type[]), Args3Allocator> ServiceInvokeArgs3Pool = new ObjectPool<(object[], Type[]), Args3Allocator>();
         private static readonly ObjectPool<(object[], Type[]), Args4Allocator> ServiceInvokeArgs4Pool = new ObjectPool<(object[], Type[]), Args4Allocator>();
+        private static readonly ObjectPool<(object[], Type[]), Args5Allocator> ServiceInvokeArgs5Pool = new ObjectPool<(object[], Type[]), Args5Allocator>();
         
         private readonly struct Args1Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -346,7 +325,23 @@ namespace TWCore.Net.RPC.Client
             {
             }
         }
+        private readonly struct Args5Allocator : IPoolObjectLifecycle<(object[], Type[])>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public (object[], Type[]) New() => (new object[5], new Type[5]);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset((object[], Type[]) value)
+            {
+            }
+            public int DropTimeFrequencyInSeconds => 120;
+            public void DropAction((object[], Type[]) value)
+            {
+            }
+        }
 
+        #region Generic
         /// <summary>
         /// Invoke a Server RPC method with 1 argument 
         /// </summary>
@@ -493,6 +488,246 @@ namespace TWCore.Net.RPC.Client
                 throw response.Exception.GetException();
             return (TReturn)response.ReturnValue;
         }
+        /// <summary>
+        /// Invoke a Server RPC method with 5 argument 
+        /// </summary>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <typeparam name="TArg5">Argument 5 type</typeparam>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="arg5">Argument 5</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TArg5, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs5Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item1[2] = arg3;
+            arrayArgs.Item1[3] = arg4;
+            arrayArgs.Item1[4] = arg5;
+            arrayArgs.Item2[0] = typeof(TArg1);
+            arrayArgs.Item2[1] = typeof(TArg2);
+            arrayArgs.Item2[2] = typeof(TArg3);
+            arrayArgs.Item2[3] = typeof(TArg4);
+            arrayArgs.Item2[4] = typeof(TArg5);
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            arrayArgs.Item1[2] = null;
+            arrayArgs.Item1[3] = null;
+            arrayArgs.Item1[4] = null;
+            ServiceInvokeArgs5Pool.Store(arrayArgs);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+
+        #endregion
+
+        #region Object
+        /// <summary>
+        /// Invokes a Server RPC method with no arguments
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Server method name</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>Server method return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeObjectAsync<TReturn>(string serviceName, string method, CancellationToken? cancellationToken = null)
+        {
+            var request = CreateRequest(serviceName, method, null, null, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        /// <summary>
+        /// Invoke a Server RPC method with 1 argument 
+        /// </summary>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeObjectAsync<TReturn>(string serviceName, string method, object arg1, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs1Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, null, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            ServiceInvokeArgs1Pool.Store(arrayArgs);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        /// <summary>
+        /// Invoke a Server RPC method with 2 argument 
+        /// </summary>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeObjectAsync<TReturn>(string serviceName, string method, object arg1, object arg2, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs2Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, null, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            ServiceInvokeArgs2Pool.Store(arrayArgs);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        /// <summary>
+        /// Invoke a Server RPC method with 3 argument 
+        /// </summary>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeObjectAsync<TReturn>(string serviceName, string method, object arg1, object arg2, object arg3, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs3Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item1[2] = arg3;
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, null, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            arrayArgs.Item1[2] = null;
+            ServiceInvokeArgs3Pool.Store(arrayArgs);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        /// <summary>
+        /// Invoke a Server RPC method with 4 argument 
+        /// </summary>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeObjectAsync<TReturn>(string serviceName, string method, object arg1, object arg2, object arg3, object arg4, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs4Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item1[2] = arg3;
+            arrayArgs.Item1[3] = arg4;
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, null, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            arrayArgs.Item1[2] = null;
+            arrayArgs.Item1[3] = null;
+            ServiceInvokeArgs4Pool.Store(arrayArgs);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        /// <summary>
+        /// Invoke a Server RPC method with 5 argument 
+        /// </summary>
+        /// <typeparam name="TReturn">Return type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Method name</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="arg5">Argument 5</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeObjectAsync<TReturn>(string serviceName, string method, object arg1, object arg2, object arg3, object arg4, object arg5, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs5Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item1[2] = arg3;
+            arrayArgs.Item1[3] = arg4;
+            arrayArgs.Item1[4] = arg5;
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, null, cancellationToken != null);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            arrayArgs.Item1[2] = null;
+            arrayArgs.Item1[3] = null;
+            arrayArgs.Item1[4] = null;
+            ServiceInvokeArgs5Pool.Store(arrayArgs);
+            if (response is null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        #endregion
 
         /// <summary>
         /// Get Method Descriptor

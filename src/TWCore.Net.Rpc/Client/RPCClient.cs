@@ -47,6 +47,7 @@ namespace TWCore.Net.RPC.Client
         private bool _transportInit;
         private ServiceDescriptorCollection _serverDescriptors;
         private ServiceDescriptorCollection _descriptors;
+        private Func<(string, string, Type[]), MethodDescriptor> _getMethodDescriptorDelegate;
 
         #region Properties
         /// <summary>
@@ -113,6 +114,7 @@ namespace TWCore.Net.RPC.Client
         public RPCClient(ITransportClient transport = null)
         {
             Transport = transport;
+            _getMethodDescriptorDelegate = GetMethodDescriptor;
             Core.Status.AttachChild(transport, this);
         }
         #endregion
@@ -511,7 +513,7 @@ namespace TWCore.Net.RPC.Client
                         types[i] = args[i].GetType();
                 }
             }
-            return _methodDescriptorCache.GetOrAdd((serviceName, method, types), GetMethodDescriptor);
+            return _methodDescriptorCache.GetOrAdd((serviceName, method, types), _getMethodDescriptorDelegate);
         }
         #endregion
 
@@ -570,7 +572,7 @@ namespace TWCore.Net.RPC.Client
                 }
             }
             var key = (serviceName, method, types);
-            var mDesc = _methodDescriptorCache.GetOrAdd(key, GetMethodDescriptor);
+            var mDesc = _methodDescriptorCache.GetOrAdd(key, _getMethodDescriptorDelegate);
             if (mDesc is null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
@@ -578,7 +580,6 @@ namespace TWCore.Net.RPC.Client
                 args = _nullItemArgs;
 
             return RPCRequestMessage.Retrieve(mDesc.Id, args, useCancellationToken);
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

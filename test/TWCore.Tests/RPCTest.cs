@@ -239,13 +239,13 @@ namespace TWCore.Tests
     public class MyServiceProxy : RPCProxy, IMyService
     {
         public event EventHandler OnAddSimplePersona;
-        public bool AddSimplePersona(SimplePerson simplePersona) => InvokeArgs<SimplePerson, bool>(simplePersona);
-        public List<SimplePerson> GetAll() => InvokeArgs<List<SimplePerson>>();
-        public SimplePerson GetSimplePersona(Guid simplePersonaId) => InvokeArgs<Guid, SimplePerson>(simplePersonaId);
-        public SimplePerson GetSimplePersona(string name, string apellido) => InvokeArgs<string, string, SimplePerson>(name, apellido);
+        public bool AddSimplePersona(SimplePerson simplePersona) => Invoke<SimplePerson, bool>(simplePersona);
+        public List<SimplePerson> GetAll() => Invoke<List<SimplePerson>>();
+        public SimplePerson GetSimplePersona(Guid simplePersonaId) => Invoke<Guid, SimplePerson>(simplePersonaId);
+        public SimplePerson GetSimplePersona(string name, string apellido) => Invoke<string, string, SimplePerson>(name, apellido);
 
-        public Task<List<SimplePerson>> GetAllAsync() => InvokeArgsAsAsync<List<SimplePerson>>();
-        public Task<bool> IsEnabled() => InvokeAsAsync<bool>();
+        public Task<List<SimplePerson>> GetAllAsync() => InvokeAsAsync<List<SimplePerson>>();
+        public Task<bool> IsEnabled() => InvokeAsync<bool>();
     }
 
 #endregion

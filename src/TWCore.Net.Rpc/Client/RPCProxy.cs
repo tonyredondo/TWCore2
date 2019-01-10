@@ -149,6 +149,81 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected T Invoke<T>(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "") 
 			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5).WaitAndResults();
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected T Invoke<TArg1, T>(TArg1 arg1, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, T>(_serviceName, memberName, arg1).WaitAndResults();
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected T Invoke<TArg1, TArg2, T>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, T>(_serviceName, memberName, arg1, arg2).WaitAndResults();
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected T Invoke<TArg1, TArg2, TArg3, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, T>(_serviceName, memberName, arg1, arg2, arg3).WaitAndResults();
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected T Invoke<TArg1, TArg2, TArg3, TArg4, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, T>(_serviceName, memberName, arg1, arg2, arg3, arg4).WaitAndResults();
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <typeparam name="TArg5">Argument 5 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="arg5">Argument 5</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected T Invoke<TArg1, TArg2, TArg3, TArg4, TArg5, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TArg5, T>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5).WaitAndResults();
         #endregion
 
         #region Invoke 
@@ -228,7 +303,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, null);
+			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -238,7 +313,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1);
+			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName, arg1);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -249,7 +324,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2);
+			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName, arg1, arg2);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -261,7 +336,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2, arg3);
+			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName, arg1, arg2, arg3);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -274,7 +349,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4);
+			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -288,7 +363,82 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
+			=> _client.ServerInvokeObjectAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsync<TArg1, T>(TArg1 arg1, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, T>(_serviceName, memberName, arg1);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsync<TArg1, TArg2, T>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, T>(_serviceName, memberName, arg1, arg2);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsync<TArg1, TArg2, TArg3, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, T>(_serviceName, memberName, arg1, arg2, arg3);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsync<TArg1, TArg2, TArg3, TArg4, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, T>(_serviceName, memberName, arg1, arg2, arg3, arg4);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <typeparam name="TArg5">Argument 5 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="arg5">Argument 5</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsync<TArg1, TArg2, TArg3, TArg4, TArg5, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TArg5, T>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
         #endregion
 
         #region InvokeAsync 
@@ -299,7 +449,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName, null);
+			=> _client.ServerInvokeObjectAsync<object>(_serviceName, memberName);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -308,7 +458,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1);
+			=> _client.ServerInvokeObjectAsync<object>(_serviceName, memberName, arg1);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -318,7 +468,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2);
+			=> _client.ServerInvokeObjectAsync<object>(_serviceName, memberName, arg1, arg2);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -329,7 +479,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3);
+			=> _client.ServerInvokeObjectAsync<object>(_serviceName, memberName, arg1, arg2, arg3);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -341,7 +491,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3, arg4);
+			=> _client.ServerInvokeObjectAsync<object>(_serviceName, memberName, arg1, arg2, arg3, arg4);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -354,148 +504,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
-        #endregion
-
-        #region Alternative Invokes
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TResult InvokeArgs<TResult>([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, memberName).WaitAndResults();
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsync<TResult>([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, memberName);
-
-
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TResult InvokeArgs<TArg1, TResult>(TArg1 arg1, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TResult>(_serviceName, memberName, arg1).WaitAndResults();
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsync<TArg1, TResult>(TArg1 arg1, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1,TResult>(_serviceName, memberName, arg1);
-
-
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <typeparam name="TArg2">Argument 2 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TResult InvokeArgs<TArg1, TArg2, TResult>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, memberName, arg1, arg2).WaitAndResults();
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <typeparam name="TArg2">Argument 2 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsync<TArg1, TArg2, TResult>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, memberName, arg1, arg2);
-
-
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <typeparam name="TArg2">Argument 2 type</typeparam>
-        /// <typeparam name="TArg3">Argument 3 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="arg3">Argument 3</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TResult InvokeArgs<TArg1, TArg2, TArg3, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, memberName, arg1, arg2, arg3).WaitAndResults();
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <typeparam name="TArg2">Argument 2 type</typeparam>
-        /// <typeparam name="TArg3">Argument 3 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="arg3">Argument 3</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsync<TArg1, TArg2, TArg3, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, memberName, arg1, arg2, arg3);
-
-
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <typeparam name="TArg2">Argument 2 type</typeparam>
-        /// <typeparam name="TArg3">Argument 3 type</typeparam>
-        /// <typeparam name="TArg4">Argument 4 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="arg3">Argument 3</param>
-        /// <param name="arg4">Argument 4</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TResult InvokeArgs<TArg1, TArg2, TArg3, TArg4, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TResult>(_serviceName, memberName, arg1, arg2, arg3, arg4).WaitAndResults();
-        /// <summary>
-        /// Proxy an invocation to a rpc method
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Argument 1 type</typeparam>
-        /// <typeparam name="TArg2">Argument 2 type</typeparam>
-        /// <typeparam name="TArg3">Argument 3 type</typeparam>
-        /// <typeparam name="TArg4">Argument 4 type</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="arg3">Argument 3</param>
-        /// <param name="arg4">Argument 4</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsync<TArg1, TArg2, TArg3, TArg4, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TResult>(_serviceName, memberName, arg1, arg2, arg3, arg4);
+			=> _client.ServerInvokeObjectAsync<object>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
         #endregion
 
 
@@ -509,7 +518,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), null);
+            => _client.ServerInvokeObjectAsync<T>(_serviceName, GetMemberName(memberName));
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -519,7 +528,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>(object arg1, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1);
+            => _client.ServerInvokeObjectAsync<T>(_serviceName, GetMemberName(memberName), arg1);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -530,7 +539,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2);
+            => _client.ServerInvokeObjectAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -542,7 +551,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+            => _client.ServerInvokeObjectAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -555,7 +564,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+            => _client.ServerInvokeObjectAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -569,7 +578,82 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
+            => _client.ServerInvokeObjectAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<TArg1, T>(TArg1 arg1, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, T>(_serviceName, GetMemberName(memberName), arg1);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<TArg1, TArg2, T>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, T>(_serviceName, GetMemberName(memberName), arg1, arg2);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<TArg1, TArg2, TArg3, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<TArg1, TArg2, TArg3, TArg4, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+        /// <summary>
+        /// Proxy an invocation to a rpc method
+        /// </summary>
+        /// <typeparam name="T">Return type</typeparam>
+        /// <typeparam name="TArg1">Argument 1 type</typeparam>
+        /// <typeparam name="TArg2">Argument 2 type</typeparam>
+        /// <typeparam name="TArg3">Argument 3 type</typeparam>
+        /// <typeparam name="TArg4">Argument 4 type</typeparam>
+        /// <typeparam name="TArg5">Argument 5 type</typeparam>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <param name="arg4">Argument 4</param>
+        /// <param name="arg5">Argument 5</param>
+        /// <param name="memberName">Method name to call</param>
+        /// <returns>Return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<TArg1, TArg2, TArg3, TArg4, TArg5, T>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TArg5, T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
         #endregion
 
         #region InvokeAsAsync 
@@ -580,7 +664,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), null);
+            => _client.ServerInvokeObjectAsync<object>(_serviceName, GetMemberName(memberName));
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -589,7 +673,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync(object arg1, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1);
+            => _client.ServerInvokeObjectAsync<object>(_serviceName, GetMemberName(memberName), arg1);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -599,7 +683,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync(object arg1, object arg2, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2);
+            => _client.ServerInvokeObjectAsync<object>(_serviceName, GetMemberName(memberName), arg1, arg2);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -610,7 +694,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+            => _client.ServerInvokeObjectAsync<object>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -622,7 +706,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+            => _client.ServerInvokeObjectAsync<object>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -635,75 +719,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
-        #endregion
-
-        #region Alternative InvokesWithAsync
-        /// <summary>
-        /// Proxy an invocation to a rpc method as async
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsAsync<TResult>([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, GetMemberName(memberName));
-        /// <summary>
-        /// Proxy an invocation to a rpc method as async
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Type of Argument 1</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsAsync<TArg1, TResult>(TArg1 arg1, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TResult>(_serviceName, GetMemberName(memberName), arg1);
-        /// <summary>
-        /// Proxy an invocation to a rpc method as async
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Type of Argument 1</typeparam>
-        /// <typeparam name="TArg2">Type of Argument 2</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsAsync<TArg1, TArg2, TResult>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2);
-        /// <summary>
-        /// Proxy an invocation to a rpc method as async
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Type of Argument 1</typeparam>
-        /// <typeparam name="TArg2">Type of Argument 2</typeparam>
-        /// <typeparam name="TArg3">Type of Argument 3</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="arg3">Argument 3</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsAsync<TArg1, TArg2, TArg3, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
-        /// <summary>
-        /// Proxy an invocation to a rpc method as async
-        /// </summary>
-        /// <typeparam name="TResult">Type of result</typeparam>
-        /// <typeparam name="TArg1">Type of Argument 1</typeparam>
-        /// <typeparam name="TArg2">Type of Argument 2</typeparam>
-        /// <typeparam name="TArg3">Type of Argument 3</typeparam>
-        /// <typeparam name="TArg4">Type of Argument 4</typeparam>
-        /// <param name="arg1">Argument 1</param>
-        /// <param name="arg2">Argument 2</param>
-        /// <param name="arg3">Argument 3</param>
-        /// <param name="arg4">Argument 4</param>
-        /// <param name="memberName">Method name</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<TResult> InvokeArgsAsAsync<TArg1, TArg2, TArg3, TArg4, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+            => _client.ServerInvokeObjectAsync<object>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
         #endregion
 
 

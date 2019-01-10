@@ -186,7 +186,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                             _clients[i] = client;
                         }
                     }
-                    await Task.WhenAll(_clients.Select(c => c.ConnectAsync())).ConfigureAwait(false);
+                    await _clients.Select(c => c.ConnectAsync()).ConfigureAwait(false);
                 }
                 catch (Exception)
                 {
@@ -207,7 +207,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             {
                 _shouldBeConnected = false;
                 _connectionCancellationTokenSource.Cancel();
-                await Task.WhenAll(_clients.Select(c => c.DisconnectAsync())).ConfigureAwait(false);
+                await _clients.Select(c => c.DisconnectAsync()).ConfigureAwait(false);
             }
         }
         #endregion
@@ -264,24 +264,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             {
                 var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
                 sent = await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
-                if (!sent)
-                {
-                    try
-                    {
-                        await client.DisconnectAsync();
-                        await client.ConnectAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                }
             } while (!sent);
             await handler.Event.WaitAsync(InvokeMethodTimeout, _connectionCancellationToken).ConfigureAwait(false);
             if (handler.Event.IsSet)
                 return handler.Message;
             _connectionCancellationToken.ThrowIfCancellationRequested();
-            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRq.MessageId));
+            throw new TimeoutException($"Timeout of {InvokeMethodTimeout / 1000} seconds has been reached waiting the response from the server with Id={messageRq.MessageId}.");
         }
         /// <inheritdoc />
         /// <summary>
@@ -308,22 +296,9 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 {
                     client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
                     sent = await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
-                    if (!sent)
-                    {
-                        try
-                        {
-                            await client.DisconnectAsync();
-                            await client.ConnectAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }
                 } while (!sent);
                 await handler.Event.WaitAsync(InvokeMethodTimeout, linkedTokenSource.Token).ConfigureAwait(false);
             }
-
             if (handler.Event.IsSet)
                 return handler.Message;
             _connectionCancellationToken.ThrowIfCancellationRequested();
@@ -332,7 +307,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 await client.SendRpcMessageAsync(new RPCCancelMessage { MessageId = messageRq.MessageId }).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
             }
-            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRq.MessageId));
+            throw new TimeoutException($"Timeout of {InvokeMethodTimeout / 1000} seconds has been reached waiting the response from the server with Id={messageRq.MessageId}.");
         }
         #endregion
 

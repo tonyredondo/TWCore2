@@ -94,7 +94,8 @@ namespace TWCore.Net.RPC.Descriptors
                     else
                         mDesc.ReturnTaskResult = null;
                 }
-                mDesc.Counter = Core.Counters.GetDoubleCounter(counterCategory, serviceType.FullName + "\\" + mDesc.Name, CounterType.Average, counterLevel, counterKind, CounterUnit.Milliseconds);
+                if (counterCategory != null)
+                    mDesc.Counter = Core.Counters.GetDoubleCounter(counterCategory, serviceType.FullName + "\\" + mDesc.Name, CounterType.Average, counterLevel, counterKind, CounterUnit.Milliseconds);
 
                 RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 

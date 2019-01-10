@@ -82,7 +82,7 @@ namespace TWCore.Net.RPC.Client
         #endregion
 
         #region Nested Types
-        class MethodDescriptionEqualityComparer : IEqualityComparer<(string ServiceName, string Method, Type[] Types)>
+        private sealed class MethodDescriptionEqualityComparer : IEqualityComparer<(string ServiceName, string Method, Type[] Types)>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool Equals((string ServiceName, string Method, Type[] Types) x, (string ServiceName, string Method, Type[] Types) y)
@@ -137,6 +137,7 @@ namespace TWCore.Net.RPC.Client
             if (!interfaceType.IsInterface)
                 throw new ArgumentException("The type of the dynamic proxy should be an interface.");
             await InitTransportAsync().ConfigureAwait(false);
+            Transport.Descriptors = Descriptors;
             if (Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
                 return new DynamicProxy(this, descriptor);
             if (!UseServerDescriptor)
@@ -162,6 +163,7 @@ namespace TWCore.Net.RPC.Client
                 throw new ArgumentException("The type of the proxy should implement a service interface.");
             var rpcClient = new T();
             await InitTransportAsync().ConfigureAwait(false);
+            Transport.Descriptors = Descriptors;
             if (!Descriptors.Items.TryGetValue(typeInterface.FullName, out var descriptor))
             {
                 if (!UseServerDescriptor)
@@ -187,9 +189,12 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args)
-            => ServerInvokeAsync(serviceName, method, args).ContinueWith(tsk => (T)tsk.Result,
-                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args)
+        {
+            var response = await ServerInvokeAsync(serviceName, method, args).ConfigureAwait(false);
+            return (T)response;
+        }
+
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -201,8 +206,6 @@ namespace TWCore.Net.RPC.Client
         public async Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args)
         {
             var request = CreateRequest(serviceName, method, args, null, false);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
             if (response is null)
@@ -222,9 +225,12 @@ namespace TWCore.Net.RPC.Client
         /// <param name="cancellationToken">Cancellation Token instance</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
-            => ServerInvokeAsync(serviceName, method, args, cancellationToken).ContinueWith(tsk => (T)tsk.Result,
-                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
+        {
+            var response = await ServerInvokeAsync(serviceName, method, args, cancellationToken).ConfigureAwait(false);
+            return (T)response;
+        }
+
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -237,8 +243,6 @@ namespace TWCore.Net.RPC.Client
         public async Task<object> ServerInvokeAsync(string serviceName, string method, object[] args, CancellationToken cancellationToken)
         {
             var request = CreateRequest(serviceName, method, args, null, true);
-            if (Transport.Descriptors is null)
-                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
             if (response is null)

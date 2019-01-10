@@ -322,13 +322,15 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     Core.Log.InfoBasic("Reconnected to server: {0}:{1}", _host, _port);
                     _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _writeStream);
                     await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
-                    _ = Task.Run(async () =>
-                    {
-                        await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
-                        OnConnect?.Invoke(this, EventArgs.Empty);
-                        Core.Log.InfoBasic("RPC reconnection started with: {0}:{1}", _host, _port);
-                    });
+                    _ = CompleteReconnectAsync();
                 }
+            }
+
+            async Task CompleteReconnectAsync()
+            {
+                await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
+                OnConnect?.Invoke(this, EventArgs.Empty);
+                Core.Log.InfoBasic("RPC reconnection started with: {0}:{1}", _host, _port);
             }
         }
 

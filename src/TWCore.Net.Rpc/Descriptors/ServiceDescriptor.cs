@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Counters;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Security;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -65,7 +66,7 @@ namespace TWCore.Net.RPC.Descriptors
         /// <param name="serviceType">Object service type for descriptor creation</param>
         /// <returns>Service descriptor instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ServiceDescriptor GetDescriptor(Type serviceType)
+        public static ServiceDescriptor GetDescriptor(Type serviceType, string counterCategory = null, CounterLevel counterLevel = CounterLevel.User, CounterKind counterKind = CounterKind.Application)
         {
             var descriptor = new ServiceDescriptor
             {
@@ -93,6 +94,8 @@ namespace TWCore.Net.RPC.Descriptors
                     else
                         mDesc.ReturnTaskResult = null;
                 }
+                mDesc.Counter = Core.Counters.GetDoubleCounter(counterCategory, serviceType.FullName + "\\" + mDesc.Name, CounterType.Average, counterLevel, counterKind, CounterUnit.Milliseconds);
+
                 RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 
                 var pars = mInfo.GetParameters();

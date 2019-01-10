@@ -50,6 +50,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;
         private Task _tskListener;
+        private Action<object> _connectionReceivedAction;
 
         #region Properties
         /// <inheritdoc />
@@ -108,6 +109,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         public DefaultTransportServer()
         {
             Serializer = Serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
+            _connectionReceivedAction = ConnectionReceived;
             Core.Status.Attach(collection =>
             {
                 lock (_locker)
@@ -284,7 +286,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     var listenerTask = _listener.AcceptTcpClientAsync();
                     var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
                     if (rTask == tokenTask) break;
-                    Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
+                    Task.Factory.StartNew(_connectionReceivedAction, listenerTask.Result, _token);
                 }
                 catch(Exception ex)
                 {
@@ -336,51 +338,44 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ServerClient_OnMessageReceivedAsync(RpcServerClient rpcServerClient, RPCMessage e)
         {
-            try
+            switch (e)
             {
-                switch(e)
-                {
-                    case RPCCancelMessage cancelMessage:
-                        if (_rpcMessagesCancellations.TryRemove(cancelMessage.MessageId, out var tSource))
-                            tSource.Cancel();
+                case RPCCancelMessage cancelMessage:
+                    if (_rpcMessagesCancellations.TryRemove(cancelMessage.MessageId, out var tSource))
+                        tSource.Cancel();
+                    break;
+                case RPCRequestMessage request:
+                    if (request.MethodId == Guid.Empty)
+                    {
+                        var dEventArgs = new ServerDescriptorsEventArgs();
+                        OnGetDescriptorsRequest?.InvokeAsync(this, dEventArgs);
+                        var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
+                        await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
+                        OnResponseSent?.InvokeAsync(this, response);
                         break;
-                    case RPCRequestMessage request:
-                        if (request.MethodId == Guid.Empty)
+                    }
+                    if (request.CancellationToken)
+                    {
+                        using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcServerClient.ConnectionCancellationToken, CancellationToken.None))
                         {
-                            var dEventArgs = new ServerDescriptorsEventArgs();
-                            OnGetDescriptorsRequest?.InvokeAsync(this, dEventArgs);
-                            var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
-                            await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
-                            OnResponseSent?.InvokeAsync(this, response);
-                            break;
+                            _rpcMessagesCancellations.TryAdd(request.MessageId, tokenSource);
+                            var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, tokenSource.Token);
+                            if (!(OnMethodCallAsync is null))
+                                await OnMethodCallAsync.InvokeAsync(this, mEventArgs).ConfigureAwait(false);
+                            if (!tokenSource.Token.IsCancellationRequested)
+                                await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
+                            _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
+                            OnResponseSent?.InvokeAsync(this, mEventArgs.Response);
                         }
-                        if (request.CancellationToken)
-                        {
-                            using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcServerClient.ConnectionCancellationToken))
-                            {
-                                _rpcMessagesCancellations.TryAdd(request.MessageId, tokenSource);
-                                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, tokenSource.Token);
-                                if (!(OnMethodCallAsync is null))
-                                    await OnMethodCallAsync.InvokeAsync(this, mEventArgs).ConfigureAwait(false);
-                                if (!tokenSource.Token.IsCancellationRequested)
-                                    await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
-                                _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
-                                OnResponseSent?.InvokeAsync(this, mEventArgs.Response);
-                            }
-                            break;
-                        }
-                        var mEventArgs2 = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
-                        if (!(OnMethodCallAsync is null))
-                            await OnMethodCallAsync.InvokeAsync(this, mEventArgs2).ConfigureAwait(false);
-                        if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
-                            await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
-                        OnResponseSent?.InvokeAsync(this, mEventArgs2.Response);
                         break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
+                    }
+                    var mEventArgs2 = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
+                    if (!(OnMethodCallAsync is null))
+                        await OnMethodCallAsync.InvokeAsync(this, mEventArgs2).ConfigureAwait(false);
+                    if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
+                        await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
+                    OnResponseSent?.InvokeAsync(this, mEventArgs2.Response);
+                    break;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

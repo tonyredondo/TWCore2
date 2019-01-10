@@ -128,11 +128,11 @@ namespace TWCore.Net.RPC.Server
             Transport.OnGetDescriptorsRequest += OnGetDescriptorsRequest;
             Transport.OnClientConnect += OnClientConnect;
             Descriptors = new ServiceDescriptorCollection();
-            _serviceInstances.Each(v =>
+            foreach (var v in _serviceInstances)
             {
                 Descriptors.Add(v.Descriptor);
                 v.BindToServiceType();
-            });
+            }
             await Transport.StartListenerAsync().ConfigureAwait(false);
             Running = true;
             Core.Log.LibVerbose("RPC Server started.");
@@ -168,8 +168,8 @@ namespace TWCore.Net.RPC.Server
             Core.Log.LibVerbose("Adding service.");
             var sItem = new ServiceItem(this, serviceInterfaceType, serviceInstance);
             _serviceInstances.Add(sItem);
-			foreach(var mDesc in sItem.Descriptor.Methods)
-				_methods.Add(mDesc.Key, (sItem, mDesc.Value));
+            foreach (var mDesc in sItem.Descriptor.Methods)
+                _methods.Add(mDesc.Key, (sItem, mDesc.Value));
             Core.Log.LibVerbose("Service added.");
         }
         /// <summary>
@@ -203,13 +203,13 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task OnMethodCallAsync(object sender, MethodEventArgs e)
         {
-			if (_methods.TryGetValue(e.Request.MethodId, out var desc))
+            if (_methods.TryGetValue(e.Request.MethodId, out var desc))
             {
                 e.Response = await desc.Service.ProcessRequestAsync(e.Request, e.ClientId, desc.Method, e.CancellationToken).ConfigureAwait(false);
                 return;
             }
             var responseMessage = RPCResponseMessage.Retrieve(e.Request);
-            responseMessage.Exception = new SerializableException(new NotImplementedException("The MethodId = {0} was not found on the service.".ApplyFormat(e.Request.MethodId)));
+            responseMessage.Exception = new SerializableException(new NotImplementedException($"The MethodId = {e.Request.MethodId} was not found on the service."));
             e.Response = responseMessage;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -226,7 +226,7 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnClientConnect(object sender, ClientConnectEventArgs e)
         {
-            foreach(var item in _serviceInstances)
+            foreach (var item in _serviceInstances)
                 item.FireClientConnection(e.ClientId);
         }
         #endregion
@@ -235,9 +235,9 @@ namespace TWCore.Net.RPC.Server
         [StatusName("Service Instance")]
         private class ServiceItem
         {
-            public static readonly ConcurrentDictionary<Type, FastPropertyInfo> TaskResultsProperties = new ConcurrentDictionary<Type, FastPropertyInfo>();
             private readonly RPCServer _server;
-            private readonly Dictionary<int, Guid> _threadClientId = new Dictionary<int, Guid>();
+            private const int MaxSupportedThreadCounts = 256;
+            private readonly Guid[] _threadClientId = new Guid[MaxSupportedThreadCounts];
 
             [StatusProperty("Type")]
             public Type ServiceType { get; }
@@ -253,7 +253,7 @@ namespace TWCore.Net.RPC.Server
                 _server = server;
                 ServiceInstance = serviceInstance;
                 ServiceType = serviceType;
-                Descriptor = ServiceDescriptor.GetDescriptor(ServiceType);
+                Descriptor = ServiceDescriptor.GetDescriptor(ServiceType, server._counterCategory, server._counterLevel, server._counterKind);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -267,18 +267,18 @@ namespace TWCore.Net.RPC.Server
 
                 #region Events
                 if (Descriptor?.Events?.Any() != true) return;
-                
+
                 foreach (var evDesc in Descriptor.Events.Values)
                 {
                     if (evDesc.Event is null) continue;
-                        
+
                     var eventAttribute = (RPCEventAttribute)ServiceInstance?.GetType().GetRuntimeEvent(evDesc.Name)?.GetCustomAttribute(typeof(RPCEventAttribute)) ??
                                          new RPCEventAttribute(RPCMessageScope.Session);
                     var evHandler = new EventHandler((s, e) =>
                     {
                         if (_server.Transport is null) return;
-                        Guid clientId;
-                        lock (_threadClientId) _threadClientId.TryGetValue(Environment.CurrentManagedThreadId, out clientId);
+                        var threadClientIdIndex = Environment.CurrentManagedThreadId % MaxSupportedThreadCounts;
+                        var clientId = _threadClientId[threadClientIdIndex];
                         _server.Transport.FireEventAsync(eventAttribute, clientId, Descriptor.Name, evDesc.Event.Name, s, e).WaitAsync();
                     });
                     evDesc.Event.AddEventHandler(ServiceInstance, evHandler);
@@ -314,7 +314,8 @@ namespace TWCore.Net.RPC.Server
                 {
                     if (OnClientConnectMethod is null) return;
                     var tId = Environment.CurrentManagedThreadId;
-                    lock (_threadClientId) _threadClientId[tId] = clientId;
+                    var threadClientIdIndex = tId % MaxSupportedThreadCounts;
+                    _threadClientId[threadClientIdIndex] = clientId;
                     var pTers = OnClientConnectMethod.GetParameters();
                     switch (pTers.Length)
                     {
@@ -325,7 +326,7 @@ namespace TWCore.Net.RPC.Server
                             OnClientConnectMethod?.Invoke(ServiceInstance, new object[] { clientId });
                             break;
                     }
-                    lock (_threadClientId) _threadClientId.Remove(tId);
+                    _threadClientId[threadClientIdIndex] = Guid.Empty;
                 }
                 catch (Exception ex)
                 {
@@ -333,14 +334,15 @@ namespace TWCore.Net.RPC.Server
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public async ValueTask<RPCResponseMessage> ProcessRequestAsync(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc, CancellationToken cancellationToken)
+            public async ValueTask<RPCResponseMessage> ProcessRequestAsync(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc, CancellationToken cancellationToken)
             {
                 var response = RPCResponseMessage.Retrieve(request);
+                var threadClientIdIndex = Environment.CurrentManagedThreadId % MaxSupportedThreadCounts;
+                _threadClientId[threadClientIdIndex] = clientId;
+                ConnectionCancellationToken = cancellationToken;
+                var initTime = Stopwatch.GetTimestamp();
                 try
                 {
-					lock (_threadClientId) _threadClientId[Environment.CurrentManagedThreadId] = clientId;
-                    ConnectionCancellationToken = cancellationToken;
-                    var initTime = Stopwatch.GetTimestamp();
                     var results = mDesc.Method(ServiceInstance, request.Parameters);
                     if (mDesc.ReturnIsTask)
                     {
@@ -353,9 +355,6 @@ namespace TWCore.Net.RPC.Server
                     }
                     else
                         response.ReturnValue = results;
-                    var execTime = (Stopwatch.GetTimestamp() - initTime) * 1000d / Stopwatch.Frequency;
-                    var counter = Core.Counters.GetDoubleCounter(_server._counterCategory, Descriptor.Name + "\\" + mDesc.Name, CounterType.Average, _server._counterLevel, _server._counterKind, CounterUnit.Milliseconds);
-                    counter.Add(execTime);
                 }
                 catch (TargetInvocationException ex)
                 {
@@ -371,6 +370,9 @@ namespace TWCore.Net.RPC.Server
                     Core.Log.Write(ex);
                     response.Exception = new SerializableException(ex);
                 }
+                _threadClientId[threadClientIdIndex] = Guid.Empty;
+                var execTime = (Stopwatch.GetTimestamp() - initTime) * 1000d / Stopwatch.Frequency;
+                mDesc.Counter.Add(execTime);
                 return response;
             }
         }

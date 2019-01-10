@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TWCore.Diagnostics.Counters;
 using TWCore.Reflection;
 using TWCore.Serialization;
 
@@ -60,6 +61,7 @@ namespace TWCore.Net.RPC.Descriptors
         [XmlIgnore, NonSerialize]
         public Type TypeOfReturnType { get; internal set; }
 
+
         /// <summary>
         /// Return is Task
         /// </summary>
@@ -70,5 +72,10 @@ namespace TWCore.Net.RPC.Descriptors
         /// </summary>
         [XmlIgnore, NonSerialize]
         public FastPropertyInfo ReturnTaskResult { get; internal set; }
+        /// <summary>
+        /// Counter
+        /// </summary>
+        [XmlIgnore, NonSerialize]
+        public DoubleCounter Counter { get; internal set; }
     }
 }

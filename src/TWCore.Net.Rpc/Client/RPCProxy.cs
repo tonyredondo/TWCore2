@@ -88,7 +88,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected T Invoke<T>([CallerMemberName]string memberName = "") 
-            => _client.ServerInvokeAsync<T>(_serviceName, memberName).WaitAndResults();
+            => _client.ServerInvokeAsync<T>(_serviceName, memberName, null).WaitAndResults();
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -159,7 +159,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected object Invoke([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName).WaitAndResults();
+			=> _client.ServerInvokeAsync(_serviceName, memberName, null).WaitAndResults();
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -228,7 +228,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, memberName);
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, null);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -299,7 +299,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, memberName);
+			=> _client.ServerInvokeAsync(_serviceName, memberName, null);
         /// <summary>
         /// Proxy an invocation to a rpc method
         /// </summary>
@@ -509,7 +509,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsAsync<T>([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName));
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), null);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>
@@ -580,7 +580,7 @@ namespace TWCore.Net.RPC.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsAsync([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName));
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), null);
         /// <summary>
         /// Proxy an invocation to a rpc method as async
         /// </summary>

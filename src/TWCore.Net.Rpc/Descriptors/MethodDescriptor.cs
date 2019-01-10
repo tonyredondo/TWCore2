@@ -73,6 +73,11 @@ namespace TWCore.Net.RPC.Descriptors
         [XmlIgnore, NonSerialize]
         public FastPropertyInfo ReturnTaskResult { get; internal set; }
         /// <summary>
+        /// Reflected method accessor delegate for direct access.
+        /// </summary>
+        [XmlIgnore, NonSerialize]
+        public MethodAccessorDelegate CreateTaskFromResult { get; internal set; }
+        /// <summary>
         /// Counter
         /// </summary>
         [XmlIgnore, NonSerialize]

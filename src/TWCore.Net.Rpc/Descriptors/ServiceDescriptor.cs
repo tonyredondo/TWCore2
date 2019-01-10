@@ -93,9 +93,15 @@ namespace TWCore.Net.RPC.Descriptors
                 {
                     mDesc.ReturnIsTask = true;
                     if (mInfo.ReturnType.GenericTypeArguments.Length > 0)
+                    {
                         mDesc.ReturnTaskResult = mInfo.ReturnType.GetProperty("Result").GetFastPropertyInfo();
+                        mDesc.CreateTaskFromResult = typeof(Task).GetMethod("FromResult").MakeGenericMethod(new[] { mInfo.ReturnType.GenericTypeArguments[0] }).GetMethodAccessor();
+                    }
                     else
+                    {
                         mDesc.ReturnTaskResult = null;
+                        mDesc.CreateTaskFromResult = null;
+                    }
                 }
                 if (counterCategory != null)
                     mDesc.Counter = Core.Counters.GetDoubleCounter(counterCategory, serviceType.FullName + "\\" + mDesc.Name, CounterType.Average, counterLevel, counterKind, CounterUnit.Milliseconds);

@@ -46,12 +46,13 @@ namespace TWCore.Net.RPC.Client
         }
         #endregion
 
-	    /// <summary>
-	    /// Sets the RPC client to the proxy
-	    /// </summary>
-	    /// <param name="client">RPCClient object instance</param>
-	    /// <param name="serviceName">Service name</param>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Internal
+        /// <summary>
+        /// Sets the RPC client to the proxy
+        /// </summary>
+        /// <param name="client">RPCClient object instance</param>
+        /// <param name="serviceName">Service name</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetClient(RPCClient client, string serviceName)
         {
             Ensure.ArgumentNotNull(client, "RPC Client can't be null.");
@@ -61,6 +62,7 @@ namespace TWCore.Net.RPC.Client
             _client.OnEventReceived += Client_OnEventReceived;
             Core.Status.AttachChild(_client, this);
         }
+        #endregion
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,7 +71,7 @@ namespace TWCore.Net.RPC.Client
 	        if (e.ServiceName != _serviceName || !_events.TryGetValue(e.EventName, out var value) ||
 	            !(value.GetValue(this) is MulticastDelegate evHandler)) return;
 	        foreach (var handler in evHandler.GetInvocationList())
-		        handler.DynamicInvoke(this, e.EventArgs);
+		        handler.DynamicInvoke(new object[] { this, e.EventArgs });
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetMemberName(string memberName)

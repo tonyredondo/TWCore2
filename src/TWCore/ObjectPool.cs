@@ -139,9 +139,10 @@ namespace TWCore
         where TPoolObjectLifecycle : struct, IPoolObjectLifecycle<T>
     {
         private readonly Timer _dropTimer;
+        private int _count;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private TPoolObjectLifecycle _allocator;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private TPoolObjectLifecycle _allocator = default;
 
         /// <summary>
         /// Object pool
@@ -150,17 +151,22 @@ namespace TWCore
         {
             _objectStack = new ConcurrentStack<T>();
             for (var i = 0; i < _allocator.InitialSize; i++)
+            {
                 _objectStack.Push(_allocator.New());
+                Interlocked.Increment(ref _count);
+            }
             if (_allocator.DropTimeFrequencyInSeconds > 0)
             {
                 var frequency = TimeSpan.FromSeconds(_allocator.DropTimeFrequencyInSeconds);
-                _dropTimer = new Timer(sender =>
-                {
-                    var count = _objectStack.Count;
-                    if (count > 2 && _objectStack.TryPop(out var item))
-                        _allocator.DropAction(item);
-                }, null, frequency, frequency);
+                _dropTimer = new Timer(DropTimerMethod, this, frequency, frequency);
             }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void DropTimerMethod(object state)
+        {
+            var oPool = (ObjectPool<T, TPoolObjectLifecycle>)state;
+            if (oPool._count > oPool._allocator.InitialSize && oPool._objectStack.TryPop(out var item))
+                oPool._allocator.DropAction(item);
         }
         /// <inheritdoc />
         /// <summary>
@@ -171,7 +177,10 @@ namespace TWCore
         public void Preallocate(int number)
         {
             for (var i = 0; i < number; i++)
+            {
                 _objectStack.Push(_allocator.New());
+                Interlocked.Increment(ref _count);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -183,6 +192,7 @@ namespace TWCore
         {
             if (!_objectStack.TryPop(out var value))
                 return _allocator.New();
+            Interlocked.Decrement(ref _count);
             if (_allocator.ResetMode == PoolResetMode.BeforeUse)
                 _allocator.Reset(value);
             return value;
@@ -198,6 +208,7 @@ namespace TWCore
             if (_allocator.ResetMode == PoolResetMode.AfterUse)
                 _allocator.Reset(obj);
             _objectStack.Push(obj);
+            Interlocked.Increment(ref _count);
         }
         /// <inheritdoc />
         /// <summary>
@@ -217,6 +228,7 @@ namespace TWCore
         public void Clear()
         {
             _objectStack.Clear();
+            Interlocked.Exchange(ref _count, 0);
         }
     }
 }

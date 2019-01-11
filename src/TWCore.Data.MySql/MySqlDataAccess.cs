@@ -56,6 +56,7 @@ namespace TWCore.Data.MySql
             ConnectionString = connectionString;
             AccessType = accessType;
             EntityValueConverter = new MySqlEntityValueConverter(this);
+            ReturnParameterName = null;
         }
 
         #region IDataAccessDynamicGenerator

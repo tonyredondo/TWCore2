@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
@@ -52,8 +53,19 @@ namespace TWCore.Tests
             var hClient = await rpcClient.CreateDynamicProxyAsync<ISampleProvider>().ConfigureAwait(false);
             var client = hClient.ActAs<ISampleProvider>();
 
-            Core.Log.InfoBasic("GetSampleAsync");
-            var sampleTsk = await client.GetSampleAsync().ConfigureAwait(false);
+            double perItemMs;
+
+            using (var watch = Watch.Create("GetSampleAsync"))
+            {
+                Sample res;
+                for(var i = 0; i < 100000; i++)
+                    res = await client.GetSampleAsync().ConfigureAwait(false);
+                perItemMs = watch.GlobalElapsedMilliseconds / 100000;
+            }
+            Core.Log.InfoBasic($"GetSampleAsync per item: {perItemMs}ms");
+
+            Console.ReadLine();
+
             Core.Log.InfoBasic("DelayTestAsync");
             await client.DelayTestAsync().ConfigureAwait(false);
             Core.Log.InfoBasic("GetSample");
@@ -113,15 +125,17 @@ namespace TWCore.Tests
 
         public class SampleProvider : ISampleProvider
         {
+            Sample sampleValue = new Sample
+            {
+                Name = "Sample Name",
+                Value = "Sample Value"
+            };
+
             /// <inheritdoc />
             public async Task<Sample> GetSampleAsync()
             {
-                await Task.Delay(2000).ConfigureAwait(false);
-                return new Sample
-                {
-                    Name = "Sample Name",
-                    Value = "Sample Value"
-                };
+                //await Task.Yield();
+                return sampleValue;
             }
             public Task DelayTestAsync()
             {
@@ -129,20 +143,12 @@ namespace TWCore.Tests
             }
             public Sample GetSample()
             {
-                return new Sample
-                {
-                    Name = "Sample Name",
-                    Value = "Sample Value"
-                };
+                return sampleValue;
             }
 
             public Sample GetSample2()
             {
-                return new Sample
-                {
-                    Name = "Sample Name",
-                    Value = "Sample Value"
-                };
+                return sampleValue;
             }
         }
     }

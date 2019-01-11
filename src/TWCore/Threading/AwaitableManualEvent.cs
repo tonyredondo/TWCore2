@@ -18,6 +18,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Threading
 {
@@ -26,8 +27,8 @@ namespace TWCore.Threading
     /// </summary>
     public class AwaitableManualEvent<T>
     {
-        private Action<T> _fireAction = null;
-        private long _wasFired = 0;
+        private Action<T> _fireAction;
+        private long _wasFired;
         private Awaiter _awaiter;
         private T _lastValue;
 
@@ -75,6 +76,7 @@ namespace TWCore.Threading
             return _awaiter;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Manual Event Awaiter
         /// </summary>
@@ -142,4 +144,116 @@ namespace TWCore.Threading
             }
         }
     }
+    
+        /// <summary>
+    /// Awaitable manual event
+    /// </summary>
+    public class AwaitableManualEvent
+    {
+        private Action _fireAction;
+        private long _wasFired;
+        private Awaiter _awaiter;
+
+        /// <summary>
+        /// Awaitable manual event
+        /// </summary>
+        public AwaitableManualEvent()
+        {
+            _awaiter = new Awaiter(this);
+        }
+        /// <summary>
+        /// Fire the event
+        /// </summary>
+        /// <param name="item">Item to send</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Fire()
+        {
+            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) == 0)
+                _fireAction();
+        }
+
+        /// <summary>
+        /// Reset event
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Reset()
+        {
+            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) == 1)
+                _awaiter = new Awaiter(this);
+        }
+
+        /// <summary>
+        /// Wait for event fire
+        /// </summary>
+        /// <returns>Awaiter</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Awaiter WaitAsync()
+        {
+            return _awaiter;
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Manual Event Awaiter
+        /// </summary>
+        public class Awaiter : INotifyCompletion
+        {
+            private volatile bool _completed;
+            private Action _continuation;
+            private AwaitableManualEvent _awaitableEvent;
+
+            internal Awaiter(AwaitableManualEvent awaitableEvent)
+            {
+                _awaitableEvent = awaitableEvent;
+                _completed = Interlocked.Read(ref _awaitableEvent._wasFired) == 1;
+                if (!_completed)
+                    _awaitableEvent._fireAction = FiredEvent;
+            }
+
+            /// <summary>
+            /// Gets the awaiter
+            /// </summary>
+            /// <returns>This awaiter instance</returns>
+            public Awaiter GetAwaiter()
+            {
+                return this;
+            }
+
+            /// <summary>
+            /// Get if the awaitable has been completed
+            /// </summary>
+            public bool IsCompleted => _completed;
+
+            /// <summary>
+            /// Gets the result
+            /// </summary>
+            /// <returns>Result</returns>
+            public void GetResult()
+            {
+                if (_completed) return;
+                var wait = new SpinWait();
+                while (!_completed)
+                    wait.SpinOnce();
+            }
+
+            void INotifyCompletion.OnCompleted(Action continuation)
+            {
+                if (_completed)
+                {
+                    continuation();
+                    return;
+                }
+                _continuation = continuation;
+            }
+
+            private void FiredEvent()
+            {
+                _completed = true;
+                _awaitableEvent = null;
+                if (_continuation != null)
+                    Task.Run(_continuation);
+            }
+        }
+    }
+
 }

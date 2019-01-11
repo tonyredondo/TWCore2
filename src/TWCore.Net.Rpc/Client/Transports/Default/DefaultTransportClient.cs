@@ -257,7 +257,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (_connectionCancellationToken.IsCancellationRequested) return null;
             var handler = new RpcMessageHandler();
             while (!_messageResponsesHandlers.TryAdd(messageRq.MessageId, handler))
-                await Task.Delay(1).ConfigureAwait(false);
+                await Task.Yield();
             if (_currentIndex > ResetIndex) _currentIndex = -1;
             bool sent;
             do
@@ -286,7 +286,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (_connectionCancellationToken.IsCancellationRequested) return null;
             var handler = new RpcMessageHandler();
             while (!_messageResponsesHandlers.TryAdd(messageRq.MessageId, handler))
-                await Task.Delay(1).ConfigureAwait(false);
+                await Task.Yield();
             if (_currentIndex > ResetIndex) _currentIndex = -1;
             bool sent;
             RpcClient client;

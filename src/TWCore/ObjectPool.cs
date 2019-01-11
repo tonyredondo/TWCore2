@@ -36,9 +36,12 @@ namespace TWCore
         private readonly ConcurrentStack<T> _objectStack;
         private readonly PoolResetMode _resetMode;
         private readonly Timer _dropTimer;
+        private int _count;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _initialBufferSize;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _dropAction;
 
         /// <summary>
         /// Pool count
@@ -58,21 +61,25 @@ namespace TWCore
         public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null)
         {
             _objectStack = new ConcurrentStack<T>();
+            _initialBufferSize = initialBufferSize;
             _createFunc = createFunc;
             _resetAction = resetAction;
             _resetMode = resetMode;
+            _dropAction = dropAction;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
-            if (dropTimeFrequencyInSeconds > 0)
+            if (dropTimeFrequencyInSeconds > 0 && _dropAction != null)
             {
                 var frequency = TimeSpan.FromSeconds(dropTimeFrequencyInSeconds);
-                _dropTimer = new Timer(sender => 
-                {
-                    var count = _objectStack.Count;
-                    if (count > 2 && _objectStack.TryPop(out var item))
-                        dropAction?.Invoke(item);
-                }, null, frequency, frequency);
+                _dropTimer = new Timer(DropTimerMethod, this, frequency, frequency);
             }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void DropTimerMethod(object state)
+        {
+            var oPool = (ObjectPool<T>)state;
+            if (oPool != null && oPool._count > oPool._initialBufferSize && oPool._objectStack.TryPop(out var item))
+                oPool._dropAction?.Invoke(item);
         }
         /// <inheritdoc />
         /// <summary>
@@ -83,7 +90,10 @@ namespace TWCore
         public void Preallocate(int number)
         {
             for (var i = 0; i < number; i++)
+            {
                 _objectStack.Push(_createFunc(this));
+                Interlocked.Increment(ref _count);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -97,6 +107,7 @@ namespace TWCore
                 return _createFunc(this);
             if (_resetMode == PoolResetMode.BeforeUse)
                 _resetAction?.Invoke(value);
+            Interlocked.Decrement(ref _count);
             return value;
         }
         /// <inheritdoc />
@@ -110,6 +121,7 @@ namespace TWCore
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
             _objectStack.Push(obj);
+            Interlocked.Increment(ref _count);
         }
         /// <inheritdoc />
         /// <summary>
@@ -129,6 +141,7 @@ namespace TWCore
         public void Clear()
         {
             _objectStack.Clear();
+            Interlocked.Exchange(ref _count, 0);
         }
     }
 
@@ -165,7 +178,7 @@ namespace TWCore
         private static void DropTimerMethod(object state)
         {
             var oPool = (ObjectPool<T, TPoolObjectLifecycle>)state;
-            if (oPool._count > oPool._allocator.InitialSize && oPool._objectStack.TryPop(out var item))
+            if (oPool != null && oPool._count > oPool._allocator.InitialSize && oPool._objectStack.TryPop(out var item))
                 oPool._allocator.DropAction(item);
         }
         /// <inheritdoc />

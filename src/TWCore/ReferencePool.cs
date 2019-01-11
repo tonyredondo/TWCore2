@@ -73,7 +73,7 @@ namespace TWCore
             _dropAction = dropAction;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
-            if (dropTimeFrequencyInSeconds > 0)
+            if (dropTimeFrequencyInSeconds > 0 && _dropAction != null)
             {
                 var frequency = TimeSpan.FromSeconds(dropTimeFrequencyInSeconds);
                 _dropTimer = new Timer(DropTimerMethod, this, frequency, frequency);
@@ -83,8 +83,8 @@ namespace TWCore
         private static void DropTimerMethod(object state)
         {
             var oPool = (ReferencePool<T>)state;
-            if (oPool._count > oPool._initialBufferSize && oPool._objectStack.TryPop(out var item))
-                oPool._dropAction(item);
+            if (oPool != null && oPool._count > oPool._initialBufferSize && oPool._objectStack.TryPop(out var item))
+                oPool._dropAction?.Invoke(item);
         }
         /// <inheritdoc />
         /// <summary>

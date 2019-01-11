@@ -71,9 +71,11 @@ namespace TWCore.Net.Multicast
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(byte[] value) {}
             public int DropTimeFrequencyInSeconds => 60;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void DropAction(byte[] value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         #endregion
 

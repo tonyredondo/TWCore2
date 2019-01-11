@@ -98,6 +98,7 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(CachePoolItem value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct StackPoolAllocator : IPoolObjectLifecycle<Stack<SerializerScope>>
         {
@@ -111,6 +112,7 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(Stack<SerializerScope> value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct DesCachePoolAllocator : IPoolObjectLifecycle<DesCachePoolItem>
         {
@@ -130,6 +132,7 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(DesCachePoolItem value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct DesStackPoolAllocator : IPoolObjectLifecycle<Stack<DeserializerTypeItem>>
         {
@@ -144,6 +147,7 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(Stack<DeserializerTypeItem> value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         #endregion
         

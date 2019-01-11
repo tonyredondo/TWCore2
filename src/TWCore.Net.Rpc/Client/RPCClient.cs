@@ -277,6 +277,7 @@ namespace TWCore.Net.RPC.Client
             public void DropAction((object[], Type[]) value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct Args2Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -293,6 +294,7 @@ namespace TWCore.Net.RPC.Client
             public void DropAction((object[], Type[]) value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct Args3Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -309,6 +311,7 @@ namespace TWCore.Net.RPC.Client
             public void DropAction((object[], Type[]) value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct Args4Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -324,6 +327,7 @@ namespace TWCore.Net.RPC.Client
             public void DropAction((object[], Type[]) value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct Args5Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -339,6 +343,7 @@ namespace TWCore.Net.RPC.Client
             public void DropAction((object[], Type[]) value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
         }
 
         #region Generic

@@ -50,6 +50,7 @@ namespace TWCore.IO
             public void DropAction(byte[] value) { }
             public byte[] New() => new byte[MaxLength];
             public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
+            public int DropMaxSizeThreshold => 10;
         }
         private readonly struct ListBytePoolAllocator : IPoolObjectLifecycle<List<byte[]>>
         {
@@ -59,6 +60,7 @@ namespace TWCore.IO
             public void DropAction(List<byte[]> value) { }
             public List<byte[]> New() => new List<byte[]>(10);
             public void Reset(List<byte[]> value) => value.Clear();
+            public int DropMaxSizeThreshold => 10;
         }
         #endregion
 

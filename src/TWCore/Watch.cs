@@ -278,6 +278,7 @@ namespace TWCore
                 public void DropAction(WItem value)
                 {
                 }
+                public int DropMaxSizeThreshold => 10;
             }
 
             [IgnoreStackFrameLog]

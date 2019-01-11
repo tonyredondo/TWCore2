@@ -36,9 +36,10 @@ namespace TWCore
         private readonly ConcurrentStack<T> _objectStack;
         private readonly PoolResetMode _resetMode;
         private readonly Timer _dropTimer;
-        private int _count;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _initialBufferSize;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _dropmaxsizeThreshold;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _dropAction;
@@ -46,7 +47,7 @@ namespace TWCore
         /// <summary>
         /// Pool count
         /// </summary>
-        public int Count => _objectStack.Count;
+        public int Count => _count;
 
         /// <summary>
         /// Object pool
@@ -57,8 +58,9 @@ namespace TWCore
         /// <param name="resetMode">Pool reset mode</param>
         /// <param name="dropTimeFrequencyInSeconds">Drop time frequency in seconds</param>
         /// <param name="dropAction">Drop action over the drop item</param>
+        /// <param name="dropMaxSizeThreashold">Drop max size threshold</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null)
+        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null, int dropMaxSizeThreashold = 5)
         {
             _objectStack = new ConcurrentStack<T>();
             _initialBufferSize = initialBufferSize;
@@ -66,6 +68,9 @@ namespace TWCore
             _resetAction = resetAction;
             _resetMode = resetMode;
             _dropAction = dropAction;
+            _dropmaxsizeThreshold = dropMaxSizeThreashold;
+            if (_dropmaxsizeThreshold < _initialBufferSize)
+                _dropmaxsizeThreshold = _initialBufferSize;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
             if (dropTimeFrequencyInSeconds > 0 && _dropAction != null)
@@ -78,8 +83,11 @@ namespace TWCore
         private static void DropTimerMethod(object state)
         {
             var oPool = (ObjectPool<T>)state;
-            if (oPool != null && oPool._count > oPool._initialBufferSize && oPool._objectStack.TryPop(out var item))
+            if (oPool != null && oPool._count > oPool._dropmaxsizeThreshold && oPool._objectStack.TryPop(out var item))
+            {
+                Interlocked.Decrement(ref oPool._count);
                 oPool._dropAction?.Invoke(item);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -152,10 +160,16 @@ namespace TWCore
         where TPoolObjectLifecycle : struct, IPoolObjectLifecycle<T>
     {
         private readonly Timer _dropTimer;
-        private int _count;
-
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private TPoolObjectLifecycle _allocator = default;
+
+
+        /// <summary>
+        /// Pool count
+        /// </summary>
+        public int Count => _count;
 
         /// <summary>
         /// Object pool
@@ -178,8 +192,11 @@ namespace TWCore
         private static void DropTimerMethod(object state)
         {
             var oPool = (ObjectPool<T, TPoolObjectLifecycle>)state;
-            if (oPool != null && oPool._count > oPool._allocator.InitialSize && oPool._objectStack.TryPop(out var item))
+            if (oPool != null && oPool._count > oPool._allocator.DropMaxSizeThreshold && oPool._objectStack.TryPop(out var item))
+            {
+                Interlocked.Decrement(ref oPool._count);
                 oPool._allocator.DropAction(item);
+            }
         }
         /// <inheritdoc />
         /// <summary>

@@ -45,6 +45,10 @@ namespace TWCore
         /// </summary>
         int DropTimeFrequencyInSeconds { get; }
         /// <summary>
+        /// Drop size threshold
+        /// </summary>
+        int DropMaxSizeThreshold { get; }
+        /// <summary>
         /// Drop action
         /// </summary>
         /// <param name="value">Drop value</param>

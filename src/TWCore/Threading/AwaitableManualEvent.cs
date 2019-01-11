@@ -164,7 +164,6 @@ namespace TWCore.Threading
         /// <summary>
         /// Fire the event
         /// </summary>
-        /// <param name="item">Item to send</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Fire()
         {

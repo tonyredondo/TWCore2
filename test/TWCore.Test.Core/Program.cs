@@ -86,30 +86,30 @@ namespace TWCore.Test.Core
         private static async Task Main(string[] args)
         {
             Console.WriteLine("MAIN");
-
-            var awaitCount = 0;
-            var awaitableSample = new AwaitableManualEvent();
-            _ = Task.Run(async () =>
-            {
-                while (true)
-                {
-                    Console.WriteLine("FIRE!!! - Count: " + awaitCount);
-                    awaitCount = 0;
-                    awaitableSample.Fire();
-                    await Task.Delay(1000).ConfigureAwait(false);
-                    awaitableSample.Reset();
-                    Console.WriteLine("RESET!!! - Count: " + awaitCount);
-                    awaitCount = 0;
-                    await Task.Delay(2000).ConfigureAwait(false);
-                }
-            });
-
-            while (true)
-            {
-                var valueTask = awaitableSample.WaitAsync();
-                await valueTask.ConfigureAwait(false);
-                awaitCount++;
-            }
+//
+//            var awaitCount = 0;
+//            var awaitableSample = new AwaitableManualEvent();
+//            _ = Task.Run(async () =>
+//            {
+//                while (true)
+//                {
+//                    Console.WriteLine("FIRE!!! - Count: " + awaitCount);
+//                    awaitCount = 0;
+//                    awaitableSample.Fire();
+//                    await Task.Delay(1000).ConfigureAwait(false);
+//                    awaitableSample.Reset();
+//                    Console.WriteLine("RESET!!! - Count: " + awaitCount);
+//                    awaitCount = 0;
+//                    await Task.Delay(2000).ConfigureAwait(false);
+//                }
+//            });
+//
+//            while (true)
+//            {
+//                var task = awaitableSample.WaitAsync();
+//                await task.ConfigureAwait(false);
+//                awaitCount++;
+//            }
             
             
             var aValue = new AItem { Name = "Test" };

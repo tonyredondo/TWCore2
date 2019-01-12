@@ -162,7 +162,16 @@ namespace TWCore.Threading
         private long _wasFired;
         private Action<object> _continuation;
         private object _state;
+        private Task _currentTask;
 
+        /// <summary>
+        /// Awaitable manual event
+        /// </summary>
+        public AwaitableManualEvent()
+        {
+            _currentTask = new ValueTask(this, 0).AsTask();
+        }
+        
         #region Interface
         void IValueTaskSource.GetResult(short token)
         {
@@ -182,7 +191,6 @@ namespace TWCore.Threading
                 continuation(state);
                 return;
             }
-
             _continuation = continuation;
             _state = state;
         }
@@ -200,12 +208,10 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Fire()
         {
-            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) == 0)
-            {
-                var oldContinuation = Interlocked.Exchange(ref _continuation, null);
-                if (oldContinuation != null)
-                    ThreadPool.QueueUserWorkItem(oldContinuation, _state, true);
-            }
+            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) != 0) return;
+            var oldContinuation = Interlocked.Exchange(ref _continuation, null);
+            if (oldContinuation != null)
+                ThreadPool.QueueUserWorkItem(oldContinuation, _state, true);
         }
 
         /// <summary>
@@ -214,7 +220,8 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
-            Interlocked.CompareExchange(ref _wasFired, 0, 1);
+            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) == 1)
+                _currentTask = new ValueTask(this, 0).AsTask();
         }
 
         /// <summary>
@@ -222,11 +229,22 @@ namespace TWCore.Threading
         /// </summary>
         /// <returns>ValueTask instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueTask WaitAsync()
+        public ValueTask WaitValueAsync()
         {
             if (Interlocked.Read(ref _wasFired) == 1)
                 return new ValueTask(Task.CompletedTask);
             return new ValueTask(this, 0);
+        }
+        /// <summary>
+        /// Gets the Value task to await for the event to be fired
+        /// </summary>
+        /// <returns>ValueTask instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WaitAsync()
+        {
+            if (Interlocked.Read(ref _wasFired) == 1)
+                return Task.CompletedTask;
+            return _currentTask;
         }
         #endregion
     }

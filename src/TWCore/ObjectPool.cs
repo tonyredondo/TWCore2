@@ -31,12 +31,13 @@ namespace TWCore
     /// Object Pool
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
-    public sealed class ObjectPool<T> : IPool<T>
+    public sealed class ObjectPool<T> : IPool<T> where T : class
     {
         private readonly ConcurrentStack<T> _objectStack;
         private readonly PoolResetMode _resetMode;
         private readonly Timer _dropTimer;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private T _firstItem;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _initialBufferSize;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _dropmaxsizeThreshold;
@@ -97,6 +98,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
+            if (number < 2) return;
             for (var i = 0; i < number; i++)
             {
                 _objectStack.Push(_createFunc(this));
@@ -111,6 +113,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
+            var inst = _firstItem;
+            if (inst != null && inst == Interlocked.CompareExchange(ref _firstItem, null, inst))
+                return inst;
             if (!_objectStack.TryPop(out var value))
                 return _createFunc(this);
             if (_resetMode == PoolResetMode.BeforeUse)
@@ -126,8 +131,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Store(T obj)
         {
+            if (obj is null) return;
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
+            if (_firstItem == null)
+            {
+                _firstItem = obj;
+                return;
+            }
             _objectStack.Push(obj);
             Interlocked.Increment(ref _count);
         }
@@ -157,10 +168,12 @@ namespace TWCore
     /// Object pool
     /// </summary>
     public sealed class ObjectPool<T, TPoolObjectLifecycle> : IPool<T>
+        where T: class
         where TPoolObjectLifecycle : struct, IPoolObjectLifecycle<T>
     {
         private readonly Timer _dropTimer;
         
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private T _firstItem;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private TPoolObjectLifecycle _allocator = default;
@@ -206,6 +219,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
+            if (number < 2) return;
             for (var i = 0; i < number; i++)
             {
                 _objectStack.Push(_allocator.New());
@@ -220,6 +234,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
+            var inst = _firstItem;
+            if (inst != null && inst == Interlocked.CompareExchange(ref _firstItem, null, inst))
+                return inst;
             if (!_objectStack.TryPop(out var value))
                 return _allocator.New();
             Interlocked.Decrement(ref _count);
@@ -235,8 +252,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Store(T obj)
         {
+            if (obj is null) return;
             if (_allocator.ResetMode == PoolResetMode.AfterUse)
                 _allocator.Reset(obj);
+            if (_firstItem == null)
+            {
+                _firstItem = obj;
+                return;
+            }
             _objectStack.Push(obj);
             Interlocked.Increment(ref _count);
         }

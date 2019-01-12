@@ -58,7 +58,7 @@ namespace TWCore.Serialization.WSerializer
         private readonly byte[] _buffer = new byte[3];
 
         #region Allocators
-        private readonly struct CachePoolItem
+        private sealed class CachePoolItem
         {
             public readonly SerializerCache<Type> TypeCache;
             public readonly SerializerCache<object> ObjectCache;
@@ -69,7 +69,7 @@ namespace TWCore.Serialization.WSerializer
                 ObjectCache = objectCache;
             }
         }
-        private readonly struct DesCachePoolItem
+        private sealed class DesCachePoolItem
         {
             public readonly SerializerCache<DeserializerTypeDefinition> TypeCache;
             public readonly SerializerCache<object> ObjectCache;

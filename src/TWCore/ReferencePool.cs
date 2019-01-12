@@ -39,7 +39,7 @@ namespace TWCore
         #endregion
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private T _firstItem = null;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private T _firstItem;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Timer _dropTimer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _dropmaxsizeThreshold;
@@ -106,6 +106,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
+            if (number < 2) return;
             var tAlloc = new T[number];
             for (var i = 0; i < number; i++)
             {

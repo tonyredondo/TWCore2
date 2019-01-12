@@ -36,6 +36,8 @@ using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 using TWCore.Tests;
+using TWCore.Threading;
+
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedVariable
 
@@ -81,10 +83,35 @@ namespace TWCore.Test.Core
             public string Name { get; set; }
         }
 
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("MAIN");
 
+            var awaitCount = 0;
+            var awaitableSample = new AwaitableManualEvent();
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    Console.WriteLine("FIRE!!! - Count: " + awaitCount);
+                    awaitCount = 0;
+                    awaitableSample.Fire();
+                    await Task.Delay(1000).ConfigureAwait(false);
+                    awaitableSample.Reset();
+                    Console.WriteLine("RESET!!! - Count: " + awaitCount);
+                    awaitCount = 0;
+                    await Task.Delay(2000).ConfigureAwait(false);
+                }
+            });
+
+            while (true)
+            {
+                var valueTask = awaitableSample.WaitAsync();
+                await valueTask.ConfigureAwait(false);
+                awaitCount++;
+            }
+            
+            
             var aValue = new AItem { Name = "Test" };
             var bValue = aValue.MapTo(i => new BItem { Name = i.Name });
 

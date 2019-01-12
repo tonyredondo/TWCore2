@@ -18,6 +18,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Sources;
+
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Threading
@@ -32,6 +34,11 @@ namespace TWCore.Threading
         private Awaiter _awaiter;
         private T _lastValue;
 
+        /// <summary>
+        /// Gets if the event was fired.
+        /// </summary>
+        public bool Fired => Interlocked.Read(ref _wasFired) == 1;
+        
         /// <summary>
         /// Awaitable manual event
         /// </summary>
@@ -136,31 +143,57 @@ namespace TWCore.Threading
 
             private void FiredEvent(T obj)
             {
+                var oldContinuation = Interlocked.Exchange(ref _continuation, null);
                 _result = obj;
                 _completed = true;
                 _awaitableEvent = null;
-                if (_continuation != null)
-                    Task.Run(_continuation);
+                if (oldContinuation != null)
+                    Task.Run(oldContinuation);
             }
         }
     }
     
-        /// <summary>
+    
+    /// <summary>
     /// Awaitable manual event
     /// </summary>
-    public class AwaitableManualEvent
+    public class AwaitableManualEvent : IValueTaskSource
     {
-        private Action _fireAction;
         private long _wasFired;
-        private Awaiter _awaiter;
+        private Action<object> _continuation;
+        private object _state;
 
-        /// <summary>
-        /// Awaitable manual event
-        /// </summary>
-        public AwaitableManualEvent()
+        #region Interface
+        void IValueTaskSource.GetResult(short token)
         {
-            _awaiter = new Awaiter(this);
+            _continuation = null;
+            _state = null;
         }
+
+        ValueTaskSourceStatus IValueTaskSource.GetStatus(short token)
+        {
+            return Interlocked.Read(ref _wasFired) == 1 ? ValueTaskSourceStatus.Succeeded : ValueTaskSourceStatus.Pending;
+        }
+
+        void IValueTaskSource.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+        {
+            if (Interlocked.Read(ref _wasFired) == 1)
+            {
+                continuation(state);
+                return;
+            }
+
+            _continuation = continuation;
+            _state = state;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Gets if the event was fired.
+        /// </summary>
+        public bool Fired => Interlocked.Read(ref _wasFired) == 1;
+
         /// <summary>
         /// Fire the event
         /// </summary>
@@ -168,7 +201,11 @@ namespace TWCore.Threading
         public void Fire()
         {
             if (Interlocked.CompareExchange(ref _wasFired, 1, 0) == 0)
-                _fireAction();
+            {
+                var oldContinuation = Interlocked.Exchange(ref _continuation, null);
+                if (oldContinuation != null)
+                    ThreadPool.QueueUserWorkItem(oldContinuation, _state, true);
+            }
         }
 
         /// <summary>
@@ -177,82 +214,21 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
-            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) == 1)
-                _awaiter = new Awaiter(this);
+            Interlocked.CompareExchange(ref _wasFired, 0, 1);
         }
 
         /// <summary>
-        /// Wait for event fire
+        /// Gets the Value task to await for the event to be fired
         /// </summary>
-        /// <returns>Awaiter</returns>
+        /// <returns>ValueTask instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Awaiter WaitAsync()
+        public ValueTask WaitAsync()
         {
-            return _awaiter;
+            if (Interlocked.Read(ref _wasFired) == 1)
+                return new ValueTask(Task.CompletedTask);
+            return new ValueTask(this, 0);
         }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Manual Event Awaiter
-        /// </summary>
-        public class Awaiter : INotifyCompletion
-        {
-            private volatile bool _completed;
-            private Action _continuation;
-            private AwaitableManualEvent _awaitableEvent;
-
-            internal Awaiter(AwaitableManualEvent awaitableEvent)
-            {
-                _awaitableEvent = awaitableEvent;
-                _completed = Interlocked.Read(ref _awaitableEvent._wasFired) == 1;
-                if (!_completed)
-                    _awaitableEvent._fireAction = FiredEvent;
-            }
-
-            /// <summary>
-            /// Gets the awaiter
-            /// </summary>
-            /// <returns>This awaiter instance</returns>
-            public Awaiter GetAwaiter()
-            {
-                return this;
-            }
-
-            /// <summary>
-            /// Get if the awaitable has been completed
-            /// </summary>
-            public bool IsCompleted => _completed;
-
-            /// <summary>
-            /// Gets the result
-            /// </summary>
-            /// <returns>Result</returns>
-            public void GetResult()
-            {
-                if (_completed) return;
-                var wait = new SpinWait();
-                while (!_completed)
-                    wait.SpinOnce();
-            }
-
-            void INotifyCompletion.OnCompleted(Action continuation)
-            {
-                if (_completed)
-                {
-                    continuation();
-                    return;
-                }
-                _continuation = continuation;
-            }
-
-            private void FiredEvent()
-            {
-                _completed = true;
-                _awaitableEvent = null;
-                if (_continuation != null)
-                    Task.Run(_continuation);
-            }
-        }
+        #endregion
     }
 
 }

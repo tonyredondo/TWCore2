@@ -32,9 +32,7 @@ namespace TWCore.Threading
     public class AsyncManualResetEvent : IDisposable
     {
         private readonly AwaitableManualEvent _event = new AwaitableManualEvent();
-        //private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         private static readonly ConcurrentDictionary<CancellationToken, Task> CTasks = new ConcurrentDictionary<CancellationToken, Task>();
-        private static readonly Task DisposedExceptionTask = Task.FromException(new Exception("The instance has been disposed."));
         private static readonly ObjectPool<Task[]> TaskArrayPool = new ObjectPool<Task[]>(_ => new Task[2], i => Array.Clear(i, 0, 2));
 
         #region Properties

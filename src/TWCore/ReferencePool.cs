@@ -38,10 +38,10 @@ namespace TWCore
         public static ReferencePool<T> Shared => Singleton<ReferencePool<T>>.Instance;
         #endregion
 
-        private readonly ConcurrentStack<T> _objectStack;
-        private readonly Timer _dropTimer;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private T _firstItem = null;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Timer _dropTimer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _initialBufferSize;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _dropmaxsizeThreshold;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _onetimeInitAction;
@@ -72,15 +72,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReferencePool(int initialBufferSize = 0, Action<T> resetAction = null, Action<T> onetimeInitAction = null, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null, int dropMaxSizeThreashold = 5)
         {
-            _initialBufferSize = initialBufferSize;
             _objectStack = new ConcurrentStack<T>();
             _resetAction = resetAction;
             _onetimeInitAction = onetimeInitAction;
             _resetMode = resetMode;
             _dropAction = dropAction;
             _dropmaxsizeThreshold = dropMaxSizeThreashold;
-            if (_dropmaxsizeThreshold < _initialBufferSize)
-                _dropmaxsizeThreshold = _initialBufferSize;
+            if (_dropmaxsizeThreshold < initialBufferSize)
+                _dropmaxsizeThreshold = initialBufferSize;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
             if (dropTimeFrequencyInSeconds > 0 && _dropAction != null)
@@ -125,6 +124,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
+            var inst = _firstItem;
+            if (inst != null && inst == Interlocked.CompareExchange(ref _firstItem, null, inst))
+                return inst;
             if (_objectStack.TryPop(out var value))
             {
                 Interlocked.Decrement(ref _count);
@@ -144,8 +146,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Store(T obj)
         {
+            if (obj is null) return;
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
+            if (_firstItem == null)
+            {
+                _firstItem = obj;
+                return;
+            }
             _objectStack.Push(obj);
             Interlocked.Increment(ref _count);
         }

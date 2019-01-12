@@ -125,10 +125,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            var inst = _firstItem;
-            if (inst != null && inst == Interlocked.CompareExchange(ref _firstItem, null, inst))
-                return inst;
-            if (_objectStack.TryPop(out var value))
+            var value = _firstItem;
+            if (value != null && value == Interlocked.CompareExchange(ref _firstItem, null, value))
+            {
+                if (_resetMode == PoolResetMode.BeforeUse)
+                    _resetAction?.Invoke(value);
+                return value;
+            }
+            if (_objectStack.TryPop(out value))
             {
                 Interlocked.Decrement(ref _count);
                 if (_resetMode == PoolResetMode.BeforeUse)

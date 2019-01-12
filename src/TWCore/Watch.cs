@@ -579,10 +579,10 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset()
             {
+                _disposedValue = false;
                 _id = 0;
                 _margin = 0;
                 _level = LogLevel.Stats;
-                _disposedValue = false;
                 _lastMessage = null;
                 _groupValue = null;
                 _counterKey = null;

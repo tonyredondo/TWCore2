@@ -113,14 +113,23 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            var inst = _firstItem;
-            if (inst != null && inst == Interlocked.CompareExchange(ref _firstItem, null, inst))
-                return inst;
-            if (!_objectStack.TryPop(out var value))
-                return _createFunc(this);
+            var value = _firstItem;
+            if (value != null && value == Interlocked.CompareExchange(ref _firstItem, null, value))
+            {
+                if (_resetMode == PoolResetMode.BeforeUse)
+                    _resetAction?.Invoke(value);
+                return value;
+            }
+            if (!_objectStack.TryPop(out value))
+            {
+                value = _createFunc(this);
+                if (_resetMode == PoolResetMode.BeforeUse)
+                    _resetAction?.Invoke(value);
+                return value;
+            }
+            Interlocked.Decrement(ref _count);
             if (_resetMode == PoolResetMode.BeforeUse)
                 _resetAction?.Invoke(value);
-            Interlocked.Decrement(ref _count);
             return value;
         }
         /// <inheritdoc />
@@ -234,11 +243,20 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            var inst = _firstItem;
-            if (inst != null && inst == Interlocked.CompareExchange(ref _firstItem, null, inst))
-                return inst;
-            if (!_objectStack.TryPop(out var value))
-                return _allocator.New();
+            var value = _firstItem;
+            if (value != null && value == Interlocked.CompareExchange(ref _firstItem, null, value))
+            {
+                if (_allocator.ResetMode == PoolResetMode.BeforeUse)
+                    _allocator.Reset(value);
+                return value;
+            }
+            if (!_objectStack.TryPop(out value))
+            {
+                value = _allocator.New();
+                if (_allocator.ResetMode == PoolResetMode.BeforeUse)
+                    _allocator.Reset(value);
+                return value;
+            }
             Interlocked.Decrement(ref _count);
             if (_allocator.ResetMode == PoolResetMode.BeforeUse)
                 _allocator.Reset(value);

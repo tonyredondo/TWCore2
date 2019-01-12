@@ -351,7 +351,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         OnGetDescriptorsRequest?.InvokeAsync(this, dEventArgs);
                         var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
                         await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
-                        OnResponseSent?.InvokeAsync(this, response);
+                        OnResponseSent?.Invoke(this, response);
                         break;
                     }
                     if (request.CancellationToken)
@@ -365,7 +365,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                             if (!tokenSource.Token.IsCancellationRequested)
                                 await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
                             _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
-                            OnResponseSent?.InvokeAsync(this, mEventArgs.Response);
+                            OnResponseSent?.Invoke(this, mEventArgs.Response);
                         }
                         break;
                     }
@@ -374,7 +374,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         await OnMethodCallAsync.InvokeAsync(this, mEventArgs2).ConfigureAwait(false);
                     if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
                         await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
-                    OnResponseSent?.InvokeAsync(this, mEventArgs2.Response);
+                    OnResponseSent?.Invoke(this, mEventArgs2.Response);
                     break;
             }
         }

@@ -97,7 +97,8 @@ namespace TWCore.Threading
                     var nCont = _continuation;
                     ThreadPool.QueueUserWorkItem(state => nCont(state), _state);
 #else
-                    ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
+                    ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(_continuation), _state);
+                    //ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
 #endif
                 }
             }
@@ -212,7 +213,8 @@ namespace TWCore.Threading
                     var nCont = _continuation;
                     ThreadPool.QueueUserWorkItem(state => nCont(state), _state);
 #else
-                    ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
+                    ThreadPool.UnsafeQueueUserWorkItem(new WaitCallback(_continuation), _state);
+                    //ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
 #endif
                 }
                 _continuation = null;

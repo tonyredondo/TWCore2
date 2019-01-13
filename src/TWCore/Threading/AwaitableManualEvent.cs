@@ -35,30 +35,34 @@ namespace TWCore.Threading
         private Task<T> _currentTask;
         private T _value;
         private readonly bool _preferLocal;
+        private readonly object _locker;
 
         /// <summary>
         /// Awaitable manual event
         /// </summary>
         /// <param name="preferLocal">Prefer continuations on local ThreadPool queue</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AwaitableManualEvent(bool preferLocal = true)
         {
+            _locker = new object();
             _preferLocal = preferLocal;
             _currentTask = new ValueTask<T>(this, 0).AsTask();
         }
-        
+
         #region Interface
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         T IValueTaskSource<T>.GetResult(short token)
         {
-            _continuation = null;
-            _state = null;
             return _value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ValueTaskSourceStatus IValueTaskSource<T>.GetStatus(short token)
         {
             return Interlocked.Read(ref _wasFired) == 1 ? ValueTaskSourceStatus.Succeeded : ValueTaskSourceStatus.Pending;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IValueTaskSource<T>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
         {
             if (Interlocked.Read(ref _wasFired) == 1)
@@ -83,16 +87,19 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Fire(T item)
         {
-            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) != 0) return;
-            _value = item;
-            var oldContinuation = Interlocked.Exchange(ref _continuation, null);
-            if (oldContinuation != null)
+            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) == 1) return;
+            lock (_locker)
             {
+                _value = item;
+                if (_continuation != null)
+                {
 #if COMPATIBILITY
-                ThreadPool.QueueUserWorkItem(state => oldContinuation(state), _state);
+                    var nCont = _continuation;
+                    ThreadPool.QueueUserWorkItem(state => nCont(state), _state);
 #else
-                ThreadPool.QueueUserWorkItem(oldContinuation, _state, _preferLocal);
+                    ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
 #endif
+                }
             }
         }
 
@@ -102,9 +109,12 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
-            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) != 1) return;
-            _value = default;
-            _currentTask = new ValueTask<T>(this, 0).AsTask();
+            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) == 0) return;
+            lock (_locker)
+            {
+                _value = default;
+                _currentTask = new ValueTask<T>(this, 0).AsTask();
+            }
         }
 
         /// <summary>
@@ -142,29 +152,33 @@ namespace TWCore.Threading
         private object _state;
         private Task _currentTask;
         private readonly bool _preferLocal;
+        private readonly object _locker;
 
         /// <summary>
         /// Awaitable manual event
         /// </summary>
         /// <param name="preferLocal">Prefer continuations on local ThreadPool queue</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AwaitableManualEvent(bool preferLocal = true)
         {
+            _locker = new object();
             _preferLocal = preferLocal;
             _currentTask = new ValueTask(this, 0).AsTask();
         }
-        
+
         #region Interface
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IValueTaskSource.GetResult(short token)
         {
-            _continuation = null;
-            _state = null;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ValueTaskSourceStatus IValueTaskSource.GetStatus(short token)
         {
             return Interlocked.Read(ref _wasFired) == 1 ? ValueTaskSourceStatus.Succeeded : ValueTaskSourceStatus.Pending;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IValueTaskSource.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
         {
             if (Interlocked.Read(ref _wasFired) == 1)
@@ -189,15 +203,20 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Fire()
         {
-            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) != 0) return;
-            var oldContinuation = Interlocked.Exchange(ref _continuation, null);
-            if (oldContinuation != null)
+            if (Interlocked.CompareExchange(ref _wasFired, 1, 0) == 1) return;
+            lock (_locker)
             {
+                if (_continuation != null)
+                {
 #if COMPATIBILITY
-                ThreadPool.QueueUserWorkItem(state => oldContinuation(state), _state);
+                    var nCont = _continuation;
+                    ThreadPool.QueueUserWorkItem(state => nCont(state), _state);
 #else
-                ThreadPool.QueueUserWorkItem(oldContinuation, _state, _preferLocal);
+                    ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
 #endif
+                }
+                _continuation = null;
+                _state = null;
             }
         }
 
@@ -207,8 +226,11 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
-            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) == 1)
+            if (Interlocked.CompareExchange(ref _wasFired, 0, 1) == 0) return;
+            lock (_locker)
+            {
                 _currentTask = new ValueTask(this, 0).AsTask();
+            }
         }
 
         /// <summary>

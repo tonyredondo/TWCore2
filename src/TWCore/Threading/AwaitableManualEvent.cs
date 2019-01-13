@@ -87,7 +87,13 @@ namespace TWCore.Threading
             _value = item;
             var oldContinuation = Interlocked.Exchange(ref _continuation, null);
             if (oldContinuation != null)
+            {
+#if COMPATIBILITY
+                ThreadPool.QueueUserWorkItem(state => oldContinuation(state), _state);
+#else
                 ThreadPool.QueueUserWorkItem(oldContinuation, _state, _preferLocal);
+#endif
+            }
         }
 
         /// <summary>

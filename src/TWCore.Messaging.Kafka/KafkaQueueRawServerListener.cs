@@ -80,7 +80,14 @@ namespace TWCore.Messaging.Kafka
                     foreach (var cRes in consumer.Consume(_token))
                     {
                         if (_token.IsCancellationRequested) break;
+#if COMPATIBILITY
                         Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, cRes));
+#else
+                ThreadPool.QueueUserWorkItem(async item =>
+                {
+                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
+                }, cRes, false);
+#endif
                     }
                 }
             }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Current);

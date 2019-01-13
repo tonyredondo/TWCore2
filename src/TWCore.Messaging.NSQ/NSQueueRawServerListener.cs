@@ -54,8 +54,15 @@ namespace TWCore.Messaging.NSQ
                 Core.Log.LibVerbose("Message received");
                 try
                 {
+#if COMPATIBILITY
                     Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, message.Body));
-                    Try.Do(message.Finish, false);
+#else
+                    ThreadPool.QueueUserWorkItem(async item =>
+                    {
+                        await _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, item);
+                    }, message.Body, false);
+#endif
+                    message.Finish();
                 }
                 catch (Exception ex)
                 {

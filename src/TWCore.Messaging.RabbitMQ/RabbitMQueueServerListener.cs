@@ -98,7 +98,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
 #if COMPATIBILITY
-                Task.Run(()=> EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
 #else
                 ThreadPool.QueueUserWorkItem(async item =>
                 {

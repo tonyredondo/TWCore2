@@ -66,19 +66,21 @@ namespace TWCore.Diagnostics.Status.Transports
             {
                 await ctx.Response.WriteAsync(htmlPage).ConfigureAwait(false);
             });
-            _httpServer.AddGetHandler("/xml", async ctx =>
+            _httpServer.AddGetHandler("/xml", ctx =>
             {
-                if (OnFetchStatus is null) return;
+                if (OnFetchStatus is null) return Task.CompletedTask;
                 var statuses = OnFetchStatus.Invoke();
                 ctx.Response.ContentType = SerializerMimeTypes.Xml;
                 xmlSerializer.Serialize(statuses, ctx.Response.OutputStream);
+                return Task.CompletedTask;
             });
-            _httpServer.AddGetHandler("/json", async ctx =>
+            _httpServer.AddGetHandler("/json", ctx =>
             {
-                if (OnFetchStatus is null) return;
+                if (OnFetchStatus is null) return Task.CompletedTask;
                 var statuses = OnFetchStatus.Invoke();
                 ctx.Response.ContentType = SerializerMimeTypes.Json;
                 jsonSerializer.Serialize(statuses, ctx.Response.OutputStream);
+                return Task.CompletedTask;
             });
             _httpServer.AddGetHandler("/gccollect", async ctx=>
             {

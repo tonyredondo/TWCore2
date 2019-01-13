@@ -42,6 +42,11 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private const int ResetIndex = 500000;
         private readonly ConcurrentDictionary<Guid, RpcMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RpcMessageHandler>();
         private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(100);
+        private readonly ReferencePool<RpcMessageHandler> _messageHandlerPool = new ReferencePool<RpcMessageHandler>(0, item =>
+        {
+            item.Message = null;
+            item.Event.Reset();
+        });
         private readonly AsyncLock _connectionLocker = new AsyncLock();
         private CancellationTokenSource _connectionCancellationTokenSource;
         private CancellationToken _connectionCancellationToken;
@@ -255,7 +260,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (!_shouldBeConnected)
                 await ConnectAsync().ConfigureAwait(false);
             if (_connectionCancellationToken.IsCancellationRequested) return null;
-            var handler = new RpcMessageHandler();
+            var handler = _messageHandlerPool.New();
             while (!_messageResponsesHandlers.TryAdd(messageRq.MessageId, handler))
                 await Task.Yield();
             if (_currentIndex > ResetIndex) _currentIndex = -1;
@@ -267,7 +272,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             } while (!sent);
             await handler.Event.WaitAsync(InvokeMethodTimeout, _connectionCancellationToken).ConfigureAwait(false);
             if (handler.Event.IsSet)
-                return handler.Message;
+            {
+                var msg = handler.Message;
+                _messageHandlerPool.Store(handler);
+                return msg;
+            }
+            _messageHandlerPool.Store(handler);
             _connectionCancellationToken.ThrowIfCancellationRequested();
             throw new TimeoutException($"Timeout of {InvokeMethodTimeout / 1000} seconds has been reached waiting the response from the server with Id={messageRq.MessageId}.");
         }
@@ -284,7 +294,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (!_shouldBeConnected)
                 await ConnectAsync().ConfigureAwait(false);
             if (_connectionCancellationToken.IsCancellationRequested) return null;
-            var handler = new RpcMessageHandler();
+            var handler = _messageHandlerPool.New();
             while (!_messageResponsesHandlers.TryAdd(messageRq.MessageId, handler))
                 await Task.Yield();
             if (_currentIndex > ResetIndex) _currentIndex = -1;
@@ -300,7 +310,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 await handler.Event.WaitAsync(InvokeMethodTimeout, linkedTokenSource.Token).ConfigureAwait(false);
             }
             if (handler.Event.IsSet)
-                return handler.Message;
+            {
+                var msg = handler.Message;
+                _messageHandlerPool.Store(handler);
+                return msg;
+            }
+            _messageHandlerPool.Store(handler);
             _connectionCancellationToken.ThrowIfCancellationRequested();
             if (cancellationToken.IsCancellationRequested)
             {
@@ -353,7 +368,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     {
                         mHandler.Value.Message = respMsg;
                         mHandler.Value.Event.Set();
-                        _messageResponsesHandlers.TryRemove(mHandler.Key, out var _);
+                        _messageResponsesHandlers.TryRemove(mHandler.Key, out _);
                     }
                     break;
             }

@@ -185,88 +185,94 @@ namespace TWCore.Net.HttpServer
         {
             var type = typeof(T);
             var methods = type.GetRuntimeMethods();
-            methods.Each(m =>
+            foreach (var m in methods)
             {
                 var routes = m.GetCustomAttributes<HttpRouteAttribute>().ToArray();
                 if (routes.Any())
                 {
-                    routes.Each(route => AddRouteHandler(route.Method, route.Url, context =>
+                    foreach (var route in routes)
                     {
-                        var ctl = Activator.CreateInstance<T>();
-                        ctl.Context = context;
-                        var mParams = m.GetParameters();
-                        if (mParams.Length > 0)
+                        AddRouteHandler(route.Method, route.Url, context =>
                         {
-                            ParameterInfo postObjectParam = null;
-                            object postObject = null;
-                            var ivkParams = new List<object>();
-                            if (context.Request.HasPostObject)
+                            var ctl = Activator.CreateInstance<T>();
+                            ctl.Context = context;
+                            var mParams = m.GetParameters();
+                            if (mParams.Length > 0)
                             {
-                                postObjectParam = mParams.FirstOrDefault(p => p.GetCustomAttribute(typeof(PostObjectAttribute)) != null);
-                                if (postObjectParam is null && mParams.Length == 1) postObjectParam = mParams[0];
-                                if (postObjectParam != null)
-                                    postObject = Try.Do(() => context.Request.GetPostObject(postObjectParam.ParameterType));
-                            }
-                            var dictionary = context.Route.GetRouteParameters(context.Request.Url.AbsolutePath);
-                            foreach (var mParam in mParams)
-                            {
-                                if (mParam == postObjectParam)
-                                    ivkParams.Add(postObject);
-                                else if (dictionary.ContainsKey(mParam.Name))
-                                    ivkParams.Add(dictionary[mParam.Name]);
-                                else
-                                    ivkParams.Add(null);
-                            }
+                                ParameterInfo postObjectParam = null;
+                                object postObject = null;
+                                var ivkParams = new List<object>();
+                                if (context.Request.HasPostObject)
+                                {
+                                    postObjectParam = mParams.FirstOrDefault(p => p.GetCustomAttribute(typeof(PostObjectAttribute)) != null);
+                                    if (postObjectParam is null && mParams.Length == 1) postObjectParam = mParams[0];
+                                    if (postObjectParam != null)
+                                        postObject = Try.Do(() => context.Request.GetPostObject(postObjectParam.ParameterType));
+                                }
 
-                            var response = m.Invoke(ctl, ivkParams.ToArray());
-                            if (response is null) return;
-                            var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                            switch (serializer)
-                            {
-                                case null when response is string:
-                                    ctl.Context.Response.Write((string)response);
-                                    break;
-                                case null when response is ValueType:
-                                    ctl.Context.Response.Write(response.ToString());
-                                    break;
-                                case null:
-                                    serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
-                                    break;
-                            }
-                            if (serializer != null)
-                                Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
+                                var dictionary = context.Route.GetRouteParameters(context.Request.Url.AbsolutePath);
+                                foreach (var mParam in mParams)
                                 {
-                                    var sEx = new SerializableException(ex);
-                                    serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
-                                });
-                        }
-                        else
-                        {
-                            var response = m.Invoke(ctl, new object[0]);
-                            if (response is null) return;
-                            var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                            switch (serializer)
-                            {
-                                case null when response is string:
-                                    ctl.Context.Response.Write((string)response);
-                                    break;
-                                case null when response is ValueType:
-                                    ctl.Context.Response.Write(response.ToString());
-                                    break;
-                                case null:
-                                    serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
-                                    break;
-                            }
-                            if (serializer != null)
-                                Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
+                                    if (mParam == postObjectParam)
+                                        ivkParams.Add(postObject);
+                                    else if (dictionary.ContainsKey(mParam.Name))
+                                        ivkParams.Add(dictionary[mParam.Name]);
+                                    else
+                                        ivkParams.Add(null);
+                                }
+
+                                var response = m.Invoke(ctl, ivkParams.ToArray());
+                                if (response is null) return;
+                                var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
+                                switch (serializer)
                                 {
-                                    var sEx = new SerializableException(ex);
-                                    serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
-                                });
-                        }
-                    }));
+                                    case null when response is string:
+                                        ctl.Context.Response.Write((string) response);
+                                        break;
+                                    case null when response is ValueType:
+                                        ctl.Context.Response.Write(response.ToString());
+                                        break;
+                                    case null:
+                                        serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                                        break;
+                                }
+
+                                if (serializer != null)
+                                    Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
+                                    {
+                                        var sEx = new SerializableException(ex);
+                                        serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
+                                    });
+                            }
+                            else
+                            {
+                                var response = m.Invoke(ctl, new object[0]);
+                                if (response is null) return;
+                                var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
+                                switch (serializer)
+                                {
+                                    case null when response is string:
+                                        ctl.Context.Response.Write((string) response);
+                                        break;
+                                    case null when response is ValueType:
+                                        ctl.Context.Response.Write(response.ToString());
+                                        break;
+                                    case null:
+                                        serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                                        break;
+                                }
+
+                                if (serializer != null)
+                                    Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
+                                    {
+                                        var sEx = new SerializableException(ex);
+                                        serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
+                                    });
+                            }
+                        });
+                    }
                 }
-            });
+            };
             return this;
         }
         /// <summary>

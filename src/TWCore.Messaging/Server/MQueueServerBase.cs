@@ -208,12 +208,12 @@ namespace TWCore.Messaging.Server
 
                 if (_serverQueues?.RecvQueues?.Any() == true)
 				{
-					_serverQueues.RecvQueues.Each(queue =>
+					foreach (var queue in _serverQueues.RecvQueues)
 					{
 						var queueListener = OnCreateQueueServerListener(queue, ResponseServer);
 						queueListener.RequestReceived += QueueListener_RequestReceived;
 						QueueServerListeners.Add(queueListener);
-					});
+					}
 				}
 				else
 					Core.Log.Warning("There aren't any Receiver Queue for the Server Listeners. Check the ServerQueues element on the queue config file.");
@@ -243,7 +243,8 @@ namespace TWCore.Messaging.Server
 			_tokenSource.Cancel();
 			Task.WaitAll(_listenerTasks.ToArray());
 			_listenerTasks.Clear();
-			QueueServerListeners.Each(l => l.Dispose());
+			foreach (var l in QueueServerListeners)
+				l.Dispose();
 			QueueServerListeners.Clear();
 			_tokenSource = null;
 			Core.Log.InfoBasic("Queue server listeners for {0} stopped", Name);

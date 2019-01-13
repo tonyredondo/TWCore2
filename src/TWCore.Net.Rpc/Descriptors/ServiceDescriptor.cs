@@ -160,14 +160,18 @@ namespace TWCore.Net.RPC.Descriptors
         {
             var genericTypes = new List<string>();
             if (!type.IsConstructedGenericType) return type.FullName;
-            type.GenericTypeArguments.Each(a => genericTypes.Add(a.FullName));
+            foreach (var a in type.GenericTypeArguments)
+                genericTypes.Add(a.FullName);
             return type.Name + "[" + genericTypes.Join(", ") + "]";
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void RegisterServiceDescriptorType(ServiceDescriptor descriptor, Type type)
         {
             if (type.IsConstructedGenericType)
-                type.GenericTypeArguments.Each(t => RegisterServiceDescriptorType(descriptor, t));
+            {
+                foreach (var t in type.GenericTypeArguments)
+                    RegisterServiceDescriptorType(descriptor, t);
+            }
 
             var typeInfo = type.GetTypeInfo();
             var asmName = typeInfo.Assembly.GetName();

@@ -190,7 +190,8 @@ namespace TWCore.Cache.Client
         /// </summary>
         public void Clear()
         {
-            Items.Each(item => { item.EnabledChanged -= Item_EnabledChanged; });
+            foreach (var item in Items)
+                item.EnabledChanged -= Item_EnabledChanged;
             Items.Clear();
             lock (EnabledItems)
                 EnabledItems.Clear();
@@ -612,7 +613,8 @@ namespace TWCore.Cache.Client
         {
             _worker?.Dispose();
             _worker = null;
-            Items.Each(i => i.Dispose());
+            foreach (var item in Items)
+                item.Dispose();
             Items.Clear();
             Core.Status.DeAttachObject(this);
         }

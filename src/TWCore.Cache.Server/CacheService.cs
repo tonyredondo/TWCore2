@@ -77,7 +77,8 @@ namespace TWCore.Services
             else
             {
                 var transport = new TransportServerCollection();
-                Transports.Each(transport.Add);
+                foreach (var item in Transports)
+                    transport.Add(item);
                 server = new RPCServer(transport);
             }
             server.SetCounterInfo("Cache Server", Diagnostics.Counters.CounterLevel.Framework, Diagnostics.Counters.CounterKind.Cache);

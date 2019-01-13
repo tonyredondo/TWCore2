@@ -1214,7 +1214,8 @@ namespace TWCore.Data
                     #endregion
 
                     #region Sets EntityBinder and FillMethod
-                    resultSets.Each(r => r.PrepareSet(EntityValueConverter));
+                    foreach (var r in resultSets)
+                        r.PrepareSet(EntityValueConverter);
                     #endregion
 
                     try
@@ -2141,7 +2142,8 @@ namespace TWCore.Data
                     #endregion
 
                     #region Sets EntityBinder and FillMethod
-                    resultSets.Each(r => r.PrepareSet(EntityValueConverter));
+                    foreach (var r in resultSets)
+                        r.PrepareSet(EntityValueConverter);
                     #endregion
 
                     try

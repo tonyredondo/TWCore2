@@ -56,57 +56,76 @@ namespace TWCore.Services
         /// Get if the service support pause and continue
         /// </summary>
         public bool CanPauseAndContinue => this.All(i => i.CanPauseAndContinue);
+
         /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnContinue() => this.Each(i =>
+        public void OnContinue()
         {
-            Core.Log.InfoBasic("Continue: {0}", i.GetType().FullName);
-            i.OnContinue();
-        });
+            foreach (var i in this)
+            {
+                Core.Log.InfoBasic("Continue: {0}", i.GetType().FullName);
+                i.OnContinue();
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnPause() => this.Reverse().Each(i =>
+        public void OnPause()
         {
-            Core.Log.InfoBasic("Pause: {0}", i.GetType().FullName);
-            i.OnPause();
-        });
+            foreach (var i in this.Reverse())
+            {
+                Core.Log.InfoBasic("Pause: {0}", i.GetType().FullName);
+                i.OnPause();
+            }
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnShutdown() => this.Reverse().Each(i =>
+        public void OnShutdown()
         {
-            Core.Log.InfoBasic("Shutting down: {0}", i.GetType().FullName);
-            i.OnShutdown();
-        });
+            foreach (var i in this.Reverse())
+            {
+                Core.Log.InfoBasic("Shutting down: {0}", i.GetType().FullName);
+                i.OnShutdown();
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
         /// <param name="args">Start arguments</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnStart(string[] args) => this.Each(i =>
+        public void OnStart(string[] args)
         {
-            Core.Log.InfoBasic("Starting: {0}", i.GetType().FullName);
-            i.OnStart(args);
-        });
+            foreach (var i in this)
+            {
+                Core.Log.InfoBasic("Starting: {0}", i.GetType().FullName);
+                i.OnStart(args);
+            }
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnStop() => this.Reverse().Each(i =>
+        public void OnStop()
         {
-            Core.Log.InfoBasic("Stopping: {0}", i.GetType().FullName);
-            i.OnStop();
-        });
+            foreach (var i in this.Reverse())
+            {
+                Core.Log.InfoBasic("Stopping: {0}", i.GetType().FullName);
+                i.OnStop();
+            }
+        }
+
         #endregion
     }
 }

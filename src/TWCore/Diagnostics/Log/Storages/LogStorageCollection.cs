@@ -286,7 +286,17 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 lock (_locker)
                 {
-                    _items.Each(t => Try.Do(v => v.Item1.Dispose(), t, false));
+                    foreach (var t in _items)
+                    {
+                        try
+                        {
+                            t.Item1.Dispose();
+                        }
+                        catch (Exception e)
+                        {
+                            Core.Log.Write(e);
+                        }
+                    }
                     _items?.Clear();
                     _cItems?.Clear();
                     _isDirty = true;

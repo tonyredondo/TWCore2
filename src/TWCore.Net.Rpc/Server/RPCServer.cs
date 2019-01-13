@@ -147,7 +147,8 @@ namespace TWCore.Net.RPC.Server
         {
             Core.Log.LibVerbose("Stopping RPC Server for the following types: {0}", _serviceInstances.Select(i => i.Descriptor.Name).Join(","));
             await Transport.StopListenerAsync().ConfigureAwait(false);
-            _serviceInstances.Each(v => v.UnbindToServiceType());
+            foreach (var v in _serviceInstances)
+                v.UnbindToServiceType();
             Transport.OnMethodCallAsync -= OnMethodCallAsync;
             Transport.OnResponseSent -= OnResponseSent;
             Transport.OnGetDescriptorsRequest -= OnGetDescriptorsRequest;

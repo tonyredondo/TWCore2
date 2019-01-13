@@ -1673,7 +1673,12 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="items">Log items range</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EnqueueItemsArray(IGroupItem[] items) => items?.Each(i => _itemsWorker.Enqueue(i));
+		public void EnqueueItemsArray(IGroupItem[] items)
+        {
+            if (items is null) return;
+            foreach (var i in items)
+                _itemsWorker.Enqueue(i);
+		} 
         /// <inheritdoc />
         /// <summary>
         /// Starts the Log Engine

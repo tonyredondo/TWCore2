@@ -60,7 +60,8 @@ namespace TWCore.Object.Api.Controllers
                     extensions.Add(serExt + comExt);
                 }
             }
-            TextExtensions.Each(i => extensions.Add(i));
+            foreach (var i in TextExtensions)
+                extensions.Add(i);
             Extensions = extensions.ToArray();
         }
 

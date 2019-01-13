@@ -49,7 +49,8 @@ namespace TWCore.Text
                         if (!quoted)
                         {
                             sb.AppendLine();
-                            Enumerable.Range(0, ++indent).Each(item => sb.Append(IndentString));
+                            foreach (var item in Enumerable.Range(0, ++indent))
+                                sb.Append(IndentString);
                         }
                         break;
                     case '}':
@@ -57,7 +58,8 @@ namespace TWCore.Text
                         if (!quoted)
                         {
                             sb.AppendLine();
-                            Enumerable.Range(0, --indent).Each(item => sb.Append(IndentString));
+                            foreach (var item in Enumerable.Range(0, --indent))
+                                sb.Append(IndentString);
                         }
                         sb.Append(ch);
                         break;
@@ -75,7 +77,8 @@ namespace TWCore.Text
                         if (!quoted)
                         {
                             sb.AppendLine();
-                            Enumerable.Range(0, indent).Each(item => sb.Append(IndentString));
+                            foreach (var item in Enumerable.Range(0, indent))
+                                sb.Append(IndentString);
                         }
                         break;
                     case ':':

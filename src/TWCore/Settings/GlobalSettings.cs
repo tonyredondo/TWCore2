@@ -67,12 +67,20 @@ namespace TWCore.Settings
                 if (Applications.TryGetByPartialKey(appName, out var appSetting))
                 {
                     var items = appSetting.GetItems(environmentName, machineName);
-                    items?.Each(i => results.Add(i));
+                    if (items != null)
+                    {
+                        foreach (var i in items)
+                            results.Add(i);
+                    }
                 }
                 else
                     Core.Log.Warning("The Settings for ApplicationName = {0} cannot be found.", applicationName);
             }
-            globals?.Each(i => results.Add(i));
+            if (globals != null)
+            {
+                foreach (var i in globals)
+                    results.Add(i);
+            }
             return results;
         }
     }

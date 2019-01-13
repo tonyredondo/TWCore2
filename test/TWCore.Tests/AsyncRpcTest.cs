@@ -63,7 +63,6 @@ namespace TWCore.Tests
                 perItemMs = watch.GlobalElapsedMilliseconds / 100000;
             }
             Core.Log.InfoBasic($"GetSampleAsync per item: {perItemMs}ms");
-
             Console.ReadLine();
 
             Core.Log.InfoBasic("DelayTestAsync");
@@ -72,10 +71,20 @@ namespace TWCore.Tests
             var sample = client.GetSample();
             Core.Log.InfoBasic("GetSample as Async");
             var sampleSimAsync = ((dynamic) hClient).GetSample2Async().Result;
+            Console.ReadLine();
 
             var pClient = await rpcClient.CreateProxyAsync<SampleProxy>().ConfigureAwait(false);
-            Core.Log.InfoBasic("GetSampleAsync");
-            var sampleTsk2 = await pClient.GetSampleAsync().ConfigureAwait(false);
+
+            using (var watch = Watch.Create("GetSampleAsync"))
+            {
+                Sample res;
+                for (var i = 0; i < 100000; i++)
+                    res = await pClient.GetSampleAsync().ConfigureAwait(false);
+                perItemMs = watch.GlobalElapsedMilliseconds / 100000;
+            }
+            Core.Log.InfoBasic($"GetSampleAsync per item: {perItemMs}ms");
+            Console.ReadLine();
+
             Core.Log.InfoBasic("DelayTestAsync");
             await pClient.DelayTestAsync().ConfigureAwait(false);
             Core.Log.InfoBasic("GetSample");
@@ -132,10 +141,9 @@ namespace TWCore.Tests
             };
 
             /// <inheritdoc />
-            public async Task<Sample> GetSampleAsync()
+            public Task<Sample> GetSampleAsync()
             {
-                //await Task.Yield();
-                return sampleValue;
+                return Task.FromResult(sampleValue);
             }
             public Task DelayTestAsync()
             {

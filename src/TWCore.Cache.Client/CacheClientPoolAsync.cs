@@ -150,9 +150,18 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.ExistKeyAsync(arg1), r => r).ConfigureAwait(false);
+                var res = await _pool.ReadAsync(key, StorageProcess, SuccessCondition).ConfigureAwait(false);
                 _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
                 return res.Item1;
+            }
+
+            Task<bool> StorageProcess(PoolAsyncItem item, string arg1)
+            {
+                return item.Storage.ExistKeyAsync(arg1);
+            }
+            bool SuccessCondition(bool response)
+            {
+                return response;
             }
         }
         /// <inheritdoc />
@@ -220,9 +229,18 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetCreationDateAsync(arg1), r => r != null).ConfigureAwait(false);
+                var res = await _pool.ReadAsync(key, StorageProcess, SuccessCondition).ConfigureAwait(false);
                 _counters.IncrementGetCreationDate(w.GlobalElapsedMilliseconds);
                 return res.Item1;
+            }
+
+            Task<DateTime?> StorageProcess(PoolAsyncItem item, string arg1)
+            {
+                return item.Storage.GetCreationDateAsync(arg1);
+            }
+            bool SuccessCondition(DateTime? response)
+            {
+                return response.HasValue;
             }
         }
         /// <inheritdoc />
@@ -236,9 +254,18 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetExpirationDateAsync(arg1), r => r != null).ConfigureAwait(false);
+                var res = await _pool.ReadAsync(key, StorageProcess, SuccessCondition).ConfigureAwait(false);
                 _counters.IncrementGetExpirationDate(w.GlobalElapsedMilliseconds);
                 return res.Item1;
+            }
+
+            Task<DateTime?> StorageProcess(PoolAsyncItem item, string arg1)
+            {
+                return item.Storage.GetExpirationDateAsync(arg1);
+            }
+            bool SuccessCondition(DateTime? response)
+            {
+                return response.HasValue;
             }
         }
         #endregion

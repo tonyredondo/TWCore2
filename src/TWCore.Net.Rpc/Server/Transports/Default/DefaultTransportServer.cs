@@ -187,7 +187,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             lock (_locker)
             {
                 var tmpSessions = _sessions.ToArray();
-                tmpSessions.Each(i => i.Dispose());
+                foreach (var i in tmpSessions)
+                    i.Dispose();
                 _sessions.Clear();
             }
             Core.Log.LibVerbose("Transport Listener Stopped");

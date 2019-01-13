@@ -802,7 +802,7 @@ namespace TWCore
             var lastArray = lastEnumerable as TItem[] ?? lastEnumerable.ToArray();
             if (lastArray.Any())
             {
-                lastArray.Each(item =>
+                foreach (var item in lastArray)
                 {
                     var keyValue = keySelector(item);
                     var oItem = lst.FirstOrDefault((o, iKeyValue, iKeySelector) => Equals(iKeyValue, iKeySelector(o)), keyValue, keySelector);
@@ -814,7 +814,7 @@ namespace TWCore
                         var rItem = finalItemFunc(item, oItem);
                         lst.Add(rItem);
                     }
-                });
+                };
             }
             return lst;
         }

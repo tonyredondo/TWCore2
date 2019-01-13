@@ -792,7 +792,11 @@ namespace TWCore
         public static void RebindSettings()
         {
             GlobalSettings?.ReloadSettings();
-            SettingsCache?.Values?.Each(v => v.ReloadSettings());
+            if (SettingsCache?.Values != null)
+            {
+                foreach (var v in SettingsCache.Values)
+                    v.ReloadSettings();
+            }
         }
         #endregion
 

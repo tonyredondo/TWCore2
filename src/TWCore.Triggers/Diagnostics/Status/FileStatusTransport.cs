@@ -71,7 +71,11 @@ namespace TWCore.Diagnostics.Status.Transports
         /// <param name="triggers">Triggers</param>
         public FileStatusTransport(params TriggerBase[] triggers)
         {
-            triggers?.Each(AddTrigger);
+            if (triggers != null)
+            {
+                foreach (var item in triggers)
+                    AddTrigger(item);
+            }
             if (!string.IsNullOrWhiteSpace(Path))
                 _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS.FILE", "This is the File Log base path", new SerializedObject(SPath.GetFullPath(Path)));
         }

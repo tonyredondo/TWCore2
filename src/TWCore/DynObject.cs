@@ -60,8 +60,10 @@ namespace TWCore
         {
             var type = BaseObject.GetType();
             var lstMembers = new List<string>();
-            type.GetRuntimeProperties().Each(i => lstMembers.Add(i.Name));
-            type.GetRuntimeMethods().Each(i => lstMembers.Add(i.Name));
+            foreach (var i in type.GetRuntimeProperties())
+                lstMembers.Add(i.Name);
+            foreach (var i in type.GetRuntimeMethods())
+                lstMembers.Add(i.Name);
             return lstMembers;
         }
         /// <inheritdoc />

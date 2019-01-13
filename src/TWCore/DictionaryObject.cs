@@ -95,11 +95,12 @@ namespace TWCore
         {
             if (element.HasAttributes)
             {
-                element.Attributes().Each(attr => currentDictionary[attr.Name.LocalName] = attr.Value);
+                foreach (var attr in element.Attributes())
+                    currentDictionary[attr.Name.LocalName] = attr.Value;
             }
             if (element.HasElements)
             {
-                element.Elements().Each(elm =>
+                foreach (var elm in element.Elements())
                 {
                     if (!elm.HasElements && !elm.HasAttributes)
                     {
@@ -115,7 +116,7 @@ namespace TWCore
                         lst.Add(nD);
                         Extract(elm, nD);
                     }
-                });
+                };
                 var keys = currentDictionary.Keys.ToList();
                 foreach (var key in keys)
                 {

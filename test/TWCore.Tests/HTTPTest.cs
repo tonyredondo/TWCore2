@@ -16,9 +16,9 @@ namespace TWCore.Tests
             info.Service = new TaskService(async token =>
             {
                 var server = new SimpleHttpServer()
-                    .AddGetHandler("/", context =>
+                    .AddGetHandler("/", async context =>
                     {
-                        context.Response.WriteLine("Hola Mundo");
+                        await context.Response.WriteLineAsync("Hola Mundo").ConfigureAwait(false);
                     })
                     .AddHttpControllerRoutes<MyController>();
                 await server.StartAsync(8085).ConfigureAwait(false);

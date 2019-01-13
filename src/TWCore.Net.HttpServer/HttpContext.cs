@@ -18,6 +18,7 @@ using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
@@ -26,15 +27,14 @@ namespace TWCore.Net.HttpServer
     /// <summary>
     /// Delegate for the request handler
     /// </summary>
-    /// <param name="context"></param>
-    public delegate void OnRequestHandler(HttpContext context);
+    /// <param name="context">Http context</param>
+    public delegate Task RequestHandlerAsync(HttpContext context);
     /// <summary>
     /// Delegate for the unhandled request events
     /// </summary>
-    /// <param name="context"></param>
-    /// <param name="handled"></param>
+    /// <param name="context">Http context</param>
     /// <param name="cancellationToken">Connection cancellation token</param>
-    public delegate void OnRequestDelegate(HttpContext context, ref bool handled, CancellationToken cancellationToken);
+    public delegate Task<bool> RequestDelegateAsync(HttpContext context, CancellationToken cancellationToken);
 
     /// <summary>
     /// Http context
@@ -70,11 +70,11 @@ namespace TWCore.Net.HttpServer
         /// </summary>
         /// <returns>true if the request container was loaded successfully; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal bool LoadRequest()
+        internal async Task<bool> LoadRequestAsync()
         {
             try
             {
-                return Request.Process();
+                return await Request.ProcessAsync().ConfigureAwait(false);
             }
             catch(System.IO.IOException)
             {
@@ -90,10 +90,10 @@ namespace TWCore.Net.HttpServer
         /// Close Current Context
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void CloseContext()
+        internal async Task CloseContextAsync()
         {
             Response.EventStream.Write(Array.Empty<byte>(), 0, 0);
-            Response.EventStream.Flush();
+            await Response.EventStream.FlushAsync().ConfigureAwait(false);
             Response.EventStream.Dispose();
         }
     }

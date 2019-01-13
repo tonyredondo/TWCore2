@@ -19,6 +19,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 
@@ -107,19 +108,19 @@ namespace TWCore.IO
         /// <summary>
         /// Before start to read from the stream event
         /// </summary>
-        public event EventHandler BeforeRead;
+        public event AsyncEventHandler BeforeRead;
         /// <summary>
         /// After the read from the stream was finished event
         /// </summary>
-        public event EventHandler AfterRead;
+        public event AsyncEventHandler AfterRead;
         /// <summary>
         /// Before start to write on the stream event
         /// </summary>
-        public event EventHandler BeforeWrite;
+        public event AsyncEventHandler BeforeWrite;
         /// <summary>
         /// After finished the writing on the stream event
         /// </summary>
-        public event EventHandler AfterWrite;
+        public event AsyncEventHandler AfterWrite;
         #endregion
 
         #region .ctor
@@ -141,7 +142,17 @@ namespace TWCore.IO
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override void Flush() => Try.Do(_baseStream.Flush);
+        public override void Flush()
+        {
+            try
+            {
+                _baseStream.Flush();
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// Sets the position within the current stream.
@@ -150,14 +161,20 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            return _baseStream.Seek(offset, origin);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override void SetLength(long value) => _baseStream.SetLength(value);
+        public override void SetLength(long value)
+        {
+            _baseStream.SetLength(value);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
@@ -169,9 +186,9 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            BeforeRead?.Invoke(this, null);
+            BeforeRead?.Invoke(this, null).WaitAsync();
 			var res = _baseStream.Read(buffer, offset, count);
-            AfterRead?.Invoke(this, null);
+            AfterRead?.Invoke(this, null).WaitAsync();
             return res;
         }
         /// <inheritdoc />
@@ -184,9 +201,9 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            BeforeWrite?.Invoke(this, null);
+            BeforeWrite?.Invoke(this, null).WaitAsync();
 			_baseStream.Write(buffer, offset, count);
-            AfterWrite?.Invoke(this, null);
+            AfterWrite?.Invoke(this, null).WaitAsync();
         }
         /// <inheritdoc />
         /// <summary>
@@ -197,8 +214,14 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous copy operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) 
-		=> _baseStream.CopyToAsync(destination, bufferSize, cancellationToken);
+        public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+        {
+            if (BeforeRead != null)
+                await BeforeRead(this, null).ConfigureAwait(false);
+            await _baseStream.CopyToAsync(destination, bufferSize, cancellationToken).ConfigureAwait(false);
+            if (AfterRead != null)
+                await AfterRead(this, null).ConfigureAwait(false);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Releases the unmanaged resources used by the System.IO.Stream and optionally releases the managed resources.
@@ -213,7 +236,17 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous flush operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override Task FlushAsync(CancellationToken cancellationToken) => _baseStream.FlushAsync(cancellationToken);
+        public override async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// Asynchronously reads a sequence of bytes from the current stream, advances the position within the stream by the number of bytes read, and monitors cancellation requests.
@@ -224,7 +257,15 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous read operation. The value of the TResult parameter contains the total number of bytes read into the buffer.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => _baseStream.ReadAsync(buffer, offset, count, cancellationToken);
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            if (BeforeRead != null)
+                await BeforeRead(this, null).ConfigureAwait(false);
+            var val = await _baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            if (AfterRead != null)
+                await AfterRead(this, null).ConfigureAwait(false);
+            return val;
+        }
         /// <inheritdoc />
         /// <summary>
         /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
@@ -242,7 +283,14 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous write operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => _baseStream.WriteAsync(buffer, offset, count, cancellationToken);
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            if (BeforeWrite != null)
+                await BeforeWrite(this, null).ConfigureAwait(false);
+            await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            if (AfterWrite != null)
+                await AfterWrite(this, null).ConfigureAwait(false);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.

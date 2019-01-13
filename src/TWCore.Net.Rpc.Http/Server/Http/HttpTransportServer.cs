@@ -91,7 +91,7 @@ namespace TWCore.Net.RPC.Server.Transports
         public HttpTransportServer()
         {
             _httpServer = new SimpleHttpServer();
-            _httpServer.OnBeginRequest += HttpServer_OnBeginRequest;
+            _httpServer.BeginRequest += HttpServer_BeginRequest;
 			Serializer = new JsonTextSerializer();
             Core.Status.Attach(collection =>
             {
@@ -166,10 +166,9 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Handles an OnBeginRequest event
         /// </summary>
         /// <param name="context">Http context</param>
-        /// <param name="handled">Get if the request was handled</param>
         /// <param name="cancellationToken">Connection CancellationToken</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void HttpServer_OnBeginRequest(HttpContext context, ref bool handled, CancellationToken cancellationToken)
+        private async Task<bool> HttpServer_BeginRequest(HttpContext context, CancellationToken cancellationToken)
         {
             var request = context.Request;
             var response = context.Response;
@@ -192,16 +191,16 @@ namespace TWCore.Net.RPC.Server.Transports
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
                 var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
                 var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
-                OnMethodCallAsync.InvokeAsync(this, eArgs).WaitAsync();
+                await OnMethodCallAsync.InvokeAsync(this, eArgs).ConfigureAwait(false);
                 if (eArgs.Response != null)
                 {
                     responseBuffer = Serializer.Serialize(eArgs.Response);
                     OnResponseSent?.Invoke(this, eArgs.Response);
                 }
             }
-            responseBuffer.CopyTo(response.OutputStream);
+            await responseBuffer.CopyToAsync(response.OutputStream).ConfigureAwait(false);
             Counters.IncrementBytesSent(responseBuffer.Count);
-            handled = true;
+            return true;
         }
         #endregion
     }

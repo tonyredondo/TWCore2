@@ -46,7 +46,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Delegate of the request handler for this url
         /// </summary>
-        public OnRequestHandler Handler { get; private set; }
+        public RequestHandlerAsync Handler { get; private set; }
         #endregion
 
         #region .ctor
@@ -57,7 +57,7 @@ namespace TWCore.Net.HttpServer
         /// <param name="url">Http route url</param>
         /// <param name="handler">Delegate of the request handler for this url</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RouteHandler(HttpMethod method, string url, OnRequestHandler handler)
+        public RouteHandler(HttpMethod method, string url, RequestHandlerAsync handler)
         {
             Method = method;
             Url = url;

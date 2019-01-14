@@ -119,3 +119,4 @@ cachedViews/*
 .idea/
 *.userprefs
 /tools/TWCore.Object.Api/assemblies
+/test/TWCore.Tests.Benchmark/BenchmarkDotNet.Artifacts/results

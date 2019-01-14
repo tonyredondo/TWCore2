@@ -113,7 +113,28 @@ namespace TWCore.Tests.Benchmark
             }
             return data;
         }
-        
+
+
+        [Benchmark]
+        public void SerializerToStream()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                _nBinary.Serialize(_data, _memStream);
+                _memStream.Position = 0;
+            }
+        }
+        [Benchmark]
+        public object DeserializerFromStream()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+            {
+                _memStream.Position = 0;
+                data = _nBinary.Deserialize<object>(_memStream);
+            }
+            return data;
+        }
     }
     
     [Serializable]

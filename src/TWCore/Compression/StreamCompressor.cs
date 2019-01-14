@@ -28,6 +28,8 @@ namespace TWCore.Compression
     /// </summary>
     public abstract class StreamCompressor : ICompressor
     {
+        private static readonly ReferencePool<RecycleMemoryStream> _recMemStream = ReferencePool<RecycleMemoryStream>.Shared;
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -83,12 +85,13 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual MultiArray<byte> Compress(MultiArray<byte> source)
         {
-            using (var msDes = new RecycleMemoryStream())
-            {
-                using (var msOrg = source.AsReadOnlyStream())
-                    Compress(msOrg, msDes);
-                return msDes.GetMultiArray();
-            }
+            var msDes = _recMemStream.New();
+            using (var msOrg = source.AsReadOnlyStream())
+                Compress(msOrg, msDes);
+            var value = msDes.GetMultiArray();
+            msDes.Reset();
+            _recMemStream.Store(msDes);
+            return value;
         }
         /// <inheritdoc />
         /// <summary>
@@ -99,11 +102,12 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task<MultiArray<byte>> CompressAsync(MultiArray<byte> source)
         {
-            using (var msDes = new RecycleMemoryStream())
-            {
-                await CompressAsync(source.AsReadOnlyStream(), msDes).ConfigureAwait(false);
-                return msDes.GetMultiArray();
-            }
+            var msDes = _recMemStream.New();
+            await CompressAsync(source.AsReadOnlyStream(), msDes).ConfigureAwait(false);
+            var value = msDes.GetMultiArray();
+            msDes.Reset();
+            _recMemStream.Store(msDes);
+            return value;
         }
         #endregion
 
@@ -148,12 +152,13 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual MultiArray<byte> Decompress(MultiArray<byte> source)
         {
-            using (var msDes = new RecycleMemoryStream())
-            {
-                using (var msOrg = source.AsReadOnlyStream())
-                    Decompress(msOrg, msDes);
-                return msDes.GetMultiArray();
-            }
+            var msDes = _recMemStream.New();
+            using (var msOrg = source.AsReadOnlyStream())
+                Decompress(msOrg, msDes);
+            var value = msDes.GetMultiArray();
+            msDes.Reset();
+            _recMemStream.Store(msDes);
+            return value;
         }
         /// <inheritdoc />
         /// <summary>
@@ -164,12 +169,13 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task<MultiArray<byte>> DecompressAsync(MultiArray<byte> source)
         {
-            using (var msDes = new RecycleMemoryStream())
-            {
-                using (var msOrg = source.AsReadOnlyStream())
-                    await DecompressAsync(msOrg, msDes).ConfigureAwait(false);
-                return msDes.GetMultiArray();
-            }
+            var msDes = _recMemStream.New();
+            using (var msOrg = source.AsReadOnlyStream())
+                await DecompressAsync(msOrg, msDes).ConfigureAwait(false);
+            var value = msDes.GetMultiArray();
+            msDes.Reset();
+            _recMemStream.Store(msDes);
+            return value;
         }
         #endregion
     }

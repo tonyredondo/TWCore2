@@ -36,6 +36,7 @@ namespace TWCore.Serialization
     public abstract class TextSerializer : ITextSerializer, ICoreStart
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
+        private static readonly ReferencePool<RecycleMemoryStream> _recMemStream = ReferencePool<RecycleMemoryStream>.Shared;
 
         #region Properties
         /// <inheritdoc />
@@ -111,12 +112,12 @@ namespace TWCore.Serialization
                 OnSerialize(stream, item, itemType);
                 return;
             }
-            using (var ms = new RecycleMemoryStream())
-            {
-                OnSerialize(ms, item, itemType);
-                ms.Position = 0;
-                Compressor.Compress(ms, stream);
-            }
+            var ms = _recMemStream.New();
+            OnSerialize(ms, item, itemType);
+            ms.Position = 0;
+            Compressor.Compress(ms, stream);
+            ms.Reset();
+            _recMemStream.Store(ms);
         }
         /// <inheritdoc />
         /// <summary>
@@ -132,12 +133,13 @@ namespace TWCore.Serialization
             {
                 return OnDeserialize(stream, itemType);
             }
-            using (var ms = new RecycleMemoryStream())
-            {
-                Compressor.Decompress(stream, ms);
-                ms.Position = 0;
-                return OnDeserialize(ms, itemType);
-            }
+            var ms = _recMemStream.New();
+            Compressor.Decompress(stream, ms);
+            ms.Position = 0;
+            var value = OnDeserialize(ms, itemType);
+            ms.Reset();
+            _recMemStream.Store(ms);
+            return value;
         }
 
         /// <inheritdoc />
@@ -150,21 +152,25 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<byte> Serialize(object item, Type itemType)
         {
-            using (var stream = new RecycleMemoryStream())
+            var stream = _recMemStream.New();
+            if (Compressor is null)
             {
-                if (Compressor is null)
-                {
-                    OnSerialize(stream, item, itemType);
-                    return stream.GetMultiArray();
-                }
-                using (var ms = new RecycleMemoryStream())
-                {
-                    OnSerialize(ms, item, itemType);
-                    ms.Position = 0;
-                    Compressor.Compress(ms, stream);
-                }
-                return stream.GetMultiArray();
+                OnSerialize(stream, item, itemType);
+                var value = stream.GetMultiArray();
+                stream.Reset();
+                _recMemStream.Store(stream);
+                return value;
             }
+            var ms = _recMemStream.New();
+            OnSerialize(ms, item, itemType);
+            ms.Position = 0;
+            Compressor.Compress(ms, stream);
+            ms.Reset();
+            _recMemStream.Store(ms);
+            var value2 = stream.GetMultiArray();
+            stream.Reset();
+            _recMemStream.Store(stream);
+            return value2;
         }
         /// <inheritdoc />
         /// <summary>
@@ -182,12 +188,13 @@ namespace TWCore.Serialization
                 {
                     return OnDeserialize(stream, valueType);
                 }
-                using (var ms = new RecycleMemoryStream())
-                {
-                    Compressor.Decompress(stream, ms);
-                    ms.Position = 0;
-                    return OnDeserialize(ms, valueType);
-                }
+                var ms = _recMemStream.New();
+                Compressor.Decompress(stream, ms);
+                ms.Position = 0;
+                var objValue = OnDeserialize(ms, valueType);
+                ms.Reset();
+                _recMemStream.Store(ms);
+                return objValue;
             }
         }
 
@@ -201,11 +208,12 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string SerializeToString(object item, Type itemType)
         {
-            using (var ms = new RecycleMemoryStream())
-            {
-                OnSerialize(ms, item, itemType);
-                return Encoding.GetString(ms.ToArray());
-            }
+            var ms = _recMemStream.New();
+            OnSerialize(ms, item, itemType);
+            var value = Encoding.GetString(ms.ToArray());
+            ms.Reset();
+            _recMemStream.Store(ms);
+            return value;
         }
         /// <inheritdoc />
         /// <summary>

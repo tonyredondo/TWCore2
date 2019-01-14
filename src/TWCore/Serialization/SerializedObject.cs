@@ -36,8 +36,8 @@ namespace TWCore.Serialization
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
         private static readonly ConcurrentDictionary<string, ISerializer> SerializerCache = new ConcurrentDictionary<string, ISerializer>();
-        private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(4096);
-        
+        private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(2048);
+
         /// <summary>
         /// Serialized Object File Extension
         /// </summary>
@@ -108,9 +108,10 @@ namespace TWCore.Serialization
             {
                 var serMimeType = serializer.MimeTypes[0];
                 var serCompressor = serializer.Compressor?.EncodingType;
-                SerializerMimeType = serMimeType;
                 if (serCompressor != null)
-                    SerializerMimeType += ":" + serCompressor;
+                    SerializerMimeType = serMimeType + ":" + serCompressor;
+                else
+                    SerializerMimeType = serMimeType;
                 var cSerializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
                 Data = cSerializer.Serialize(data, type);
             }
@@ -174,7 +175,7 @@ namespace TWCore.Serialization
                 if (type == typeof(MultiArray<byte>))
                     return Data;
                 return null;
-            }            
+            }
             var serializer = SerializerCache.GetOrAdd(SerializerMimeType, smt => CreateSerializer(smt));
             var value = serializer.Deserialize(Data, type ?? typeof(object));
             return value;
@@ -186,11 +187,12 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<byte> ToMultiArray()
         {
-            using (var ms = new RecycleMemoryStream())
-            {
-                CopyTo(ms);
-                return ms.GetMultiArray();
-            }
+            var ms = ReferencePool<RecycleMemoryStream>.Shared.New();
+            CopyTo(ms);
+            var value = ms.GetMultiArray();
+            ms.Reset();
+            ReferencePool<RecycleMemoryStream>.Shared.Store(ms);
+            return value;
         }
         /// <summary>
         /// Get SubArray representation of the SerializedObject instance
@@ -613,7 +615,7 @@ namespace TWCore.Serialization
         {
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
-            
+
             return FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
             {
                 using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -621,7 +623,7 @@ namespace TWCore.Serialization
             }, filepath);
         }
         #endregion
-        
+
         #region Overrides
         /// <summary>
         /// Gets the SerializedObject hash code

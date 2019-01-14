@@ -70,7 +70,7 @@ namespace TWCore
         /// <param name="dropAction">Drop action over the drop item</param>
         /// <param name="dropMaxSizeThreashold">Drop max size threshold</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReferencePool(int initialBufferSize = 0, Action<T> resetAction = null, Action<T> onetimeInitAction = null, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null, int dropMaxSizeThreashold = 5)
+        public ReferencePool(int initialBufferSize = 0, Action<T> resetAction = null, Action<T> onetimeInitAction = null, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 120, Action<T> dropAction = null, int dropMaxSizeThreashold = 15)
         {
             _objectStack = new ConcurrentStack<T>();
             _resetAction = resetAction;

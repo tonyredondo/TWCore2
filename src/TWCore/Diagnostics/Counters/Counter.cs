@@ -105,7 +105,7 @@ namespace TWCore.Diagnostics.Counters
                     }
                 }
             }
-            var newItem = new CounterItemValue<T>(now, value);
+            var newItem = CounterItemValue<T>.Retrieve(now, value);
             _lastValue = newItem;
             _counterValues.Add(newItem);
         }
@@ -131,7 +131,7 @@ namespace TWCore.Diagnostics.Counters
                 lstItems.Add(item);
                 itemIdx++;
             }
-            return new CounterItem<T>(Category, Name, Type, Level, Kind, Unit, lstItems);
+            return CounterItem<T>.Retrieve(Category, Name, Type, Level, Kind, Unit, lstItems);
         }
 
         /// <summary>

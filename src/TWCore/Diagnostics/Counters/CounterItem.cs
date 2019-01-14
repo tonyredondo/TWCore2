@@ -80,6 +80,8 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CounterItem() { }
+
+
         /// <summary>
         /// Counter item
         /// </summary>
@@ -91,17 +93,37 @@ namespace TWCore.Diagnostics.Counters
         /// <param name="unit">Counter unit</param>
         /// <param name="values">Counter values</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CounterItem(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit, List<CounterItemValue<T>> values)
+        public static CounterItem<T> Retrieve(string category, string name, CounterType type, CounterLevel level, CounterKind kind, CounterUnit unit, List<CounterItemValue<T>> values)
         {
-            Environment = Core.EnvironmentName;
-            Application = Core.ApplicationName;
-            Category = category;
-            Name = name;
-            Type = type;
-            Level = level;
-            Kind = kind;
-            Unit = unit;
-            Values = values;
+            var item = ReferencePool<CounterItem<T>>.Shared.New();
+            item.Environment = Core.EnvironmentName;
+            item.Application = Core.ApplicationName;
+            item.Category = category;
+            item.Name = name;
+            item.Type = type;
+            item.Level = level;
+            item.Kind = kind;
+            item.Unit = unit;
+            item.Values = values;
+            return item;
+        }
+        /// <summary>
+        /// Store the specified item.
+        /// </summary>
+        /// <param name="item">Item.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(CounterItem<T> item)
+        {
+            item.Environment = null;
+            item.Application = null;
+            item.Category = null;
+            item.Name = null;
+            item.Type = CounterType.Cumulative;
+            item.Level = CounterLevel.User;
+            item.Kind = CounterKind.Unknown;
+            item.Unit = CounterUnit.Unknown;
+            item.Values = null;
+            ReferencePool<CounterItem<T>>.Shared.Store(item);
         }
     }
 	/// <summary>
@@ -118,20 +140,35 @@ namespace TWCore.Diagnostics.Counters
 		/// </summary>
 		public T Value { get; set; }
 
-		/// <summary>
-		/// Counter item
-		/// </summary>
-		public CounterItemValue() { }
         /// <summary>
         /// Counter item
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public CounterItemValue() { }
+
+        /// <summary>
+        /// Retrieve Counter item
         /// </summary>
         /// <param name="timestamp">Counter value timestamp</param>
         /// <param name="value">Counter value</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CounterItemValue(DateTime timestamp, T value)
+        public static CounterItemValue<T> Retrieve(DateTime timestamp, T value)
         {
-			Timestamp = timestamp;
-			Value = value;
-		}
-	}
+            var item = ReferencePool<CounterItemValue<T>>.Shared.New();
+            item.Timestamp = timestamp;
+            item.Value = value;
+            return item;
+        }
+        /// <summary>
+        /// Store the specified item.
+        /// </summary>
+        /// <param name="item">Item.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(CounterItemValue<T> item)
+        {
+            item.Timestamp = DateTime.MinValue;
+            item.Value = default;
+            ReferencePool<CounterItemValue<T>>.Shared.Store(item);
+        }
+    }
 }

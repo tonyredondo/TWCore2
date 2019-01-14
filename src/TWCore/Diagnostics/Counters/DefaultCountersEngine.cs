@@ -34,6 +34,7 @@ namespace TWCore.Diagnostics.Counters
     {
         private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private readonly List<(ICounterReader, ICounterItem)> _counterReaderItemList = new List<(ICounterReader, ICounterItem)>();
         private readonly List<ICounterItem> _counterList = new List<ICounterItem>();
         private ICountersStorage[] _storages = null;
         private Timer _timer = null;
@@ -255,14 +256,21 @@ namespace TWCore.Diagnostics.Counters
                 {
                     var value = i.Take(Settings.MaximumBatchPerCounter);
                     if (!(value is null))
+                    {
                         _counterList.Add(value);
+                        _counterReaderItemList.Add((i, value));
+                    }
                 }
                 if (_counterList.Count > 0)
                 {
                     foreach (var storage in storages)
                         storage.Store(_counterList);
+
+                    foreach (var item in _counterReaderItemList)
+                        item.Item1.ReturnToPool(item.Item2);
                 }
                 _counterList.Clear();
+                _counterReaderItemList.Clear();
             }
             catch (Exception ex)
             {

@@ -133,6 +133,20 @@ namespace TWCore.Diagnostics.Counters
             }
             return CounterItem<T>.Retrieve(Category, Name, Type, Level, Kind, Unit, lstItems);
         }
+        /// <summary>
+        /// Return the ICounterItem to the pool
+        /// </summary>
+        /// <param name="item">Item value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ReturnToPool(ICounterItem item)
+        {
+            if (item is CounterItem<T> value)
+            {
+                foreach(var lVal in value.Values)
+                    CounterItemValue<T>.Store(lVal);
+                CounterItem<T>.Store(value);
+            }
+        }
 
         /// <summary>
         /// Merge values

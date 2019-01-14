@@ -17,6 +17,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -33,6 +34,7 @@ namespace TWCore.Diagnostics.Counters
     {
         private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private readonly List<ICounterItem> _counterList = new List<ICounterItem>();
         private ICountersStorage[] _storages = null;
         private Timer _timer = null;
         private bool _inProcess = false;
@@ -249,15 +251,18 @@ namespace TWCore.Diagnostics.Counters
             _inProcess = true;
             try
             {
-                var counters = _counterReaders
-                    .Select(i => i.Take(Settings.MaximumBatchPerCounter))
-                    .RemoveNulls()
-                    .ToList();
-                if (counters.Count > 0)
+                foreach(var i in _counterReaders)
+                {
+                    var value = i.Take(Settings.MaximumBatchPerCounter);
+                    if (!(value is null))
+                        _counterList.Add(value);
+                }
+                if (_counterList.Count > 0)
                 {
                     foreach (var storage in storages)
-                        storage.Store(counters);
+                        storage.Store(_counterList);
                 }
+                _counterList.Clear();
             }
             catch (Exception ex)
             {

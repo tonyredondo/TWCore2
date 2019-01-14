@@ -40,7 +40,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
     /// <param name="rpcServerClient">RpcServerClient instance</param>
     /// <param name="sessionMessage">Session request message</param>
     /// <returns>True if the session is accepted; otherwise, false.</returns>
-    public delegate Task<bool> RpcServerClientSessionEvent(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage);
+    public delegate ValueTask<bool> RpcServerClientSessionEvent(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage);
     /// <summary>
     /// Rpc server client session event
     /// </summary>
@@ -227,13 +227,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                                 ? Guid.NewGuid()
                                 : sessionMessage.SessionId;
                             _onSession = true;
-                            await SendRpcMessageAsync(new RPCSessionResponseMessage
-                            {
-                                RequestMessageId = sessionMessage.MessageId,
-                                SessionId = _sessionId,
-                                Succeed = true
-                            }).ConfigureAwait(false);
+                            var msg = RPCSessionResponseMessage.Retrieve(sessionMessage.MessageId, true, _sessionId);
+                            await SendRpcMessageAsync(msg).ConfigureAwait(false);
                             OnConnect?.Invoke(this, EventArgs.Empty);
+                            RPCSessionResponseMessage.Store(msg);
                         }
                         else
                             Dispose();

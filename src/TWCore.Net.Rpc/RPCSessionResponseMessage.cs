@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -43,5 +44,38 @@ namespace TWCore.Net.RPC
         /// </summary>
         [DataMember]
         public Guid SessionId { get; set; }
+
+
+        #region Statics
+        /// <summary>
+        ///  Retrieves a Session Response Message from the Pool
+        /// </summary>
+        /// <param name="requestMessageId">Request message id</param>
+        /// <param name="succeed">Succeed value</param>
+        /// <param name="sessionId">Session id</param>
+        /// <returns>Session Response message value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static RPCSessionResponseMessage Retrieve(Guid requestMessageId, bool succeed, Guid sessionId)
+        {
+            var value = ReferencePool<RPCSessionResponseMessage>.Shared.New();
+            value.RequestMessageId = requestMessageId;
+            value.Succeed = succeed;
+            value.SessionId = sessionId;
+            return value;
+        }
+        /// <summary>
+        /// Stores a Session Response Message in the Pool.
+        /// </summary>
+        /// <param name="value">Session Response message value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(RPCSessionResponseMessage value)
+        {
+            if (value is null) return;
+            value.RequestMessageId = Guid.Empty;
+            value.Succeed = false;
+            value.SessionId = Guid.Empty;
+            ReferencePool<RPCSessionResponseMessage>.Shared.Store(value);
+        }
+        #endregion
     }
 }

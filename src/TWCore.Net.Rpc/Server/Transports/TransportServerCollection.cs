@@ -141,11 +141,11 @@ namespace TWCore.Net.RPC.Server.Transports
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnClientConnect(object sender, ClientConnectEventArgs e)
-            => OnClientConnect?.InvokeAsync(sender, e);
+            => OnClientConnect?.Invoke(sender, e);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
-            => OnGetDescriptorsRequest?.InvokeAsync(sender, e);
+            => OnGetDescriptorsRequest?.Invoke(sender, e);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Task Item_OnMethodCallAsync(object sender, MethodEventArgs e)
@@ -155,7 +155,7 @@ namespace TWCore.Net.RPC.Server.Transports
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnResponseSent(object sender, RPCResponseMessage message)
-            => OnResponseSent?.InvokeAsync(sender, message);
+            => OnResponseSent?.Invoke(sender, message);
         #endregion
 
         #region Public Methods

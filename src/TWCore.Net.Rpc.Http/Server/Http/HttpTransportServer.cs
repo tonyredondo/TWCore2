@@ -175,28 +175,32 @@ namespace TWCore.Net.RPC.Server.Transports
             Core.Log.LibVerbose("Request received from {0}:{1} to {2} {3}", request.RemoteAddress, request.RemotePort, request.Method, request.RawUrl);
 
             var clientId = Guid.NewGuid();
-            OnClientConnect?.Invoke(this, new ClientConnectEventArgs(clientId));
+            var ccEvent = ClientConnectEventArgs.Retrieve(clientId);
+            OnClientConnect?.Invoke(this, ccEvent);
+            ClientConnectEventArgs.Store(ccEvent);
 
             context.Response.ContentType = Serializer.MimeTypes[0];
             var responseBuffer = default(MultiArray<byte>);
 
             if (context.Request.Method == HttpMethod.GET && EnableGetDescriptors && OnGetDescriptorsRequest != null)
             {
-                var eArgs = new ServerDescriptorsEventArgs();
+                var eArgs = ServerDescriptorsEventArgs.Retrieve();
                 OnGetDescriptorsRequest(this, eArgs);
                 responseBuffer = Serializer.Serialize(eArgs.Descriptors);
+                ServerDescriptorsEventArgs.Store(eArgs);
             }
             if (context.Request.Method == HttpMethod.POST && !(OnMethodCallAsync is null))
             {
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
                 var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
-                var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
+                var eArgs = MethodEventArgs.Retrieve(clientId, messageRq, cancellationToken);
                 await OnMethodCallAsync.InvokeAsync(this, eArgs).ConfigureAwait(false);
                 if (eArgs.Response != null)
                 {
                     responseBuffer = Serializer.Serialize(eArgs.Response);
                     OnResponseSent?.Invoke(this, eArgs.Response);
                 }
+                MethodEventArgs.Store(eArgs);
             }
             await responseBuffer.CopyToAsync(response.OutputStream).ConfigureAwait(false);
             Counters.IncrementBytesSent(responseBuffer.Count);

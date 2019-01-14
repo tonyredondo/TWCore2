@@ -184,21 +184,23 @@ namespace TWCore.Net.RPC.Server.Transports
                 case string strValue:
                     if (strValue == "GetDescription")
                     {
-                        var sDesc = new ServerDescriptorsEventArgs();
+                        var sDesc = ServerDescriptorsEventArgs.Retrieve();
                         if (OnGetDescriptorsRequest != null)
                         {
                             OnGetDescriptorsRequest(requestReceivedEventArgs.Request.CorrelationId, sDesc);
                             requestReceivedEventArgs.Response.Body = _queueServer.SenderSerializer.GetSerializedObject(sDesc.Descriptors);
                         }
+                        ServerDescriptorsEventArgs.Store(sDesc);
                     }
                     break;
                 case RPCRequestMessage rqMessage:
-                    var mEvent = new MethodEventArgs(requestReceivedEventArgs.Request.CorrelationId, rqMessage, requestReceivedEventArgs.ProcessResponseTimeoutCancellationToken);
+                    var mEvent = MethodEventArgs.Retrieve(requestReceivedEventArgs.Request.CorrelationId, rqMessage, requestReceivedEventArgs.ProcessResponseTimeoutCancellationToken);
                     if (!(OnMethodCallAsync is null))
                     {
                         await OnMethodCallAsync.InvokeAsync(this, mEvent).ConfigureAwait(false);
                         requestReceivedEventArgs.Response.Body = _queueServer.SenderSerializer.GetSerializedObject(mEvent.Response);
                     }
+                    MethodEventArgs.Store(mEvent);
                     break;
             }
         }

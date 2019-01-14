@@ -51,6 +51,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private CancellationToken _token;
         private Task _tskListener;
         private Action<object> _connectionReceivedAction;
+        private RpcServerClient[] _sessionsArray;
 
         #region Properties
         /// <inheritdoc />
@@ -64,10 +65,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// true if the transport server can send the services descriptors; otherwise, false
         /// </summary>
         [StatusProperty("Get Descriptors Enabled")]
-        public bool EnableGetDescriptors 
-        { 
+        public bool EnableGetDescriptors
+        {
             get => false;
-            set { } 
+            set { }
         }
         /// <inheritdoc />
         /// <summary>
@@ -112,10 +113,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _connectionReceivedAction = ConnectionReceived;
             Core.Status.Attach(collection =>
             {
-                lock (_locker)
-                {
-                    collection.Add("Sessions Count", _sessions.Count, true);
-                }
+                collection.Add("Sessions Count", _sessionsArray?.Length, true);
             });
         }
         /// <inheritdoc />
@@ -206,69 +204,55 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
+            var eventMessage = RPCEventMessage.Retrieve(serviceName, eventName, e);
             try
             {
-                var eventMessage = new RPCEventMessage {ServiceName = serviceName, EventName = eventName, EventArgs = e};
+                var sessions = _sessionsArray;
 
                 switch (eventAttribute.Scope)
                 {
                     case RPCMessageScope.Session:
-                        RpcServerClient client = null;
-                        lock (_locker)
+                        foreach (var s in sessions)
                         {
-                            foreach (var s in _sessions)
+                            if (s.OnSession && s.SessionId == clientId)
                             {
-                                if (s.OnSession && s.SessionId == clientId)
-                                {
-                                    client = s;
-                                    break;
-                                }
+                                await s.SendRpcMessageAsync(eventMessage).ConfigureAwait(false);
+                                Core.Log.LibVerbose("Sending event trigger to SessionId='{0}' on event '{1}'", clientId, eventName);
+                                break;
                             }
-                        }
-                        if (client != null)
-                        {
-                            await client.SendRpcMessageAsync(eventMessage).ConfigureAwait(false);
-                            Core.Log.LibVerbose($"Sending event trigger to SessionId='{clientId}' on event '{eventName}'");
                         }
                         break;
                     case RPCMessageScope.Hub:
                         var hubName = eventAttribute.HubName;
-                        var clients = new List<RpcServerClient>();
-                        lock (_locker)
+                        foreach (var s in sessions)
                         {
-                            foreach (var s in _sessions)
+                            if (s.OnSession && s.Hub == hubName)
                             {
-                                if (s.OnSession && s.Hub == hubName)
-                                    clients.Add(s);
+                                await s.SendRpcMessageAsync(eventMessage).ConfigureAwait(false);
+                                Core.Log.LibVerbose("Sending event trigger to Hub='{0}' on event '{1}'", hubName, eventName);
                             }
-                        }
-                        if (clients.Count > 0)
-                        {
-                            await Task.WhenAll(clients.Select((s, eMessage) => s.SendRpcMessageAsync(eMessage), eventMessage)).ConfigureAwait(false);
-                            Core.Log.LibVerbose($"Sending event trigger to Hub='{hubName}' on event '{eventName}'");
                         }
                         break;
                     case RPCMessageScope.Global:
-                        var gClients = new List<RpcServerClient>();
-                        lock (_locker)
+                        foreach (var s in sessions)
                         {
-                            foreach (var s in _sessions)
+                            if (s.OnSession)
                             {
-                                if (s.OnSession)
-                                    gClients.Add(s);
+                                await s.SendRpcMessageAsync(eventMessage).ConfigureAwait(false);
+                                Core.Log.LibVerbose("Sending event trigger to all sessions on event '{0}'", eventName);
                             }
-                        }
-                        if (gClients.Count > 0)
-                        {
-                            await Task.WhenAll(gClients.Select((s, eMessage) => s.SendRpcMessageAsync(eMessage), eventMessage)).ConfigureAwait(false);
-                            Core.Log.LibVerbose($"Sending event trigger to all sessions on event '{eventName}'");
+
                         }
                         break;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
+            }
+            finally
+            {
+                RPCEventMessage.Store(eventMessage);
             }
         }
         #endregion
@@ -280,16 +264,19 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             var tokenTask = _token.WhenCanceledAsync();
             var retries = 5;
+            var tskArray = new Task[2];
+            tskArray[0] = tokenTask;
             while (!_token.IsCancellationRequested)
             {
                 try
                 {
                     var listenerTask = _listener.AcceptTcpClientAsync();
-                    var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
-                    if (rTask == tokenTask) break;
+                    tskArray[1] = listenerTask;
+                    var rTask = await Task.WhenAny(tskArray).ConfigureAwait(false);
+                    if (rTask == tskArray[0]) break;
                     Task.Factory.StartNew(_connectionReceivedAction, listenerTask.Result, _token);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                     if (Interlocked.Decrement(ref retries) == 0)
@@ -300,7 +287,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 }
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ConnectionReceived(object objTcpClient)
         {
@@ -322,18 +309,21 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             lock (_locker)
             {
                 _sessions.Add(serverClient);
+                _sessionsArray = _sessions.ToArray();
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Task<bool> ServerClient_OnSessionMessageReceivedAsync(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage)
+        private ValueTask<bool> ServerClient_OnSessionMessageReceivedAsync(RpcServerClient rpcServerClient, RPCSessionRequestMessage sessionMessage)
         {
-            return TaskHelper.CompleteTrue;
+            return new ValueTask<bool>(true);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ServerClient_OnConnect(RpcServerClient rpcServerClient, EventArgs e)
         {
-            OnClientConnect?.Invoke(this, new ClientConnectEventArgs(rpcServerClient.SessionId));
+            var cEvent = ClientConnectEventArgs.Retrieve(rpcServerClient.SessionId);
+            OnClientConnect?.Invoke(this, cEvent);
+            ClientConnectEventArgs.Store(cEvent);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -348,11 +338,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 case RPCRequestMessage request:
                     if (request.MethodId == Guid.Empty)
                     {
-                        var dEventArgs = new ServerDescriptorsEventArgs();
-                        OnGetDescriptorsRequest?.InvokeAsync(this, dEventArgs);
-                        var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
+                        var dEventArgs = ServerDescriptorsEventArgs.Retrieve();
+                        OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
+                        var response = RPCResponseMessage.Retrieve(request);
+                        response.ReturnValue = dEventArgs.Descriptors;
                         await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
                         OnResponseSent?.Invoke(this, response);
+                        ServerDescriptorsEventArgs.Store(dEventArgs);
                         break;
                     }
                     if (request.CancellationToken)
@@ -360,22 +352,24 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcServerClient.ConnectionCancellationToken, CancellationToken.None))
                         {
                             _rpcMessagesCancellations.TryAdd(request.MessageId, tokenSource);
-                            var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, tokenSource.Token);
+                            var mEventArgs = MethodEventArgs.Retrieve(rpcServerClient.SessionId, request, tokenSource.Token);
                             if (!(OnMethodCallAsync is null))
                                 await OnMethodCallAsync.InvokeAsync(this, mEventArgs).ConfigureAwait(false);
                             if (!tokenSource.Token.IsCancellationRequested)
                                 await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
                             _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
                             OnResponseSent?.Invoke(this, mEventArgs.Response);
+                            MethodEventArgs.Store(mEventArgs);
                         }
                         break;
                     }
-                    var mEventArgs2 = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
+                    var mEventArgs2 = MethodEventArgs.Retrieve(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
                     if (!(OnMethodCallAsync is null))
                         await OnMethodCallAsync.InvokeAsync(this, mEventArgs2).ConfigureAwait(false);
                     if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
                         await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
                     OnResponseSent?.Invoke(this, mEventArgs2.Response);
+                    MethodEventArgs.Store(mEventArgs2);
                     break;
             }
         }
@@ -389,6 +383,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             lock (_locker)
             {
                 _sessions.Remove(rpcServerClient);
+                _sessionsArray = _sessions.ToArray();
             }
         }
         #endregion
@@ -401,41 +396,35 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <param name="description">Message description</param>
         /// <param name="message">Message object data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void PushMessageToAllHub(string hub, string description, object message)
+        public async Task PushMessageToAllHubAsync(string hub, string description, object message)
         {
-            var msg = new RPCPushMessage
+            var msg = RPCPushMessage.Retrieve(RPCMessageScope.Hub, description, message);
+            var sessions = _sessionsArray;
+            foreach (var s in sessions)
             {
-                Data = message,
-                Scope = RPCMessageScope.Hub,
-                Description = description
-            };
-            lock (_locker)
-            {
-                foreach (var s in _sessions.Where((s, mHub) => s.OnSession && s.Hub == mHub, hub))
-                    s.SendRpcMessageAsync(msg);
+                if (s.OnSession && s.Hub == hub)
+                    await s.SendRpcMessageAsync(msg).ConfigureAwait(false);
             }
+            RPCPushMessage.Store(msg);
         }
         /// <summary>
         /// Push a message to all sessions in a hub except the specified sessionId
-        /// </summary>
+        /// </summary>  
         /// <param name="hub">Hub name</param>
         /// <param name="description">Message description</param>
         /// <param name="message">Message object data</param>
         /// <param name="exceptSessionId">Session id to exclude</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void PushMessageToAllHub(string hub, string description, object message, Guid exceptSessionId)
+        public async Task PushMessageToAllHubAsync(string hub, string description, object message, Guid exceptSessionId)
         {
-            var msg = new RPCPushMessage
+            var msg = RPCPushMessage.Retrieve(RPCMessageScope.Hub, description, message);
+            var sessions = _sessionsArray;
+            foreach (var s in sessions)
             {
-                Data = message,
-                Scope = RPCMessageScope.Hub,
-                Description = description
-            };
-            lock (_locker)
-            {
-                foreach (var s in _sessions.Where((s, iHub, iExceptSessionId) => s.OnSession && s.Hub == iHub && s.SessionId != iExceptSessionId, hub, exceptSessionId))
-                    s.SendRpcMessageAsync(msg);
+                if (s.OnSession && s.Hub == hub && s.SessionId != exceptSessionId)
+                    await s.SendRpcMessageAsync(msg).ConfigureAwait(false);
             }
+            RPCPushMessage.Store(msg);
         }
         /// <summary>
         /// Push a message to all connected sessions
@@ -443,19 +432,16 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <param name="description">Message description</param>
         /// <param name="message">Message object data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void PushMessageToAll(string description, object message)
+        public async Task PushMessageToAllAsync(string description, object message)
         {
-            var msg = new RPCPushMessage
+            var msg = RPCPushMessage.Retrieve(RPCMessageScope.Global, description, message);
+            var sessions = _sessionsArray;
+            foreach (var s in sessions)
             {
-                Data = message,
-                Scope = RPCMessageScope.Global,
-                Description = description
-            };
-            lock (_locker)
-            {
-                foreach (var s in _sessions.Where(s => s.OnSession))
-                    s.SendRpcMessageAsync(msg);
+                if (s.OnSession)
+                    await s.SendRpcMessageAsync(msg).ConfigureAwait(false);
             }
+            RPCPushMessage.Store(msg);
         }
         /// <summary>
         /// Push a message to all connected sessions except the specified sessionId
@@ -464,19 +450,16 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <param name="message">Message object data</param>
         /// <param name="exceptSessionId">Session id to exclude</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void PushMessageToAll(string description, object message, Guid exceptSessionId)
+        public async Task PushMessageToAllAsync(string description, object message, Guid exceptSessionId)
         {
-            var msg = new RPCPushMessage
+            var msg = RPCPushMessage.Retrieve(RPCMessageScope.Global, description, message);
+            var sessions = _sessionsArray;
+            foreach (var s in sessions)
             {
-                Data = message,
-                Scope = RPCMessageScope.Global,
-                Description = description
-            };
-            lock (_locker)
-            {
-                foreach (var s in _sessions.Where((s, mExceptSessionId) => s.OnSession && s.SessionId != mExceptSessionId, exceptSessionId))
-                    s.SendRpcMessageAsync(msg);
+                if (s.OnSession && s.SessionId != exceptSessionId)
+                    await s.SendRpcMessageAsync(msg).ConfigureAwait(false);
             }
+            RPCPushMessage.Store(msg);
         }
         /// <summary>
         /// Push a message to a session
@@ -485,19 +468,16 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <param name="description">Message description</param>
         /// <param name="message">Message object data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void PushMessageTo(Guid sessionId, string description, object message)
+        public async Task PushMessageToAsync(Guid sessionId, string description, object message)
         {
-            var msg = new RPCPushMessage
+            var msg = RPCPushMessage.Retrieve(RPCMessageScope.Session, description, message);
+            var sessions = _sessionsArray;
+            foreach (var s in sessions)
             {
-                Data = message,
-                Scope = RPCMessageScope.Session,
-                Description = description
-            };
-            lock (_locker)
-            {
-                foreach (var s in _sessions.Where((s, mSessionId) => s.OnSession && s.SessionId == mSessionId, sessionId))
-                    s.SendRpcMessageAsync(msg);
+                if (s.OnSession && s.SessionId == sessionId)
+                    await s.SendRpcMessageAsync(msg).ConfigureAwait(false);
             }
+            RPCPushMessage.Store(msg);
         }
         #endregion
 

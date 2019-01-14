@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
 
@@ -42,5 +43,37 @@ namespace TWCore.Net.RPC
         /// </summary>
         [DataMember]
         public EventArgs EventArgs { get; set; }
+
+        #region Statics
+        /// <summary>
+        ///  Retrieves an Event Message from the Pool
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="eventName">Event name</param>
+        /// <param name="eventArgs">Event args</param>
+        /// <returns>Event message value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static RPCEventMessage Retrieve(string serviceName, string eventName, EventArgs eventArgs)
+        {
+            var value = ReferencePool<RPCEventMessage>.Shared.New();
+            value.ServiceName = serviceName;
+            value.EventName = eventName;
+            value.EventArgs = eventArgs;
+            return value;
+        }
+        /// <summary>
+        /// Stores an Event Message in the Pool.
+        /// </summary>
+        /// <param name="value">Event message value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(RPCEventMessage value)
+        {
+            if (value is null) return;
+            value.ServiceName = null;
+            value.EventName = null;
+            value.EventArgs = null;
+            ReferencePool<RPCEventMessage>.Shared.Store(value);
+        }
+        #endregion
     }
 }

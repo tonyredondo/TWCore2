@@ -82,6 +82,17 @@ namespace TWCore.Net.RPC
             return message;
         }
         /// <summary>
+        /// Retrieve a Response Message from the pool
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static RPCResponseMessage Retrieve(RPCError errorMessage)
+        {
+            var message = ReferencePool<RPCResponseMessage>.Shared.New();
+            message.MessageId = errorMessage.MessageId;
+            message.Exception = errorMessage.Exception;
+            return message;
+        }
+        /// <summary>
         /// Store the RPCResponseMessage to the pool
         /// </summary>
         /// <param name="message"></param>

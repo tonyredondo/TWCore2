@@ -244,8 +244,9 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
-            var request = new RPCRequestMessage { MethodId = Guid.Empty };
+            var request = RPCRequestMessage.Retrieve(Guid.Empty, null, false);
             var response = await InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }
         /// <inheritdoc />
@@ -352,18 +353,24 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     if (!_previousMessages.TryGetValue(eventMessage.MessageId, out _))
                     {
                         _previousMessages.TryAdd(eventMessage.MessageId, null);
-                        OnEventReceived?.Invoke(this, new EventDataEventArgs(eventMessage.ServiceName, eventMessage.EventName, eventMessage.EventArgs));
+                        var edea = EventDataEventArgs.Retrieve(eventMessage.ServiceName, eventMessage.EventName, eventMessage.EventArgs);
+                        OnEventReceived?.Invoke(this, edea);
+                        EventDataEventArgs.Store(edea);
                     }
                     break;
                 case RPCPushMessage pushMessage:
                     if (!_previousMessages.TryGetValue(pushMessage.MessageId, out _))
                     {
                         _previousMessages.TryAdd(pushMessage.MessageId, null);
-                        OnPushMessageReceived?.Invoke(this, new EventArgs<RPCPushMessage>(pushMessage));
+                        var evArgs = ReferencePool<EventArgs<RPCPushMessage>>.Shared.New();
+                        evArgs.Item1 = pushMessage;
+                        OnPushMessageReceived?.Invoke(this, evArgs);
+                        evArgs.Item1 = null;
+                        ReferencePool<EventArgs<RPCPushMessage>>.Shared.Store(evArgs);
                     }
                     break;
                 case RPCError errorMessage:
-                    var respMsg = new RPCResponseMessage { Exception = errorMessage.Exception };
+                    var respMsg = RPCResponseMessage.Retrieve(errorMessage);
                     foreach (var mHandler in _messageResponsesHandlers.ToArray())
                     {
                         mHandler.Value.Message = respMsg;

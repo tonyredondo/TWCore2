@@ -55,6 +55,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private readonly string _host;
         private readonly int _port;
         private readonly BinarySerializer _serializer;
+        private readonly Func<Task> _receiveThreadDelegate;
         private readonly Func<object, Task> _messageReceivedHandlerDelegate;
 
         private TcpClient _client;
@@ -125,6 +126,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             _host = host;
             _port = port;
             _hub = "Default";
+            _receiveThreadDelegate = new Func<Task>(ReceiveThread);
             _messageReceivedHandlerDelegate = new Func<object, Task>(MessageReceivedHandler);
         }
         #endregion
@@ -161,7 +163,9 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 }
                 Core.Log.InfoBasic("Connected to server: {0}:{1}", _host, _port);
                 BindBackgroundTasks();
-                _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _writeStream);
+                var sessionMessage = RPCSessionRequestMessage.Retrieve(_sessionId, _hub);
+                _serializer.Serialize(sessionMessage, _writeStream);
+                RPCSessionRequestMessage.Store(sessionMessage);
                 await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
                 await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
                 OnConnect?.Invoke(this, EventArgs.Empty);
@@ -230,7 +234,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private void BindBackgroundTasks()
         {
             if (_receiveTask is null || _receiveTask.IsCompleted)
-                _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
+                _receiveTask = Task.Factory.StartNew(_receiveThreadDelegate, TaskCreationOptions.LongRunning);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -257,7 +261,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         var innerEx = dEx.InnerException;
                         if (innerEx is IOException)
                         {
-                            OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(innerEx) });
+                            var errMessage = ReferencePool<RPCError>.Shared.New();
+                            errMessage.Exception = new SerializableException(innerEx);
+                            OnMessageReceived?.Invoke(this, errMessage);
+                            ReferencePool<RPCError>.Shared.Store(errMessage);
                             break;
                         }
                         else
@@ -269,7 +276,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     }
                     catch (IOException ex)
                     {
-                        OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
+                        var errMessage = ReferencePool<RPCError>.Shared.New();
+                        errMessage.Exception = new SerializableException(ex);
+                        OnMessageReceived?.Invoke(this, errMessage);
+                        ReferencePool<RPCError>.Shared.Store(errMessage);
                         break;
                     }
                     catch (Exception ex)
@@ -282,13 +292,19 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 catch (SocketException ex)
                 {
                     Core.Log.Error(ex.Message);
-                    OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
+                    var errMessage = ReferencePool<RPCError>.Shared.New();
+                    errMessage.Exception = new SerializableException(ex);
+                    OnMessageReceived?.Invoke(this, errMessage);
+                    ReferencePool<RPCError>.Shared.Store(errMessage);
                     break;
                 }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
-                    OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
+                    var errMessage = ReferencePool<RPCError>.Shared.New();
+                    errMessage.Exception = new SerializableException(ex);
+                    OnMessageReceived?.Invoke(this, errMessage);
+                    ReferencePool<RPCError>.Shared.Store(errMessage);
                     break;
                 }
             }
@@ -301,29 +317,29 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         {
             using (await _connectionLocker.LockAsync().ConfigureAwait(false))
             {
-                if (_client?.Connected != true)
+                if (_client?.Connected == true) return;
+                _onSession = false;
+                _sessionEvent.Reset();
+                _client = new TcpClient
                 {
-                    _onSession = false;
-                    _sessionEvent.Reset();
-                    _client = new TcpClient
-                    {
-                        NoDelay = true
-                    };
-                    Factory.SetSocketLoopbackFastPath(_client.Client);
-                    await _client.ConnectAsync(_host, _port).ConfigureAwait(false);
-                    _networkStream = _client.GetStream();
-                    _readStream = new BufferedStream(_networkStream);
-                    _writeStream = new BufferedStream(_networkStream);
-                    if (_connectionCancellationTokenSource is null || _connectionCancellationTokenSource.IsCancellationRequested)
-                    {
-                        _connectionCancellationTokenSource = new CancellationTokenSource();
-                        _connectionCancellationToken = _connectionCancellationTokenSource.Token;
-                    }
-                    Core.Log.InfoBasic("Reconnected to server: {0}:{1}", _host, _port);
-                    _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _writeStream);
-                    await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
-                    _ = CompleteReconnectAsync();
+                    NoDelay = true
+                };
+                Factory.SetSocketLoopbackFastPath(_client.Client);
+                await _client.ConnectAsync(_host, _port).ConfigureAwait(false);
+                _networkStream = _client.GetStream();
+                _readStream = new BufferedStream(_networkStream);
+                _writeStream = new BufferedStream(_networkStream);
+                if (_connectionCancellationTokenSource is null || _connectionCancellationTokenSource.IsCancellationRequested)
+                {
+                    _connectionCancellationTokenSource = new CancellationTokenSource();
+                    _connectionCancellationToken = _connectionCancellationTokenSource.Token;
                 }
+                Core.Log.InfoBasic("Reconnected to server: {0}:{1}", _host, _port);
+                var sessionMessage = RPCSessionRequestMessage.Retrieve(_sessionId, _hub);
+                _serializer.Serialize(sessionMessage, _writeStream);
+                RPCSessionRequestMessage.Store(sessionMessage);
+                await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
+                _ = CompleteReconnectAsync();
             }
 
             async Task CompleteReconnectAsync()

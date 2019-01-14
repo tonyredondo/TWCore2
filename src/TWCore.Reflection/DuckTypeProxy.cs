@@ -104,7 +104,7 @@ namespace TWCore.Reflection
 			if (!(_realObject is DynamicObject dContainer))
 				throw new MissingMethodException(_realObject?.GetType().Name, methodName);
 
-			var types = new List<Type>(args.Length);
+            var types = ReferencePool<List<Type>>.Shared.New();
 			var typesKey = string.Empty;
 			for (var i = 0; i < args.Length; i++)
 			{
@@ -118,7 +118,7 @@ namespace TWCore.Reflection
 			{
 				var csArgs = Enumerable.Range(0, args.Length + 1)
 									   .Select(i => CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null));
-
+                
 				var cSiteBinder = Microsoft.CSharp.RuntimeBinder.Binder.InvokeMember(CSharpBinderFlags.None, mName.Method, types, GetType(), csArgs);
 					
 				switch (args.Length)
@@ -149,7 +149,10 @@ namespace TWCore.Reflection
 				return null;
 			});
 
-			switch (args.Length)
+            types.Clear();
+            ReferencePool<List<Type>>.Shared.Store(types);
+
+            switch (args.Length)
 			{
 				case 0:
 					return ((CallSite<Func<CallSite, object, object>>)callSite).Target(callSite, dContainer);

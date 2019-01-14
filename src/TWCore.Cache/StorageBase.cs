@@ -110,13 +110,6 @@ namespace TWCore.Cache
                 collection.Add(nameof(ItemsExpirationDateOverwrite), ItemsExpirationDateOverwrite);
             });
         }
-        /// <summary>
-        /// Storage destructor
-        /// </summary>
-        ~StorageBase()
-        {
-            Dispose(false);
-        }
         #endregion
 
         #region Private/Protected Methods

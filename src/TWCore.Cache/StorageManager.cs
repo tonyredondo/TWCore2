@@ -114,15 +114,6 @@ namespace TWCore.Cache
             BindStatusHandlers();
             LoadExtensions();
         }
-        /// <summary>
-        /// Storage destructor
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~StorageManager()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(false);
-        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindStatusHandlers()
         {

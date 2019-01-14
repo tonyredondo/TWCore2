@@ -83,7 +83,8 @@ namespace TWCore.Cache.Client
         internal readonly List<PoolAsyncItem> Items;
         internal readonly HashSet<PoolAsyncItem> EnabledItems;
         internal readonly ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]> ItemsCache = new ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]>();
-        
+        internal PoolAsyncItem[] _currentEnabledItems = Array.Empty<PoolAsyncItem>();
+
         #region Properties
         /// <summary>
         /// Delays between ping tries in milliseconds
@@ -180,7 +181,10 @@ namespace TWCore.Cache.Client
             if (item.Enabled)
             {
                 lock (EnabledItems)
+                {
                     EnabledItems.Add(item);
+                    _currentEnabledItems = EnabledItems.ToArray();
+                }
                 ItemsCache.Clear();
             }
             _hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
@@ -194,7 +198,10 @@ namespace TWCore.Cache.Client
                 item.EnabledChanged -= Item_EnabledChanged;
             Items.Clear();
             lock (EnabledItems)
+            {
                 EnabledItems.Clear();
+                _currentEnabledItems = Array.Empty<PoolAsyncItem>();
+            }
             ItemsCache.Clear();
         }
         /// <summary>
@@ -218,10 +225,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AnyEnabled()
         {
-            lock (EnabledItems)
-            {
-                return EnabledItems.Count > 0;
-            }
+            return _currentEnabledItems.Length > 0;
         }
         /// <summary>
         /// Waits and gets the list of enabled storages ordered by Ping time
@@ -241,17 +245,15 @@ namespace TWCore.Cache.Client
                 return poolItems;
             }
 
-            var totalCount = 80;
+            var totalCount = 20;
             while (totalCount-- > 0)
             {
-                lock(EnabledItems)
-                { 
-                    var iWhere = onlyMemoryStorages ?
-                        EnabledItems.Where((i, sMode) => i.Mode.HasFlag(sMode) && i.Storage.Type == StorageType.Memory, mode) :
-                        EnabledItems.Where((i, sMode) => i.Mode.HasFlag(sMode), mode);
-                    poolItems = iWhere.ToArray();
-                }
-                
+                var enableTimes = _currentEnabledItems;
+                var iWhere = onlyMemoryStorages ?
+                    enableTimes.Where((i, sMode) => i.Mode.HasFlag(sMode) && i.Storage.Type == StorageType.Memory, mode) :
+                    enableTimes.Where((i, sMode) => i.Mode.HasFlag(sMode), mode);
+                poolItems = iWhere.ToArray();
+
                 if (poolItems.Length > 0)
                 {
                     if (!ForceAtLeastOneNetworkItemEnabled)
@@ -286,7 +288,7 @@ namespace TWCore.Cache.Client
                     }
                 }
 
-                await Task.Delay(250).ConfigureAwait(false);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
 
             Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);
@@ -303,7 +305,30 @@ namespace TWCore.Cache.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> ReadAsync<T>(StorageFuncAsyncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
-            => (await ReadAsync(null, null, (PoolAsyncItem item, object a1, object a2) => function(item), responseCondition).ConfigureAwait(false)).Item1;
+        {
+            Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
+            var items = await WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead)
+                return default;
+            for (var i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                try
+                {
+                    var response = await function(item).ConfigureAwait(false);
+                    if (responseCondition(response))
+                        return response;
+                    if (item.Storage.Type != StorageType.Memory && ReadMode == PoolReadMode.FastestOnlyRead)
+                        break;
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
+                }
+            }
+            Core.Log.LibVerbose("\tItem not Found in the pool.");
+            return default;
+        }
         /// <summary>
         /// Read action on the Pool.
         /// </summary>
@@ -314,8 +339,31 @@ namespace TWCore.Cache.Client
         /// <param name="responseCondition">Function to check if the result is good or not.</param>
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<(T, PoolAsyncItem)> ReadAsync<T, TA1>(TA1 arg1, StorageFuncAsyncDelegate<T, TA1> function, ResponseConditionDelegate<T> responseCondition)
-            => ReadAsync(arg1, null, (PoolAsyncItem item, TA1 a1, object a2) => function(item, a1), responseCondition);
+        public async Task<(T, PoolAsyncItem)> ReadAsync<T, TA1>(TA1 arg1, StorageFuncAsyncDelegate<T, TA1> function, ResponseConditionDelegate<T> responseCondition)
+        {
+            Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
+            var items = await WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead)
+                return (default, null);
+            for (var i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                try
+                {
+                    var response = await function(item, arg1).ConfigureAwait(false);
+                    if (responseCondition(response))
+                        return (response, item);
+                    if (item.Storage.Type != StorageType.Memory && ReadMode == PoolReadMode.FastestOnlyRead)
+                        break;
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
+                }
+            }
+            Core.Log.LibVerbose("\tItem not Found in the pool.");
+            return (default, null);
+        }
         /// <summary>
         /// Read action on the Pool.
         /// </summary>
@@ -442,7 +490,7 @@ namespace TWCore.Cache.Client
                     idx++;
                     if (idx < arrEnabled.Length)
                     {
-                        _worker.Enqueue(action: WorkerHandler, state: new WriteItem<TA1, TA2, TA3, TA4>
+                        _worker.Enqueue(function: item => WorkerHandler(item), state: new WriteItem<TA1, TA2, TA3, TA4>
                         {
                             Action = action,
                             Arg1 = arg1,
@@ -550,7 +598,7 @@ namespace TWCore.Cache.Client
                     idx++;
                     if (idx < arrEnabled.Length)
                     {
-                        _worker.Enqueue(action: WorkerHandler, state: new WriteItem<TA1, TA2, TA3, TA4>
+                        _worker.Enqueue(function: item => WorkerHandler(item), state: new WriteItem<TA1, TA2, TA3, TA4>
                         {
                             Action = async (item, a1, a2, a3, a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false),
                             Arg1 = arg1,
@@ -569,7 +617,7 @@ namespace TWCore.Cache.Client
             return response;
         }
 
-        private static void WorkerHandler<TA1, TA2, TA3, TA4>(WriteItem<TA1, TA2, TA3, TA4> wItem)
+        private static async Task WorkerHandler<TA1, TA2, TA3, TA4>(WriteItem<TA1, TA2, TA3, TA4> wItem)
         {
             for (; wItem.Index < wItem.Items.Length; wItem.Index++)
             {
@@ -578,7 +626,7 @@ namespace TWCore.Cache.Client
                 {
                     if (item.Enabled)
                     {
-                        wItem.Action(item, wItem.Arg1, wItem.Arg2, wItem.Arg3, wItem.Arg4).WaitAsync();
+                        await wItem.Action(item, wItem.Arg1, wItem.Arg2, wItem.Arg3, wItem.Arg4).ConfigureAwait(false);
                         Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
                     }
                 }
@@ -594,12 +642,13 @@ namespace TWCore.Cache.Client
         private void Item_EnabledChanged(object sender, bool e)
         {
             var poolItem = (PoolAsyncItem)sender;
-            lock(EnabledItems)
+            lock (EnabledItems)
             {
                 if (e)
                     EnabledItems.Add(poolItem);
                 else
                     EnabledItems.Remove(poolItem);
+                _currentEnabledItems = EnabledItems.ToArray();
             }
             ItemsCache.Clear();
         }

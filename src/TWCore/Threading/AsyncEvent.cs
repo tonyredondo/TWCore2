@@ -29,7 +29,6 @@ namespace TWCore.Threading
 	    private readonly object _locker;
         private List<Func<object, TEventArgs, Task>> _funcsInvocationList;
         private List<Action<object, TEventArgs>> _actionsInvocationList;
-		private bool _dirty;
 		private Func<object, TEventArgs, Task>[] _callFuncArray;
 		private Action<object, TEventArgs>[] _callActionArray;
 
@@ -39,7 +38,6 @@ namespace TWCore.Threading
         /// </summary>
         private AsyncEvent()
         {
-            _dirty = true;
             _locker = new object();
         }
         #endregion
@@ -53,30 +51,19 @@ namespace TWCore.Threading
         /// <returns>Task instance</returns>
         public async Task InvokeAsync(object sender, TEventArgs eventArgs)
         {
-			if (_dirty)
+            var cFuncArray = _callFuncArray;
+            var cActionArray = _callActionArray;
+			if (!(cFuncArray is null))
 			{
-				lock (_locker)
-				{
-					if (_dirty)
-					{
-						_callFuncArray = _funcsInvocationList?.ToArray();
-						_callActionArray = _actionsInvocationList?.ToArray();
-						_dirty = false;
-					}
-				}
-			}
-
-			if (!(_callFuncArray is null))
-			{
-				var length = _callFuncArray.Length;
+				var length = cFuncArray.Length;
 				for (var i = 0; i < length; i++)
-					await _callFuncArray[i](sender, eventArgs).ConfigureAwait(false);
+					await cFuncArray[i](sender, eventArgs).ConfigureAwait(false);
 			}
-			if (!(_callActionArray is null))
+			if (!(cActionArray is null))
 			{
-				var length = _callActionArray.Length;
+				var length = cActionArray.Length;
 				for (var i = 0; i < length; i++)
-					_callActionArray[i](sender, eventArgs);
+                    cActionArray[i](sender, eventArgs);
 			}
         }
         #endregion
@@ -97,7 +84,7 @@ namespace TWCore.Threading
 				if (e._funcsInvocationList is null)
 					e._funcsInvocationList = new List<Func<object, TEventArgs, Task>>();
 				e._funcsInvocationList.Add(callback);
-				e._dirty = true;
+                e._callFuncArray = e._funcsInvocationList.ToArray();
 			}
             return e;
         }
@@ -116,7 +103,7 @@ namespace TWCore.Threading
 				if (e._funcsInvocationList is null)
 					e._funcsInvocationList = new List<Func<object, TEventArgs, Task>>();
 				e._funcsInvocationList.Remove(callback);
-				e._dirty = true;
+                e._callFuncArray = e._funcsInvocationList.ToArray();
 			}
             return e;
         }
@@ -135,7 +122,7 @@ namespace TWCore.Threading
 	            if (e._actionsInvocationList is null)
 		            e._actionsInvocationList = new List<Action<object, TEventArgs>>();
                 e._actionsInvocationList.Add(callback);
-                e._dirty = true;
+                e._callActionArray = e._actionsInvocationList.ToArray();
             }
             return e;
         }
@@ -154,7 +141,7 @@ namespace TWCore.Threading
 	            if (e._actionsInvocationList is null)
 		            e._actionsInvocationList = new List<Action<object, TEventArgs>>();
                 e._actionsInvocationList.Remove(callback);
-                e._dirty = true;
+                e._callActionArray = e._actionsInvocationList.ToArray();
             }
             return e;
         }

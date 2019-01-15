@@ -42,13 +42,14 @@ namespace TWCore.Messaging.Server
 		private CancellationTokenSource _tokenSource;
 		private MQClientQueues _clientQueues;
 		private MQServerQueues _serverQueues;
+        private static string ResponseMessageFullName = typeof(ResponseMessage).FullName;
 
-		#region Properties
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets or Sets the client name
-		/// </summary>
-		[StatusProperty]
+        #region Properties
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets or Sets the client name
+        /// </summary>
+        [StatusProperty]
 		public string Name { get; set; }
 		/// <inheritdoc />
 		/// <summary>
@@ -303,11 +304,11 @@ namespace TWCore.Messaging.Server
                 Core.Log.LibDebug("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, iMessages);
                 if (RequestReceived != null)
                     await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-                e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
+                e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? ResponseMessageFullName : e.Response.Header.Response.Label;
                 if (MQueueServerEvents.RequestReceived != null)
                     await MQueueServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
-                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponseSerialized)
+                if (e.SendResponse && e.Response != null && e.Response.Body != ResponseMessage.NoResponseSerialized)
                 {
                     e.Response.Header.Response.ApplicationSentDate = Core.Now;
 

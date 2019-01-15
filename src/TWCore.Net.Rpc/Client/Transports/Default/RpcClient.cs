@@ -253,6 +253,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     }
                     try
                     {
+                        if (_client.Available == 0)
+                            await Task.Yield();
                         var message = _serializer.Deserialize<RPCMessage>(_readStream);
                         Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _connectionCancellationToken);
                     }

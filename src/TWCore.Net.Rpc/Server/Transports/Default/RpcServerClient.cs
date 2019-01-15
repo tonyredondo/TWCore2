@@ -173,15 +173,17 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReceiveThread()
+        private async Task ReceiveThread()
         {
             Thread.CurrentThread.Name = "RPC.DefaultTransportServer.ReceiveThread";
             while (_client != null && _client.Connected)
             {
                 try
                 {
+                    if (_client.Available == 0)
+                        await Task.Yield();
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _tokenSource.Token);
+                    _ = Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _tokenSource.Token);
                 }
                 catch (DeserializerException dEx)
                 {

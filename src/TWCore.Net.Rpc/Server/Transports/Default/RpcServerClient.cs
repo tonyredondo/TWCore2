@@ -170,12 +170,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private void BindBackgroundTasks()
         {
             if (_receiveTask is null || _receiveTask.IsCompleted)
-                _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
+                //_receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
+                _receiveTask = Task.Run(ReceiveThread);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ReceiveThread()
         {
-            Thread.CurrentThread.Name = "RPC.DefaultTransportServer.ReceiveThread";
+            //Thread.CurrentThread.Name = "RPC.DefaultTransportServer.ReceiveThread";
             while (_client != null && _client.Connected)
             {
                 try

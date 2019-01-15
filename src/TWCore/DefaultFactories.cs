@@ -520,16 +520,13 @@ namespace TWCore
             }
             if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes > 0)
             {
-                if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes != 60)
+                if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes != 120)
                     Core.Log.InfoBasic("Setting the Large Object Heap Compact timeout every {0} minutes.", Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
                 var time = TimeSpan.FromMinutes(Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
                 _largeObjectTimer = new Timer(obj =>
                 {
-                    Core.Log.InfoBasic("Setting the Compaction on the Large Object Heap and forcing the garbage collector collect...");
+                    Core.Log.InfoBasic("Setting the Compaction on the Large Object Heap for next garbage collection...");
                     GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                    GC.Collect();
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
                 }, null, time, time);
             }
             _lastValue = Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes;

@@ -33,8 +33,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         private readonly object _locker = new object();
         private readonly List<ITraceStorage> _items = new List<ITraceStorage>();
         private readonly ReferencePool<List<Task>> _procTaskPool = new ReferencePool<List<Task>>();
-        private List<ITraceStorage> _cItems;
-        private volatile bool _isDirty;
+        private ITraceStorage[] _cItems;
 
         #region .ctor
         /// <summary>
@@ -62,13 +61,13 @@ namespace TWCore.Diagnostics.Trace.Storages
             lock (_locker)
             {
                 _items.Add(storage);
-                _isDirty = true;
+                _cItems = _items.ToArray();
             }
         }
         /// <summary>
         /// Gets the storage quantities inside the collection
         /// </summary>
-        public int Count => _items?.Count ?? 0;
+        public int Count => _cItems?.Length ?? 0;
         /// <summary>
         /// Clears the collection
         /// </summary>
@@ -78,7 +77,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             lock (_locker)
             {
                 _items.Clear();
-                _isDirty = true;
+                _cItems = _items.ToArray();
             }
         }
         /// <summary>
@@ -88,8 +87,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ITraceStorage[] GetAllStorages()
         {
-            lock (_locker)
-                return _items.ToArray() ?? Array.Empty<ITraceStorage>();
+            return _cItems ?? Array.Empty<ITraceStorage>();
         }
         #endregion
 
@@ -100,25 +98,15 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// </summary>
         /// <param name="item">Trace item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task WriteAsync(TraceItem item)
+        public async Task WriteAsync(TraceItem item)
         {
-            if (_isDirty || _cItems is null)
-            {
-                if (_items is null) return Task.CompletedTask;
-                lock (_locker)
-                {
-                    _cItems = new List<ITraceStorage>(_items);
-                }
-            }
+            var cItems = _cItems;
             var tsks = _procTaskPool.New();
-            for (var i = 0; i < _cItems.Count; i++)
+            for (var i = 0; i < cItems.Length; i++)
                 tsks.Add(InternalWriteAsync(_cItems[i], item));
-            var resTask = Task.WhenAll(tsks).ContinueWith(_ =>
-            {
-                tsks.Clear();
-                _procTaskPool.Store(tsks);
-            });
-            return resTask;
+            await Task.WhenAll(tsks).ConfigureAwait(false);
+            tsks.Clear();
+            _procTaskPool.Store(tsks);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static async Task InternalWriteAsync(ITraceStorage storage, TraceItem item)
@@ -140,7 +128,10 @@ namespace TWCore.Diagnostics.Trace.Storages
         public void Dispose()
         {
             lock (_locker)
+            {
                 _items.Clear();
+                _cItems = null;
+            }
         }
         #endregion
     }

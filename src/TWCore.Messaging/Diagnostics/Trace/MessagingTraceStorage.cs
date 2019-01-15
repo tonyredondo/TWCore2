@@ -39,7 +39,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     {
         private readonly string _queueName;
         private readonly Timer _timer;
-        private volatile bool _processing;
+        private int _processing;
         private int _count;
         private readonly bool _sendCompleteTrace;
         private readonly BlockingCollection<MessagingTraceItem> _traceItems;
@@ -112,13 +112,12 @@ namespace TWCore.Diagnostics.Trace.Storages
         #region Private methods
         private void TimerCallback(object state)
         {
-            if (_processing) return;
-            _processing = true;
+            if (Interlocked.CompareExchange(ref _processing, 1, 0) == 1) return;
             try
             {
                 if (_traceItems.Count == 0)
                 {
-                    _processing = false;
+                    Interlocked.Exchange(ref _processing, 0);
                     return;
                 }
 
@@ -150,7 +149,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             {
                 Core.Log.Write(ex);
             }
-            _processing = false;
+            Interlocked.Exchange(ref _processing, 0);
         }
         #endregion
     }

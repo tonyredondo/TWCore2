@@ -38,7 +38,7 @@ namespace TWCore.Diagnostics.Counters
         private readonly List<ICounterItem> _counterList = new List<ICounterItem>();
         private ICountersStorage[] _storages = null;
         private Timer _timer = null;
-        private bool _inProcess = false;
+        private int _inProcess = 0;
 
         /// <summary>
         /// Gets the counter storage
@@ -248,8 +248,7 @@ namespace TWCore.Diagnostics.Counters
             var storages = _storages;
             if (storages == null) return;
             if (storages.Length == 0) return;
-            if (_inProcess) return;
-            _inProcess = true;
+            if (Interlocked.CompareExchange(ref _inProcess, 1, 0) == 1) return;
             try
             {
                 foreach(var i in _counterReaders)
@@ -276,7 +275,7 @@ namespace TWCore.Diagnostics.Counters
             {
                 Core.Log.Write(ex);
             }
-            _inProcess = false;
+            Interlocked.Exchange(ref _inProcess, 0);
         }
         #endregion
 

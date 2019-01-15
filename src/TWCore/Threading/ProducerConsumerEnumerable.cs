@@ -41,7 +41,7 @@ namespace TWCore.Threading
         private readonly AsyncManualResetEvent _producerAddEvent;
         private readonly AsyncManualResetEvent _producerEndEvent;
         private readonly ObjectPool<ConsumerEnumerator> _consumerPool;
-        private bool _started;
+        private int _started = 0;
         private bool _disposed;
 
         #region .ctor
@@ -51,7 +51,6 @@ namespace TWCore.Threading
         /// <param name="producerFunc">Func to perform for the production of data</param>
         public ProducerConsumerEnumerable(Func<ProducerMethods, CancellationToken, Task> producerFunc)
         {
-            _started = false;
             _producerFunc = producerFunc;
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
@@ -65,7 +64,6 @@ namespace TWCore.Threading
         /// <param name="actionFunc">Action to perform for the production of data</param>
         public ProducerConsumerEnumerable(Action<ProducerMethods, CancellationToken> actionFunc)
         {
-            _started = false;
             _producerFunc = (pMethods, token) => Task.Run(() => actionFunc(pMethods, token));
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
@@ -102,8 +100,7 @@ namespace TWCore.Threading
         /// </summary>
         public void StartProducer()
         {
-            if (_started) return;
-            _started = true;
+            if (Interlocked.CompareExchange(ref _started, 1, 0) == 1) return;
             _producerEndEvent.Reset();
             Task.Run(async () =>
             {
@@ -235,6 +232,7 @@ namespace TWCore.Threading
         private class ConsumerEnumerator : IEnumerator<T>
         {
             private readonly ProducerConsumerEnumerable<T> _data;
+            private readonly Task[] _tsks = new Task[2];
             private int _index;
             public T Current { get; private set; }
             object IEnumerator.Current => Current;
@@ -251,7 +249,11 @@ namespace TWCore.Threading
                 {
                     var addTask = _data._producerAddEvent.WaitAsync();
                     var endTask = _data._producerEndEvent.WaitAsync(_data._tokenSource.Token);
-                    var waitTask = await Task.WhenAny(endTask, addTask).ConfigureAwait(false);
+                    _tsks[0] = addTask;
+                    _tsks[1] = endTask;
+                    var waitTask = await Task.WhenAny(_tsks).ConfigureAwait(false);
+                    _tsks[0] = null;
+                    _tsks[1] = null;
                     if (waitTask == endTask)
                         return false;
                 }

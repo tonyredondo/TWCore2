@@ -43,7 +43,6 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly string _originalUrl;
         private readonly Uri _url;
         private readonly string _indexFormat;
-        private volatile bool _processing;
         private int _count;
         private readonly BlockingCollection<object> _sourceItems;
         private bool _enabled = true;
@@ -53,6 +52,7 @@ namespace TWCore.Diagnostics.Log.Storages
             EnumsAsStrings = true
         };
         private WebClient _client;
+        private int _inProcess = 0;
 
         #region .ctor
         /// <summary>
@@ -157,13 +157,12 @@ namespace TWCore.Diagnostics.Log.Storages
         #region Private Methods
         private void TimerCallback(object state)
         {
-            if (_processing) return;
-            _processing = true;
+            if (Interlocked.CompareExchange(ref _inProcess, 1, 0) == 1) return;
             try
             {
                 if (_sourceItems.Count == 0)
                 {
-                    _processing = false;
+                    Interlocked.Exchange(ref _inProcess, 0);
                     return;
                 }
 
@@ -172,9 +171,9 @@ namespace TWCore.Diagnostics.Log.Storages
                 {
                     string index = null;
                     if (item is SourceData sDataItem)
-                        index = _indexFormat.ApplyFormat(sDataItem.@timestamp, sDataItem.applicationName, sDataItem.environmentName).ToLowerInvariant();
+                        index = string.Format(_indexFormat, sDataItem.@timestamp, sDataItem.applicationName, sDataItem.environmentName).ToLowerInvariant();
                     else if (item is GroupSourceData gDataItem)
-                        index = _indexFormat.ApplyFormat(gDataItem.@timestamp, Core.ApplicationName, Core.EnvironmentName).ToLowerInvariant();
+                        index = string.Format(_indexFormat, gDataItem.@timestamp, Core.ApplicationName, Core.EnvironmentName).ToLowerInvariant();
                     _builderBuffer.Append("{\"index\":{\"_index\":\"" + index + "\",\"_type\":\"logevent\"}}\n");
                     _builderBuffer.Append(serializer.SerializeToString(item) + "\n");
                     Interlocked.Decrement(ref _count);
@@ -196,7 +195,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 //
             }
-            _processing = false;
+            Interlocked.Exchange(ref _inProcess, 0);
         }
 
         private class SourceData

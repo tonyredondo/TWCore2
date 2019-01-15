@@ -43,9 +43,9 @@ namespace TWCore.Cache
         private readonly ManualResetEventSlim _readyEventSlim = new ManualResetEventSlim(false);
         private readonly string _name;
         private int _expirationCheckTimeInMinutes = 30;
-        private bool _init;
+        private int _init;
+        private int _expirationRunning;
         private Timer _expirationTimer;
-        private volatile bool _expirationRunning;
 
         #region Properties
         /// <summary>
@@ -59,10 +59,10 @@ namespace TWCore.Cache
         /// <summary>
         /// Gets or sets the time in minutes to check if some items has expired.
         /// </summary>
-        public int ExpirationCheckTimeInMinutes 
-        { 
+        public int ExpirationCheckTimeInMinutes
+        {
             get => _expirationCheckTimeInMinutes;
-            set { _expirationCheckTimeInMinutes = value; SetExpirationTimeout(); } 
+            set { _expirationCheckTimeInMinutes = value; SetExpirationTimeout(); }
         }
         /// <summary>
         /// Maximum duration per storage item
@@ -76,12 +76,12 @@ namespace TWCore.Cache
         /// Overwrites the expiration date setted by each item in TimeSpan.
         /// </summary>
         public TimeSpan? ItemsExpirationDateOverwrite { get; set; }
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the Storage Type
-		/// </summary>
-		/// <value>The type.</value>
-		public abstract StorageType Type { get; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the Storage Type
+        /// </summary>
+        /// <value>The type.</value>
+        public abstract StorageType Type { get; }
         #endregion
 
         #region Events
@@ -128,12 +128,11 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void CheckItemExpiration(bool initial = false)
         {
-            if (_expirationRunning) return;
-            _expirationRunning = true;
+            if (Interlocked.CompareExchange(ref _expirationRunning, 1, 0) == 1) return;
             try
             {
                 Core.Log.LibVerbose("Checking items expiration");
-				var expiredItems = Metas.Where(m => m.IsExpired).ToArray();
+                var expiredItems = Metas.Where(m => m.IsExpired).ToArray();
                 Core.Log.LibVerbose("Removing {0} expired items", expiredItems.Length);
                 foreach (var item in expiredItems)
                 {
@@ -151,7 +150,7 @@ namespace TWCore.Cache
             {
                 Core.Log.Write(ex);
             }
-            _expirationRunning = false;
+            Interlocked.Exchange(ref _expirationRunning, 0);
         }
         /// <summary>
         /// Method that handles when a item is expiring
@@ -181,11 +180,11 @@ namespace TWCore.Cache
         #endregion
 
         #region Abstract Methods
-		/// <summary>
-		/// Gets the items metadata.
-		/// </summary>
-		/// <value>IEnumerable with all items metadata</value>
-		protected abstract IEnumerable<StorageItemMeta> Metas { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; }
+        /// <summary>
+        /// Gets the items metadata.
+        /// </summary>
+        /// <value>IEnumerable with all items metadata</value>
+        protected abstract IEnumerable<StorageItemMeta> Metas { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; }
         /// <summary>
         /// Tries to get the metadata from the storage
         /// </summary>
@@ -238,11 +237,11 @@ namespace TWCore.Cache
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract IEnumerable<string> OnGetKeys();
-		/// <summary>
-		/// Init this storage
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract void OnInit();
+        /// <summary>
+        /// Init this storage
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract void OnInit();
         #endregion
 
         #region Public Methods
@@ -253,15 +252,14 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
-            if (_init) return;
-            _init = true;
+            if (Interlocked.CompareExchange(ref _init, 1, 0) == 1) return;
             try
             {
                 OnInit();
             }
             catch
             {
-                _init = false;
+                Interlocked.Exchange(ref _init, 0);
                 throw;
             }
         }

@@ -31,9 +31,13 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
+        /// <summary>
+        /// Maximum segment length
+        /// </summary>
+        public const int MaxLength = 1024;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] public const int MaxLength = 1024;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;

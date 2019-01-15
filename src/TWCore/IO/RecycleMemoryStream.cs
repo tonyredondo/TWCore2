@@ -31,9 +31,9 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 512;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] public const int MaxLength = 1024;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
@@ -42,7 +42,7 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _totalLength;
 
         #region Allocators
-        private readonly struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
+        internal readonly struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
         {
             public int InitialSize => 4;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;

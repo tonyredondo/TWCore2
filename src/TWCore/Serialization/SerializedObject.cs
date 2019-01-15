@@ -475,16 +475,15 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                const int segmentLength = 8192;
-                var rows = dataLength / segmentLength;
-                var pos = dataLength % segmentLength;
+                var segmentLength = RecycleMemoryStream.MaxLength;
+                var rows = Math.DivRem(dataLength, segmentLength, out var pos);
                 if (pos > 0)
                     rows++;
 
                 var bytes = new byte[rows][];
                 for (var i = 0; i < bytes.Length; i++)
                 {
-                    bytes[i] = new byte[segmentLength];
+                    bytes[i] = RecycleMemoryStream.ByteArrayPool.New();
                     stream.ReadExact(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength);
                 }
 
@@ -571,16 +570,15 @@ namespace TWCore.Serialization
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
-                const int segmentLength = 8192;
-                var rows = dataLength / segmentLength;
-                var pos = dataLength % segmentLength;
+                var segmentLength = RecycleMemoryStream.MaxLength;
+                var rows = Math.DivRem(dataLength, segmentLength, out var pos);
                 if (pos > 0)
                     rows++;
 
                 var bytes = new byte[rows][];
                 for (var i = 0; i < bytes.Length; i++)
                 {
-                    bytes[i] = new byte[segmentLength];
+                    bytes[i] = RecycleMemoryStream.ByteArrayPool.New();
                     await stream.ReadExactAsync(bytes[i], 0, i == bytes.Length - 1 ? pos : segmentLength).ConfigureAwait(false);
                 }
                 data = new MultiArray<byte>(bytes, 0, dataLength);

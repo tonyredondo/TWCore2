@@ -176,8 +176,7 @@ namespace TWCore
             {
                 if (index >= _count) throw new IndexOutOfRangeException();
                 var globalIndex = index + _offset;
-                var arrayIndex = globalIndex / _segmentsLength;
-                var position = globalIndex % _segmentsLength;
+                var arrayIndex = Math.DivRem(globalIndex, _segmentsLength, out var position);
                 return ref ListOfArrays[arrayIndex][position];
             }
         }

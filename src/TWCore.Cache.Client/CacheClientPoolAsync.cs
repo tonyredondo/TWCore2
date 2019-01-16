@@ -921,10 +921,9 @@ namespace TWCore.Cache.Client
         /// <param name="data">Item Data</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetAsync(string key, object data)
+        public Task<bool> SetAsync(string key, object data)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetAsync(key, serObj).ConfigureAwait(false);
+            return SetAsync(key, Serializer.GetSerializedObject(data));
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -934,37 +933,9 @@ namespace TWCore.Cache.Client
         /// <param name="expirationDate">Item expiration date</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetAsync(string key, object data, TimeSpan expirationDate)
+        public Task<bool> SetAsync(string key, object data, TimeSpan expirationDate)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetAsync(key, serObj, expirationDate).ConfigureAwait(false);
-        }
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetAsync(string key, object data, TimeSpan? expirationDate, string[] tags)
-        {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetAsync(key, serObj, expirationDate, tags).ConfigureAwait(false);
-        }
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetAsync(string key, object data, DateTime expirationDate)
-        {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetAsync(key, serObj, expirationDate).ConfigureAwait(false);
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate);
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -975,10 +946,34 @@ namespace TWCore.Cache.Client
         /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetAsync(string key, object data, DateTime? expirationDate, string[] tags)
+        public Task<bool> SetAsync(string key, object data, TimeSpan? expirationDate, string[] tags)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetAsync(key, serObj, expirationDate, tags).ConfigureAwait(false);
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate, tags);
+        }
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetAsync(string key, object data, DateTime expirationDate)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate);
+        }
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetAsync(string key, object data, DateTime? expirationDate, string[] tags)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate, tags);
         }
         /// <summary>
         /// Updates the data of an existing storage item.
@@ -987,10 +982,9 @@ namespace TWCore.Cache.Client
         /// <param name="data">New item data</param>
         /// <returns>true if the data could be updated; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> UpdateDataAsync(string key, object data)
+        public Task<bool> UpdateDataAsync(string key, object data)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await UpdateDataAsync(key, serObj).ConfigureAwait(false);
+            return UpdateDataAsync(key, Serializer.GetSerializedObject(data));
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -999,10 +993,9 @@ namespace TWCore.Cache.Client
         /// <param name="data">Item Data</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetMultiAsync(string[] keys, object data)
+        public Task<bool> SetMultiAsync(string[] keys, object data)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetMultiAsync(keys, serObj).ConfigureAwait(false);
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data));
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -1012,10 +1005,9 @@ namespace TWCore.Cache.Client
         /// <param name="expirationDate">Item expiration date</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan expirationDate)
+        public Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan expirationDate)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetMultiAsync(keys, serObj, expirationDate).ConfigureAwait(false);
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate);
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -1026,10 +1018,9 @@ namespace TWCore.Cache.Client
         /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan? expirationDate, string[] tags)
+        public Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan? expirationDate, string[] tags)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetMultiAsync(keys, serObj, expirationDate, tags).ConfigureAwait(false);
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate, tags);
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -1039,10 +1030,9 @@ namespace TWCore.Cache.Client
         /// <param name="expirationDate">Item expiration date</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetMultiAsync(string[] keys, object data, DateTime expirationDate)
+        public Task<bool> SetMultiAsync(string[] keys, object data, DateTime expirationDate)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetMultiAsync(keys, serObj, expirationDate).ConfigureAwait(false);
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate);
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -1053,10 +1043,9 @@ namespace TWCore.Cache.Client
         /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> SetMultiAsync(string[] keys, object data, DateTime? expirationDate, string[] tags)
+        public Task<bool> SetMultiAsync(string[] keys, object data, DateTime? expirationDate, string[] tags)
         {
-            using (var serObj = Serializer.GetSerializedObject(data))
-                return await SetMultiAsync(keys, serObj, expirationDate, tags).ConfigureAwait(false);
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate, tags);
         }
         #endregion
 

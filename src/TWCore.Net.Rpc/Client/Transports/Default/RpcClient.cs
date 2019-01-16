@@ -67,8 +67,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private bool _onSession;
         private string _hub;
         private Guid _sessionId;
-        private Thread _receiveThread;
-
+        //private Thread _receiveThread;
+        private Task _receiveTask;
         #endregion
 
         #region Properties
@@ -231,20 +231,23 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
-            if (_receiveThread is null || !_receiveThread.IsAlive)
-            {
-                _receiveThread = new Thread(ReceiveThread)
-                {
-                    IsBackground = true,
-                    Name = "RPC.DefaultTransportClient.ReceiveThread",
-                    Priority = ThreadPriority.Normal
-                };
-                _receiveThread.Start();
-            }
+            //if (_receiveThread is null || !_receiveThread.IsAlive)
+            //{
+            //    _receiveThread = new Thread(ReceiveThread)
+            //    {
+            //        IsBackground = true,
+            //        Name = "RPC.DefaultTransportClient.ReceiveThread",
+            //        Priority = ThreadPriority.Normal
+            //    };
+            //    _receiveThread.Start();
+            //}
+            if (_receiveTask is null || _receiveTask.IsCompleted)
+                _receiveTask = Task.Run(ReceiveThread);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReceiveThread()
+        //private void ReceiveThread()
+        private async Task ReceiveThread()
         {
             while (_shouldBeConnected && !_connectionCancellationToken.IsCancellationRequested)
             {
@@ -253,13 +256,15 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     if (_client is null || !_client.Connected)
                     {
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
-                        ReconnectAsync().WaitAsync();
+                        await ReconnectAsync().ConfigureAwait(false);
                         Core.Log.InfoBasic("Reconnection succeded!");
                     }
                     try
                     {
+                        if (_client.Available == 0)
+                            await Task.Yield();
                         var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                        Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _connectionCancellationToken);
+                        _ = Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _connectionCancellationToken);
                     }
                     catch (DeserializerException dEx)
                     {
@@ -403,7 +408,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             _writeStream = null;
             _networkStream = null;
             _onSession = false;
-            _receiveThread = null;
+            //_receiveThread = null;
         }
     }
 }

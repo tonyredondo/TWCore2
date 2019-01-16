@@ -186,7 +186,8 @@ namespace TWCore
                 if (task.IsCompleted)
                     return task.Result;
                 currentSyncContext = SynchronizationContext.Current;
-                SynchronizationContext.SetSynchronizationContext(null);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(null);
                 return task.Result;
             }
             catch (AggregateException ex)
@@ -221,7 +222,8 @@ namespace TWCore
                 if (task.IsCompleted)
                     return task.Result;
                 currentSyncContext = SynchronizationContext.Current;
-                SynchronizationContext.SetSynchronizationContext(null);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(null);
                 return task.Wait(millisecondsTimeout) ? task.Result : default;
             }
             catch (AggregateException ex)
@@ -256,7 +258,8 @@ namespace TWCore
                 if (task.IsCompleted)
                     return task.Result;
                 currentSyncContext = SynchronizationContext.Current;
-                SynchronizationContext.SetSynchronizationContext(null);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(null);
                 return task.Wait(timeout) ? task.Result : default;
             }
             catch (AggregateException ex)
@@ -292,7 +295,8 @@ namespace TWCore
                     return task.Result;
 
                 currentSyncContext = SynchronizationContext.Current;
-                SynchronizationContext.SetSynchronizationContext(null);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(null);
                 task.Wait(cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                     return default;
@@ -327,7 +331,8 @@ namespace TWCore
             var currentSyncContext = SynchronizationContext.Current;
             try
             {
-                SynchronizationContext.SetSynchronizationContext(null);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(null);
                 return task.Result;
             }
             catch (AggregateException ex)
@@ -340,7 +345,8 @@ namespace TWCore
             }
             finally
             {
-                SynchronizationContext.SetSynchronizationContext(currentSyncContext);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(currentSyncContext);
             }
         }
         /// <summary>
@@ -357,7 +363,8 @@ namespace TWCore
             var currentSyncContext = SynchronizationContext.Current;
             try
             {
-                SynchronizationContext.SetSynchronizationContext(null);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(null);
                 task.Wait();
             }
             catch (AggregateException ex)
@@ -370,7 +377,8 @@ namespace TWCore
             }
             finally
             {
-                SynchronizationContext.SetSynchronizationContext(currentSyncContext);
+                if (currentSyncContext != null)
+                    SynchronizationContext.SetSynchronizationContext(currentSyncContext);
             }
         }
         /// <summary>
@@ -728,42 +736,15 @@ namespace TWCore
         /// </summary>
         /// <typeparam name="T">Type of task response</typeparam>
         /// <param name="task">Task source object</param>
-        /// <returns>Response of the task completation</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T WaitAndResults<T>(this ValueTask<T> task)
-        {
-            try
-            {
-                return task.GetAwaiter().GetResult();
-            }
-            catch (AggregateException ex)
-            {
-                if (ex.InnerExceptions.Count == 1)
-                {
-                    Core.Log.Write(ex.InnerExceptions[0]);
-                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
-                }
-                Core.Log.Write(ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-                throw;
-            }
-        }
-        /// <summary>
-        /// Waits for task finalization and returns the result value
-        /// </summary>
-        /// <typeparam name="T">Type of task response</typeparam>
-        /// <param name="task">Task source object</param>
         /// <param name="millisecondsTimeout">Milliseconds for waiting the task to complete</param>
         /// <returns>Response of the task completation</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T WaitAndResults<T>(this ValueTask<T> task, int millisecondsTimeout)
+        public static T WaitAndResults<T>(this ValueTask<T> task, int millisecondsTimeout = 0)
         {
             if (task.IsCompleted)
                 return task.Result;
+            if (millisecondsTimeout == 0)
+                return task.AsTask().WaitAndResults();
             return task.AsTask().WaitAndResults(millisecondsTimeout);
         }
         /// <summary>

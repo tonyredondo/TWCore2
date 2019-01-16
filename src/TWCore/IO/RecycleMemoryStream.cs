@@ -31,42 +31,12 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
-        /// <summary>
-        /// Maximum segment length
-        /// </summary>
-        public const int MaxLength = 1024;
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _collectPoolItems = true;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentPosition;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _totalLength;
-
-        #region Allocators
-        internal readonly struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
-        {
-            public int InitialSize => 4;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            public int DropTimeFrequencyInSeconds => 120;
-            public void DropAction(byte[] value) { }
-            public byte[] New() => new byte[MaxLength];
-            public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
-            public int DropMaxSizeThreshold => 10;
-        }
-        private readonly struct ListBytePoolAllocator : IPoolObjectLifecycle<List<byte[]>>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            public int DropTimeFrequencyInSeconds => 60;
-            public void DropAction(List<byte[]> value) { }
-            public List<byte[]> New() => new List<byte[]>(10);
-            public void Reset(List<byte[]> value) => value.Clear();
-            public int DropMaxSizeThreshold => 10;
-        }
-        #endregion
 
         #region Properties
         /// <inheritdoc />
@@ -140,8 +110,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, int index, int count, bool writable)
         {
-            _buffers = ListByteArrayPool.New();
-            _buffers.Add(ByteArrayPool.New());
+            _buffers = SegmentPool.RentContainer();
+            _buffers.Add(SegmentPool.Rent());
             _canWrite = writable;
             if (buffer != null)
                 Write(buffer.AsSpan(index, count));
@@ -170,7 +140,7 @@ namespace TWCore.IO
             if (_isClosed)
                 throw new IOException("The stream is closed.");
             if (_currentPosition >= _totalLength) return -1;
-            var row = Math.DivRem(_currentPosition, MaxLength, out var index);
+            var row = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var index);
             var res = _buffers[row][index];
             _currentPosition++;
             return res;
@@ -193,13 +163,13 @@ namespace TWCore.IO
             var bLength = buffer.Length;
             if (bLength == 0) return 0;
             if (_currentPosition >= _totalLength) return 0;
-            var fromRow = Math.DivRem(_currentPosition, MaxLength, out var fromIndex);
+            var fromRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var fromIndex);
             if (bLength > 1)
             {
                 var toPos = _currentPosition + bLength;
                 if (toPos > _totalLength)
                     toPos = _totalLength;
-                var toRow = Math.DivRem(toPos, MaxLength, out var toIndex);
+                var toRow = Math.DivRem(toPos, SegmentPool.SegmentLength, out var toIndex);
 
                 if (fromRow == toRow)
                 {
@@ -215,7 +185,7 @@ namespace TWCore.IO
                     Span<byte> source;
 
                     if (i == fromRow)
-                        source = _buffers[i].AsSpan(fromIndex, MaxLength - fromIndex);
+                        source = _buffers[i].AsSpan(fromIndex, SegmentPool.SegmentLength - fromIndex);
                     else if (i == toRow)
                         source = _buffers[i].AsSpan(0, toIndex);
                     else
@@ -284,9 +254,9 @@ namespace TWCore.IO
                 throw new IOException("The stream is closed.");
             if (!_canWrite)
                 throw new IOException("The stream is readonly.");
-            var cRow = Math.DivRem(_currentPosition, MaxLength, out var cIndex);
+            var cRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var cIndex);
             if (cRow >= _buffers.Count)
-                _buffers.Add(ByteArrayPool.New());
+                _buffers.Add(SegmentPool.Rent());
             _buffers[cRow][cIndex] = value;
             _currentPosition++;
             if (_currentPosition > _totalLength)
@@ -309,11 +279,11 @@ namespace TWCore.IO
             if (!_canWrite)
                 throw new IOException("The stream is readonly.");
             var finalPosition = _currentPosition + buffer.Length;
-            var cRow = Math.DivRem(_currentPosition, MaxLength, out var cIndex);
-            var fRow = Math.DivRem(finalPosition, MaxLength, out var fIndex);
+            var cRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var cIndex);
+            var fRow = Math.DivRem(finalPosition, SegmentPool.SegmentLength, out var fIndex);
             var missRows = (fRow + 1) - _buffers.Count;
             for (var i = 0; i < missRows; i++)
-                _buffers.Add(ByteArrayPool.New());
+                _buffers.Add(SegmentPool.Rent());
             if (cRow == fRow)
             {
                 var destination = _buffers[cRow].AsSpan(cIndex, fIndex - cIndex);
@@ -328,7 +298,7 @@ namespace TWCore.IO
                 Span<byte> destination;
 
                 if (i == cRow)
-                    destination = _buffers[i].AsSpan(cIndex, MaxLength - cIndex);
+                    destination = _buffers[i].AsSpan(cIndex, SegmentPool.SegmentLength - cIndex);
                 else if (i == fRow)
                     destination = _buffers[i].AsSpan(0, fIndex);
                 else
@@ -490,8 +460,8 @@ namespace TWCore.IO
                 if (_collectPoolItems)
                 {
                     foreach (var array in _buffers)
-                        ByteArrayPool.Store(array);
-                    ListByteArrayPool.Store(_buffers);
+                        SegmentPool.Return(array);
+                    SegmentPool.ReturnContainer(_buffers);
                 }
                 _buffers = null;
                 _isClosed = true;
@@ -524,8 +494,8 @@ namespace TWCore.IO
             _currentPosition = 0;
             _totalLength = 0;
             if (_collectPoolItems) return;
-            _buffers = ListByteArrayPool.New();
-            _buffers.Add(ByteArrayPool.New());
+            _buffers = SegmentPool.RentContainer();
+            _buffers.Add(SegmentPool.Rent());
             _collectPoolItems = true;
         }
         #endregion

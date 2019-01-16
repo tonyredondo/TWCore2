@@ -460,7 +460,19 @@ namespace TWCore.Net.Multicast
         private readonly struct ReceivedDatagrams
         {
             public readonly Memory<byte>[] Datagrams;
-            public bool Complete => !Datagrams?.Any(i => i.IsEmpty) ?? false;
+            public bool Complete
+            {
+                get
+                {
+                    if (Datagrams == null) return false;
+                    foreach(var i in Datagrams)
+                    {
+                        if (i.IsEmpty)
+                            return false;
+                    }
+                    return true;
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnlySequence<byte> GetMessage()

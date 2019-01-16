@@ -55,7 +55,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private readonly string _host;
         private readonly int _port;
         private readonly BinarySerializer _serializer;
-        private readonly Func<Task> _receiveThreadDelegate;
         private readonly Func<object, Task> _messageReceivedHandlerDelegate;
 
         private TcpClient _client;
@@ -65,10 +64,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private bool _shouldBeConnected;
         private CancellationTokenSource _connectionCancellationTokenSource;
         private CancellationToken _connectionCancellationToken;
-        private Task _receiveTask;
         private bool _onSession;
         private string _hub;
         private Guid _sessionId;
+        private Thread _receiveThread;
 
         #endregion
 
@@ -126,7 +125,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             _host = host;
             _port = port;
             _hub = "Default";
-            _receiveThreadDelegate = new Func<Task>(ReceiveThread);
             _messageReceivedHandlerDelegate = new Func<object, Task>(MessageReceivedHandler);
         }
         #endregion
@@ -233,15 +231,21 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
-            if (_receiveTask is null || _receiveTask.IsCompleted)
-                //_receiveTask = Task.Factory.StartNew(_receiveThreadDelegate, TaskCreationOptions.LongRunning);
-                _receiveTask = Task.Run(_receiveThreadDelegate);
+            if (_receiveThread is null || !_receiveThread.IsAlive)
+            {
+                _receiveThread = new Thread(ReceiveThread)
+                {
+                    IsBackground = true,
+                    Name = "RPC.DefaultTransportClient.ReceiveThread",
+                    Priority = ThreadPriority.Normal
+                };
+                _receiveThread.Start();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ReceiveThread()
+        private void ReceiveThread()
         {
-            //Thread.CurrentThread.Name = "RPC.DefaultTransportClient.ReceiveThread";
             while (_shouldBeConnected && !_connectionCancellationToken.IsCancellationRequested)
             {
                 try
@@ -249,13 +253,11 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     if (_client is null || !_client.Connected)
                     {
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
-                        await ReconnectAsync().ConfigureAwait(false);
+                        ReconnectAsync().WaitAsync();
                         Core.Log.InfoBasic("Reconnection succeded!");
                     }
                     try
                     {
-                        if (_client.Available == 0)
-                            await Task.Yield();
                         var message = _serializer.Deserialize<RPCMessage>(_readStream);
                         Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _connectionCancellationToken);
                     }
@@ -401,6 +403,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             _writeStream = null;
             _networkStream = null;
             _onSession = false;
+            _receiveThread = null;
         }
     }
 }

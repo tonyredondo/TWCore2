@@ -64,12 +64,12 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private Stream _networkStream;
         private BufferedStream _readStream;
         private BufferedStream _writeStream;
-        private Task _receiveTask;
         private bool _onSession;
         private string _hub;
         private Guid _sessionId;
         private CancellationTokenSource _tokenSource;
         private string _clientIp;
+        private Thread _receiveThread;
         #endregion
 
         #region Properties
@@ -169,22 +169,26 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
-            if (_receiveTask is null || _receiveTask.IsCompleted)
-                //_receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
-                _receiveTask = Task.Run(ReceiveThread);
+            if (_receiveThread is null || !_receiveThread.IsAlive)
+            {
+                _receiveThread = new Thread(ReceiveThread)
+                {
+                    IsBackground = true,
+                    Name = "RPC.DefaultTransportServer.ReceiveThread",
+                    Priority = ThreadPriority.Normal
+                };
+                _receiveThread.Start();
+            }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ReceiveThread()
+        private void ReceiveThread()
         {
-            //Thread.CurrentThread.Name = "RPC.DefaultTransportServer.ReceiveThread";
             while (_client != null && _client.Connected)
             {
                 try
                 {
-                    if (_client.Available == 0)
-                        await Task.Yield();
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    _ = Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _tokenSource.Token);
+                    Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _tokenSource.Token);
                 }
                 catch (DeserializerException dEx)
                 {
@@ -276,6 +280,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 _writeStream = null;
                 _networkStream = null;
                 _tokenSource = null;
+
+                _receiveThread = null;
             }
             catch
             {

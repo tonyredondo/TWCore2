@@ -92,7 +92,7 @@ namespace TWCore.Serialization
         {
             if (data is null) return;
             var type = data.GetType();
-            _dataType = type.GetTypeName();
+            _dataType = string.Intern(type.GetTypeName());
             if (data is byte[] bytes)
             {
                 _serializerMimeType = null;
@@ -117,9 +117,9 @@ namespace TWCore.Serialization
                 var serMimeType = serializer.MimeTypes[0];
                 var serCompressor = serializer.Compressor?.EncodingType;
                 if (serCompressor != null)
-                    _serializerMimeType = serMimeType + ":" + serCompressor;
+                    _serializerMimeType = string.Intern(serMimeType + ":" + serCompressor);
                 else
-                    _serializerMimeType = serMimeType;
+                    _serializerMimeType = string.Intern(serMimeType);
                 var cSerializer = SerializerCache.GetOrAdd(_serializerMimeType, smt => CreateSerializer(smt));
                 _data = cSerializer.Serialize(data, type);
                 _canCollect = true;
@@ -135,8 +135,8 @@ namespace TWCore.Serialization
         private SerializedObject(byte[] data, string dataType, string serializerMimeType)
         {
             _data = data;
-            _dataType = dataType;
-            _serializerMimeType = serializerMimeType;
+            _dataType = string.Intern(dataType);
+            _serializerMimeType = string.Intern(serializerMimeType);
             _canCollect = true;
         }
         /// <summary>
@@ -149,14 +149,15 @@ namespace TWCore.Serialization
         private SerializedObject(MultiArray<byte> data, string dataType, string serializerMimeType)
         {
             _data = data;
-            _dataType = dataType;
-            _serializerMimeType = serializerMimeType;
+            _dataType = string.Intern(dataType);
+            _serializerMimeType = string.Intern(serializerMimeType);
             _canCollect = true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ISerializer CreateSerializer(string serMimeType)
         {
+            
             var idx = serMimeType.IndexOf(':');
             var serMime = idx < 0 ? serMimeType : serMimeType.Substring(0, idx);
             var serComp = idx < 0 ? null : serMimeType.Substring(idx + 1);

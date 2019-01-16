@@ -279,6 +279,8 @@ namespace TWCore
                 {
                 }
                 public int DropMaxSizeThreshold => 10;
+                public int MaximumSize => 100;
+                public int DropQuantity => 10;
             }
 
             [IgnoreStackFrameLog]

@@ -214,10 +214,16 @@ namespace TWCore
         private static void DropTimerMethod(object state)
         {
             var oPool = (ObjectPool<T, TPoolObjectLifecycle>)state;
-            if (oPool != null && oPool._count > oPool._allocator.DropMaxSizeThreshold && oPool._objectStack.TryPop(out var item))
+            if (oPool == null) return;
+            for (var i = 0; i < oPool._allocator.DropQuantity; i++)
             {
-                Interlocked.Decrement(ref oPool._count);
-                oPool._allocator.DropAction(item);
+                if (oPool._count > oPool._allocator.DropMaxSizeThreshold && oPool._objectStack.TryPop(out var item))
+                {
+                    Interlocked.Decrement(ref oPool._count);
+                    oPool._allocator.DropAction(item);
+                }
+                else
+                    break;
             }
         }
         /// <inheritdoc />
@@ -278,6 +284,7 @@ namespace TWCore
                 _firstItem = obj;
                 return;
             }
+            if (_count > _allocator.MaximumSize) return;
             _objectStack.Push(obj);
             Interlocked.Increment(ref _count);
         }

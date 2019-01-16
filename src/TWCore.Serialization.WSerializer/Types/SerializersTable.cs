@@ -46,6 +46,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct Table2048Allocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -60,6 +62,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct Table1024Allocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -74,6 +78,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct Table512Allocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -88,6 +94,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct TableNoCacheAllocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -102,6 +110,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Init(SerializersTable table)
@@ -303,6 +313,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct Table2048Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -317,6 +329,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct Table1024Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -331,6 +345,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct Table512Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -345,6 +361,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct TableNoCacheAllocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -359,6 +377,8 @@ namespace TWCore.Serialization.WSerializer.Types
             {
             }
             public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Init(DeserializersTable table)

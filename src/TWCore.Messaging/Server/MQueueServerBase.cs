@@ -317,10 +317,13 @@ namespace TWCore.Messaging.Server
                         ResponseSent != null || MQueueServerEvents.ResponseSent != null)
                     {
                         rsea = new ResponseSentEventArgs(Name, e.Response);
+                        Task t1 = null, t2 = null;
                         if (BeforeSendResponse != null)
-                            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+                            t1 = BeforeSendResponse.InvokeAsync(this, rsea);
                         if (MQueueServerEvents.BeforeSendResponse != null)
-                            await MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+                            t2 = MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea);
+                        if (t1 != null) await t1.ConfigureAwait(false);
+                        if (t2 != null) await t2.ConfigureAwait(false);
                     }
 
                     var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
@@ -329,10 +332,13 @@ namespace TWCore.Messaging.Server
                         if (rsea != null)
                         {
                             rsea.MessageLength = sentBytes;
+                            Task t1 = null, t2 = null;
                             if (ResponseSent != null)
-                                await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                                t1 = ResponseSent.InvokeAsync(this, rsea);
                             if (MQueueServerEvents.ResponseSent != null)
-                                await MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                                t2 = MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea);
+                            if (t1 != null) await t1.ConfigureAwait(false);
+                            if (t2 != null) await t2.ConfigureAwait(false);
                         }
                     }
                     else
@@ -357,10 +363,13 @@ namespace TWCore.Messaging.Server
                 Counters.IncrementReceivingTime(e.Message.Header.Response.TotalTime);
                 Counters.IncrementTotalReceivingBytes(e.MessageLength);
                 Core.Log.LibDebug("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.Message.CorrelationId, iMessages);
+                Task t1 = null, t2 = null;
                 if (ResponseReceived != null)
-                    await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                    t1 = ResponseReceived.InvokeAsync(sender, e);
                 if (MQueueServerEvents.ResponseReceived != null)
-                    await MQueueServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                    t2 = MQueueServerEvents.ResponseReceived.InvokeAsync(sender, e);
+                if (t1 != null) await t1.ConfigureAwait(false);
+                if (t2 != null) await t2.ConfigureAwait(false);
                 Counters.DecrementMessages();
                 Counters.IncrementTotalMessagesProccesed();
             }

@@ -91,8 +91,10 @@ namespace TWCore.Messaging.RabbitMQ
                     Route = e.Sender.Route,
                     Parameters = e.Sender.Parameters
                 });
-                var sendTasks = queues.Select(SendTaskAsync).ToArray();
-                await Task.WhenAny(sendTasks).ConfigureAwait(false);
+                var tsk = new Task[queues.Count];
+                for (var i = 0; i < tsk.Length; i++)
+                    tsk[i] = SendTaskAsync(queues[i]);
+                await Task.WhenAny(tsk).ConfigureAwait(false);
             }
 
 		    return message.Count;

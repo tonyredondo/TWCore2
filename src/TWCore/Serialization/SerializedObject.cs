@@ -308,11 +308,11 @@ namespace TWCore.Serialization
             if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
-            FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
+            using (FileLockerAsync.GetLockAsync(filepath).GetLock())
             {
-                using (var fs = new FileStream(fpath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
                     CopyTo(fs);
-            }, filepath);
+            }
         }
         /// <summary>
         /// Get SerializedObject instance from the MultiArray representation.
@@ -633,11 +633,11 @@ namespace TWCore.Serialization
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
 
-            return FileLockerAsync.GetLockAsync(filepath).Lock(fpath =>
+            using (FileLockerAsync.GetLockAsync(filepath).GetLock())
             {
                 using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     return FromStream(fs);
-            }, filepath);
+            }
         }
         #endregion
 

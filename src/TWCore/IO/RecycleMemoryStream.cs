@@ -29,7 +29,7 @@ namespace TWCore.IO
     /// <summary>
     /// Recycle Arrays MemoryStream
     /// </summary>
-    public class RecycleMemoryStream : Stream
+    public sealed class RecycleMemoryStream : Stream
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
@@ -115,6 +115,14 @@ namespace TWCore.IO
             _canWrite = writable;
             if (buffer != null)
                 Write(buffer.AsSpan(index, count));
+        }
+        /// <summary>
+        /// Releases unmanaged resources and performs other cleanup operations before the
+        /// <see cref="T:TWCore.IO.RecycleMemoryStream"/> is reclaimed by garbage collection.
+        /// </summary>
+        ~RecycleMemoryStream()
+        {
+            Dispose(false);
         }
         /// <summary>
         /// Dispose all internal resources

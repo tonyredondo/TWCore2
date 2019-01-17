@@ -4,22 +4,21 @@ using System.IO;
 using BenchmarkDotNet.Attributes;
 using TWCore.IO;
 using TWCore.Serialization.NSerializer;
+using TWCore.Serialization.RawSerializer;
 
 namespace TWCore.Tests.Benchmark
 {
-    [ClrJob, CoreJob(baseline: true), MonoJob]
+    [ClrJob, CoreJob(baseline: true)]
     [RPlotExporter, RankColumn, MinColumn, MaxColumn, MemoryDiagnoser]
     public class SerializersBench
     {
         private List<STest> _data;
         private MultiArray<byte> _binData;
         private NBinarySerializer _nBinary;
-        private SerializersTable _nBinarySerTable;
-        private DeserializersTable _nBinaryDSerTable;
+        private RawBinarySerializer _rawBinary;
         private MemoryStream _memStream;
-        private RecycleMemoryStream _recmemStream;
 
-        [Params(1, 1000)]
+        [Params(1)]
         public int N;
         
         [GlobalSetup]
@@ -60,23 +59,19 @@ namespace TWCore.Tests.Benchmark
                     new STest { FirstName = "Person" , LastName = "Person" + "." +18, Age = 19 },
                 };
             _nBinary = new NBinarySerializer();
+            _rawBinary = new RawBinarySerializer();
 
             _binData = _nBinary.Serialize(_data);
+            _binData = _rawBinary.Serialize(_data);
             
-            _nBinarySerTable = new SerializersTable();
             _memStream = new MemoryStream();
-            _nBinarySerTable.Serialize(_memStream, _data);
+            _nBinary.Serialize(_data, _memStream);
             _memStream.Position = 0;
-            
-            _nBinaryDSerTable = new DeserializersTable();
-            
-            _recmemStream = new RecycleMemoryStream();
-            _nBinarySerTable.Serialize(_recmemStream, _data);
-            _recmemStream.Position = 0;
+            _rawBinary.Serialize(_data, _memStream);
         }
 
         [Benchmark]
-        public MultiArray<byte> Serialize()
+        public MultiArray<byte> NSerialize()
         {
             var data = MultiArray<byte>.Empty;
             for(var i = 0; i < N; i ++)
@@ -85,7 +80,7 @@ namespace TWCore.Tests.Benchmark
         }
 
         [Benchmark]
-        public object Deserialize()
+        public object NDeserialize()
         {
             object data = null;
             for(var i = 0; i < N; i++)
@@ -94,29 +89,7 @@ namespace TWCore.Tests.Benchmark
         }
 
         [Benchmark]
-        public void SerializerTable()
-        {
-            for (var i = 0; i < N; i++)
-            {
-                _nBinarySerTable.Serialize(_memStream, _data);
-                _memStream.Position = 0;
-            }
-        }
-        [Benchmark]
-        public object DeserializerTable()
-        {
-            object data = null;
-            for (var i = 0; i < N; i++)
-            {
-                _memStream.Position = 0;
-                data = _nBinaryDSerTable.Deserialize(_memStream);
-            }
-            return data;
-        }
-
-
-        [Benchmark]
-        public void SerializerToStream()
+        public void NSerializerToStream()
         {
             for (var i = 0; i < N; i++)
             {
@@ -125,13 +98,53 @@ namespace TWCore.Tests.Benchmark
             }
         }
         [Benchmark]
-        public object DeserializerFromStream()
+        public object NDeserializerFromStream()
         {
             object data = null;
             for (var i = 0; i < N; i++)
             {
                 _memStream.Position = 0;
                 data = _nBinary.Deserialize<object>(_memStream);
+            }
+            return data;
+        }
+        //
+
+        [Benchmark]
+        public MultiArray<byte> RawSerialize()
+        {
+            var data = MultiArray<byte>.Empty;
+            for (var i = 0; i < N; i++)
+                data = _rawBinary.Serialize(_data);
+            return data;
+        }
+
+        [Benchmark]
+        public object RawDeserialize()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+                data = _rawBinary.Deserialize<object>(_binData);
+            return data;
+        }
+
+        [Benchmark]
+        public void RawSerializerToStream()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                _rawBinary.Serialize(_data, _memStream);
+                _memStream.Position = 0;
+            }
+        }
+        [Benchmark]
+        public object RawDeserializerFromStream()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+            {
+                _memStream.Position = 0;
+                data = _rawBinary.Deserialize<object>(_memStream);
             }
             return data;
         }

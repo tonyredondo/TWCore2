@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using TWCore.IO;
 // ReSharper disable UnusedMember.Global
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -43,7 +44,7 @@ namespace TWCore
         public static MultiArray<T> Empty = new MultiArray<T>();
 
         //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal readonly IList<T[]> ListOfArrays;
+        internal readonly List<T[]> ListOfArrays;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly int _offset;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -81,7 +82,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(T[] array)
         {
-            ListOfArrays = new[] { array };
+            ListOfArrays = new List<T[]>
+            {
+                array
+            };
             _offset = 0;
             _count = array?.Length ?? 0;
             _segmentsLength = _count;
@@ -100,7 +104,10 @@ namespace TWCore
                 throw new ArgumentOutOfRangeException(nameof(offset), "The count should be a positive number.");
             if (array.Length - offset < count)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid.");
-            ListOfArrays = new[] { array };
+            ListOfArrays = new List<T[]>
+            {
+                array
+            };
             _offset = offset;
             _count = count;
             _segmentsLength = _count;
@@ -111,7 +118,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray(ArraySegment<T> array)
         {
-            ListOfArrays = new[] { array.Array };
+            ListOfArrays = new List<T[]>
+            {
+                array.Array
+            };
             _offset = array.Offset;
             _count = array.Count;
             _segmentsLength = _count;
@@ -120,7 +130,7 @@ namespace TWCore
         /// Provides a MultiArray implementation without copying buffer.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public MultiArray(IList<T[]> segments)
+        public MultiArray(List<T[]> segments)
         {
             ListOfArrays = segments;
             _offset = 0;
@@ -135,7 +145,7 @@ namespace TWCore
         /// Provides a MultiArray implementation without copying buffer.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public MultiArray(IList<T[]> segments, int offset, int count)
+        public MultiArray(List<T[]> segments, int offset, int count)
         {
             ListOfArrays = segments;
             if (offset < 0)
@@ -154,7 +164,7 @@ namespace TWCore
             _count = count;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private MultiArray(IList<T[]> segments, int offset, int count, int segmentsLength)
+        private MultiArray(List<T[]> segments, int offset, int count, int segmentsLength)
         {
             ListOfArrays = segments;
             _offset = offset;
@@ -286,7 +296,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
-            if (ListOfArrays is IList<byte[]> arrays)
+            if (ListOfArrays is List<byte[]> arrays)
                 return MultiArrayBytesComparer.Instance.GetHashCode(new MultiArray<byte>(arrays, _offset, _count, _segmentsLength));
             var res = 0x2D2816FE;
             var step = (_count / 64) + 1;
@@ -635,7 +645,7 @@ namespace TWCore
         /// </summary>
         /// <param name="listOfSegments">Array of arrays sources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments);
+        public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments.ToList());
         #endregion
 
         #region Private Methods

@@ -33,7 +33,6 @@ namespace TWCore.Net.RPC.Client
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object[] _taskArgument = new object[1];
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<Type, MethodInfo> TaskFromResultsMethods = new ConcurrentDictionary<Type, MethodInfo>();
 
         /// <inheritdoc />
@@ -73,17 +72,11 @@ namespace TWCore.Net.RPC.Client
                 throw new Exception("Method not found");
 
             var returnType = descriptor.TypeOfReturnType;
-            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task);
-            if (isAsync)
+            if (descriptor.ReturnIsTask)
             {
                 var res = _client.ServerInvokeAsync(_descriptor.Name, name, args).WaitAndResults();
-                if (returnType.GenericTypeArguments.Length > 0)
-                {
-                    var taskCreator = TaskFromResultsMethods.GetOrAdd(returnType.GenericTypeArguments[0], type => typeof(Task).GetMethod("FromResult").MakeGenericMethod(type));
-                    _taskArgument[0] = res;
-                    result = taskCreator.Invoke(null, _taskArgument);
-                    _taskArgument[0] = null;
-                }
+                if (descriptor.CreateTaskFromResult != null)
+                    result = descriptor.CreateTaskFromResult(null, new[] { res });
                 else
                     result = Task.CompletedTask;
             }

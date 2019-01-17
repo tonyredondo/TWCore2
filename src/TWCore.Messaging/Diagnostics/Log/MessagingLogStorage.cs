@@ -37,13 +37,14 @@ namespace TWCore.Diagnostics.Log.Storages
     {
         private readonly string _queueName;
         private readonly Timer _timer;
-        private volatile bool _processing;
+        private int _processing = 0;
         private int _count;
         private readonly BlockingCollection<object> _items;
         private IMQueueRawClient _queueClient;
         private readonly IPool<List<LogItem>> _pool;
         private readonly IPool<List<GroupMetadata>> _poolGroup;
         private bool _enabled = true;
+        private Task[] _tsks = new Task[2];
 
         #region .ctor
         /// <summary>
@@ -145,13 +146,12 @@ namespace TWCore.Diagnostics.Log.Storages
         #region Private methods
         private void TimerCallback(object state)
         {
-            if (_processing) return;
-            _processing = true;
+            if (Interlocked.CompareExchange(ref _processing, 1, 0) == 1) return;
             try
             {
                 if (_items.Count == 0)
                 {
-                    _processing = false;
+                    Interlocked.Exchange(ref _processing, 0);
                     return;
                 }
 
@@ -176,7 +176,11 @@ namespace TWCore.Diagnostics.Log.Storages
                 var tskLogs = logItemsToSend.Count > 0 ? _queueClient.SendAsync(logItemsToSend) : Task.CompletedTask;
                 var tskGroup = metadataToSend.Count > 0 ? _queueClient.SendAsync(metadataToSend) : Task.CompletedTask;
 
-                Task.WaitAll(tskLogs, tskGroup);
+                _tsks[0] = tskLogs;
+                _tsks[1] = tskGroup;
+                Task.WaitAll(_tsks);
+                _tsks[0] = null;
+                _tsks[1] = null;
 
                 logItemsToSend.Clear();
                 metadataToSend.Clear();
@@ -193,7 +197,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 //
             }
-            _processing = false;
+            Interlocked.Exchange(ref _processing, 0);
         }
         #endregion
     }

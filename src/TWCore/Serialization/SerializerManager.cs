@@ -294,7 +294,7 @@ namespace TWCore.Serialization
         {
             var props = itemType.GetRuntimeProperties().Where(p => p.PropertyType == typeof(object) && p.Name != "System.Collections.IList.Item" && p.CanRead);
             var fields = itemType.GetRuntimeFields().Where(f => f.FieldType == typeof(object));
-            props.Each(p =>
+            foreach (var p in props)
             {
                 try
                 {
@@ -302,7 +302,10 @@ namespace TWCore.Serialization
                     if (ov is null) return;
                     var ovType = ov.GetType();
                     if (ovType.IsConstructedGenericType)
-                        ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
+                    {
+                        foreach (var t in ovType.GenericTypeArguments)
+                            extraTypes.Add(t);
+                    }
                     if (ovType == typeof(object))
                         FillExtraTypes(extraTypes, ov, p.PropertyType);
                     else
@@ -312,8 +315,8 @@ namespace TWCore.Serialization
                 {
                     // ignored
                 }
-            });
-            fields.Each(f =>
+            }
+            foreach (var f in fields)
             {
                 try
                 {
@@ -321,14 +324,17 @@ namespace TWCore.Serialization
                     if (ov is null) return;
                     var ovType = ov.GetType();
                     if (ovType.IsConstructedGenericType)
-                        ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
+                    {
+                        foreach (var t in ovType.GenericTypeArguments)
+                            extraTypes.Add(t);
+                    }
                     extraTypes.Add(ov.GetType());
                 }
                 catch
                 {
                     // ignored
                 }
-            });
+            }
         }
         #endregion
 

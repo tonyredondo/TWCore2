@@ -109,14 +109,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void Debug(string message, object arg1);
+        void Debug<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void Debug(string message, object arg1, object arg2);
+        void Debug<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -124,7 +124,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void Debug(string message, object arg1, object arg2, object arg3);
+        void Debug<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -144,14 +144,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void Verbose(string message, object arg1);
+        void Verbose<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void Verbose(string message, object arg1, object arg2);
+        void Verbose<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
@@ -159,7 +159,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void Verbose(string message, object arg1, object arg2, object arg3);
+        void Verbose<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
@@ -181,7 +181,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="ex">Exception</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void Error(Exception ex, string message, object arg1);
+        void Error<T1>(Exception ex, string message, in T1 arg1);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -189,7 +189,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void Error(Exception ex, string message, object arg1, object arg2);
+        void Error<T1, T2>(Exception ex, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -198,7 +198,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void Error(Exception ex, string message, object arg1, object arg2, object arg3);
+        void Error<T1, T2, T3>(Exception ex, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -216,14 +216,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void Error(string message, object arg1);
+        void Error<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void Error(string message, object arg1, object arg2);
+        void Error<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -231,7 +231,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void Error(string message, object arg1, object arg2, object arg3);
+        void Error<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -251,14 +251,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void Warning(string message, object arg1);
+        void Warning<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void Warning(string message, object arg1, object arg2);
+        void Warning<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
@@ -266,7 +266,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void Warning(string message, object arg1, object arg2, object arg3);
+        void Warning<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
@@ -286,14 +286,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void InfoBasic(string message, object arg1);
+        void InfoBasic<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a InfoBasic item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void InfoBasic(string message, object arg1, object arg2);
+        void InfoBasic<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a InfoBasic item into the log storages
         /// </summary>
@@ -301,7 +301,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void InfoBasic(string message, object arg1, object arg2, object arg3);
+        void InfoBasic<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a InfoBasic item into the log storages
         /// </summary>
@@ -321,14 +321,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void InfoMedium(string message, object arg1);
+        void InfoMedium<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void InfoMedium(string message, object arg1, object arg2);
+        void InfoMedium<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
@@ -336,7 +336,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void InfoMedium(string message, object arg1, object arg2, object arg3);
+        void InfoMedium<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
@@ -356,14 +356,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void InfoDetail(string message, object arg1);
+        void InfoDetail<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void InfoDetail(string message, object arg1, object arg2);
+        void InfoDetail<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
@@ -371,7 +371,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void InfoDetail(string message, object arg1, object arg2, object arg3);
+        void InfoDetail<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
@@ -391,14 +391,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void Stats(string message, object arg1);
+        void Stats<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a Stats item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void Stats(string message, object arg1, object arg2);
+        void Stats<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a Stats item into the log storages
         /// </summary>
@@ -406,7 +406,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void Stats(string message, object arg1, object arg2, object arg3);
+        void Stats<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a Stats item into the log storages
         /// </summary>
@@ -426,14 +426,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void LibDebug(string message, object arg1);
+        void LibDebug<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a LibDebug item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void LibDebug(string message, object arg1, object arg2);
+        void LibDebug<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a LibDebug item into the log storages
         /// </summary>
@@ -441,7 +441,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void LibDebug(string message, object arg1, object arg2, object arg3);
+        void LibDebug<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a LibDebug item into the log storages
         /// </summary>
@@ -461,14 +461,14 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void LibVerbose(string message, object arg1);
+        void LibVerbose<T1>(string message, in T1 arg1);
         /// <summary>
         /// Write a LibVerbose item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void LibVerbose(string message, object arg1, object arg2);
+        void LibVerbose<T1, T2>(string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a LibVerbose item into the log storages
         /// </summary>
@@ -476,7 +476,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void LibVerbose(string message, object arg1, object arg2, object arg3);
+        void LibVerbose<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a LibVerbose item into the log storages
         /// </summary>
@@ -500,7 +500,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void DebugGroup(string groupName, string message, object arg1);
+        void DebugGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -508,7 +508,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void DebugGroup(string groupName, string message, object arg1, object arg2);
+        void DebugGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -517,7 +517,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void DebugGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void DebugGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -540,7 +540,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void VerboseGroup(string groupName, string message, object arg1);
+        void VerboseGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
@@ -548,7 +548,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void VerboseGroup(string groupName, string message, object arg1, object arg2);
+        void VerboseGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
@@ -557,7 +557,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void VerboseGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void VerboseGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
@@ -589,7 +589,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void ErrorGroup(Exception ex, string groupName, string message, object arg1);
+        void ErrorGroup<T1>(Exception ex, string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -598,7 +598,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void ErrorGroup(Exception ex, string groupName, string message, object arg1, object arg2);
+        void ErrorGroup<T1, T2>(Exception ex, string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -608,7 +608,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void ErrorGroup(Exception ex, string groupName, string message, object arg1, object arg2, object arg3);
+        void ErrorGroup<T1, T2, T3>(Exception ex, string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -629,7 +629,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void ErrorGroup(string groupName, string message, object arg1);
+        void ErrorGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -637,7 +637,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void ErrorGroup(string groupName, string message, object arg1, object arg2);
+        void ErrorGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -646,7 +646,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void ErrorGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void ErrorGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -669,7 +669,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void WarningGroup(string groupName, string message, object arg1);
+        void WarningGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
@@ -677,7 +677,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void WarningGroup(string groupName, string message, object arg1, object arg2);
+        void WarningGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
@@ -686,7 +686,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void WarningGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void WarningGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
@@ -709,7 +709,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void InfoBasicGroup(string groupName, string message, object arg1);
+        void InfoBasicGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a InfoBasic item into the log storages
         /// </summary>
@@ -717,7 +717,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void InfoBasicGroup(string groupName, string message, object arg1, object arg2);
+        void InfoBasicGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a InfoBasic item into the log storages
         /// </summary>
@@ -726,7 +726,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void InfoBasicGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void InfoBasicGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a InfoBasic item into the log storages
         /// </summary>
@@ -749,7 +749,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void InfoMediumGroup(string groupName, string message, object arg1);
+        void InfoMediumGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
@@ -757,7 +757,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void InfoMediumGroup(string groupName, string message, object arg1, object arg2);
+        void InfoMediumGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
@@ -766,7 +766,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void InfoMediumGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void InfoMediumGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
@@ -789,7 +789,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void InfoDetailGroup(string groupName, string message, object arg1);
+        void InfoDetailGroup<T1>(string groupName, string message, in T1 arg1);
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
@@ -797,7 +797,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void InfoDetailGroup(string groupName, string message, object arg1, object arg2);
+        void InfoDetailGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
@@ -806,7 +806,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void InfoDetailGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void InfoDetailGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
@@ -831,7 +831,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="groupName">Group name</param>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
-        void StatsGroup(string groupName, string message, object arg1);
+        void StatsGroup<T1>(string groupName, string message, in T1 arg1);
         /// <inheritdoc />
         /// <summary>
         /// Write a Stats item into the log storages
@@ -840,7 +840,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
-        void StatsGroup(string groupName, string message, object arg1, object arg2);
+        void StatsGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2);
         /// <inheritdoc />
         /// <summary>
         /// Write a Stats item into the log storages
@@ -850,7 +850,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
-        void StatsGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        void StatsGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3);
         /// <inheritdoc />
         /// <summary>
         /// Write a Stats item into the log storages

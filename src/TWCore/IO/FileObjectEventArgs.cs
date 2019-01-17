@@ -24,7 +24,7 @@ namespace TWCore.IO
     /// FileObject event args
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
-    public class FileObjectEventArgs<T> : EventArgs
+    public sealed class FileObjectEventArgs<T> : EventArgs
     {
         /// <summary>
         /// File path for the object

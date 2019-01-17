@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Descriptors;
 
 namespace TWCore.Net.RPC.Server
@@ -29,5 +30,30 @@ namespace TWCore.Net.RPC.Server
         /// Service descriptor collection
         /// </summary>
         public ServiceDescriptorCollection Descriptors { get; set; }
+
+
+
+        #region Statics
+        /// <summary>
+        /// Server descriptor event args, for the event when the server receive a server descriptor request.
+        /// </summary>
+        /// <returns>ServerDescriptorsEventArgs instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ServerDescriptorsEventArgs Retrieve()
+        {
+            return ReferencePool<ServerDescriptorsEventArgs>.Shared.New();
+        }
+        /// <summary>
+        /// Stores a server descriptor args.
+        /// </summary>
+        /// <param name="value">Method event args value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(ServerDescriptorsEventArgs value)
+        {
+            if (value is null) return;
+            value.Descriptors = null;
+            ReferencePool<ServerDescriptorsEventArgs>.Shared.Store(value);
+        }
+        #endregion
     }
 }

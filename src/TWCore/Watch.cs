@@ -278,6 +278,9 @@ namespace TWCore
                 public void DropAction(WItem value)
                 {
                 }
+                public int DropMaxSizeThreshold => 10;
+                public int MaximumSize => 100;
+                public int DropQuantity => 10;
             }
 
             [IgnoreStackFrameLog]
@@ -352,7 +355,7 @@ namespace TWCore
             #endregion
 
             #region Nested Types
-            private class LogStatItem
+            private sealed class LogStatItem
             {
                 public int Id;
                 public int Margin;
@@ -578,9 +581,13 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset()
             {
-                _level = LogLevel.Stats;
                 _disposedValue = false;
+                _id = 0;
+                _margin = 0;
+                _level = LogLevel.Stats;
                 _lastMessage = null;
+                _groupValue = null;
+                _counterKey = null;
                 _ticksTimestamp = Stopwatch.GetTimestamp();
                 _initTicks = _ticksTimestamp;
                 _lastTapTicks = _ticksTimestamp;

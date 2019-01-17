@@ -15,16 +15,20 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 using TWCore.IO;
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable InvertIf
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming
@@ -63,10 +67,11 @@ namespace TWCore.Net.HttpServer
             [HttpStatusCode.Not_Implemented] = ("501", "Not Implemented"),
             [HttpStatusCode.Service_Unavailable] = ("503", "Service Unavailable")
         };
-        internal readonly EventStream EventStream;
-        private readonly HttpContext _context;
+        internal EventStream EventStream;
+        private HttpContext _context;
         private TcpClient _client;
         private bool _headersSent;
+        private readonly StringBuilder _builder = new StringBuilder();
 
         #region Properties
         /// <summary>
@@ -102,7 +107,7 @@ namespace TWCore.Net.HttpServer
         {
             _client = socketClient;
             EventStream = new EventStream(new BufferedStream(socketClient.GetStream(), 16384));
-            EventStream.BeforeWrite += (s, e) => WriteHeaders();
+            EventStream.BeforeWrite += (s, e) => WriteHeadersAsync();
             _context = context;
             Version = HttpVersion.Version1_0;
             StatusCode = HttpStatusCode.OK;
@@ -113,11 +118,10 @@ namespace TWCore.Net.HttpServer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void WriteHeaders()
+        private async Task WriteHeadersAsync()
         {
             if (_headersSent || !OutputStream.CanWrite) return;
 
-            //Core.Log.LibVerbose("Writing Response Headers...");
             var useGZip = false;
             var useDeflate = false;
 
@@ -142,18 +146,28 @@ namespace TWCore.Net.HttpServer
             }
             var version = Version == HttpVersion.Version1_0 ? "1.0" : Version == HttpVersion.Version1_1 ? "1.1" : "1.0";
             var status = StatusCodeResponses[StatusCode];
-            EventStream.BaseStream.WriteLine(string.Concat("HTTP/", version, " ", status.Item1, " ", status.Item2));
-            EventStream.BaseStream.WriteLine("Date: " + Core.Now.ToString("R"));
-            EventStream.BaseStream.WriteLine("Content-Type: " + ContentType);
+            _builder.AppendFormat("HTTP/{0} {1} {2}\nDate: {3:R}\nContent-Type: {4}\n", version, status.Item1, status.Item2, Core.Now, ContentType);
             foreach (var header in Headers)
             {
                 if (header.Key == "Date")
                     continue;
                 if (header.Key == "Content-Type")
                     continue;
-                EventStream.BaseStream.WriteLine(header.Key + ": " + header.Value);
+                _builder.AppendLine(header.Key + ": " + header.Value);
             }
-            EventStream.BaseStream.WriteLine("");
+            _builder.AppendLine(string.Empty);
+            var strHeader = _builder.ToString();
+            var headerLength = Encoding.UTF8.GetByteCount(strHeader);
+            var headerBytes = ArrayPool<byte>.Shared.Rent(headerLength);
+            try
+            {
+                Encoding.UTF8.GetBytes(strHeader, 0, strHeader.Length, headerBytes, 0);
+                await EventStream.BaseStream.WriteAsync(headerBytes, 0, headerLength).ConfigureAwait(false);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(headerBytes);
+            }
             if (useGZip)
                 EventStream.BaseStream = new GZipStream(EventStream.BaseStream, CompressionMode.Compress, false);
             else if (useDeflate)
@@ -172,7 +186,6 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(Stream stream, int bufferLength = 4096, int timeOutToReadBytes = 0)
         {
-            //Core.Log.LibVerbose("Writing a stream to the Response stream using a buffer of {0} bytes", bufferLength);
             stream.WriteToStream(OutputStream, 0, bufferLength, timeOutToReadBytes);
         }
         /// <summary>
@@ -186,7 +199,6 @@ namespace TWCore.Net.HttpServer
         {
             if (buffer != null)
             {
-                //Core.Log.LibVerbose("Writing a byte array on the Response stream [{0}bytes]", count - offset);
                 OutputStream.Write(buffer, offset, count);
             }
         }
@@ -206,7 +218,6 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(string content)
         {
-            //Core.Log.LibVerbose("Writing text on the Response stream.");
             OutputStream.WriteText(content);
         }
         /// <summary>
@@ -216,8 +227,59 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteLine(string content)
         {
-            //Core.Log.LibVerbose("Writing line on the Response stream.");
             OutputStream.WriteLine(content);
+        }
+        
+        /// <summary>
+        /// Writes a stream to the response
+        /// </summary>
+        /// <param name="stream">Stream to be written on the response</param>
+        /// <param name="bufferLength">Buffer read length</param>
+        /// <param name="timeOutToReadBytes">Timeout to read and write all the bytes</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WriteAsync(Stream stream, int bufferLength = 4096, int timeOutToReadBytes = 0)
+        {
+            return stream.WriteToStreamAsync(OutputStream, 0, bufferLength, timeOutToReadBytes);
+        }
+        /// <summary>
+        /// Writes a byte array to the response
+        /// </summary>
+        /// <param name="buffer">Byte array to write on the response</param>
+        /// <param name="offset">Initial index of the byte array</param>
+        /// <param name="count">Number of bytes to write</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WriteAsync(byte[] buffer, int offset, int count)
+        {
+            if (buffer != null)
+                return OutputStream.WriteAsync(buffer, offset, count);
+            return Task.CompletedTask;
+        }
+        /// <summary>
+        /// Writes a byte array to the response
+        /// </summary>
+        /// <param name="buffer">Byte array to write on the response</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WriteAsync(byte[] buffer)
+        {
+            return WriteAsync(buffer, 0, buffer.Length);
+        }
+        /// <summary>
+        /// Writes a text value to the response
+        /// </summary>
+        /// <param name="content">String value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WriteAsync(string content)
+        {
+            return OutputStream.WriteTextAsync(content);
+        }
+        /// <summary>
+        /// Writes a string line value to the response
+        /// </summary>
+        /// <param name="content">String value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task WriteLineAsync(string content)
+        {
+            return OutputStream.WriteLineAsync(content);
         }
         #endregion
 

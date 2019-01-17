@@ -39,21 +39,20 @@ namespace TWCore.Cache
         private static readonly HashSet<StorageItemMeta> AllMetas = new HashSet<StorageItemMeta>();
         private static volatile int _registeredCount;
         private static volatile int _currentCount;
-        private static volatile bool _expirationTimerSetted;
-        private static volatile bool _runningTimer;
+        private static int _expirationTimerSetted;
+        private static int _runningTimer;
+
         private static Timer _globalExpirationTimer;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SetExpirationTimer()
         {
-            if (_expirationTimerSetted) return;
-            _expirationTimerSetted = true;
+            if (Interlocked.CompareExchange(ref _expirationTimerSetted, 1, 0) == 1) return;
             _globalExpirationTimer?.Dispose();
             _globalExpirationTimer = new Timer(i =>
             {
-                if (_runningTimer) return;
+                if (Interlocked.CompareExchange(ref _runningTimer, 1, 0) == 1) return;
                 try
                 {
-                    _runningTimer = true;
                     StorageItemMeta[] metasToRemove;
                     lock (LockPad)
                     {
@@ -77,8 +76,6 @@ namespace TWCore.Cache
                     {
                         lock (LockPad)
                             AllMetas.TrimExcess();
-                        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                        GC.Collect();
                         _registeredCount = _currentCount;
                     }
                 }
@@ -88,7 +85,7 @@ namespace TWCore.Cache
                 }
                 finally
                 {
-                    _runningTimer = false;
+                    Interlocked.Exchange(ref _runningTimer, 0);
                 }
             }, null, 5000, 5000);
         }
@@ -97,7 +94,7 @@ namespace TWCore.Cache
         {
             lock (LockPad)
             {
-                if (!_expirationTimerSetted) SetExpirationTimer();
+                if (_expirationTimerSetted == 0) SetExpirationTimer();
                 if (!AllMetas.Add(meta)) return;
                 _registeredCount++;
                 _currentCount++;
@@ -115,8 +112,6 @@ namespace TWCore.Cache
             {
                 lock (LockPad)
                     AllMetas.TrimExcess();
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect();
                 _registeredCount = _currentCount;
             }
         }

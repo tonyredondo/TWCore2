@@ -114,15 +114,6 @@ namespace TWCore.Cache
             BindStatusHandlers();
             LoadExtensions();
         }
-        /// <summary>
-        /// Storage destructor
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~StorageManager()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(false);
-        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindStatusHandlers()
         {
@@ -131,7 +122,8 @@ namespace TWCore.Cache
                 collection.AddOk("Stack Count", _storageStack.Count);
                 collection.AddOk("Stack", _storageStack.Select(s => s.ToString()).Join(", "));
                 collection.AddOk("Loaded extensions", _extensions.Count);
-                _storageStack.Each(s => Core.Status.AttachChild(s, this));
+                foreach (var s in _storageStack)
+	                Core.Status.AttachChild(s, this);
             });
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -436,12 +428,18 @@ namespace TWCore.Cache
         #endregion
 
         #region IStorage
+
         /// <inheritdoc />
         /// <summary>
         /// Init this storage
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() => _storages?.Each(s => s.Init());
+        public void Init()
+        {
+	        if (_storages == null) return;
+	        foreach (var s in _storages)
+		        s.Init();
+        }
 
         #region Exist Key / Get Keys
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1290,11 +1288,11 @@ namespace TWCore.Cache
 	        if (_disposedValue) return;
 	        if (disposing)
 	        {
-		        _storageStack.Each(s =>
+		        foreach (var s in _storageStack)
 		        {
 			        var sM = s as StorageBase;
 			        sM?.Dispose();
-		        });
+		        }
                 lock (_extensions)
                 {
                     foreach (var ext in _extensions)

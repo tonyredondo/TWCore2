@@ -66,7 +66,7 @@ namespace TWCore
         private static Dictionary<object, object> _objectData;
         private static AsyncLocal<Dictionary<string, object>> _taskData;
         private static AsyncLocal<Dictionary<object, object>> _taskObjectData;
-        private static volatile bool _initialized;
+        private static int _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
         private static Timer _updateLocalUtcTimer;
         private static TimeSpan _localUtcOffset;
@@ -213,8 +213,7 @@ namespace TWCore
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Init(Factories factories)
         {
-            if (_initialized) return;
-            _initialized = true;
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1) return;
             InstanceIdString = InstanceId.ToString();
             _updateLocalUtcTimer = new Timer(UpdateLocalUtc, null, 0, 5000);
             Factory.SetFactories(factories);
@@ -640,7 +639,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunOnInit(Action action)
         {
-            if (_initialized)
+            if (_initialized == 1)
                 action();
             else
                 lock (OninitActions)
@@ -653,7 +652,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunOnInit(Func<Task> taskFunc)
         {
-            if (_initialized)
+            if (_initialized == 1)
                 taskFunc().WaitAsync();
             else
                 lock (OninitActions)
@@ -792,7 +791,11 @@ namespace TWCore
         public static void RebindSettings()
         {
             GlobalSettings?.ReloadSettings();
-            SettingsCache?.Values?.Each(v => v.ReloadSettings());
+            if (SettingsCache?.Values != null)
+            {
+                foreach (var v in SettingsCache.Values)
+                    v.ReloadSettings();
+            }
         }
         #endregion
 

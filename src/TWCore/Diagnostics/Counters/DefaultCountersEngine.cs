@@ -17,6 +17,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -33,9 +34,11 @@ namespace TWCore.Diagnostics.Counters
     {
         private readonly ConcurrentDictionary<(string Category, string Name), ICounter> _counters = new ConcurrentDictionary<(string Category, string Name), ICounter>();
         private readonly BlockingCollection<ICounterReader> _counterReaders = new BlockingCollection<ICounterReader>();
+        private readonly List<(ICounterReader, ICounterItem)> _counterReaderItemList = new List<(ICounterReader, ICounterItem)>();
+        private readonly List<ICounterItem> _counterList = new List<ICounterItem>();
         private ICountersStorage[] _storages = null;
         private Timer _timer = null;
-        private bool _inProcess = false;
+        private int _inProcess = 0;
 
         /// <summary>
         /// Gets the counter storage
@@ -76,6 +79,10 @@ namespace TWCore.Diagnostics.Counters
                _storages = Storages.ToArray();
            };
         }
+        #endregion
+
+        #region Private Methods
+        private void ThrowInvalidCounter() => throw new InvalidCounterException();
         #endregion
 
         #region Public Methods
@@ -121,7 +128,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is IntegerCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an integer counter
@@ -143,7 +151,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is IntegerCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an double counter
@@ -166,8 +175,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DoubleCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
-
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an double counter
@@ -189,7 +198,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DoubleCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an decimal counter
@@ -212,7 +222,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DecimalCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an decimal counter
@@ -234,7 +245,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DecimalCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         #endregion
 
@@ -245,25 +257,34 @@ namespace TWCore.Diagnostics.Counters
             var storages = _storages;
             if (storages == null) return;
             if (storages.Length == 0) return;
-            if (_inProcess) return;
-            _inProcess = true;
+            if (Interlocked.CompareExchange(ref _inProcess, 1, 0) == 1) return;
             try
             {
-                var counters = _counterReaders
-                    .Select(i => i.Take(Settings.MaximumBatchPerCounter))
-                    .RemoveNulls()
-                    .ToList();
-                if (counters.Count > 0)
+                foreach(var i in _counterReaders)
+                {
+                    var value = i.Take(Settings.MaximumBatchPerCounter);
+                    if (!(value is null))
+                    {
+                        _counterList.Add(value);
+                        _counterReaderItemList.Add((i, value));
+                    }
+                }
+                if (_counterList.Count > 0)
                 {
                     foreach (var storage in storages)
-                        storage.Store(counters);
+                        storage.Store(_counterList);
+
+                    foreach (var item in _counterReaderItemList)
+                        item.Item1.ReturnToPool(item.Item2);
                 }
+                _counterList.Clear();
+                _counterReaderItemList.Clear();
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }
-            _inProcess = false;
+            Interlocked.Exchange(ref _inProcess, 0);
         }
         #endregion
 
@@ -271,6 +292,7 @@ namespace TWCore.Diagnostics.Counters
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             Stop();

@@ -60,7 +60,8 @@ namespace TWCore.Object.Api.Controllers
                     extensions.Add(serExt + comExt);
                 }
             }
-            TextExtensions.Each(i => extensions.Add(i));
+            foreach (var i in TextExtensions)
+                extensions.Add(i);
             Extensions = extensions.ToArray();
         }
 
@@ -407,15 +408,18 @@ namespace TWCore.Object.Api.Controllers
         {
             var servicesPathEntries = GetLocalServices(false);
 
-            var rootPaths = Settings.RootPaths
-                .Select(p => new PathEntry { Name =  p, Path = p })
+            var notemptyPaths = Settings.RootPaths
+                .Select(p => new PathEntry {Name = p, Path = p})
                 .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
-                .Each(ls =>
-                {
-                    ls.Path = Path.GetFullPath(ls.Path);
-                })
-                .Where(p => Directory.Exists(p.Path))
                 .ToArray();
+
+            var rootPaths = new List<PathEntry>();
+            foreach (var item in notemptyPaths)
+            {
+                item.Path = Path.GetFullPath(item.Path);
+                if (Directory.Exists(item.Path))
+                    rootPaths.Add(item);
+            }
 
             var entries = rootPaths.Concat(servicesPathEntries.Values)
                 //rootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)

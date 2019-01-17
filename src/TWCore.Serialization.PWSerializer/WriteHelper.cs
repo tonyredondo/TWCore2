@@ -38,6 +38,9 @@ namespace TWCore.Serialization.PWSerializer
             public void DropAction(byte[] value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

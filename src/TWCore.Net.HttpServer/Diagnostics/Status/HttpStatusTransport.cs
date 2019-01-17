@@ -62,54 +62,56 @@ namespace TWCore.Diagnostics.Status.Transports
             var xmlSerializer = new XmlTextSerializer();
             var jsonSerializer = new JsonTextSerializer() { UseCamelCase = true };
             _httpServer = new SimpleHttpServer();
-            _httpServer.AddGetHandler("/", ctx =>
+            _httpServer.AddGetHandler("/", async ctx =>
             {
-                ctx.Response.Write(htmlPage);
+                await ctx.Response.WriteAsync(htmlPage).ConfigureAwait(false);
             });
             _httpServer.AddGetHandler("/xml", ctx =>
             {
-                if (OnFetchStatus is null) return;
+                if (OnFetchStatus is null) return Task.CompletedTask;
                 var statuses = OnFetchStatus.Invoke();
                 ctx.Response.ContentType = SerializerMimeTypes.Xml;
                 xmlSerializer.Serialize(statuses, ctx.Response.OutputStream);
+                return Task.CompletedTask;
             });
             _httpServer.AddGetHandler("/json", ctx =>
             {
-                if (OnFetchStatus is null) return;
+                if (OnFetchStatus is null) return Task.CompletedTask;
                 var statuses = OnFetchStatus.Invoke();
                 ctx.Response.ContentType = SerializerMimeTypes.Json;
                 jsonSerializer.Serialize(statuses, ctx.Response.OutputStream);
+                return Task.CompletedTask;
             });
-            _httpServer.AddGetHandler("/gccollect", ctx =>
+            _httpServer.AddGetHandler("/gccollect", async ctx=>
             {
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 ctx.Response.ContentType = SerializerMimeTypes.Json;
-                ctx.Response.Write("true");
+                await ctx.Response.WriteAsync("true").ConfigureAwait(false);
             });
-            _httpServer.AddGetHandler("/discovery", ctx =>
+            _httpServer.AddGetHandler("/discovery", async ctx =>
             {
                 var services = DiscoveryService.GetRegisteredServices();
                 var statusServices = services.Where(s => s.Category == DiscoveryService.FrameworkCategory && s.Name == "STATUS.HTTP").ToArray();
-                ctx.Response.WriteLine("<html><head><title>Discovered Status Services</title></head><body style='padding:30px;'><h1 style='text-align:center;'>Discovered status services</h1>");
+                await ctx.Response.WriteLineAsync("<html><head><title>Discovered Status Services</title></head><body style='padding:30px;'><h1 style='text-align:center;'>Discovered status services</h1>").ConfigureAwait(false);
                 foreach (var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }).OrderBy(s => s.Key.EnvironmentName))
                 {
-                    ctx.Response.WriteLine($"<h3>Environment: {g.Key.EnvironmentName} - Machine: {g.Key.MachineName}</h3>");
-                    ctx.Response.WriteLine("<ul>");
+                    await ctx.Response.WriteLineAsync($"<h3>Environment: {g.Key.EnvironmentName} - Machine: {g.Key.MachineName}</h3>").ConfigureAwait(false);
+                    await ctx.Response.WriteLineAsync("<ul>").ConfigureAwait(false);
                     foreach (var ss in g)
                     {
                         var dct = (Dictionary<string, object>)ss.Data.GetValue();
-                        ctx.Response.WriteLine("<li style='list-style-type: none;'>");
+                        await ctx.Response.WriteLineAsync("<li style='list-style-type: none;'>").ConfigureAwait(false);
                         foreach (var ssAddress in ss.Addresses)
                         {
-                            ctx.Response.WriteLine($"<a href='http://{ssAddress.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ssAddress.ToString()}</a> /");
+                            await ctx.Response.WriteLineAsync($"<a href='http://{ssAddress.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ssAddress.ToString()}</a> /").ConfigureAwait(false);;
                         }
-                        ctx.Response.WriteLine($" {ss.ApplicationName}</li>");
+                        await ctx.Response.WriteLineAsync($" {ss.ApplicationName}</li>").ConfigureAwait(false);;
                     }
-                    ctx.Response.WriteLine("</ul>");
+                    await ctx.Response.WriteLineAsync("</ul>").ConfigureAwait(false);;
                 }
-                ctx.Response.WriteLine("</body></html>");
+                await ctx.Response.WriteLineAsync("</body></html>").ConfigureAwait(false);;
             });
             StartListening(port).WaitAsync();
             Core.Status.DeAttachObject(_httpServer);

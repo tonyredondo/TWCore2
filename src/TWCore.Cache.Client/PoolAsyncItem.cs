@@ -173,6 +173,8 @@ namespace TWCore.Cache.Client
         {
             var tokenTask = _token.WhenCanceledAsync();
             var sw = new Stopwatch();
+            var tskArray = new Task[2];
+            tskArray[0] = tokenTask;
             while (!_token.IsCancellationRequested)
             {
                 try
@@ -187,7 +189,8 @@ namespace TWCore.Cache.Client
                     {
                         sw.Restart();
                         var stoTask = Storage.IsEnabledAsync();
-                        var rTask = await Task.WhenAny(stoTask, tokenTask).ConfigureAwait(false);
+                        tskArray[1] = stoTask;
+                        var rTask = await Task.WhenAny(tskArray).ConfigureAwait(false);
                         if (rTask == tokenTask) break;
                         Enabled = stoTask.Result;
                         sw.Stop();

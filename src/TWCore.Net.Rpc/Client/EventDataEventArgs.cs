@@ -28,29 +28,56 @@ namespace TWCore.Net.RPC.Client
         /// <summary>
         /// Service Name
         /// </summary>
-        public string ServiceName { get; }
+        public string ServiceName { get; private set; }
         /// <summary>
         /// Event name that got fired
         /// </summary>
-        public string EventName { get; }
+        public string EventName { get; private set; }
         /// <summary>
         /// Event arguments
         /// </summary>
-        public EventArgs EventArgs { get; }
+        public EventArgs EventArgs { get;  private set;}
 
         /// <inheritdoc />
         /// <summary>
         /// Event args for the received event data from the server
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EventDataEventArgs()
+        {
+        }
+
+
+        #region Statics
+        /// <summary>
+        ///  Retrieves an Event data event args from the Pool
+        /// </summary>
         /// <param name="serviceName">Service name</param>
         /// <param name="eventName">Event name that got fired</param>
         /// <param name="eventArgs">Event arguments</param>
+        /// <returns>Event data event args value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EventDataEventArgs(string serviceName, string eventName, EventArgs eventArgs)
+        public static EventDataEventArgs Retrieve(string serviceName, string eventName, EventArgs eventArgs)
         {
-            ServiceName = serviceName;
-            EventName = eventName;
-            EventArgs = eventArgs;
+            var value = ReferencePool<EventDataEventArgs>.Shared.New();
+            value.ServiceName = serviceName;
+            value.EventName = eventName;
+            value.EventArgs = eventArgs;
+            return value;
         }
+        /// <summary>
+        /// Stores an Event data event args in the Pool.
+        /// </summary>
+        /// <param name="value">Event data event args value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(EventDataEventArgs value)
+        {
+            if (value is null) return;
+            value.ServiceName = null;
+            value.EventName = null;
+            value.EventArgs = null;
+            ReferencePool<EventDataEventArgs>.Shared.Store(value);
+        }
+        #endregion
     }
 }

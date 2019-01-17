@@ -28,6 +28,7 @@ using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
+using TWCore.Threading;
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable InconsistentNaming
 // ReSharper disable FieldCanBeMadeReadOnly.Local
@@ -155,6 +156,7 @@ namespace TWCore.Tests
         SimplePerson GetSimplePersona(Guid simplePersonaId);
         List<SimplePerson> GetAll();
         bool AddSimplePersona(SimplePerson simplePersona);
+        Task<bool> IsEnabled();
     }
 
     public interface IHello
@@ -228,17 +230,22 @@ namespace TWCore.Tests
             OnAddSimplePersona?.Invoke(this, new EventArgs<SimplePerson>(simplePersona));
             return true;
         }
+        public Task<bool> IsEnabled()
+        {
+            return TaskHelper.CompleteTrue;
+        }
     }
 #pragma warning disable 67
     public class MyServiceProxy : RPCProxy, IMyService
     {
         public event EventHandler OnAddSimplePersona;
-        public bool AddSimplePersona(SimplePerson simplePersona) => InvokeArgs<SimplePerson, bool>(simplePersona);
-        public List<SimplePerson> GetAll() => InvokeArgs<List<SimplePerson>>();
-        public SimplePerson GetSimplePersona(Guid simplePersonaId) => InvokeArgs<Guid, SimplePerson>(simplePersonaId);
-        public SimplePerson GetSimplePersona(string name, string apellido) => InvokeArgs<string, string, SimplePerson>(name, apellido);
+        public bool AddSimplePersona(SimplePerson simplePersona) => Invoke<SimplePerson, bool>(simplePersona);
+        public List<SimplePerson> GetAll() => Invoke<List<SimplePerson>>();
+        public SimplePerson GetSimplePersona(Guid simplePersonaId) => Invoke<Guid, SimplePerson>(simplePersonaId);
+        public SimplePerson GetSimplePersona(string name, string apellido) => Invoke<string, string, SimplePerson>(name, apellido);
 
-        public Task<List<SimplePerson>> GetAllAsync() => InvokeArgsAsAsync<List<SimplePerson>>();
+        public Task<List<SimplePerson>> GetAllAsync() => InvokeAsAsync<List<SimplePerson>>();
+        public Task<bool> IsEnabled() => InvokeAsync<bool>();
     }
 
 #endregion

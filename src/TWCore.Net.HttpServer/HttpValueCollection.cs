@@ -95,7 +95,9 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(string key)
         {
-            this.Where((x, mKey) => string.Equals(x.Key, mKey, StringComparison.OrdinalIgnoreCase), key).ToArray().Each(x => base.Remove(x));
+            var enumerable = this.Where((x, mKey) => string.Equals(x.Key, mKey, StringComparison.OrdinalIgnoreCase), key);
+            foreach (var x in enumerable)
+                base.Remove(x);
         }
 
         /// <summary>
@@ -146,11 +148,12 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillFromString(string query, bool urlencoded)
         {
-            query.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray())
+            var enumerable = query.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray())
                 .Select((i, uEnconded) => new KeyValue(
                     (uEnconded ? Uri.UnescapeDataString(i[0]) : i[0]).Replace("+", " "),
-                    (uEnconded ? Uri.UnescapeDataString(i[1]) : i[1]).Replace("+", " ")), urlencoded)
-                    .Each(i => base.Add(i));
+                    (uEnconded ? Uri.UnescapeDataString(i[1]) : i[1]).Replace("+", " ")), urlencoded);
+            foreach (var i in enumerable)
+                base.Add(i);
         }
         #endregion
     }

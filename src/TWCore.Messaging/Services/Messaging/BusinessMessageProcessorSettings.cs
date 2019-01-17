@@ -30,6 +30,6 @@ namespace TWCore.Services.Messaging
         /// <summary>
         /// Business item initial count in percent of the total maximum items.
         /// </summary>
-        public float InitialBusinessesPercent { get; set; } = 0.3F;
+        public float InitialBusinessesPercent { get; set; } = 0.2F;
     }
 }

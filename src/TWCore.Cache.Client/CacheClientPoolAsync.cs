@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -148,12 +149,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> ExistKeyAsync(string key)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.ExistKeyAsync(arg1), r => r).ConfigureAwait(false);
-                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.ExistKeyAsync(arg1), r => r).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementExistKey(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -164,27 +164,26 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Dictionary<string, bool>> ExistKeyAsync(string[] keys)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            var tasks = new Task<Dictionary<string, bool>>[poolEnabled.Length];
+            for (var i = 0; i < tasks.Length; i++)
+                tasks[i] = poolEnabled[i].Storage.ExistKeyAsync(keys);
+            var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var dictionary = new Dictionary<string, bool>();
+            foreach (var innerDictio in tasksResults)
             {
-                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
-                var tasks = new Task<Dictionary<string, bool>>[poolEnabled.Length];
-                for (var i = 0; i < tasks.Length; i++)
-                    tasks[i] = poolEnabled[i].Storage.ExistKeyAsync(keys);
-                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
-                var dictionary = new Dictionary<string, bool>();
-                foreach (var innerDictio in tasksResults)
+                if (innerDictio is null) continue;
+                foreach (var item in innerDictio)
                 {
-                    if (innerDictio is null) continue;
-                    foreach (var item in innerDictio)
-                    {
-                        dictionary.TryGetValue(item.Key, out var value);
-                        if (item.Value || !value)
-                            dictionary[item.Key] = item.Value;
-                    }
+                    dictionary.TryGetValue(item.Key, out var value);
+                    if (item.Value || !value)
+                        dictionary[item.Key] = item.Value;
                 }
-                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
-                return dictionary;
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementExistKey(execTime);
+            return dictionary;
         }
         /// <inheritdoc />
         /// <summary>
@@ -194,17 +193,16 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<string[]> GetKeysAsync()
         {
-            using (var w = Watch.Create())
-            {
-                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
-                var tasks = new Task<string[]>[poolEnabled.Length];
-                for (var i = 0; i < tasks.Length; i++)
-                    tasks[i] = poolEnabled[i].Storage.GetKeysAsync();
-                var stringBags = await Task.WhenAll(tasks).ConfigureAwait(false);
-                var keys = stringBags.RemoveNulls().SelectMany(i => i).Distinct().ToArray();
-                _counters.IncrementGetKeys(w.GlobalElapsedMilliseconds);
-                return keys;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            var tasks = new Task<string[]>[poolEnabled.Length];
+            for (var i = 0; i < tasks.Length; i++)
+                tasks[i] = poolEnabled[i].Storage.GetKeysAsync();
+            var stringBags = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var keys = stringBags.RemoveNulls().SelectMany(i => i).Distinct().ToArray();
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetKeys(execTime);
+            return keys;
         }
         #endregion
 
@@ -218,12 +216,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<DateTime?> GetCreationDateAsync(string key)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetCreationDateAsync(arg1), r => r != null).ConfigureAwait(false);
-                _counters.IncrementGetCreationDate(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetCreationDateAsync(arg1), r => r.HasValue).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetCreationDate(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -234,12 +231,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<DateTime?> GetExpirationDateAsync(string key)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetExpirationDateAsync(arg1), r => r != null).ConfigureAwait(false);
-                _counters.IncrementGetExpirationDate(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetExpirationDateAsync(arg1), r => r.HasValue).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetExpirationDate(execTime);
+            return res.Item1;
         }
         #endregion
 
@@ -253,12 +249,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta> GetMetaAsync(string key)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetMetaAsync(arg1), r => r != null).ConfigureAwait(false);
-                _counters.IncrementGetMeta(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.GetMetaAsync(arg1), r => r != null).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetMeta(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -270,12 +265,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta> GetMetaAsync(string key, TimeSpan lastTime)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(key, lastTime, (item, arg1, arg2) => item.Storage.GetMetaAsync(arg1, arg2), r => r != null).ConfigureAwait(false);
-                _counters.IncrementGetMeta(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(key, lastTime, (item, arg1, arg2) => item.Storage.GetMetaAsync(arg1, arg2), r => r != null).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetMeta(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -287,12 +281,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta> GetMetaAsync(string key, DateTime comparer)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(key, comparer, (item, arg1, arg2) => item.Storage.GetMetaAsync(arg1, arg2), r => r != null).ConfigureAwait(false);
-                _counters.IncrementGetMeta(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(key, comparer, (item, arg1, arg2) => item.Storage.GetMetaAsync(arg1, arg2), r => r != null).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetMeta(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -303,12 +296,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta[]> GetMetaByTagAsync(string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(tags, (item, arg1) => item.Storage.GetMetaByTagAsync(arg1), r => r?.Any() == true).ConfigureAwait(false);
-                _counters.IncrementGetMetaByTag(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(tags, (item, arg1) => item.Storage.GetMetaByTagAsync(arg1), r => r?.Any() == true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetMetaByTag(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -320,12 +312,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta[]> GetMetaByTagAsync(string[] tags, bool containingAll)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.GetMetaByTagAsync(arg1, arg2), r => r?.Any() == true).ConfigureAwait(false);
-                _counters.IncrementGetMetaByTag(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.GetMetaByTagAsync(arg1, arg2), r => r?.Any() == true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetMetaByTag(execTime);
+            return res.Item1;
         }
         #endregion
 
@@ -339,14 +330,13 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetAsync(string key)
         {
-            using (var w = Watch.Create())
-            {
-                var (sto, usedItem) = await _pool.ReadAsync(key, (item, a1) => item.Storage.GetAsync(a1), r => r != null).ConfigureAwait(false);
-                if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
-                    await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
-                _counters.IncrementGet(w.GlobalElapsedMilliseconds);
-                return sto;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var (sto, usedItem) = await _pool.ReadAsync(key, (item, a1) => item.Storage.GetAsync(a1), r => r != null).ConfigureAwait(false);
+            if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
+                await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGet(execTime);
+            return sto;
         }
         /// <inheritdoc />
         /// <summary>
@@ -358,14 +348,13 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetAsync(string key, TimeSpan lastTime)
         {
-            using (var w = Watch.Create())
-            {
-                var (sto, usedItem) = await _pool.ReadAsync(key, lastTime, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null).ConfigureAwait(false);
-                if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
-                    await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
-                _counters.IncrementGet(w.GlobalElapsedMilliseconds);
-                return sto;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var (sto, usedItem) = await _pool.ReadAsync(key, lastTime, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null).ConfigureAwait(false);
+            if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
+                await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGet(execTime);
+            return sto;
         }
         /// <inheritdoc />
         /// <summary>
@@ -377,14 +366,13 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetAsync(string key, DateTime comparer)
         {
-            using (var w = Watch.Create())
-            {
-                var (sto, usedItem) = await _pool.ReadAsync(key, comparer, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null).ConfigureAwait(false);
-                if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
-                    await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
-                _counters.IncrementGet(w.GlobalElapsedMilliseconds);
-                return sto;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var (sto, usedItem) = await _pool.ReadAsync(key, comparer, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null).ConfigureAwait(false);
+            if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
+                await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGet(execTime);
+            return sto;
         }
         /// <inheritdoc />
         /// <summary>
@@ -395,12 +383,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem[]> GetByTagAsync(string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(tags, (item, arg1) => item.Storage.GetByTagAsync(arg1), r => r?.Any() == true).ConfigureAwait(false);
-                _counters.IncrementGetByTag(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(tags, (item, arg1) => item.Storage.GetByTagAsync(arg1), r => r?.Any() == true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetByTag(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -412,12 +399,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem[]> GetByTagAsync(string[] tags, bool containingAll)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.ReadAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.GetByTagAsync(arg1, arg2), r => r?.Any() == true).ConfigureAwait(false);
-                _counters.IncrementGetByTag(w.GlobalElapsedMilliseconds);
-                return res.Item1;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.ReadAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.GetByTagAsync(arg1, arg2), r => r?.Any() == true).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetByTag(execTime);
+            return res.Item1;
         }
         /// <inheritdoc />
         /// <summary>
@@ -428,27 +414,26 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Dictionary<string, StorageItem>> GetAsync(string[] keys)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
+            for (var i = 0; i < tasks.Length; i++)
+                tasks[i] = poolEnabled[i].Storage.GetAsync(keys);
+            var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var innerDictio in tasksResults)
             {
-                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
-                var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
-                for (var i = 0; i < tasks.Length; i++)
-                    tasks[i] = poolEnabled[i].Storage.GetAsync(keys);
-                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
-                var dictionary = new Dictionary<string, StorageItem>();
-                foreach (var innerDictio in tasksResults)
+                if (innerDictio is null) continue;
+                foreach (var item in innerDictio)
                 {
-                    if (innerDictio is null) continue;
-                    foreach (var item in innerDictio)
-                    {
-                        dictionary.TryGetValue(item.Key, out var value);
-                        if (value is null)
-                            dictionary[item.Key] = item.Value;
-                    }
+                    dictionary.TryGetValue(item.Key, out var value);
+                    if (value is null)
+                        dictionary[item.Key] = item.Value;
                 }
-                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
-                return dictionary;
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementExistKey(execTime);
+            return dictionary;
         }
         /// <inheritdoc />
         /// <summary>
@@ -460,27 +445,26 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, TimeSpan lastTime)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
+            for (var i = 0; i < tasks.Length; i++)
+                tasks[i] = poolEnabled[i].Storage.GetAsync(keys, lastTime);
+            var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var innerDictio in tasksResults)
             {
-                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
-                var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
-                for (var i = 0; i < tasks.Length; i++)
-                    tasks[i] = poolEnabled[i].Storage.GetAsync(keys, lastTime);
-                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
-                var dictionary = new Dictionary<string, StorageItem>();
-                foreach (var innerDictio in tasksResults)
+                if (innerDictio is null) continue;
+                foreach (var item in innerDictio)
                 {
-                    if (innerDictio is null) continue;
-                    foreach (var item in innerDictio)
-                    {
-                        dictionary.TryGetValue(item.Key, out var value);
-                        if (value is null)
-                            dictionary[item.Key] = item.Value;
-                    }
+                    dictionary.TryGetValue(item.Key, out var value);
+                    if (value is null)
+                        dictionary[item.Key] = item.Value;
                 }
-                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
-                return dictionary;
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementExistKey(execTime);
+            return dictionary;
         }
         /// <inheritdoc />
         /// <summary>
@@ -492,27 +476,26 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, DateTime comparer)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
+            for (var i = 0; i < tasks.Length; i++)
+                tasks[i] = poolEnabled[i].Storage.GetAsync(keys, comparer);
+            var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var innerDictio in tasksResults)
             {
-                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
-                var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
-                for (var i = 0; i < tasks.Length; i++)
-                    tasks[i] = poolEnabled[i].Storage.GetAsync(keys, comparer);
-                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
-                var dictionary = new Dictionary<string, StorageItem>();
-                foreach (var innerDictio in tasksResults)
+                if (innerDictio is null) continue;
+                foreach (var item in innerDictio)
                 {
-                    if (innerDictio is null) continue;
-                    foreach (var item in innerDictio)
-                    {
-                        dictionary.TryGetValue(item.Key, out var value);
-                        if (value is null)
-                            dictionary[item.Key] = item.Value;
-                    }
+                    dictionary.TryGetValue(item.Key, out var value);
+                    if (value is null)
+                        dictionary[item.Key] = item.Value;
                 }
-                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
-                return dictionary;
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementExistKey(execTime);
+            return dictionary;
         }
         #endregion
 
@@ -526,12 +509,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(StorageItem item)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(item, (p, arg1) => p.Storage.SetAsync(arg1)).ConfigureAwait(false);
-                _counters.IncrementSet(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(item, (p, arg1) => p.Storage.SetAsync(arg1)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSet(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -543,12 +525,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
-                _counters.IncrementSet(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSet(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -561,12 +542,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, TimeSpan expirationDate)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
-                _counters.IncrementSet(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSet(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -580,12 +560,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
-                _counters.IncrementSet(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSet(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -598,12 +577,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, DateTime expirationDate)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
-                _counters.IncrementSet(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSet(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -617,12 +595,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
-                _counters.IncrementSet(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSet(execTime);
+            return res;
         }
         #endregion
 
@@ -636,12 +613,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetMultiAsync(StorageItem[] items)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(items, (p, arg1) => p.Storage.SetMultiAsync(arg1)).ConfigureAwait(false);
-                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(items, (p, arg1) => p.Storage.SetMultiAsync(arg1)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSetMulti(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -653,12 +629,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(keys, data, (item, arg1, arg2) => item.Storage.SetMultiAsync(arg1, arg2)).ConfigureAwait(false);
-                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(keys, data, (item, arg1, arg2) => item.Storage.SetMultiAsync(arg1, arg2)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSetMulti(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -671,12 +646,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan expirationDate)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(keys, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetMultiAsync(arg1, arg2, arg3)).ConfigureAwait(false);
-                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(keys, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetMultiAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSetMulti(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -690,12 +664,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(keys, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetMultiAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
-                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(keys, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetMultiAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSetMulti(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -708,12 +681,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime expirationDate)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(keys, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetMultiAsync(arg1, arg2, arg3)).ConfigureAwait(false);
-                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(keys, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetMultiAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSetMulti(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -727,12 +699,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(keys, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetMultiAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
-                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(keys, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetMultiAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementSetMulti(execTime);
+            return res;
         }
         #endregion
 
@@ -747,12 +718,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> UpdateDataAsync(string key, SerializedObject data)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.UpdateDataAsync(arg1, arg2)).ConfigureAwait(false);
-                _counters.IncrementUpdateData(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.UpdateDataAsync(arg1, arg2)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementUpdateData(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -763,12 +733,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> RemoveAsync(string key)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, (item, arg1) => item.Storage.RemoveAsync(arg1)).ConfigureAwait(false);
-                _counters.IncrementRemove(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, (item, arg1) => item.Storage.RemoveAsync(arg1)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementRemove(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -779,12 +748,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<string[]> RemoveByTagAsync(string[] tags)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(tags, (item, arg1) => item.Storage.RemoveByTagAsync(arg1)).ConfigureAwait(false);
-                _counters.IncrementRemove(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(tags, (item, arg1) => item.Storage.RemoveByTagAsync(arg1)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementRemove(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -796,12 +764,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<string[]> RemoveByTagAsync(string[] tags, bool containingAll)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.RemoveByTagAsync(arg1, arg2)).ConfigureAwait(false);
-                _counters.IncrementRemove(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.RemoveByTagAsync(arg1, arg2)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementRemove(execTime);
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -813,12 +780,11 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> CopyAsync(string key, string newKey)
         {
-            using (var w = Watch.Create())
-            {
-                var res = await _pool.WriteAsync(key, newKey, (item, arg1, arg2) => item.Storage.CopyAsync(arg1, arg2)).ConfigureAwait(false);
-                _counters.IncrementCopy(w.GlobalElapsedMilliseconds);
-                return res;
-            }
+            var startTime = Stopwatch.GetTimestamp();
+            var res = await _pool.WriteAsync(key, newKey, (item, arg1, arg2) => item.Storage.CopyAsync(arg1, arg2)).ConfigureAwait(false);
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementCopy(execTime);
+            return res;
         }
         #endregion
 
@@ -832,17 +798,16 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var sto = await GetAsync(key).ConfigureAwait(false);
+            if (sto is null)
             {
-                var sto = await GetAsync(key).ConfigureAwait(false);
-                if (sto is null)
-                {
-                    await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
-                    sto = await GetAsync(key).ConfigureAwait(false);
-                }
-                _counters.IncrementGetOrSet(w.GlobalElapsedMilliseconds);
-                return sto;
+                await _pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
+                sto = await GetAsync(key).ConfigureAwait(false);
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetOrSet(execTime);
+            return sto;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -854,17 +819,16 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan expirationDate)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
+            if (sto is null)
             {
-                var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
-                if (sto is null)
-                {
-                    await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
-                    sto = await GetAsync(key).ConfigureAwait(false);
-                }
-                _counters.IncrementGetOrSet(w.GlobalElapsedMilliseconds);
-                return sto;
+                await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+                sto = await GetAsync(key).ConfigureAwait(false);
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetOrSet(execTime);
+            return sto;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -877,17 +841,16 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
+            if (sto is null)
             {
-                var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
-                if (sto is null)
-                {
-                    await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
-                    sto = await GetAsync(key).ConfigureAwait(false);
-                }
-                _counters.IncrementGetOrSet(w.GlobalElapsedMilliseconds);
-                return sto;
+                await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+                sto = await GetAsync(key).ConfigureAwait(false);
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetOrSet(execTime);
+            return sto;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -899,17 +862,16 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime expirationDate)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
+            if (sto is null)
             {
-                var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
-                if (sto is null)
-                {
-                    await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
-                    sto = await GetAsync(key).ConfigureAwait(false);
-                }
-                _counters.IncrementGetOrSet(w.GlobalElapsedMilliseconds);
-                return sto;
+                await _pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+                sto = await GetAsync(key).ConfigureAwait(false);
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetOrSet(execTime);
+            return sto;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -922,17 +884,16 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
+            if (sto is null)
             {
-                var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
-                if (sto is null)
-                {
-                    await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
-                    sto = await GetAsync(key).ConfigureAwait(false);
-                }
-                _counters.IncrementGetOrSet(w.GlobalElapsedMilliseconds);
-                return sto;
+                await _pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+                sto = await GetAsync(key).ConfigureAwait(false);
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementGetOrSet(execTime);
+            return sto;
         }
         #endregion
 
@@ -960,7 +921,10 @@ namespace TWCore.Cache.Client
         /// <param name="data">Item Data</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetAsync(string key, object data) => SetAsync(key, Serializer.GetSerializedObject(data));
+        public Task<bool> SetAsync(string key, object data)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data));
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -969,26 +933,10 @@ namespace TWCore.Cache.Client
         /// <param name="expirationDate">Item expiration date</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetAsync(string key, object data, TimeSpan expirationDate) => SetAsync(key, Serializer.GetSerializedObject(data), expirationDate);
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetAsync(string key, object data, TimeSpan? expirationDate, string[] tags) => SetAsync(key, Serializer.GetSerializedObject(data), expirationDate, tags);
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetAsync(string key, object data, DateTime expirationDate) => SetAsync(key, Serializer.GetSerializedObject(data), expirationDate);
+        public Task<bool> SetAsync(string key, object data, TimeSpan expirationDate)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate);
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -998,7 +946,35 @@ namespace TWCore.Cache.Client
         /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetAsync(string key, object data, DateTime? expirationDate, string[] tags) => SetAsync(key, Serializer.GetSerializedObject(data), expirationDate, tags);
+        public Task<bool> SetAsync(string key, object data, TimeSpan? expirationDate, string[] tags)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate, tags);
+        }
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetAsync(string key, object data, DateTime expirationDate)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate);
+        }
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetAsync(string key, object data, DateTime? expirationDate, string[] tags)
+        {
+            return SetAsync(key, Serializer.GetSerializedObject(data), expirationDate, tags);
+        }
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -1006,7 +982,10 @@ namespace TWCore.Cache.Client
         /// <param name="data">New item data</param>
         /// <returns>true if the data could be updated; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> UpdateDataAsync(string key, object data) => UpdateDataAsync(key, Serializer.GetSerializedObject(data));
+        public Task<bool> UpdateDataAsync(string key, object data)
+        {
+            return UpdateDataAsync(key, Serializer.GetSerializedObject(data));
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -1014,7 +993,10 @@ namespace TWCore.Cache.Client
         /// <param name="data">Item Data</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetMultiAsync(string[] keys, object data) => SetMultiAsync(keys, Serializer.GetSerializedObject(data));
+        public Task<bool> SetMultiAsync(string[] keys, object data)
+        {
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data));
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -1023,7 +1005,10 @@ namespace TWCore.Cache.Client
         /// <param name="expirationDate">Item expiration date</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan expirationDate) => SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate);
+        public Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan expirationDate)
+        {
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate);
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -1033,7 +1018,10 @@ namespace TWCore.Cache.Client
         /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan? expirationDate, string[] tags) => SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate, tags);
+        public Task<bool> SetMultiAsync(string[] keys, object data, TimeSpan? expirationDate, string[] tags)
+        {
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate, tags);
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -1042,7 +1030,10 @@ namespace TWCore.Cache.Client
         /// <param name="expirationDate">Item expiration date</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetMultiAsync(string[] keys, object data, DateTime expirationDate) => SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate);
+        public Task<bool> SetMultiAsync(string[] keys, object data, DateTime expirationDate)
+        {
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate);
+        }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -1052,7 +1043,10 @@ namespace TWCore.Cache.Client
         /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> SetMultiAsync(string[] keys, object data, DateTime? expirationDate, string[] tags) => SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate, tags);
+        public Task<bool> SetMultiAsync(string[] keys, object data, DateTime? expirationDate, string[] tags)
+        {
+            return SetMultiAsync(keys, Serializer.GetSerializedObject(data), expirationDate, tags);
+        }
         #endregion
 
         #region IStorageWithExtensionExecutionAsync
@@ -1065,21 +1059,20 @@ namespace TWCore.Cache.Client
         /// <returns>Command response</returns>
         public async Task<object> ExecuteExtensionAsync(string extensionName, string command, object[] args)
         {
-            using (var w = Watch.Create())
+            var startTime = Stopwatch.GetTimestamp();
+            object response = null;
+            var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+            foreach (var item in poolEnabled)
             {
-                object response = null;
-                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
-                foreach(var item in poolEnabled)
+                if (item.Storage is IStorageWithExtensionExecutionAsync sto)
                 {
-                    if (item.Storage is IStorageWithExtensionExecutionAsync sto)
-                    {
-                        response = await sto.ExecuteExtensionAsync(extensionName, command, args).ConfigureAwait(false);
-                        if (response != null) break;
-                    }
+                    response = await sto.ExecuteExtensionAsync(extensionName, command, args).ConfigureAwait(false);
+                    if (response != null) break;
                 }
-                _counters.IncrementExecuteExtension(w.GlobalElapsedMilliseconds);
-                return response;
             }
+            var execTime = (Stopwatch.GetTimestamp() - startTime) * 1000d / Stopwatch.Frequency;
+            _counters.IncrementExecuteExtension(execTime);
+            return response;
         }
         #endregion
 

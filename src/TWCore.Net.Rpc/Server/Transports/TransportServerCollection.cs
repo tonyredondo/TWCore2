@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+using TWCore.Threading;
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -29,14 +30,16 @@ namespace TWCore.Net.RPC.Server.Transports
     /// <summary>
     /// Collection of transport servers
     /// </summary>
-    public class TransportServerCollection : ObservableCollection<ITransportServer>, ITransportServer
+    public sealed class TransportServerCollection : ObservableCollection<ITransportServer>, ITransportServer
     {
+        private string _name;
+        
         #region Properties
         /// <inheritdoc />
         /// <summary>
         /// Transport name, should be the same name for Server and Client
         /// </summary>
-        public string Name => string.Join(";", this.Select(i => i.Name).ToArray());
+        public string Name => _name;
         /// <inheritdoc />
         /// <summary>
         /// true if the transport server can send the service descriptor; otherwise, false
@@ -46,7 +49,11 @@ namespace TWCore.Net.RPC.Server.Transports
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => this.Any(i => i.EnableGetDescriptors);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => this.Each(i => i.EnableGetDescriptors = value);
+            set
+            {
+                foreach (var i in this)
+                    i.EnableGetDescriptors = value;
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -57,7 +64,11 @@ namespace TWCore.Net.RPC.Server.Transports
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => this.FirstOrDefault()?.Serializer;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => this.Each(i => i.Serializer = value);
+            set
+            {
+                foreach (var i in this)
+                    i.Serializer = value;
+            }
         }
         #endregion
 
@@ -69,7 +80,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
-        public event EventHandler<MethodEventArgs> OnMethodCall;
+        public AsyncEvent<MethodEventArgs> OnMethodCallAsync { get; set; }
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
@@ -78,10 +89,11 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Event that fires when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
+
         /// <summary>
         /// Collection Changed
         /// </summary>
-        public sealed override event NotifyCollectionChangedEventHandler CollectionChanged
+        public override event NotifyCollectionChangedEventHandler CollectionChanged
         {
             add => base.CollectionChanged += value;
             remove => base.CollectionChanged -= value;
@@ -105,7 +117,7 @@ namespace TWCore.Net.RPC.Server.Transports
                         Core.Log.LibVerbose("Adding {0} transport server", item.GetType().Name);
                         item.OnClientConnect += Item_OnClientConnect;
                         item.OnGetDescriptorsRequest += Item_OnGetDescriptorsRequest;
-                        item.OnMethodCall += Item_OnMethodCall;
+                        item.OnMethodCallAsync += Item_OnMethodCallAsync;
                         item.OnResponseSent += Item_OnResponseSent;
                     }
                 }
@@ -116,10 +128,12 @@ namespace TWCore.Net.RPC.Server.Transports
                         Core.Log.LibVerbose("Removing {0} transport server", item.GetType().Name);
                         item.OnClientConnect -= Item_OnClientConnect;
                         item.OnGetDescriptorsRequest -= Item_OnGetDescriptorsRequest;
-                        item.OnMethodCall -= Item_OnMethodCall;
+                        item.OnMethodCallAsync -= Item_OnMethodCallAsync;
                         item.OnResponseSent -= Item_OnResponseSent;
                     }
                 }
+                
+                _name = string.Join(";", this.Select(i => i.Name).ToArray());
             };
         }
         #endregion
@@ -134,8 +148,10 @@ namespace TWCore.Net.RPC.Server.Transports
             => OnGetDescriptorsRequest?.Invoke(sender, e);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Item_OnMethodCall(object sender, MethodEventArgs e)
-            => OnMethodCall?.Invoke(sender, e);
+        private Task Item_OnMethodCallAsync(object sender, MethodEventArgs e)
+        {
+            return OnMethodCallAsync is null ? Task.CompletedTask : OnMethodCallAsync.InvokeAsync(sender, e);
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnResponseSent(object sender, RPCResponseMessage message)
@@ -154,10 +170,17 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <param name="sender">Sender information</param>
         /// <param name="e">Event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        public Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
-            foreach (var item in this)
-                item.FireEvent(eventAttribute, clientId, serviceName, eventName, sender, e);
+            var count = Count;
+            if (count == 0) 
+                return Task.CompletedTask;
+            if (count == 1)
+                return this[0].FireEventAsync(eventAttribute, clientId, serviceName, eventName, sender, e);
+            var fArray = new Task[count];
+            for(var i = 0; i < count; i++)
+                fArray[i] = this[i].FireEventAsync(eventAttribute, clientId, serviceName, eventName, sender, e);
+            return Task.WhenAll(fArray);
         }
         /// <inheritdoc />
         /// <summary>
@@ -165,10 +188,17 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         /// <returns>Task as result of the startup process</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task StartListenerAsync()
+        public Task StartListenerAsync()
         {
-            foreach (var item in this)
-                await item.StartListenerAsync().ConfigureAwait(false);
+            var count = Count;
+            if (count == 0) 
+                return Task.CompletedTask;
+            if (count == 1)
+                return this[0].StartListenerAsync();
+            var fArray = new Task[count];
+            for(var i = 0; i < count; i++)
+                fArray[i] = this[i].StartListenerAsync();
+            return Task.WhenAll(fArray);
         }
         /// <inheritdoc />
         /// <summary>
@@ -176,10 +206,17 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         /// <returns>Task as result of the stop process</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task StopListenerAsync()
+        public Task StopListenerAsync()
         {
-            foreach (var item in this)
-                await item.StopListenerAsync().ConfigureAwait(false);
+            var count = Count;
+            if (count == 0) 
+                return Task.CompletedTask;
+            if (count == 1)
+                return this[0].StopListenerAsync();
+            var fArray = new Task[count];
+            for(var i = 0; i < count; i++)
+                fArray[i] = this[i].StopListenerAsync();
+            return Task.WhenAll(fArray);
         }
         #endregion
     }

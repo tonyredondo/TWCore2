@@ -26,7 +26,7 @@ namespace TWCore.Net.RPC
     /// RPC Request Message
     /// </summary>
     [Serializable, DataContract]
-    public class RPCRequestMessage : RPCMessage
+    public sealed class RPCRequestMessage : RPCMessage
     {
         /// <summary>
         /// Method identifier

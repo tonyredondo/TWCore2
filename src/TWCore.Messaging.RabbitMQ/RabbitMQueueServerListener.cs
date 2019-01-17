@@ -97,7 +97,14 @@ namespace TWCore.Messaging.RabbitMQ
             _receiverConsumer.Received += (ch, ea) =>
             {
                 var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
-                Task.Run(()=> EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
+#if COMPATIBILITY
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
+#else
+                ThreadPool.QueueUserWorkItem(async item =>
+                {
+                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
+                }, msg, false);
+#endif
 				_receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
@@ -110,6 +117,11 @@ namespace TWCore.Messaging.RabbitMQ
 
             await _monitorTask.ConfigureAwait(false);
         }
+
+        private async void ThreadPoolWorkItem(RabbitMessage item)
+        {
+            await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
+        } 
         /// <inheritdoc />
         /// <summary>
         /// On Dispose

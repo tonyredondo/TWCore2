@@ -29,11 +29,8 @@ namespace TWCore.IO
     /// <summary>
     /// Recycle Arrays MemoryStream
     /// </summary>
-    public class RecycleMemoryStream : Stream
+    public sealed class RecycleMemoryStream : Stream
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 512;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffers;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _isClosed;
@@ -41,53 +38,32 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentPosition;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _totalLength;
 
-        #region Allocators
-        private readonly struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
-        {
-            public int InitialSize => 4;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            public int DropTimeFrequencyInSeconds => 120;
-            public void DropAction(byte[] value) { }
-            public byte[] New() => new byte[MaxLength];
-            public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
-        }
-        private readonly struct ListBytePoolAllocator : IPoolObjectLifecycle<List<byte[]>>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            public int DropTimeFrequencyInSeconds => 60;
-            public void DropAction(List<byte[]> value) { }
-            public List<byte[]> New() => new List<byte[]>(10);
-            public void Reset(List<byte[]> value) => value.Clear();
-        }
-        #endregion
-
         #region Properties
         /// <inheritdoc />
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
-        public override bool CanRead { get; } = true;
+        public sealed override bool CanRead { get; } = true;
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
-        public override bool CanSeek { get; } = true;
+        public sealed override bool CanSeek { get; } = true;
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
-        public override bool CanWrite => _canWrite;
+        public sealed override bool CanWrite => _canWrite;
         /// <inheritdoc />
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-        public override long Length => _totalLength;
+        public sealed override long Length => _totalLength;
         /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
-        public override long Position
+        public sealed override long Position
         {
             get => _currentPosition;
             set
@@ -134,11 +110,19 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, int index, int count, bool writable)
         {
-            _buffers = ListByteArrayPool.New();
-            _buffers.Add(ByteArrayPool.New());
+            _buffers = SegmentPool.RentContainer();
+            _buffers.Add(SegmentPool.Rent());
             _canWrite = writable;
             if (buffer != null)
                 Write(buffer.AsSpan(index, count));
+        }
+        /// <summary>
+        /// Releases unmanaged resources and performs other cleanup operations before the
+        /// <see cref="T:TWCore.IO.RecycleMemoryStream"/> is reclaimed by garbage collection.
+        /// </summary>
+        ~RecycleMemoryStream()
+        {
+            Dispose(false);
         }
         /// <summary>
         /// Dispose all internal resources
@@ -152,6 +136,12 @@ namespace TWCore.IO
         }
         #endregion
 
+        #region Throw Helpers
+        private static void ThrowStreamClosed() => throw new IOException("The stream is closed.");
+        private static void ThrowStreamReadOnly() => throw new IOException("The stream is readonly.");
+        private static void ThrowStreamWriteError() => throw new IOException("Write error.");
+        #endregion
+
         #region Read
         /// <inheritdoc />
         /// <summary>
@@ -159,12 +149,11 @@ namespace TWCore.IO
         /// </summary>
         /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
+        public sealed override int ReadByte()
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
+            if (_isClosed) ThrowStreamClosed();
             if (_currentPosition >= _totalLength) return -1;
-            var row = Math.DivRem(_currentPosition, MaxLength, out var index);
+            var row = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var index);
             var res = _buffers[row][index];
             _currentPosition++;
             return res;
@@ -179,21 +168,20 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public int Read(Span<byte> buffer)
 #else
-        public override int Read(Span<byte> buffer)
+        public sealed override int Read(Span<byte> buffer)
 #endif
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
+            if (_isClosed) ThrowStreamClosed();
             var bLength = buffer.Length;
             if (bLength == 0) return 0;
             if (_currentPosition >= _totalLength) return 0;
-            var fromRow = Math.DivRem(_currentPosition, MaxLength, out var fromIndex);
+            var fromRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var fromIndex);
             if (bLength > 1)
             {
                 var toPos = _currentPosition + bLength;
                 if (toPos > _totalLength)
                     toPos = _totalLength;
-                var toRow = Math.DivRem(toPos, MaxLength, out var toIndex);
+                var toRow = Math.DivRem(toPos, SegmentPool.SegmentLength, out var toIndex);
 
                 if (fromRow == toRow)
                 {
@@ -209,7 +197,7 @@ namespace TWCore.IO
                     Span<byte> source;
 
                     if (i == fromRow)
-                        source = _buffers[i].AsSpan(fromIndex, MaxLength - fromIndex);
+                        source = _buffers[i].AsSpan(fromIndex, SegmentPool.SegmentLength - fromIndex);
                     else if (i == toRow)
                         source = _buffers[i].AsSpan(0, toIndex);
                     else
@@ -235,7 +223,7 @@ namespace TWCore.IO
         /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Read(byte[] buffer, int offset, int count)
+        public sealed override int Read(byte[] buffer, int offset, int count)
             => Read(buffer.AsSpan(offset, count));
         /// <inheritdoc />
         /// <summary>
@@ -247,7 +235,7 @@ namespace TWCore.IO
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => Task.FromResult(Read(buffer.AsSpan(offset, count)));
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
@@ -260,7 +248,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #else
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public sealed override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #endif
             => new ValueTask<int>(Read(buffer.Span));
         #endregion
@@ -272,15 +260,13 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The byte to write to the stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteByte(byte value)
+        public sealed override void WriteByte(byte value)
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
-            if (!_canWrite)
-                throw new IOException("The stream is readonly.");
-            var cRow = Math.DivRem(_currentPosition, MaxLength, out var cIndex);
+            if (_isClosed) ThrowStreamClosed();
+            if (!_canWrite) ThrowStreamReadOnly();
+            var cRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var cIndex);
             if (cRow >= _buffers.Count)
-                _buffers.Add(ByteArrayPool.New());
+                _buffers.Add(SegmentPool.Rent());
             _buffers[cRow][cIndex] = value;
             _currentPosition++;
             if (_currentPosition > _totalLength)
@@ -295,19 +281,17 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public void Write(ReadOnlySpan<byte> buffer)
 #else
-        public override void Write(ReadOnlySpan<byte> buffer)
+        public sealed override void Write(ReadOnlySpan<byte> buffer)
 #endif
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
-            if (!_canWrite)
-                throw new IOException("The stream is readonly.");
+            if (_isClosed) ThrowStreamClosed();
+            if (!_canWrite) ThrowStreamReadOnly();
             var finalPosition = _currentPosition + buffer.Length;
-            var cRow = Math.DivRem(_currentPosition, MaxLength, out var cIndex);
-            var fRow = Math.DivRem(finalPosition, MaxLength, out var fIndex);
+            var cRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var cIndex);
+            var fRow = Math.DivRem(finalPosition, SegmentPool.SegmentLength, out var fIndex);
             var missRows = (fRow + 1) - _buffers.Count;
             for (var i = 0; i < missRows; i++)
-                _buffers.Add(ByteArrayPool.New());
+                _buffers.Add(SegmentPool.Rent());
             if (cRow == fRow)
             {
                 var destination = _buffers[cRow].AsSpan(cIndex, fIndex - cIndex);
@@ -322,7 +306,7 @@ namespace TWCore.IO
                 Span<byte> destination;
 
                 if (i == cRow)
-                    destination = _buffers[i].AsSpan(cIndex, MaxLength - cIndex);
+                    destination = _buffers[i].AsSpan(cIndex, SegmentPool.SegmentLength - cIndex);
                 else if (i == fRow)
                     destination = _buffers[i].AsSpan(0, fIndex);
                 else
@@ -335,8 +319,7 @@ namespace TWCore.IO
             }
 
             final:
-            if (buffer.Length != 0)
-                throw new IOException("Write error");
+            if (buffer.Length != 0) ThrowStreamWriteError();
             _currentPosition = finalPosition;
             if (_currentPosition > _totalLength)
                 _totalLength = _currentPosition;
@@ -349,7 +332,7 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
+        public sealed override void Write(byte[] buffer, int offset, int count)
             => Write(buffer.AsSpan(offset, count));
         /// <inheritdoc />
         /// <summary>
@@ -360,7 +343,7 @@ namespace TWCore.IO
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Write(buffer.AsSpan(offset, count));
             return Task.CompletedTask;
@@ -375,7 +358,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #else
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public sealed override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #endif
         {
             Write(buffer.Span);
@@ -389,7 +372,7 @@ namespace TWCore.IO
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush()
+        public sealed override void Flush()
         {
         }
         /// <inheritdoc />
@@ -398,7 +381,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task FlushAsync(CancellationToken cancellationToken)
+        public sealed override Task FlushAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -415,7 +398,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public new void CopyTo(Stream destination, int bufferSize)
 #else
-        public override void CopyTo(Stream destination, int bufferSize)
+        public sealed override void CopyTo(Stream destination, int bufferSize)
 #endif
         {
             var mArray = new MultiArray<byte>(_buffers, _currentPosition, _totalLength - _currentPosition);
@@ -429,7 +412,7 @@ namespace TWCore.IO
         /// <param name="bufferSize">Buffer size. (not used)</param>
         /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+        public sealed override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
         {
             var mArray = new MultiArray<byte>(_buffers, _currentPosition, _totalLength - _currentPosition);
             return mArray.CopyToAsync(destination);
@@ -445,7 +428,7 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin)
+        public sealed override long Seek(long offset, SeekOrigin origin)
         {
             if (origin == SeekOrigin.Begin)
             {
@@ -467,7 +450,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value)
+        public sealed override void SetLength(long value)
         {
             if (value < 0)
                 value = 0;
@@ -477,15 +460,15 @@ namespace TWCore.IO
         /// Close stream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Close()
+        public sealed override void Close()
         {
             if (_buffers != null)
             {
                 if (_collectPoolItems)
                 {
                     foreach (var array in _buffers)
-                        ByteArrayPool.Store(array);
-                    ListByteArrayPool.Store(_buffers);
+                        SegmentPool.Return(array);
+                    SegmentPool.ReturnContainer(_buffers);
                 }
                 _buffers = null;
                 _isClosed = true;
@@ -518,8 +501,8 @@ namespace TWCore.IO
             _currentPosition = 0;
             _totalLength = 0;
             if (_collectPoolItems) return;
-            _buffers = ListByteArrayPool.New();
-            _buffers.Add(ByteArrayPool.New());
+            _buffers = SegmentPool.RentContainer();
+            _buffers.Add(SegmentPool.Rent());
             _collectPoolItems = true;
         }
         #endregion

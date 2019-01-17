@@ -137,6 +137,36 @@ namespace TWCore
         public static string ApplyFormat(this string format, params object[] args)
             => string.Format(format, args);
         /// <summary>
+        /// Apply format to a string
+        /// </summary>
+        /// <param name="format">Format pattern</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <returns>String with the format result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ApplyFormat(this string format, object arg1)
+            => string.Format(format, arg1);
+        /// <summary>
+        /// Apply format to a string
+        /// </summary>
+        /// <param name="format">Format pattern</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <returns>String with the format result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ApplyFormat(this string format, object arg1, object arg2)
+            => string.Format(format, arg1, arg2);
+        /// <summary>
+        /// Apply format to a string
+        /// </summary>
+        /// <param name="format">Format pattern</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <param name="arg3">Argument 3</param>
+        /// <returns>String with the format result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ApplyFormat(this string format, object arg1, object arg2, object arg3)
+            => string.Format(format, arg1, arg2, arg3);
+        /// <summary>
         /// Compare two strings and gives the equality in percent.
         /// Using Levenshtein 
         /// </summary>

@@ -26,5 +26,10 @@ namespace TWCore.Diagnostics.Counters
         /// </summary>
         /// <returns>The counter value</returns>
         ICounterItem Take(int items);
+        /// <summary>
+        /// Return values to pool if is supported
+        /// </summary>
+        /// <param name="item">Item value.</param>
+        void ReturnToPool(ICounterItem item);
     }
 }

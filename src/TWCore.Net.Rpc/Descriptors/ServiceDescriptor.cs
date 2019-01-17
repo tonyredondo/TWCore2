@@ -21,6 +21,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
+using TWCore.Diagnostics.Counters;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Security;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -62,9 +64,12 @@ namespace TWCore.Net.RPC.Descriptors
         /// Gets a service descriptor from a service type
         /// </summary>
         /// <param name="serviceType">Object service type for descriptor creation</param>
+        /// <param name="counterCategory">Counter category</param>
+        /// <param name="counterLevel">Counter level</param>
+        /// <param name="counterKind">Counter kind</param>
         /// <returns>Service descriptor instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ServiceDescriptor GetDescriptor(Type serviceType)
+        public static ServiceDescriptor GetDescriptor(Type serviceType, string counterCategory = null, CounterLevel counterLevel = CounterLevel.User, CounterKind counterKind = CounterKind.Application)
         {
             var descriptor = new ServiceDescriptor
             {
@@ -84,6 +89,23 @@ namespace TWCore.Net.RPC.Descriptors
                     ReturnType = GetTypeName(mInfo.ReturnType),
                     TypeOfReturnType = mInfo.ReturnType
                 };
+                if (mInfo.ReturnType == typeof(Task) || mInfo.ReturnType.BaseType == typeof(Task))
+                {
+                    mDesc.ReturnIsTask = true;
+                    if (mInfo.ReturnType.GenericTypeArguments.Length > 0)
+                    {
+                        mDesc.ReturnTaskResult = mInfo.ReturnType.GetProperty("Result").GetFastPropertyInfo();
+                        mDesc.CreateTaskFromResult = typeof(Task).GetMethod("FromResult").MakeGenericMethod(new[] { mInfo.ReturnType.GenericTypeArguments[0] }).GetMethodAccessor();
+                    }
+                    else
+                    {
+                        mDesc.ReturnTaskResult = null;
+                        mDesc.CreateTaskFromResult = null;
+                    }
+                }
+                if (counterCategory != null)
+                    mDesc.Counter = Core.Counters.GetDoubleCounter(counterCategory, serviceType.FullName + "\\" + mDesc.Name, CounterType.Average, counterLevel, counterKind, CounterUnit.Milliseconds);
+
                 RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 
                 var pars = mInfo.GetParameters();
@@ -138,14 +160,18 @@ namespace TWCore.Net.RPC.Descriptors
         {
             var genericTypes = new List<string>();
             if (!type.IsConstructedGenericType) return type.FullName;
-            type.GenericTypeArguments.Each(a => genericTypes.Add(a.FullName));
+            foreach (var a in type.GenericTypeArguments)
+                genericTypes.Add(a.FullName);
             return type.Name + "[" + genericTypes.Join(", ") + "]";
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void RegisterServiceDescriptorType(ServiceDescriptor descriptor, Type type)
         {
             if (type.IsConstructedGenericType)
-                type.GenericTypeArguments.Each(t => RegisterServiceDescriptorType(descriptor, t));
+            {
+                foreach (var t in type.GenericTypeArguments)
+                    RegisterServiceDescriptorType(descriptor, t);
+            }
 
             var typeInfo = type.GetTypeInfo();
             var asmName = typeInfo.Assembly.GetName();

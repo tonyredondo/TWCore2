@@ -24,6 +24,11 @@ namespace TWCore
     /// <typeparam name="T">Type of the pool</typeparam>
     public interface IPool<T>
     {
+
+        /// <summary>
+        /// Pool count
+        /// </summary>
+        int Count { get; }
         /// <summary>
         /// Preallocate a number of objects on the pool
         /// </summary>

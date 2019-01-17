@@ -82,8 +82,10 @@ namespace TWCore.Messaging.RabbitMQ
                 await SendTaskAsync(e.ResponseQueues[0]).ConfigureAwait(false);
             else
             {
-                var sendTasks = e.ResponseQueues.Select(SendTaskAsync).ToArray();
-                await Task.WhenAny(sendTasks).ConfigureAwait(false);
+                var tsk = new Task[e.ResponseQueues.Count];
+                for (var i = 0; i < tsk.Length; i++)
+                    tsk[i] = SendTaskAsync(e.ResponseQueues[i]);
+                await Task.WhenAny(tsk).ConfigureAwait(false);
             }
 
             return data.Count;

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Cache.Client;
 using TWCore.Cache.Client.Configuration;
@@ -34,14 +35,13 @@ namespace TWCore.Services
 	public static class CoreServicesExtensions
 	{
 	    private static CacheSettings _settings;
-	    private static bool _init;
+        private static int _init;
 
 		#region Init
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Init()
 		{
-			if (_init) return;
-			_init = true;
+            if (Interlocked.CompareExchange(ref _init, 1, 0) == 1) return;
 
 			var cacheSettings = Core.GetSettings<CacheConfigurationSettings>();
 			if (string.IsNullOrEmpty(cacheSettings.ConfigFile)) return;
@@ -78,7 +78,7 @@ namespace TWCore.Services
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetDefaultCacheClientSettings(this CoreServices services, CacheSettings settings)
 		{
-			_init = true;
+            _init = Interlocked.Exchange(ref _init, 1);
 			_settings = settings;
 		}
 		#endregion

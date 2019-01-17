@@ -64,16 +64,20 @@ namespace TWCore.Net.Multicast
         #region Allocators
         private readonly struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
         {
-            public int InitialSize => 1;
+            public int InitialSize => 10;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] New() => new byte[PacketSize];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(byte[] value) {}
-            public int DropTimeFrequencyInSeconds => 60;
+            public int DropTimeFrequencyInSeconds => 120;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void DropAction(byte[] value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 10;
         }
         #endregion
 
@@ -458,7 +462,19 @@ namespace TWCore.Net.Multicast
         private readonly struct ReceivedDatagrams
         {
             public readonly Memory<byte>[] Datagrams;
-            public bool Complete => !Datagrams?.Any(i => i.IsEmpty) ?? false;
+            public bool Complete
+            {
+                get
+                {
+                    if (Datagrams == null) return false;
+                    foreach(var i in Datagrams)
+                    {
+                        if (i.IsEmpty)
+                            return false;
+                    }
+                    return true;
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnlySequence<byte> GetMessage()

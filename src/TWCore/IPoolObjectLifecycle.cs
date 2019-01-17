@@ -27,6 +27,10 @@ namespace TWCore
         /// </summary>
         int InitialSize { get; }
         /// <summary>
+        /// Pool maximum size
+        /// </summary>
+        int MaximumSize { get; }
+        /// <summary>
         /// Pool reset mode
         /// </summary>
         PoolResetMode ResetMode { get; }
@@ -44,6 +48,14 @@ namespace TWCore
         /// Drop time frequency in seconds
         /// </summary>
         int DropTimeFrequencyInSeconds { get; }
+        /// <summary>
+        /// Drop size threshold
+        /// </summary>
+        int DropMaxSizeThreshold { get; }
+        /// <summary>
+        /// Drop quantity per time
+        /// </summary>
+        int DropQuantity { get; }
         /// <summary>
         /// Drop action
         /// </summary>

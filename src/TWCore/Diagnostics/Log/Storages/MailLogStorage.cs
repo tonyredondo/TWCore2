@@ -266,9 +266,21 @@ namespace TWCore.Diagnostics.Log.Storages
             AddressCc = AddressCc?.Replace(",", ";").Replace("|", ";");
             AddressTo = AddressTo?.Replace(",", ";").Replace("|", ";");
 
-            AddressBcc.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { message.Bcc.Add(new MailAddress(a)); } });
-            AddressCc.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { message.CC.Add(new MailAddress(a)); } });
-            AddressTo.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { message.To.Add(new MailAddress(a)); } });
+            foreach (var a in AddressBcc.SplitAndTrim(';'))
+            {
+                if (!string.IsNullOrEmpty(a))
+                    message.Bcc.Add(new MailAddress(a));
+            }
+            foreach (var a in AddressCc.SplitAndTrim(';'))
+            {
+                if (!string.IsNullOrEmpty(a)) 
+                    message.CC.Add(new MailAddress(a));
+            }
+            foreach (var a in AddressTo.SplitAndTrim(';'))
+            {
+                if (!string.IsNullOrEmpty(a)) 
+                    message.To.Add(new MailAddress(a)); 
+            }
 
             var msg = string.Empty;
 

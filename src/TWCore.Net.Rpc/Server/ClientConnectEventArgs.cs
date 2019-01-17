@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Net.RPC.Server
@@ -28,10 +29,31 @@ namespace TWCore.Net.RPC.Server
         /// Client identifier
         /// </summary>
         public Guid ClientId { get; private set; }
+
+
+        #region Statics
         /// <summary>
-        /// Client connection event args, used on the event when a new client is connected to the service
+        ///  Client connection event args, for the event when the server receive a server descriptor request.
         /// </summary>
-        /// <param name="clientId">Client identifier</param>
-        public ClientConnectEventArgs(Guid clientId) => ClientId = clientId;
+        /// <returns>ServerDescriptorsEventArgs instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ClientConnectEventArgs Retrieve(Guid clientId)
+        {
+            var value = ReferencePool<ClientConnectEventArgs>.Shared.New();
+            value.ClientId = clientId;
+            return value;
+        }
+        /// <summary>
+        /// Stores a client connection args.
+        /// </summary>
+        /// <param name="value">Method event args value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(ClientConnectEventArgs value)
+        {
+            if (value is null) return;
+            value.ClientId = Guid.Empty;
+            ReferencePool<ClientConnectEventArgs>.Shared.Store(value);
+        }
+        #endregion
     }
 }

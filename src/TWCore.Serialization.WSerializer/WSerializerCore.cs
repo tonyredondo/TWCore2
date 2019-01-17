@@ -58,7 +58,7 @@ namespace TWCore.Serialization.WSerializer
         private readonly byte[] _buffer = new byte[3];
 
         #region Allocators
-        private readonly struct CachePoolItem
+        private sealed class CachePoolItem
         {
             public readonly SerializerCache<Type> TypeCache;
             public readonly SerializerCache<object> ObjectCache;
@@ -69,7 +69,7 @@ namespace TWCore.Serialization.WSerializer
                 ObjectCache = objectCache;
             }
         }
-        private readonly struct DesCachePoolItem
+        private sealed class DesCachePoolItem
         {
             public readonly SerializerCache<DeserializerTypeDefinition> TypeCache;
             public readonly SerializerCache<object> ObjectCache;
@@ -98,6 +98,9 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(CachePoolItem value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct StackPoolAllocator : IPoolObjectLifecycle<Stack<SerializerScope>>
         {
@@ -111,6 +114,9 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(Stack<SerializerScope> value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct DesCachePoolAllocator : IPoolObjectLifecycle<DesCachePoolItem>
         {
@@ -130,6 +136,9 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(DesCachePoolItem value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct DesStackPoolAllocator : IPoolObjectLifecycle<Stack<DeserializerTypeItem>>
         {
@@ -144,6 +153,9 @@ namespace TWCore.Serialization.WSerializer
             public void DropAction(Stack<DeserializerTypeItem> value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         #endregion
         

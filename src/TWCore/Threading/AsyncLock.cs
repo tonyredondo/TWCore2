@@ -77,7 +77,35 @@ namespace TWCore.Threading
                 ? _cachedTaskReleaser
                 : waitTask.ContinueWith((oldTask, state) => (IDisposable) state, _cachedReleaser, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
-
+        /// <summary>
+        /// Gets lock syncronously.
+        /// </summary>
+        /// <returns>
+        /// <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
+        /// will release the <see cref="AsyncLock"/>.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IDisposable GetLock()
+        {
+            _semaphore.Wait();
+            return _cachedReleaser;
+        }
+        /// <summary>
+        /// Gets lock syncronously.
+        /// </summary>
+        /// <param name="cancellationToken">
+        /// The <see cref="CancellationToken"/> token to observe.
+        /// </param>
+        /// <returns>
+        /// <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
+        /// will release the <see cref="AsyncLock"/>.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IDisposable GetLock(CancellationToken cancellationToken)
+        {
+            _semaphore.Wait(cancellationToken);
+            return _cachedReleaser;
+        }
         /// <summary>
         /// Locks the <see cref="AsyncLock"/>.
         /// </summary>

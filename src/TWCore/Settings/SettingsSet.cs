@@ -60,7 +60,11 @@ namespace TWCore.Settings
                 }
             }
             var result = new KeyValueCollection(partial?.Items, false);
-            Items?.Each(i => result.Add(i));
+            if (Items != null)
+            {
+                foreach (var i in Items)
+                    result.Add(i);
+            }
             return result;
         }
     }

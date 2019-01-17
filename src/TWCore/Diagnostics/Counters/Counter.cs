@@ -105,7 +105,7 @@ namespace TWCore.Diagnostics.Counters
                     }
                 }
             }
-            var newItem = new CounterItemValue<T>(now, value);
+            var newItem = CounterItemValue<T>.Retrieve(now, value);
             _lastValue = newItem;
             _counterValues.Add(newItem);
         }
@@ -131,7 +131,21 @@ namespace TWCore.Diagnostics.Counters
                 lstItems.Add(item);
                 itemIdx++;
             }
-            return new CounterItem<T>(Category, Name, Type, Level, Kind, Unit, lstItems);
+            return CounterItem<T>.Retrieve(Category, Name, Type, Level, Kind, Unit, lstItems);
+        }
+        /// <summary>
+        /// Return the ICounterItem to the pool
+        /// </summary>
+        /// <param name="item">Item value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ReturnToPool(ICounterItem item)
+        {
+            if (item is CounterItem<T> value)
+            {
+                foreach(var lVal in value.Values)
+                    CounterItemValue<T>.Store(lVal);
+                CounterItem<T>.Store(value);
+            }
         }
 
         /// <summary>

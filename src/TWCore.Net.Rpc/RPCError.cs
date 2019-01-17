@@ -24,7 +24,7 @@ namespace TWCore.Net.RPC
     /// RPC Error Message
     /// </summary>
     [Serializable, DataContract]
-    public class RPCError : RPCMessage
+    public sealed class RPCError : RPCMessage
     {
         /// <summary>
         /// Message exception

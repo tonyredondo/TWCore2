@@ -26,6 +26,7 @@ using TWCore.Collections;
 using TWCore.Diagnostics.Log.Storages;
 using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
+using TWCore.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Diagnostics.Log
@@ -41,7 +42,7 @@ namespace TWCore.Diagnostics.Log
         #region Private fields
         private readonly Worker<IGroupItem> _itemsWorker;
         private readonly ConcurrentQueue<IGroupItem> _lastLogItems = new ConcurrentQueue<IGroupItem>();
-        private readonly ManualResetEventSlim _completationHandler = new ManualResetEventSlim(true);
+        private readonly AsyncManualResetEvent _completationHandler = new AsyncManualResetEvent(true);
         #endregion
 
         #region Properties
@@ -65,7 +66,7 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Gets a log done task that completes when the log has finished to write
         /// </summary>
-        public Task LogDoneTask => Task.Run(() => _completationHandler.Wait());
+        public Task LogDoneTask => _completationHandler.WaitAsync();
         /// <inheritdoc />
         /// <summary>
         /// Enable or Disable the Log engine
@@ -89,10 +90,11 @@ namespace TWCore.Diagnostics.Log
                 {
                     case null:
                         return Task.CompletedTask;
-                    case NewLineLogItem _:
+                    case NewLineLogItem nlineItem:
+                        ReferencePool<NewLineLogItem>.Shared.Store(nlineItem);
                         return Storages.WriteEmptyLineAsync();
                     case LogItem lItem:
-                        return Storages.WriteAsync(lItem).ContinueWith(_ => LogItem.Store(lItem), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                        return Storages.WriteAsync(lItem).ContinueWith((tsk, state) => LogItem.Store((LogItem)state), lItem, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     case ILogItem iLitem:
                         return Storages.WriteAsync(iLitem);
                     case IGroupMetadata gMeta:
@@ -240,7 +242,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Debug(string message, object arg1)
+        public void Debug<T1>(string message, in T1 arg1)
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
@@ -254,7 +256,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Debug(string message, object arg1, object arg2)
+        public void Debug<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
@@ -269,7 +271,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Debug(string message, object arg1, object arg2, object arg3)
+        public void Debug<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
@@ -309,7 +311,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Verbose(string message, object arg1)
+        public void Verbose<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, null, message, arg1);
@@ -322,7 +324,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Verbose(string message, object arg1, object arg2)
+        public void Verbose<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, null, message, arg1, arg2);
@@ -336,7 +338,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Verbose(string message, object arg1, object arg2, object arg3)
+        public void Verbose<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, null, message, arg1, arg2, arg3);
@@ -376,7 +378,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Error(Exception ex, string message, object arg1)
+        public void Error<T1>(Exception ex, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, arg1, ex);
@@ -390,7 +392,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Error(Exception ex, string message, object arg1, object arg2)
+        public void Error<T1, T2>(Exception ex, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, arg1, arg2, ex);
@@ -405,7 +407,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Error(Exception ex, string message, object arg1, object arg2, object arg3)
+        public void Error<T1, T2, T3>(Exception ex, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, arg1, arg2, arg3, ex);
@@ -441,7 +443,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Error(string message, object arg1)
+        public void Error<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, arg1);
@@ -454,7 +456,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Error(string message, object arg1, object arg2)
+        public void Error<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, arg1, arg2);
@@ -468,7 +470,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Error(string message, object arg1, object arg2, object arg3)
+        public void Error<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, arg1, arg2, arg3);
@@ -506,7 +508,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Warning(string message, object arg1)
+        public void Warning<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, null, message, arg1);
@@ -519,7 +521,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Warning(string message, object arg1, object arg2)
+        public void Warning<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, null, message, arg1, arg2);
@@ -533,7 +535,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Warning(string message, object arg1, object arg2, object arg3)
+        public void Warning<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, null, message, arg1, arg2, arg3);
@@ -571,7 +573,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoBasic(string message, object arg1)
+        public void InfoBasic<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, null, message, arg1);
@@ -584,7 +586,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoBasic(string message, object arg1, object arg2)
+        public void InfoBasic<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, null, message, arg1, arg2);
@@ -598,7 +600,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoBasic(string message, object arg1, object arg2, object arg3)
+        public void InfoBasic<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, null, message, arg1, arg2, arg3);
@@ -636,7 +638,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoMedium(string message, object arg1)
+        public void InfoMedium<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, null, message, arg1);
@@ -649,7 +651,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoMedium(string message, object arg1, object arg2)
+        public void InfoMedium<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, null, message, arg1, arg2);
@@ -663,7 +665,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoMedium(string message, object arg1, object arg2, object arg3)
+        public void InfoMedium<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, null, message, arg1, arg2, arg3);
@@ -701,7 +703,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoDetail(string message, object arg1)
+        public void InfoDetail<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, null, message, arg1);
@@ -714,7 +716,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoDetail(string message, object arg1, object arg2)
+        public void InfoDetail<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, null, message, arg1, arg2);
@@ -728,7 +730,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoDetail(string message, object arg1, object arg2, object arg3)
+        public void InfoDetail<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, null, message, arg1, arg2, arg3);
@@ -766,7 +768,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Stats(string message, object arg1)
+        public void Stats<T1>(string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, null, message, arg1);
@@ -779,7 +781,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Stats(string message, object arg1, object arg2)
+        public void Stats<T1, T2>(string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, null, message, arg1, arg2);
@@ -793,7 +795,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Stats(string message, object arg1, object arg2, object arg3)
+        public void Stats<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, null, message, arg1, arg2, arg3);
@@ -811,11 +813,151 @@ namespace TWCore.Diagnostics.Log
                 WriteUnsafe(LogLevel.Stats, null, message, args);
         }
         #endregion
-        
+
+        #region LibDebug Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibDebug(string message)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibDebug))
+                WriteUnsafe(LogLevel.LibDebug, null, message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibDebug<T1>(string message, in T1 arg1)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibDebug))
+                WriteUnsafe(LogLevel.LibDebug, null, message, arg1);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibDebug<T1, T2>(string message, in T1 arg1, in T2 arg2)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibDebug))
+                WriteUnsafe(LogLevel.LibDebug, null, message, arg1, arg2);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibDebug<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibDebug))
+                WriteUnsafe(LogLevel.LibDebug, null, message, arg1, arg2, arg3);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibDebug(string message, params object[] args)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibDebug))
+                WriteUnsafe(LogLevel.LibDebug, null, message, args);
+        }
         #endregion
-        
+
+        #region LibVerbose Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibVerbose(string message)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibVerbose))
+                WriteUnsafe(LogLevel.LibVerbose, null, message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibVerbose<T1>(string message, in T1 arg1)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibVerbose))
+                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibVerbose<T1, T2>(string message, in T1 arg1, in T2 arg2)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibVerbose))
+                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1, arg2);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibVerbose<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibVerbose))
+                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1, arg2, arg3);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibVerbose(string message, params object[] args)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibVerbose))
+                WriteUnsafe(LogLevel.LibVerbose, null, message, args);
+        }
+        #endregion
+
+        #endregion
+
         #region Basic Group Members
-        
+
         #region DebugGroup Methods
         /// <inheritdoc />
         /// <summary>
@@ -838,7 +980,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DebugGroup(string groupName, string message, object arg1)
+        public void DebugGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
@@ -853,7 +995,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DebugGroup(string groupName, string message, object arg1, object arg2)
+        public void DebugGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
@@ -869,7 +1011,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DebugGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void DebugGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
@@ -912,7 +1054,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void VerboseGroup(string groupName, string message, object arg1)
+        public void VerboseGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, groupName, message, arg1);
@@ -926,7 +1068,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void VerboseGroup(string groupName, string message, object arg1, object arg2)
+        public void VerboseGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, groupName, message, arg1, arg2);
@@ -941,7 +1083,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void VerboseGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void VerboseGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, groupName, message, arg1, arg2, arg3);
@@ -996,7 +1138,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ErrorGroup(Exception ex, string groupName, string message, object arg1)
+        public void ErrorGroup<T1>(Exception ex, string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, arg1, ex);
@@ -1011,7 +1153,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ErrorGroup(Exception ex, string groupName, string message, object arg1, object arg2)
+        public void ErrorGroup<T1, T2>(Exception ex, string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, arg1, arg2, ex);
@@ -1027,7 +1169,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ErrorGroup(Exception ex, string groupName, string message, object arg1, object arg2, object arg3)
+        public void ErrorGroup<T1, T2, T3>(Exception ex, string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, arg1, arg2, arg3, ex);
@@ -1066,7 +1208,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ErrorGroup(string groupName, string message, object arg1)
+        public void ErrorGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, arg1);
@@ -1080,7 +1222,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ErrorGroup(string groupName, string message, object arg1, object arg2)
+        public void ErrorGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, arg1, arg2);
@@ -1095,7 +1237,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ErrorGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void ErrorGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, arg1, arg2, arg3);
@@ -1136,7 +1278,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WarningGroup(string groupName, string message, object arg1)
+        public void WarningGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, groupName, message, arg1);
@@ -1150,7 +1292,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WarningGroup(string groupName, string message, object arg1, object arg2)
+        public void WarningGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, groupName, message, arg1, arg2);
@@ -1165,7 +1307,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WarningGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void WarningGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, groupName, message, arg1, arg2, arg3);
@@ -1206,7 +1348,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoBasicGroup(string groupName, string message, object arg1)
+        public void InfoBasicGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, groupName, message, arg1);
@@ -1220,7 +1362,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoBasicGroup(string groupName, string message, object arg1, object arg2)
+        public void InfoBasicGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, groupName, message, arg1, arg2);
@@ -1235,7 +1377,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoBasicGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void InfoBasicGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, groupName, message, arg1, arg2, arg3);
@@ -1276,7 +1418,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoMediumGroup(string groupName, string message, object arg1)
+        public void InfoMediumGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, groupName, message, arg1);
@@ -1290,7 +1432,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoMediumGroup(string groupName, string message, object arg1, object arg2)
+        public void InfoMediumGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, groupName, message, arg1, arg2);
@@ -1305,7 +1447,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoMediumGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void InfoMediumGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, groupName, message, arg1, arg2, arg3);
@@ -1346,7 +1488,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoDetailGroup(string groupName, string message, object arg1)
+        public void InfoDetailGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, groupName, message, arg1);
@@ -1360,7 +1502,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoDetailGroup(string groupName, string message, object arg1, object arg2)
+        public void InfoDetailGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, groupName, message, arg1, arg2);
@@ -1375,7 +1517,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InfoDetailGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void InfoDetailGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, groupName, message, arg1, arg2, arg3);
@@ -1416,7 +1558,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="arg1">First argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void StatsGroup(string groupName, string message, object arg1)
+        public void StatsGroup<T1>(string groupName, string message, in T1 arg1)
         {
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, groupName, message, arg1);
@@ -1430,7 +1572,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg1">First argument</param>
         /// <param name="arg2">Second argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void StatsGroup(string groupName, string message, object arg1, object arg2)
+        public void StatsGroup<T1, T2>(string groupName, string message, in T1 arg1, in T2 arg2)
         {
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, groupName, message, arg1, arg2);
@@ -1445,7 +1587,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void StatsGroup(string groupName, string message, object arg1, object arg2, object arg3)
+        public void StatsGroup<T1, T2, T3>(string groupName, string message, in T1 arg1, in T2 arg2, in T3 arg3)
         {
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, groupName, message, arg1, arg2, arg3);
@@ -1466,146 +1608,6 @@ namespace TWCore.Diagnostics.Log
         #endregion
 
         #endregion
-
-        #region LibDebug Methods
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibDebug item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibDebug(string message)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibDebug))
-                WriteUnsafe(LogLevel.LibDebug, null, message);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibDebug item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="arg1">First argument</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibDebug(string message, object arg1)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibDebug))
-                WriteUnsafe(LogLevel.LibDebug, null, message, arg1);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibDebug item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="arg1">First argument</param>
-        /// <param name="arg2">Second argument</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibDebug(string message, object arg1, object arg2)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibDebug))
-                WriteUnsafe(LogLevel.LibDebug, null, message, arg1, arg2);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibDebug item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="arg1">First argument</param>
-        /// <param name="arg2">Second argument</param>
-        /// <param name="arg3">Third argument</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibDebug(string message, object arg1, object arg2, object arg3)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibDebug))
-                WriteUnsafe(LogLevel.LibDebug, null, message, arg1, arg2, arg3);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibDebug item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="args">Arguments to bing with the pattern</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibDebug(string message, params object[] args)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibDebug))
-                WriteUnsafe(LogLevel.LibDebug, null, message, args);
-        }
-        #endregion
-        
-        #region LibVerbose Methods
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibVerbose item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibVerbose(string message)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibVerbose))
-                WriteUnsafe(LogLevel.LibVerbose, null, message);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibVerbose item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="arg1">First argument</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibVerbose(string message, object arg1)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibVerbose))
-                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibVerbose item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="arg1">First argument</param>
-        /// <param name="arg2">Second argument</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibVerbose(string message, object arg1, object arg2)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibVerbose))
-                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1, arg2);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibVerbose item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="arg1">First argument</param>
-        /// <param name="arg2">Second argument</param>
-        /// <param name="arg3">Third argument</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibVerbose(string message, object arg1, object arg2, object arg3)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibVerbose))
-                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1, arg2, arg3);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Write a LibVerbose item into the log storages
-        /// </summary>
-        /// <param name="message">Item message with pattern support</param>
-        /// <param name="args">Arguments to bing with the pattern</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LibVerbose(string message, params object[] args)
-        {
-            if (!Core.DebugMode) return;
-            if (IsLogLevelValid(LogLevel.LibVerbose))
-                WriteUnsafe(LogLevel.LibVerbose, null, message, args);
-        }
-        #endregion
         
         #region WriteEmptyLine Method
         /// <inheritdoc />
@@ -1615,7 +1617,7 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteEmptyLine()
         {
-            Write(new NewLineLogItem());
+            Write(ReferencePool<NewLineLogItem>.Shared.New());
         }
         #endregion
 
@@ -1648,12 +1650,15 @@ namespace TWCore.Diagnostics.Log
         public void AddGroupMetadata(string groupName, params (string Key, string Value)[] keyValues)
         {
             if (string.IsNullOrWhiteSpace(groupName) || keyValues is null) return;
+            var nValues = new KeyValue[keyValues.Length];
+            for (var i = 0; i < keyValues.Length; i++)
+                nValues[i] = new KeyValue(keyValues[i].Key, keyValues[i].Value);
             _itemsWorker?.Enqueue(new GroupMetadata
             {
                 InstanceId = Core.InstanceId,
                 Timestamp = Core.Now,
                 GroupName = groupName,
-                Items = keyValues.Select(i => new KeyValue(i.Key, i.Value)).ToArray()
+                Items = nValues
             });
         }
         #endregion
@@ -1673,7 +1678,12 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="items">Log items range</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EnqueueItemsArray(IGroupItem[] items) => items?.Each(i => _itemsWorker.Enqueue(i));
+		public void EnqueueItemsArray(IGroupItem[] items)
+        {
+            if (items is null) return;
+            foreach (var i in items)
+                _itemsWorker.Enqueue(i);
+		} 
         /// <inheritdoc />
         /// <summary>
         /// Starts the Log Engine

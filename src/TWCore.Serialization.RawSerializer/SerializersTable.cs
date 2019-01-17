@@ -97,8 +97,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.BoolArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.BoolArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,8 +116,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.CharArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.CharArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,8 +135,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DateTimeOffsetArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.DateTimeOffsetArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -151,8 +154,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DateTimeArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.DateTimeArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -169,8 +173,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.EnumArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.EnumArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -187,8 +192,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.GuidArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.GuidArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -205,8 +211,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DecimalArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.DecimalArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -223,8 +230,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DoubleArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.DoubleArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -241,8 +249,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.FloatArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.FloatArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -259,8 +268,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.LongArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.LongArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -277,8 +287,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.ULongArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.ULongArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -295,8 +306,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.IntArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.IntArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -313,8 +325,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.UIntArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.UIntArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -331,8 +344,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.ShortArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.ShortArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -349,8 +363,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.UShortArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.UShortArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -367,8 +382,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.SByteArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.SByteArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -385,8 +401,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.StringArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.StringArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -403,8 +420,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.TimeSpanArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.TimeSpanArray, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -421,8 +439,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.ObjectArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
+            var length = value.Length;
+            WriteDefInt(DataBytesDefinition.ObjectArray, length);
+            for (var i = 0; i < length; i++)
                 InternalWriteObjectValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -439,8 +458,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.BoolList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.BoolList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -457,8 +477,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.CharList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.CharList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -475,8 +496,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DateTimeOffsetList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.DateTimeOffsetList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -493,8 +515,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DateTimeList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.DateTimeList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -511,8 +534,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.EnumList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.EnumList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -529,8 +553,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.GuidList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.GuidList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -547,8 +572,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DecimalList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.DecimalList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -565,8 +591,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.DoubleList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.DoubleList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -583,8 +610,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.FloatList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.FloatList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -601,8 +629,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.LongList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.LongList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -619,8 +648,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.ULongList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.ULongList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -637,8 +667,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.IntList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.IntList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -655,8 +686,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.UIntList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.UIntList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -673,8 +705,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.ShortList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.ShortList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -691,8 +724,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.UShortList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.UShortList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -709,8 +743,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.SByteList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.SByteList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -727,8 +762,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.StringList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.StringList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -745,8 +781,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.TimeSpanList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.TimeSpanList, length);
+            for (var i = 0; i < length; i++)
                 WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -763,8 +800,9 @@ namespace TWCore.Serialization.RawSerializer
                 return;
             }
             _objectCache.Set(value);
-            WriteDefInt(DataBytesDefinition.ObjectList, value.Count);
-            for (var i = 0; i < value.Count; i++)
+            var length = value.Count;
+            WriteDefInt(DataBytesDefinition.ObjectList, length);
+            for (var i = 0; i < length; i++)
                 InternalWriteObjectValue(value[i]);
         }
         #endregion

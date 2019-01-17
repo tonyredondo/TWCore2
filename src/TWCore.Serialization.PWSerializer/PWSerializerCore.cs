@@ -119,6 +119,9 @@ namespace TWCore.Serialization.PWSerializer
             public void DropAction(SerPoolItem value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct DesPoolAllocator : IPoolObjectLifecycle<DesPoolItem>
         {
@@ -132,6 +135,9 @@ namespace TWCore.Serialization.PWSerializer
             public void DropAction(DesPoolItem value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct SerializerScopeAllocator : IPoolObjectLifecycle<SerializerScope>
         {
@@ -145,6 +151,9 @@ namespace TWCore.Serialization.PWSerializer
             public void DropAction(SerializerScope value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         private readonly struct RuntimeValueAllocator : IPoolObjectLifecycle<SerializerPlanItem.RuntimeValue>
         {
@@ -158,6 +167,9 @@ namespace TWCore.Serialization.PWSerializer
             public void DropAction(SerializerPlanItem.RuntimeValue value)
             {
             }
+            public int DropMaxSizeThreshold => 10;
+            public int MaximumSize => 100;
+            public int DropQuantity => 1;
         }
         #endregion
 

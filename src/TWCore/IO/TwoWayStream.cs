@@ -27,7 +27,7 @@ namespace TWCore.IO
     /// <summary>
     /// Two Way Stream decorator
     /// </summary>
-    public class TwoWayStream : Stream
+    public sealed class TwoWayStream : Stream
     {
         private readonly Stream _readStream;
         private readonly Stream _writeStream;
@@ -98,7 +98,7 @@ namespace TWCore.IO
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush()
+        public sealed override void Flush()
             => _writeStream.Flush();
         /// <inheritdoc />
         /// <summary>
@@ -106,7 +106,7 @@ namespace TWCore.IO
         /// </summary>
         /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
+        public sealed override int ReadByte()
             => _readStream.ReadByte();
         /// <inheritdoc />
         /// <summary>
@@ -117,14 +117,14 @@ namespace TWCore.IO
         /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Read(byte[] buffer, int offset, int count)
+        public sealed override int Read(byte[] buffer, int offset, int count)
             => _readStream.Read(buffer, offset, count);
         /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => _readStream.ReadAsync(buffer, offset, count, cancellationToken);
         /// <inheritdoc />
         /// <summary>
@@ -134,14 +134,14 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
+        public sealed override void Write(byte[] buffer, int offset, int count)
             => _writeStream.Write(buffer, offset, count);
         /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => _writeStream.WriteAsync(buffer, offset, count, cancellationToken);
         /// <inheritdoc />
         /// <summary>
@@ -151,20 +151,20 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public sealed override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
         /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value) => throw new NotSupportedException();
+        public sealed override void SetLength(long value) => throw new NotSupportedException();
         /// <summary>
         /// Dispose all resources of the instance
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override void Dispose(bool disposing)
+        protected sealed override void Dispose(bool disposing)
         {
             if (disposing)
             {

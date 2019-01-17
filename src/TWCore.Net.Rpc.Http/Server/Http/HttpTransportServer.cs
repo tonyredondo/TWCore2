@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+using TWCore.Threading;
+
 // ReSharper disable RedundantAssignment
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -64,13 +66,13 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Events
         /// <summary>
-        /// Event that fires when a Descriptors request is received.
+        /// Event that fires when a Descriptor request is received.
         /// </summary>
         public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
-        public event EventHandler<MethodEventArgs> OnMethodCall;
+        public AsyncEvent<MethodEventArgs> OnMethodCallAsync { get; set; }
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
@@ -89,7 +91,7 @@ namespace TWCore.Net.RPC.Server.Transports
         public HttpTransportServer()
         {
             _httpServer = new SimpleHttpServer();
-            _httpServer.OnBeginRequest += HttpServer_OnBeginRequest;
+            _httpServer.BeginRequest += HttpServer_BeginRequest;
 			Serializer = new JsonTextSerializer();
             Core.Status.Attach(collection =>
             {
@@ -152,9 +154,10 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <param name="sender">Sender information</param>
         /// <param name="e">Event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        public Task FireEventAsync(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
             Core.Log.Warning("Events is not supported on HttpTransportServer");
+            return Task.CompletedTask;
         }
         #endregion
 
@@ -163,42 +166,45 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Handles an OnBeginRequest event
         /// </summary>
         /// <param name="context">Http context</param>
-        /// <param name="handled">Get if the request was handled</param>
         /// <param name="cancellationToken">Connection CancellationToken</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void HttpServer_OnBeginRequest(HttpContext context, ref bool handled, CancellationToken cancellationToken)
+        private async Task<bool> HttpServer_BeginRequest(HttpContext context, CancellationToken cancellationToken)
         {
             var request = context.Request;
             var response = context.Response;
             Core.Log.LibVerbose("Request received from {0}:{1} to {2} {3}", request.RemoteAddress, request.RemotePort, request.Method, request.RawUrl);
 
             var clientId = Guid.NewGuid();
-            OnClientConnect?.Invoke(this, new ClientConnectEventArgs(clientId));
+            var ccEvent = ClientConnectEventArgs.Retrieve(clientId);
+            OnClientConnect?.Invoke(this, ccEvent);
+            ClientConnectEventArgs.Store(ccEvent);
 
             context.Response.ContentType = Serializer.MimeTypes[0];
             var responseBuffer = default(MultiArray<byte>);
 
             if (context.Request.Method == HttpMethod.GET && EnableGetDescriptors && OnGetDescriptorsRequest != null)
             {
-                var eArgs = new ServerDescriptorsEventArgs();
+                var eArgs = ServerDescriptorsEventArgs.Retrieve();
                 OnGetDescriptorsRequest(this, eArgs);
                 responseBuffer = Serializer.Serialize(eArgs.Descriptors);
+                ServerDescriptorsEventArgs.Store(eArgs);
             }
-            if (context.Request.Method == HttpMethod.POST && OnMethodCall != null)
+            if (context.Request.Method == HttpMethod.POST && !(OnMethodCallAsync is null))
             {
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
                 var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
-                var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
-                OnMethodCall(this, eArgs);
+                var eArgs = MethodEventArgs.Retrieve(clientId, messageRq, cancellationToken);
+                await OnMethodCallAsync.InvokeAsync(this, eArgs).ConfigureAwait(false);
                 if (eArgs.Response != null)
                 {
                     responseBuffer = Serializer.Serialize(eArgs.Response);
                     OnResponseSent?.Invoke(this, eArgs.Response);
                 }
+                MethodEventArgs.Store(eArgs);
             }
-            responseBuffer.CopyTo(response.OutputStream);
+            await responseBuffer.CopyToAsync(response.OutputStream).ConfigureAwait(false);
             Counters.IncrementBytesSent(responseBuffer.Count);
-            handled = true;
+            return true;
         }
         #endregion
     }

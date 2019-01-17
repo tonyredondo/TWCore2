@@ -72,7 +72,10 @@ namespace TWCore.Collections
                 if (!UseBubbling)
                     _eventHandlersStack.Peek().Invoke(sender, e);
                 else
-                    _eventHandlersStack.Each(item => item.Invoke(sender, e));
+                {
+                    foreach (var item in _eventHandlersStack)
+                        item.Invoke(sender, e);
+                }
             }
         }
         #endregion
@@ -164,7 +167,10 @@ namespace TWCore.Collections
                 if (!UseBubbling)
                     _eventHandlersStack.Peek().Invoke(sender, e);
                 else
-                    _eventHandlersStack.Each(item => item.Invoke(sender, e));
+                {
+                    foreach (var item in _eventHandlersStack)
+                        item.Invoke(sender, e);
+                }
             }
         }
         #endregion

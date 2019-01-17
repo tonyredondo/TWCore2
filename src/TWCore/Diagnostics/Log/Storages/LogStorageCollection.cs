@@ -42,9 +42,8 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly object _locker = new object();
         private readonly List<(ILogStorage, LogLevel)> _items = new List<(ILogStorage, LogLevel)>();
         private readonly ReferencePool<List<Task>> _procTaskPool = new ReferencePool<List<Task>>();
-        private volatile bool _isDirty;
         private LogLevel _lastMaxLogLevel = LogLevel.Error;
-        private List<(ILogStorage, LogLevel)> _cItems;
+        private (ILogStorage, LogLevel)[] _cItems;
         private int _itemsCount;
 
         #region.ctor
@@ -56,7 +55,8 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             Core.Status.Attach(collection =>
             {
-                foreach (var item in _items)
+                var cItems = _cItems;
+                foreach (var item in cItems)
                 {
                     if (item.Item1 is null) continue;
                     collection.Add(item.Item1.ToString(), item.Item2);
@@ -79,12 +79,12 @@ namespace TWCore.Diagnostics.Log.Storages
                 if (_items.All((i, mStorage) => i.Item1 != mStorage, storage))
                 {
                     _items.Add((storage, writeLevel));
-                    _isDirty = true;
+                    _cItems = _items.ToArray();
                     CalculateMaxLogLevel();
+                    Interlocked.Exchange(ref _itemsCount, _items.Count);
+                    Core.Status.AttachChild(storage, this);
                 }
-                Interlocked.Exchange(ref _itemsCount, _items.Count);
             }
-            Core.Status.AttachChild(storage, this);
         }
         /// <summary>
         /// Adds a new storage to the collection
@@ -112,8 +112,12 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             lock (_locker)
             {
-                _items.RemoveAll(i => i.Item1 == storage);
-                Interlocked.Exchange(ref _itemsCount, _items.Count);
+                if (_items.RemoveAll(i => i.Item1 == storage) > 0)
+                {
+                    _cItems = _items.ToArray();
+                    CalculateMaxLogLevel();
+                    Interlocked.Exchange(ref _itemsCount, _items.Count);
+                }
             }
         }
         /// <summary>
@@ -140,7 +144,7 @@ namespace TWCore.Diagnostics.Log.Storages
             lock (_locker)
             {
                 _items.Clear();
-                _isDirty = true;
+                _cItems = _items.ToArray();
                 Interlocked.Exchange(ref _itemsCount, _items.Count);
                 CalculateMaxLogLevel();
             }
@@ -165,8 +169,14 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CalculateMaxLogLevel()
         {
-            var levels = _items.Select(i => i.Item2).ToArray();
-            _lastMaxLogLevel = levels.Length > 0 ? levels.Max() : LogLevel.Error;
+            var cItems = _items;
+            var maxError = LogLevel.Error;
+            foreach(var i in cItems)
+            {
+                if (i.Item2 > maxError)
+                    maxError = i.Item2;
+            }
+            _lastMaxLogLevel = maxError;
         }
         #endregion
 
@@ -177,29 +187,18 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task WriteAsync(ILogItem item)
+        public async Task WriteAsync(ILogItem item)
         {
-            if (_isDirty || _cItems is null)
-            {
-                if (_items is null) return Task.CompletedTask;
-                lock (_locker)
-                {
-                    _cItems = new List<(ILogStorage, LogLevel)>(_items);
-                    _isDirty = false;
-                }
-            }
+            var cItems = _cItems;
             var tsks = _procTaskPool.New();
-            for (var i = 0; i < _cItems.Count; i++)
+            for (var i = 0; i < cItems.Length; i++)
             {
-                if (_cItems[i].Item2.HasFlag(item.Level))
-                    tsks.Add(InternalWriteAsync(_cItems[i].Item1, item));
+                if (cItems[i].Item2.HasFlag(item.Level))
+                    tsks.Add(InternalWriteAsync(cItems[i].Item1, item));
             }
-            var resTask = Task.WhenAll(tsks).ContinueWith(_ =>
-            {
-                tsks.Clear();
-                _procTaskPool.Store(tsks);
-            });
-            return resTask;
+            await Task.WhenAll(tsks).ConfigureAwait(false);
+            tsks.Clear();
+            _procTaskPool.Store(tsks);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static async Task InternalWriteAsync(ILogStorage storage, ILogItem logItem)
@@ -220,16 +219,8 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task WriteEmptyLineAsync()
         {
-            if (_isDirty || _cItems is null)
-            {
-                if (_items is null) return;
-                lock (_locker)
-                {
-                    _cItems = new List<(ILogStorage, LogLevel)>(_items);
-                    _isDirty = false;
-                }
-            }
-            foreach (var sto in _cItems)
+            var cItems = _cItems;
+            foreach (var sto in cItems)
             {
                 try
                 {
@@ -248,16 +239,8 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <returns>Task process</returns>
         public async Task WriteAsync(IGroupMetadata item)
         {
-            if (_isDirty || _cItems is null)
-            {
-                if (_items is null) return;
-                lock (_locker)
-                {
-                    _cItems = new List<(ILogStorage, LogLevel)>(_items);
-                    _isDirty = false;
-                }
-            }
-            foreach (var sto in _cItems)
+            var cItems = _cItems;
+            foreach (var sto in cItems)
             {
                 try
                 {
@@ -286,22 +269,22 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 lock (_locker)
                 {
-                    _items.Each(t => Try.Do(v => v.Item1.Dispose(), t, false));
+                    foreach (var t in _items)
+                    {
+                        try
+                        {
+                            t.Item1.Dispose();
+                        }
+                        catch (Exception e)
+                        {
+                            Core.Log.Write(e);
+                        }
+                    }
                     _items?.Clear();
-                    _cItems?.Clear();
-                    _isDirty = true;
+                    _cItems = null;
                 }
             }
             _disposedValue = true;
-        }
-
-        /// <summary>
-        /// LogStorage destructor
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~LogStorageCollection()
-        {
-            Dispose(false);
         }
 
         /// <inheritdoc />

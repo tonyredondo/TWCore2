@@ -29,7 +29,7 @@ namespace TWCore.Net.RPC
     /// RPC Response Message
     /// </summary>
     [Serializable, DataContract]
-    public class RPCResponseMessage : RPCMessage
+    public sealed class RPCResponseMessage : RPCMessage
     {
         /// <summary>
         /// Request Message identifier for this response
@@ -79,6 +79,17 @@ namespace TWCore.Net.RPC
             var message = ReferencePool<RPCResponseMessage>.Shared.New();
             message.MessageId = Guid.NewGuid();
             message.RequestMessageId = request.MessageId;
+            return message;
+        }
+        /// <summary>
+        /// Retrieve a Response Message from the pool
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static RPCResponseMessage Retrieve(RPCError errorMessage)
+        {
+            var message = ReferencePool<RPCResponseMessage>.Shared.New();
+            message.MessageId = errorMessage.MessageId;
+            message.Exception = errorMessage.Exception;
             return message;
         }
         /// <summary>

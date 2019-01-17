@@ -206,8 +206,10 @@ namespace TWCore.Messaging.RabbitMQ
             if (_senders.Count == 1)
                 return await SendTaskAsync(_senders[0]).ConfigureAwait(false);
 
-            var senderTasks = _senders.Select(SendTaskAsync).ToArray();
-            await Task.WhenAny(senderTasks).ConfigureAwait(false);
+            var tsk = new Task[_senders.Count];
+            for (var i = 0; i < tsk.Length; i++)
+                tsk[i] = SendTaskAsync(_senders[i]);
+            await Task.WhenAny(tsk).ConfigureAwait(false);
             return true;
 
             async Task<bool> SendTaskAsync(RabbitMQueue sender)

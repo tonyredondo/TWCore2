@@ -21,6 +21,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using TWCore.Serialization;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -115,13 +116,13 @@ namespace TWCore.Net.HttpServer
 
         #region Internal Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal bool Process()
+        internal async Task<bool> ProcessAsync()
         {
             //Core.Log.LibVerbose("Connection from {0}:{1}", RemoteAddress, RemotePort);
 
             #region Init
             //Core.Log.LibVerbose("Initializing request...");
-            var request = _streamReader.ReadLine();
+            var request = await _streamReader.ReadLineAsync().ConfigureAwait(false);
             if (string.IsNullOrEmpty(request))
                 throw new Exception("Invalid http request line");
 
@@ -172,7 +173,7 @@ namespace TWCore.Net.HttpServer
             var hostHeader = false;
             string host = null;
             var contentTypeHeader = false;
-            while (!string.IsNullOrEmpty(line = _streamReader.ReadLine()))
+            while (!string.IsNullOrEmpty(line = await _streamReader.ReadLineAsync().ConfigureAwait(false)))
             {               
                 var separator = line.IndexOf(':', 1);
                 if (separator > -1)
@@ -211,8 +212,9 @@ namespace TWCore.Net.HttpServer
                         throw new Exception(string.Format("POST Content-Length({0}) too big for this simple server", ContentLength));
                     if (ContentLength > 0)
                     {
-                        var fReader = new BinaryReader(InputStream, Encoding.UTF8, true);
-                        PostData = fReader.ReadBytes(ContentLength);
+                        var data = new byte[ContentLength];
+                        await InputStream.FillAsync(data).ConfigureAwait(false);
+                        PostData = data;
                     }
                 }
                 Core.Log.LibVerbose("Post Data done.");

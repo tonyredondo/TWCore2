@@ -289,43 +289,45 @@ namespace TWCore.Net.Multicast
         {
             try
             {
-                var serObj = SerializedObject.FromReadOnlySequence(e.Data);
-                if (serObj is null) return;
-                if (!(serObj.GetValue() is RegisteredService rService)) return;
-
-                try
+                using (var serObj = SerializedObject.FromReadOnlySequence(e.Data))
                 {
-                    var received = new ReceivedService
+                    if (serObj is null) return;
+                    if (!(serObj.GetValue() is RegisteredService rService)) return;
+
+                    try
                     {
-                        ServiceId = rService.ServiceId,
-                        InstanceId = rService.InstanceId,
-                        Category = rService.Category,
-                        Name = rService.Name,
-                        Description = rService.Description,
-                        MachineName = rService.MachineName,
-                        ApplicationName = rService.ApplicationName,
-                        FrameworkVersion = rService.FrameworkVersion,
-                        EnvironmentName = rService.EnvironmentName,
-                        Data = rService.Data,
-                        Addresses = new[] { e.Address }
-                    };
-                    bool exist;
-                    lock (ReceivedServices)
-                    {
-                        exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
-                        if (exist)
-                            received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
-                        ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
+                        var received = new ReceivedService
+                        {
+                            ServiceId = rService.ServiceId,
+                            InstanceId = rService.InstanceId,
+                            Category = rService.Category,
+                            Name = rService.Name,
+                            Description = rService.Description,
+                            MachineName = rService.MachineName,
+                            ApplicationName = rService.ApplicationName,
+                            FrameworkVersion = rService.FrameworkVersion,
+                            EnvironmentName = rService.EnvironmentName,
+                            Data = rService.Data,
+                            Addresses = new[] { e.Address }
+                        };
+                        bool exist;
+                        lock (ReceivedServices)
+                        {
+                            exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
+                            if (exist)
+                                received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
+                            ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
+                        }
+
+                        var eArgs = new EventArgs<ReceivedService>(received);
+                        if (!exist)
+                            OnNewServiceReceived?.Invoke(sender, eArgs);
+                        OnServiceReceived?.Invoke(sender, eArgs);
                     }
-
-                    var eArgs = new EventArgs<ReceivedService>(received);
-                    if (!exist)
-                        OnNewServiceReceived?.Invoke(sender, eArgs);
-                    OnServiceReceived?.Invoke(sender, eArgs);
-                }
-                catch (Exception)
-                {
-                    //
+                    catch (Exception)
+                    {
+                        //
+                    }
                 }
             }
             catch(Exception)
@@ -345,13 +347,15 @@ namespace TWCore.Net.Multicast
                     if (srv.Service.GetDataFunc != null)
                     {
                         srv.Service.Data = srv.Service.GetDataFunc();
-                        ServicesBytesList.Add(new SerializedObject(srv.Service, Serializer).ToMultiArray());
+                        using (var serObj = new SerializedObject(srv.Service, Serializer))
+                            ServicesBytesList.Add(serObj.ToMultiArray());
                     }
                     else
                     {
                         if (srv.DataToSend.IsEmpty || srv.Serializer != Serializer)
                         {
-                            srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToMultiArray();
+                            using (var serObj = new SerializedObject(srv.Service, Serializer))
+                                srv.DataToSend = serObj.ToMultiArray();
                             srv.Serializer = Serializer;
                         }
                         ServicesBytesList.Add(srv.DataToSend);

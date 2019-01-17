@@ -86,7 +86,8 @@ namespace TWCore.Net
         {
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Accept.Clear();
-            Serializer.MimeTypes.Each(i => _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(i)));
+            foreach (var i in Serializer.MimeTypes)
+                _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(i));
             foreach (var item in DefaultHeaders)
                 _client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
 

@@ -109,12 +109,12 @@ namespace TWCore.Messaging.RabbitMQ
                 if (Channel != null) return;
                 if (CurrentConnections.TryGetValue(Route, out var connection))
                 {
-                    Core.Log.LibVerbose("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
+                    Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
                     Channel = connection.CreateModel();
                 }
                 else
                 {
-                    Core.Log.LibVerbose("Creating connection for: Route={0}", Route);
+                    Core.Log.InfoDetail("Creating connection for: Route={0}", Route);
                     var factory = new ConnectionFactory
                     {
                         Uri = new Uri(Route),
@@ -122,7 +122,7 @@ namespace TWCore.Messaging.RabbitMQ
                         AutomaticRecoveryEnabled = true,
                     };
                     connection = factory.CreateConnection();
-                    Core.Log.LibVerbose("Creating channel for: Route={0}, Name={1}", Route, Name);
+                    Core.Log.InfoDetail("Creating channel for: Route={0}, Name={1}", Route, Name);
                     Channel = connection.CreateModel();
                     CurrentConnections.TryAdd(Route, connection);
                 }

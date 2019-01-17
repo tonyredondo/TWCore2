@@ -151,11 +151,10 @@ namespace TWCore.Messaging.RabbitMQ
                 if (_senders != null)
                     for (var i = 0; i < _senders.Count; i++)
                     {
-                        if (_senders[i]?.Factory is null) continue;
-                        collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Factory.HostName);
+                        collection.Add("Sender: {0} ".ApplyFormat(i), _senders[i].Route + " - " +_senders[i].Name);
                     }
-                if (_receiver?.Factory != null)
-                    collection.Add("Receiver Path", _receiver.Factory.HostName);
+                if (_receiver != null)
+                    collection.Add("Receiver: {0}", _receiver.Route + " - " + _receiver.Name);
             });
         }
 

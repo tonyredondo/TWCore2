@@ -16,6 +16,7 @@ limitations under the License.
 
 using RabbitMQ.Client;
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -31,17 +32,11 @@ namespace TWCore.Messaging.RabbitMQ
     /// </summary>
     internal class RabbitMQueue : MQConnection, IDisposable
     {
+        private static readonly ConcurrentDictionary<string, IConnection> CurrentConnections = new ConcurrentDictionary<string, IConnection>();
         private readonly Action _autoCloseAction;
+        private readonly Action _internalConnection;
 
         #region Properties
-        /// <summary>
-        /// Connection Factory
-        /// </summary>
-        public ConnectionFactory Factory { get; set; }
-        /// <summary>
-        /// Connection
-        /// </summary>
-        public IConnection Connection { get; private set; }
         /// <summary>
         /// Channel
         /// </summary>
@@ -75,6 +70,7 @@ namespace TWCore.Messaging.RabbitMQ
             ExchangeType = Parameters[nameof(ExchangeType)];
             Durable = Parameters[nameof(Durable)].ParseTo(true);
             _autoCloseAction = ActionDelegate.Create(Close).CreateBufferedAction(60000);
+            _internalConnection = InternalConnection;
         }
         //~RabbitMQueue()
         //{
@@ -96,7 +92,7 @@ namespace TWCore.Messaging.RabbitMQ
                 if (Channel != null) return true;
                 if (string.IsNullOrEmpty(Route))
                     throw new UriFormatException($"The route for the connection to {Name} is null.");
-                await ((Action)InternalConnection).InvokeWithRetry(retryInterval, retryCount).ConfigureAwait(false);
+                await _internalConnection.InvokeWithRetry(retryInterval, retryCount, "Trying to connect to " + Route).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex)
@@ -111,15 +107,25 @@ namespace TWCore.Messaging.RabbitMQ
             lock (this)
             {
                 if (Channel != null) return;
-                Core.Log.LibVerbose("Creating channel for: Route={0}, Name={1}", Route, Name);
-                Factory = new ConnectionFactory
+                if (CurrentConnections.TryGetValue(Route, out var connection))
                 {
-                    Uri = new Uri(Route),
-                    UseBackgroundThreadsForIO = true,
-                    AutomaticRecoveryEnabled = true,
-                };
-                Connection = Factory.CreateConnection();
-                Channel = Connection.CreateModel();
+                    Core.Log.LibVerbose("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
+                    Channel = connection.CreateModel();
+                }
+                else
+                {
+                    Core.Log.LibVerbose("Creating connection for: Route={0}", Route);
+                    var factory = new ConnectionFactory
+                    {
+                        Uri = new Uri(Route),
+                        UseBackgroundThreadsForIO = true,
+                        AutomaticRecoveryEnabled = true,
+                    };
+                    connection = factory.CreateConnection();
+                    Core.Log.LibVerbose("Creating channel for: Route={0}, Name={1}", Route, Name);
+                    Channel = connection.CreateModel();
+                    CurrentConnections.TryAdd(Route, connection);
+                }
             }
         }
 
@@ -152,11 +158,7 @@ namespace TWCore.Messaging.RabbitMQ
                 if (Channel is null) return;
                 if (Channel.IsOpen)
                     Channel.Close();
-                if (Connection.IsOpen)
-                    Connection.Close();
-                Connection = null;
                 Channel = null;
-                Factory = null;
                 Core.Log.LibVerbose("Closing channel for: Route={0}, Name={1}", Route, Name);
             }
         }

@@ -4,7 +4,7 @@
     <Title>TWCore.Data.PostgreSQL</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="4.0.3" />
+    <PackageReference Include="Npgsql" Version="4.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />

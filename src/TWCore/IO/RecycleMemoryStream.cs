@@ -137,9 +137,9 @@ namespace TWCore.IO
         #endregion
 
         #region Throw Helpers
-        private void ThrowStreamClosed() => throw new IOException("The stream is closed.");
-        private void ThrowStreamReadOnly() => throw new IOException("The stream is readonly.");
-        private void ThrowStreamWriteError() => throw new IOException("Write error.");
+        private static void ThrowStreamClosed() => throw new IOException("The stream is closed.");
+        private static void ThrowStreamReadOnly() => throw new IOException("The stream is readonly.");
+        private static void ThrowStreamWriteError() => throw new IOException("Write error.");
         #endregion
 
         #region Read

@@ -66,6 +66,11 @@ namespace TWCore.Serialization
         public string SerializerMimeType => _serializerMimeType;
         #endregion
 
+        #region Throw Helper
+        private static void ThrowSerializerNotFound(string serMime) => throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
+        private static void ThrowDisposedValue() => throw new ObjectDisposedException(nameof(SerializedObject));
+        #endregion
+
         #region .ctor
         /// <summary>
         /// Serialized Object
@@ -163,7 +168,7 @@ namespace TWCore.Serialization
             var serComp = idx < 0 ? null : serMimeType.Substring(idx + 1);
             var ser = SerializerManager.GetByMimeType(serMime);
             if (ser is null)
-                throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
+                ThrowSerializerNotFound(serMime);
             if (!string.IsNullOrWhiteSpace(serComp))
                 ser.Compressor = CompressorManager.GetByEncodingType(serComp);
             return ser;
@@ -178,7 +183,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object GetValue()
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             if (_data == MultiArray<byte>.Empty) return null;
             var type = string.IsNullOrWhiteSpace(_dataType) ? typeof(object) : Core.GetType(_dataType, false);
             if (string.IsNullOrWhiteSpace(_serializerMimeType))
@@ -200,7 +205,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<byte> ToMultiArray()
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             var ms = ReferencePool<RecycleMemoryStream>.Shared.New();
             CopyTo(ms);
             var value = ms.GetMultiArray();
@@ -215,7 +220,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(Stream stream)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             var hasDataType = !string.IsNullOrEmpty(_dataType);
             var hasMimeType = !string.IsNullOrEmpty(_serializerMimeType);
 
@@ -284,7 +289,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task ToFileAsync(string filepath)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
 
@@ -305,7 +310,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ToFile(string filepath)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
             using (FileLockerAsync.GetLockAsync(filepath).GetLock())
@@ -646,9 +651,10 @@ namespace TWCore.Serialization
         /// Gets the SerializedObject hash code
         /// </summary>
         /// <returns>Hash code value</returns>
-        public override int GetHashCode()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public sealed override int GetHashCode()
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             var hash = _serializerMimeType?.GetHashCode() ?? 0;
             hash += (_dataType?.GetHashCode() ?? 0) ^ 31;
             hash += _data.GetHashCode() ^ 31;
@@ -659,9 +665,10 @@ namespace TWCore.Serialization
         /// </summary>
         /// <param name="comparer">EqualityComparer instance</param>
         /// <returns>Hash code value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetHashCode(IEqualityComparer comparer)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             var hash = _serializerMimeType != null ? comparer.GetHashCode(_serializerMimeType) : 0;
             hash += (_dataType != null ? comparer.GetHashCode(_dataType) : 0) ^ 31;
             hash += MultiArrayBytesComparer.Instance.GetHashCode(_data) ^ 31;
@@ -672,6 +679,7 @@ namespace TWCore.Serialization
         /// </summary>
         /// <param name="obj">Object to compare</param>
         /// <returns>True if both objects are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
             => base.Equals(obj as SerializedObject);
         /// <summary>
@@ -679,9 +687,10 @@ namespace TWCore.Serialization
         /// </summary>
         /// <param name="other">SerializedObject to compare</param>
         /// <returns>True if both objects are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(SerializedObject other)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             if (ReferenceEquals(other, null)) return false;
             if (ReferenceEquals(this, other)) return true;
             if (other._dataType != _dataType) return false;
@@ -694,9 +703,10 @@ namespace TWCore.Serialization
         /// <param name="other">Object to compare</param>
         /// <param name="comparer">EqualityComparer instance</param>
         /// <returns>True if both objects are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(object other, IEqualityComparer comparer)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SerializedObject));
+            if (disposedValue) ThrowDisposedValue();
             if (ReferenceEquals(other, null)) return false;
             if (!(other is SerializedObject bSer)) return false;
             if (!comparer.Equals(_dataType, bSer._dataType)) return false;
@@ -709,6 +719,7 @@ namespace TWCore.Serialization
         /// <param name="a">First instance</param>
         /// <param name="b">Second instance</param>
         /// <returns>True if both instances are equal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(SerializedObject a, SerializedObject b)
         {
             if (ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return false;
@@ -725,6 +736,7 @@ namespace TWCore.Serialization
         /// <param name="a">First instance</param>
         /// <param name="b">Second instance</param>
         /// <returns>True if both instances are different</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(SerializedObject a, SerializedObject b)
         {
             return !(a == b);

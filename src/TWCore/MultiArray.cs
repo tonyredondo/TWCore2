@@ -174,12 +174,12 @@ namespace TWCore
         #endregion
 
         #region ThrowHelpers
-        private void ThrowIndexOutOfRangeException() => throw new IndexOutOfRangeException();
-        private void ThrowIndexShouldBePositive() => throw new ArgumentOutOfRangeException("index", "Index should be a positive number.");
-        private void ThrowIndexShouldBeLowerThanCount() => throw new ArgumentOutOfRangeException("index", "The index should be lower than the total Array Count.");
-        private void ThrowCountShouldBePositive() => throw new ArgumentOutOfRangeException("count", "Count should be a positive number.");
-        private void ThrowCountIsInvalid() => throw new ArgumentOutOfRangeException("count", "The count is invalid.");
-        private void ThrowIsNotByteArray() => throw new NotSupportedException("The type of MultiArray is not bytes");
+        private static void ThrowIndexOutOfRangeException() => throw new IndexOutOfRangeException();
+        private static void ThrowIndexShouldBePositive() => throw new ArgumentOutOfRangeException("index", "Index should be a positive number.");
+        private static void ThrowIndexShouldBeLowerThanCount() => throw new ArgumentOutOfRangeException("index", "The index should be lower than the total Array Count.");
+        private static void ThrowCountShouldBePositive() => throw new ArgumentOutOfRangeException("count", "Count should be a positive number.");
+        private static void ThrowCountIsInvalid() => throw new ArgumentOutOfRangeException("count", "The count is invalid.");
+        private static void ThrowIsNotByteArray() => throw new NotSupportedException("The type of MultiArray is not bytes");
         #endregion
 
         #region Methods

@@ -23,7 +23,7 @@ namespace TWCore.Net.RPC
     /// RPC Cancel Message
     /// </summary>
     [Serializable, DataContract]
-    public class RPCCancelMessage : RPCMessage
+    public sealed class RPCCancelMessage : RPCMessage
     {
     }
 }

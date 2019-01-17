@@ -29,7 +29,7 @@ namespace TWCore.IO
     /// <summary>
     /// Stream decorator with events for Reading and Writing
     /// </summary>
-    public class EventStream : Stream
+    public sealed class EventStream : Stream
     {
         private Stream _baseStream;
 
@@ -142,7 +142,7 @@ namespace TWCore.IO
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush()
+        public sealed override void Flush()
         {
             try
             {
@@ -161,7 +161,7 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin)
+        public sealed override long Seek(long offset, SeekOrigin origin)
         {
             return _baseStream.Seek(offset, origin);
         }
@@ -171,7 +171,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value)
+        public sealed override void SetLength(long value)
         {
             _baseStream.SetLength(value);
         }
@@ -184,7 +184,7 @@ namespace TWCore.IO
         /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Read(byte[] buffer, int offset, int count)
+        public sealed override int Read(byte[] buffer, int offset, int count)
         {
             BeforeRead?.Invoke(this, null).WaitAsync();
 			var res = _baseStream.Read(buffer, offset, count);
@@ -199,7 +199,7 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
+        public sealed override void Write(byte[] buffer, int offset, int count)
         {
             BeforeWrite?.Invoke(this, null).WaitAsync();
 			_baseStream.Write(buffer, offset, count);
@@ -214,7 +214,7 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous copy operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+        public sealed override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
         {
             if (BeforeRead != null)
                 await BeforeRead(this, null).ConfigureAwait(false);
@@ -228,7 +228,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override void Dispose(bool disposing) => _baseStream.Dispose();
+		protected sealed override void Dispose(bool disposing) => _baseStream.Dispose();
         /// <inheritdoc />
         /// <summary>
         /// Asynchronously clears all buffers for this stream, causes any buffered data to be written to the underlying device, and monitors cancellation requests.
@@ -236,7 +236,7 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous flush operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override async Task FlushAsync(CancellationToken cancellationToken)
+        public sealed override async Task FlushAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -257,7 +257,7 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous read operation. The value of the TResult parameter contains the total number of bytes read into the buffer.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (BeforeRead != null)
                 await BeforeRead(this, null).ConfigureAwait(false);
@@ -272,7 +272,7 @@ namespace TWCore.IO
         /// </summary>
         /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int ReadByte() => _baseStream.ReadByte();
+		public sealed override int ReadByte() => _baseStream.ReadByte();
         /// <inheritdoc />
         /// <summary>
         /// Asynchronously writes a sequence of bytes to the current stream, advances the current position within this stream by the number of bytes written, and monitors cancellation requests.
@@ -283,7 +283,7 @@ namespace TWCore.IO
         /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is System.Threading.CancellationToken.None.</param>
         /// <returns>A task that represents the asynchronous write operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (BeforeWrite != null)
                 await BeforeWrite(this, null).ConfigureAwait(false);
@@ -297,7 +297,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The byte to write to the stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override void WriteByte(byte value) => _baseStream.WriteByte(value);
+		public sealed override void WriteByte(byte value) => _baseStream.WriteByte(value);
         /// <summary>
         /// Dispose method
         /// </summary>

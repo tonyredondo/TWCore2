@@ -26,7 +26,7 @@ namespace TWCore.Net.RPC
     /// RPC Session Request Message
     /// </summary>
     [Serializable, DataContract]
-    public class RPCSessionRequestMessage : RPCMessage
+    public sealed class RPCSessionRequestMessage : RPCMessage
     {
         /// <summary>
         /// Client session identifier

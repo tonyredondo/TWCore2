@@ -143,7 +143,7 @@ namespace TWCore.IO
         /// </summary>
         /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
+        public sealed override int ReadByte()
         {
             if (_isClosed)
                 throw new IOException("The stream is closed.");
@@ -163,7 +163,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public int Read(Span<byte> buffer)
 #else
-        public override int Read(Span<byte> buffer)
+        public sealed override int Read(Span<byte> buffer)
 #endif
         {
             if (_isClosed)
@@ -219,7 +219,7 @@ namespace TWCore.IO
         /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Read(byte[] buffer, int offset, int count)
+        public sealed override int Read(byte[] buffer, int offset, int count)
             => Read(buffer.AsSpan(offset, count));
         /// <inheritdoc />
         /// <summary>
@@ -231,7 +231,7 @@ namespace TWCore.IO
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => Task.FromResult(Read(buffer.AsSpan(offset, count)));
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
@@ -244,7 +244,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #else
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public sealed override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #endif
             => new ValueTask<int>(Read(buffer.Span));
         #endregion
@@ -256,7 +256,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The byte to write to the stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteByte(byte value)
+        public sealed override void WriteByte(byte value)
         {
             if (_isClosed)
                 throw new IOException("The stream is closed.");
@@ -279,7 +279,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public void Write(ReadOnlySpan<byte> buffer)
 #else
-        public override void Write(ReadOnlySpan<byte> buffer)
+        public sealed override void Write(ReadOnlySpan<byte> buffer)
 #endif
         {
             if (_isClosed)
@@ -333,7 +333,7 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
+        public sealed override void Write(byte[] buffer, int offset, int count)
             => Write(buffer.AsSpan(offset, count));
         /// <inheritdoc />
         /// <summary>
@@ -344,7 +344,7 @@ namespace TWCore.IO
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public sealed override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Write(buffer.AsSpan(offset, count));
             return Task.CompletedTask;
@@ -359,7 +359,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #else
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public sealed override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
 #endif
         {
             Write(buffer.Span);
@@ -373,7 +373,7 @@ namespace TWCore.IO
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush()
+        public sealed override void Flush()
         {
         }
         /// <inheritdoc />
@@ -382,7 +382,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task FlushAsync(CancellationToken cancellationToken)
+        public sealed override Task FlushAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -399,7 +399,7 @@ namespace TWCore.IO
 #if COMPATIBILITY
         public new void CopyTo(Stream destination, int bufferSize)
 #else
-        public override void CopyTo(Stream destination, int bufferSize)
+        public sealed override void CopyTo(Stream destination, int bufferSize)
 #endif
         {
             var mArray = new MultiArray<byte>(_buffers, _currentPosition, _totalLength - _currentPosition);
@@ -413,7 +413,7 @@ namespace TWCore.IO
         /// <param name="bufferSize">Buffer size. (not used)</param>
         /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+        public sealed override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
         {
             var mArray = new MultiArray<byte>(_buffers, _currentPosition, _totalLength - _currentPosition);
             return mArray.CopyToAsync(destination);
@@ -429,7 +429,7 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin)
+        public sealed override long Seek(long offset, SeekOrigin origin)
         {
             if (origin == SeekOrigin.Begin)
             {
@@ -451,7 +451,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value)
+        public sealed override void SetLength(long value)
         {
             if (value < 0)
                 value = 0;
@@ -461,7 +461,7 @@ namespace TWCore.IO
         /// Close stream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Close()
+        public sealed override void Close()
         {
             if (_buffers != null)
             {

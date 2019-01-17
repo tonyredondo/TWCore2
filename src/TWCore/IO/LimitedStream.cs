@@ -27,7 +27,7 @@ namespace TWCore.IO
     /// <summary>
     /// Stream decorator with limited bytes read
     /// </summary>
-    public class LimitedStream : Stream
+    public sealed class LimitedStream : Stream
     {
         private readonly Stream _baseStream;
 
@@ -101,7 +101,7 @@ namespace TWCore.IO
         /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int Read(byte[] buffer, int offset, int count)
+        public sealed override int Read(byte[] buffer, int offset, int count)
         {
             var nCount = Math.Min(count, Remaining);
 			var res = _baseStream.Read(buffer, offset, nCount);
@@ -115,7 +115,7 @@ namespace TWCore.IO
         /// </summary>
         /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
+        public sealed override int ReadByte()
         {
             if (Remaining <= 0)
                 return -1;
@@ -132,7 +132,7 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
+        public sealed override void Write(byte[] buffer, int offset, int count)
         {
 			_baseStream.Write(buffer, offset, count);
         }
@@ -142,7 +142,7 @@ namespace TWCore.IO
         /// </summary>
         /// <param name="value">The byte to write to the stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteByte(byte value)
+        public sealed override void WriteByte(byte value)
         {
 			_baseStream.WriteByte(value);
         }
@@ -151,7 +151,7 @@ namespace TWCore.IO
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush()
+        public sealed override void Flush()
         {
 			_baseStream.Flush();
         }
@@ -163,14 +163,14 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
+		public sealed override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
         /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override void SetLength(long value) => _baseStream.SetLength(value);
+		public sealed override void SetLength(long value) => _baseStream.SetLength(value);
         #endregion
     }
 }

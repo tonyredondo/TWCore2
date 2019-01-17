@@ -26,7 +26,7 @@ namespace TWCore.Net.RPC
     /// RPC Event message sent by the server
     /// </summary>
     [Serializable, DataContract]
-    public class RPCEventMessage : RPCMessage
+    public sealed class RPCEventMessage : RPCMessage
     {
         /// <summary>
         /// Service name

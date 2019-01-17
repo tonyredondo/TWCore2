@@ -27,7 +27,7 @@ namespace TWCore.Net.RPC
     /// Push message type
     /// </summary>
 	[Serializable, DataContract]
-    public class RPCPushMessage : RPCMessage
+    public sealed class RPCPushMessage : RPCMessage
     {
         /// <summary>
         /// Message scope

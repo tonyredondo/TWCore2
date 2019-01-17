@@ -43,27 +43,27 @@ namespace TWCore.IO
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
-        public override bool CanRead { get; } = true;
+        public sealed override bool CanRead { get; } = true;
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
-        public override bool CanSeek { get; } = true;
+        public sealed override bool CanSeek { get; } = true;
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
-        public override bool CanWrite => _canWrite;
+        public sealed override bool CanWrite => _canWrite;
         /// <inheritdoc />
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-        public override long Length => _totalLength;
+        public sealed override long Length => _totalLength;
         /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
-        public override long Position
+        public sealed override long Position
         {
             get => _currentPosition;
             set
@@ -136,6 +136,12 @@ namespace TWCore.IO
         }
         #endregion
 
+        #region Throw Helpers
+        private void ThrowStreamClosed() => throw new IOException("The stream is closed.");
+        private void ThrowStreamReadOnly() => throw new IOException("The stream is readonly.");
+        private void ThrowStreamWriteError() => throw new IOException("Write error.");
+        #endregion
+
         #region Read
         /// <inheritdoc />
         /// <summary>
@@ -145,8 +151,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sealed override int ReadByte()
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
+            if (_isClosed) ThrowStreamClosed();
             if (_currentPosition >= _totalLength) return -1;
             var row = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var index);
             var res = _buffers[row][index];
@@ -166,8 +171,7 @@ namespace TWCore.IO
         public sealed override int Read(Span<byte> buffer)
 #endif
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
+            if (_isClosed) ThrowStreamClosed();
             var bLength = buffer.Length;
             if (bLength == 0) return 0;
             if (_currentPosition >= _totalLength) return 0;
@@ -258,10 +262,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sealed override void WriteByte(byte value)
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
-            if (!_canWrite)
-                throw new IOException("The stream is readonly.");
+            if (_isClosed) ThrowStreamClosed();
+            if (!_canWrite) ThrowStreamReadOnly();
             var cRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var cIndex);
             if (cRow >= _buffers.Count)
                 _buffers.Add(SegmentPool.Rent());
@@ -282,10 +284,8 @@ namespace TWCore.IO
         public sealed override void Write(ReadOnlySpan<byte> buffer)
 #endif
         {
-            if (_isClosed)
-                throw new IOException("The stream is closed.");
-            if (!_canWrite)
-                throw new IOException("The stream is readonly.");
+            if (_isClosed) ThrowStreamClosed();
+            if (!_canWrite) ThrowStreamReadOnly();
             var finalPosition = _currentPosition + buffer.Length;
             var cRow = Math.DivRem(_currentPosition, SegmentPool.SegmentLength, out var cIndex);
             var fRow = Math.DivRem(finalPosition, SegmentPool.SegmentLength, out var fIndex);
@@ -319,8 +319,7 @@ namespace TWCore.IO
             }
 
             final:
-            if (buffer.Length != 0)
-                throw new IOException("Write error");
+            if (buffer.Length != 0) ThrowStreamWriteError();
             _currentPosition = finalPosition;
             if (_currentPosition > _totalLength)
                 _totalLength = _currentPosition;

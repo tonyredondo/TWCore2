@@ -81,6 +81,10 @@ namespace TWCore.Diagnostics.Counters
         }
         #endregion
 
+        #region Private Methods
+        private void ThrowInvalidCounter() => throw new InvalidCounterException();
+        #endregion
+
         #region Public Methods
         /// <summary>
         /// Start engine
@@ -124,7 +128,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is IntegerCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an integer counter
@@ -146,7 +151,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is IntegerCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an double counter
@@ -169,8 +175,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DoubleCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
-
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an double counter
@@ -192,7 +198,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DoubleCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an decimal counter
@@ -215,7 +222,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DecimalCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         /// <summary>
         /// Gets an decimal counter
@@ -237,7 +245,8 @@ namespace TWCore.Diagnostics.Counters
             });
             if (counter is DecimalCounter iCounter)
                 return iCounter;
-            throw new InvalidCounterException();
+            ThrowInvalidCounter();
+            return null;
         }
         #endregion
 
@@ -283,6 +292,7 @@ namespace TWCore.Diagnostics.Counters
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             Stop();

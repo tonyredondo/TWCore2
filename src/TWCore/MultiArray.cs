@@ -74,7 +74,7 @@ namespace TWCore
         /// </summary>
         public bool IsEmpty => _count == 0;
         #endregion
-        
+
         #region .ctors
         /// <summary>
         /// Provides a MultiArray implementation without copying buffer.
@@ -173,6 +173,15 @@ namespace TWCore
         }
         #endregion
 
+        #region ThrowHelpers
+        private void ThrowIndexOutOfRangeException() => throw new IndexOutOfRangeException();
+        private void ThrowIndexShouldBePositive() => throw new ArgumentOutOfRangeException("index", "Index should be a positive number.");
+        private void ThrowIndexShouldBeLowerThanCount() => throw new ArgumentOutOfRangeException("index", "The index should be lower than the total Array Count.");
+        private void ThrowCountShouldBePositive() => throw new ArgumentOutOfRangeException("count", "Count should be a positive number.");
+        private void ThrowCountIsInvalid() => throw new ArgumentOutOfRangeException("count", "The count is invalid.");
+        private void ThrowIsNotByteArray() => throw new NotSupportedException("The type of MultiArray is not bytes");
+        #endregion
+
         #region Methods
         /// <summary>
         /// Reference to an element inside the array
@@ -184,7 +193,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (index >= _count) throw new IndexOutOfRangeException();
+                if (index >= _count) ThrowIndexOutOfRangeException();
                 var globalIndex = index + _offset;
                 var arrayIndex = Math.DivRem(globalIndex, _segmentsLength, out var position);
                 return ref ListOfArrays[arrayIndex][position];
@@ -200,7 +209,7 @@ namespace TWCore
         {
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
-            for(var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
                 int index;
                 if (rowIndex == fromRowIndex)
@@ -209,11 +218,11 @@ namespace TWCore
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    index = Array.IndexOf(ListOfArrays[rowIndex], item, 0, toPosition + 1);                    
+                    index = Array.IndexOf(ListOfArrays[rowIndex], item, 0, toPosition + 1);
                 }
                 else
                 {
-                    index = Array.IndexOf(ListOfArrays[rowIndex], item, 0, _segmentsLength);                                        
+                    index = Array.IndexOf(ListOfArrays[rowIndex], item, 0, _segmentsLength);
                 }
                 if (index == -1) continue;
                 var globalIndex = ToGlobalIndex(rowIndex, index);
@@ -226,12 +235,11 @@ namespace TWCore
         /// </summary>
         /// <param name="index">Index from the slice begins</param>
         /// <returns>New MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<T> Slice(int index)
         {
-            if (index < 0)
-                throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
-            if (index > _count)
-                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count.");
+            if (index < 0) ThrowIndexShouldBePositive();
+            if (index > _count) ThrowIndexShouldBeLowerThanCount();
             return new MultiArray<T>(ListOfArrays, _offset + index, _count - index, _segmentsLength);
         }
         /// <summary>
@@ -239,6 +247,7 @@ namespace TWCore
         /// </summary>
         /// <param name="index">Index from the slice begins</param>
         /// <returns>New MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<T> SliceAndReduce(int index)
             => SliceAndReduce(index, _count - index);
         /// <summary>
@@ -247,16 +256,13 @@ namespace TWCore
         /// <param name="index">Index from the slice begins</param>
         /// <param name="count">Number of element of the slice</param>
         /// <returns>New MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<T> Slice(int index, int count)
         {
-            if (index < 0)
-                throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
-            if (_count < 0)
-                throw new ArgumentOutOfRangeException(nameof(index), "Count should be a positive number.");
-            if (index > _count)
-                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
-            if (_count - index < count)
-                throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid");
+            if (index < 0) ThrowIndexShouldBePositive();
+            if (_count < 0) ThrowCountShouldBePositive();
+            if (index > _count) ThrowIndexShouldBeLowerThanCount();
+            if (_count - index < count) ThrowCountIsInvalid();
             return new MultiArray<T>(ListOfArrays, _offset + index, count, _segmentsLength);
         }
         /// <summary>
@@ -265,20 +271,17 @@ namespace TWCore
         /// <param name="index">Index from the slice begins</param>
         /// <param name="count">Number of element of the slice</param>
         /// <returns>New MultiArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<T> SliceAndReduce(int index, int count)
         {
-            if (index < 0)
-                throw new ArgumentOutOfRangeException(nameof(index), "Index should be a positive number.");
-            if (_count < 0)
-                throw new ArgumentOutOfRangeException(nameof(index), "Count should be a positive number.");
-            if (index > _count)
-                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
-            if (_count - index < count)
-                throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid");
+            if (index < 0) ThrowIndexShouldBePositive();
+            if (_count < 0) ThrowCountShouldBePositive();
+            if (index > _count) ThrowIndexShouldBeLowerThanCount();
+            if (_count - index < count) ThrowCountIsInvalid();
             var (fromRowIndex, fromPosition) = FromGlobalIndex(index);
             var (toRowIndex, toPosition) = FromGlobalIndex(index + count - 1);
             var lst = new List<T[]>();
-            for(var row = fromRowIndex; row <= toRowIndex; row++)
+            for (var row = fromRowIndex; row <= toRowIndex; row++)
                 lst.Add(ListOfArrays[row]);
             return new MultiArray<T>(lst, fromPosition, count);
         }
@@ -327,7 +330,6 @@ namespace TWCore
             if (obj.ListOfArrays is null && ListOfArrays is null) return true;
             return obj.ListOfArrays.SequenceEqual(ListOfArrays);
         }
-        
         /// <summary>
         /// Gets if the MultiArray is equal to another MultiArray
         /// </summary>
@@ -357,10 +359,14 @@ namespace TWCore
         /// Copy data to the stream
         /// </summary>
         /// <param name="stream">Stream instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(Stream stream)
         {
-            if (!(ListOfArrays is IList<byte[]> arrays))
-                throw new NotSupportedException("The type of MultiArray is not bytes");
+            if (!(ListOfArrays is List<byte[]> arrays))
+            {
+                ThrowIsNotByteArray();
+                return;
+            }
 
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
@@ -404,11 +410,15 @@ namespace TWCore
         /// Copy data to the stream
         /// </summary>
         /// <param name="stream">Stream instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task CopyToAsync(Stream stream)
         {
-            if (!(ListOfArrays is IList<byte[]> arrays))
-                throw new NotSupportedException("The type of MultiArray is not bytes");
-            
+            if (!(ListOfArrays is List<byte[]> arrays))
+            {
+                ThrowIsNotByteArray();
+                return;
+            }
+
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
@@ -460,7 +470,6 @@ namespace TWCore
         /// <param name="arrayIndex">Starting offset in the destination array</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(T[] array, int arrayIndex) => CopyTo(array.AsSpan(arrayIndex));
-
         /// <summary>
         /// Write data to a span
         /// </summary>
@@ -497,7 +506,8 @@ namespace TWCore
         {
             if (this is MultiArray<byte> mBytes)
                 return MultiArrayReadOnlyStream.New(mBytes);
-            throw new NotSupportedException("The type of MultiArray is not bytes");
+            ThrowIsNotByteArray();
+            return null;
         }
         /// <summary>
         /// Get a ReadOnlySequence from this MultiArray instance
@@ -617,11 +627,11 @@ namespace TWCore
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
             var lst = new List<T[]>();
-            for(var row = fromRowIndex; row <= toRowIndex; row++)
+            for (var row = fromRowIndex; row <= toRowIndex; row++)
                 lst.Add(ListOfArrays[row]);
             return new MultiArray<T>(lst, fromPosition, _count);
         }
-        
+
         /// <summary>
         /// Creates a MultiArray instance from an Array
         /// </summary>
@@ -661,7 +671,7 @@ namespace TWCore
             return (arrayIndex * _segmentsLength) + position;
         }
         #endregion
-        
+
         #region Nested Types
         /// <inheritdoc />
         /// <summary>
@@ -703,7 +713,7 @@ namespace TWCore
             public sealed override long Position
             {
                 get => _position;
-                set => _position = (int) value;
+                set => _position = (int)value;
             }
             #endregion
 
@@ -858,7 +868,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public SequenceSegment(T[] segmentItem)
                 => Memory = new ReadOnlyMemory<T>(segmentItem);
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public SequenceSegment Add(T[] segmentItem)
             {
@@ -870,6 +880,6 @@ namespace TWCore
                 return segment;
             }
         }
-#endregion
+        #endregion
     }
 }

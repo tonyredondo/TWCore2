@@ -57,7 +57,9 @@ Available in Nuget: https://www.nuget.org/packages?q=Tags%3A"TWCore"
 - NSerializer (Custom binary serializer with object reference graph support and cyclic reference)
 - RawSerializer (Like NSerializer but without internal caching, faster, but serialized objects are bigger in bytes size.)
 
-#### Simple Object Serializer Benchmark
+---
+
+### Simple Object Serializer Benchmark
 
 BenchmarkDotNet=v0.11.3, OS=Windows 10.0.17134.523 (1803/April2018Update/Redstone4)\
 Intel Core i7-4770R CPU 3.20GHz (Haswell), 1 CPU, 8 logical and 4 physical cores\

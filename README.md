@@ -54,8 +54,8 @@ Available in Nuget: https://www.nuget.org/packages?q=Tags%3A"TWCore"
 - BinaryFormatter
 - Utf8Json
 - MsgPack
-- NSerializer (Custom binary serializer with object reference graph support and cyclic reference)
-- RawSerializer (Like NSerializer but without internal caching, faster, but serialized objects are bigger in bytes size.)
+- **NSerializer** (Custom binary serializer with object reference graph support and cyclic reference)
+- **RawSerializer** (Like NSerializer but without internal caching, faster, but serialized objects are bigger in bytes size.)
 
 ---
 

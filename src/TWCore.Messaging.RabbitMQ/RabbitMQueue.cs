@@ -108,7 +108,10 @@ namespace TWCore.Messaging.RabbitMQ
                 if (Channel != null) return;
                 if (CurrentConnections.TryGetValue(Route, out var connection))
                 {
-                    Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
+                    if (string.IsNullOrEmpty(Name))
+                        Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}", Route);
+                    else
+                        Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
                     Channel = connection.CreateModel();
                 }
                 else
@@ -121,7 +124,10 @@ namespace TWCore.Messaging.RabbitMQ
                         AutomaticRecoveryEnabled = true,
                     };
                     connection = factory.CreateConnection();
-                    Core.Log.InfoDetail("Creating channel for: Route={0}, Name={1}", Route, Name);
+                    if (string.IsNullOrEmpty(Name))
+                        Core.Log.InfoDetail("Creating channel for: Route={0}", Route);
+                    else
+                        Core.Log.InfoDetail("Creating channel for: Route={0}, Name={1}", Route, Name);
                     Channel = connection.CreateModel();
                     CurrentConnections.TryAdd(Route, connection);
                 }

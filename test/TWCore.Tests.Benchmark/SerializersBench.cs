@@ -10,17 +10,22 @@ using TWCore.Serialization.Utf8Json;
 
 namespace TWCore.Tests.Benchmark
 {
-    [ClrJob, CoreJob(baseline: true)]
+    [CoreJob(baseline: true)]
     [RPlotExporter, RankColumn, MinColumn, MaxColumn, MemoryDiagnoser]
     public class SerializersBench
     {
         private List<STest> _data;
         private MultiArray<byte> _binData;
+        //
         private NBinarySerializer _nBinary;
         private RawBinarySerializer _rawBinary;
         private JsonTextSerializer _jsonSerializer;
         private Utf8JsonTextSerializer _utf8jsonSerializer;
-        private MemoryStream _memStream;
+        //
+        private MemoryStream _nBinaryStream;
+        private MemoryStream _rawBinaryStream;
+        private MemoryStream _jsonSerializerStream;
+        private MemoryStream _utf8jsonSerializerStream;
 
         [Params(1)]
         public int N;
@@ -72,14 +77,15 @@ namespace TWCore.Tests.Benchmark
             _binData = _jsonSerializer.Serialize(_data);
             _binData = _utf8jsonSerializer.Serialize(_data);
 
-            _memStream = new MemoryStream();
-            _nBinary.Serialize(_data, _memStream);
-            _memStream.Position = 0;
-            _rawBinary.Serialize(_data, _memStream);
-            _memStream.Position = 0;
-            _jsonSerializer.Serialize(_data, _memStream);
-            _memStream.Position = 0;
-            _utf8jsonSerializer.Serialize(_data, _memStream);
+            _nBinaryStream = new MemoryStream();
+            _rawBinaryStream = new MemoryStream();
+            _jsonSerializerStream = new MemoryStream();
+            _utf8jsonSerializerStream = new MemoryStream();
+
+            _nBinary.Serialize(_data, _nBinaryStream);
+            _rawBinary.Serialize(_data, _rawBinaryStream);
+            _jsonSerializer.Serialize(_data, _jsonSerializerStream);
+            _utf8jsonSerializer.Serialize(_data, _utf8jsonSerializerStream);
         }
 
         [Benchmark]
@@ -87,8 +93,8 @@ namespace TWCore.Tests.Benchmark
         {
             for (var i = 0; i < N; i++)
             {
-                _nBinary.Serialize(_data, _memStream);
-                _memStream.Position = 0;
+                _nBinary.Serialize(_data, _nBinaryStream);
+                _nBinaryStream.Position = 0;
             }
         }
         [Benchmark]
@@ -97,8 +103,8 @@ namespace TWCore.Tests.Benchmark
             object data = null;
             for (var i = 0; i < N; i++)
             {
-                _memStream.Position = 0;
-                data = _nBinary.Deserialize<object>(_memStream);
+                _nBinaryStream.Position = 0;
+                data = _nBinary.Deserialize<object>(_nBinaryStream);
             }
             return data;
         }
@@ -108,8 +114,8 @@ namespace TWCore.Tests.Benchmark
         {
             for (var i = 0; i < N; i++)
             {
-                _rawBinary.Serialize(_data, _memStream);
-                _memStream.Position = 0;
+                _rawBinary.Serialize(_data, _rawBinaryStream);
+                _rawBinaryStream.Position = 0;
             }
         }
         [Benchmark]
@@ -118,8 +124,8 @@ namespace TWCore.Tests.Benchmark
             object data = null;
             for (var i = 0; i < N; i++)
             {
-                _memStream.Position = 0;
-                data = _rawBinary.Deserialize<object>(_memStream);
+                _rawBinaryStream.Position = 0;
+                data = _rawBinary.Deserialize<object>(_rawBinaryStream);
             }
             return data;
         }
@@ -130,8 +136,8 @@ namespace TWCore.Tests.Benchmark
         {
             for (var i = 0; i < N; i++)
             {
-                _jsonSerializer.Serialize(_data, _memStream);
-                _memStream.Position = 0;
+                _jsonSerializer.Serialize(_data, _jsonSerializerStream);
+                _jsonSerializerStream.Position = 0;
             }
         }
         [Benchmark]
@@ -140,8 +146,8 @@ namespace TWCore.Tests.Benchmark
             object data = null;
             for (var i = 0; i < N; i++)
             {
-                _memStream.Position = 0;
-                data = _jsonSerializer.Deserialize<object>(_memStream);
+                _jsonSerializerStream.Position = 0;
+                data = _jsonSerializer.Deserialize<object>(_jsonSerializerStream);
             }
             return data;
         }
@@ -151,8 +157,8 @@ namespace TWCore.Tests.Benchmark
         {
             for (var i = 0; i < N; i++)
             {
-                _utf8jsonSerializer.Serialize(_data, _memStream);
-                _memStream.Position = 0;
+                _utf8jsonSerializer.Serialize(_data, _utf8jsonSerializerStream);
+                _utf8jsonSerializerStream.Position = 0;
             }
         }
         [Benchmark]
@@ -161,8 +167,8 @@ namespace TWCore.Tests.Benchmark
             object data = null;
             for (var i = 0; i < N; i++)
             {
-                _memStream.Position = 0;
-                data = _utf8jsonSerializer.Deserialize<object>(_memStream);
+                _utf8jsonSerializerStream.Position = 0;
+                data = _utf8jsonSerializer.Deserialize<object>(_utf8jsonSerializerStream);
             }
             return data;
         }

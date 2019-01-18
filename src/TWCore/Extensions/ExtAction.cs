@@ -860,6 +860,7 @@ namespace TWCore
         /// <param name="action">Action to try</param>
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
+        /// <param name="errorMessage">Message to show in case of an exception</param>
         /// <returns>Retry Task instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task InvokeWithRetry(this Action action, int retryInterval = 1000, int retryCount = 3, string errorMessage = null)
@@ -894,6 +895,7 @@ namespace TWCore
         /// <param name="func">Func to try</param>
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
+        /// <param name="errorMessage">Message to show in case of an exception</param>
         /// <returns>Retry Task instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<TResult> InvokeWithRetry<TResult>(this Func<TResult> func, int retryInterval = 1000, int retryCount = 3, string errorMessage = null)

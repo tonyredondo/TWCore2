@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using BenchmarkDotNet.Attributes;
 using TWCore.IO;
+using TWCore.Serialization;
 using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.RawSerializer;
+using TWCore.Serialization.Utf8Json;
 
 namespace TWCore.Tests.Benchmark
 {
@@ -16,6 +18,8 @@ namespace TWCore.Tests.Benchmark
         private MultiArray<byte> _binData;
         private NBinarySerializer _nBinary;
         private RawBinarySerializer _rawBinary;
+        private JsonTextSerializer _jsonSerializer;
+        private Utf8JsonTextSerializer _utf8jsonSerializer;
         private MemoryStream _memStream;
 
         [Params(1)]
@@ -60,32 +64,22 @@ namespace TWCore.Tests.Benchmark
                 };
             _nBinary = new NBinarySerializer();
             _rawBinary = new RawBinarySerializer();
+            _jsonSerializer = new JsonTextSerializer();
+            _utf8jsonSerializer = new Utf8JsonTextSerializer();
 
             _binData = _nBinary.Serialize(_data);
             _binData = _rawBinary.Serialize(_data);
-            
+            _binData = _jsonSerializer.Serialize(_data);
+            _binData = _utf8jsonSerializer.Serialize(_data);
+
             _memStream = new MemoryStream();
             _nBinary.Serialize(_data, _memStream);
             _memStream.Position = 0;
             _rawBinary.Serialize(_data, _memStream);
-        }
-
-        [Benchmark]
-        public MultiArray<byte> NSerialize()
-        {
-            var data = MultiArray<byte>.Empty;
-            for(var i = 0; i < N; i ++)
-                data = _nBinary.Serialize(_data);
-            return data;
-        }
-
-        [Benchmark]
-        public object NDeserialize()
-        {
-            object data = null;
-            for(var i = 0; i < N; i++)
-                data = _nBinary.Deserialize<object>(_binData);
-            return data;
+            _memStream.Position = 0;
+            _jsonSerializer.Serialize(_data, _memStream);
+            _memStream.Position = 0;
+            _utf8jsonSerializer.Serialize(_data, _memStream);
         }
 
         [Benchmark]
@@ -109,25 +103,6 @@ namespace TWCore.Tests.Benchmark
             return data;
         }
         //
-
-        [Benchmark]
-        public MultiArray<byte> RawSerialize()
-        {
-            var data = MultiArray<byte>.Empty;
-            for (var i = 0; i < N; i++)
-                data = _rawBinary.Serialize(_data);
-            return data;
-        }
-
-        [Benchmark]
-        public object RawDeserialize()
-        {
-            object data = null;
-            for (var i = 0; i < N; i++)
-                data = _rawBinary.Deserialize<object>(_binData);
-            return data;
-        }
-
         [Benchmark]
         public void RawSerializerToStream()
         {
@@ -145,6 +120,49 @@ namespace TWCore.Tests.Benchmark
             {
                 _memStream.Position = 0;
                 data = _rawBinary.Deserialize<object>(_memStream);
+            }
+            return data;
+        }
+
+        //
+        [Benchmark]
+        public void NewtonsoftJsonSerializerToStream()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                _jsonSerializer.Serialize(_data, _memStream);
+                _memStream.Position = 0;
+            }
+        }
+        [Benchmark]
+        public object NewtonsoftJsonRawDeserializerFromStream()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+            {
+                _memStream.Position = 0;
+                data = _jsonSerializer.Deserialize<object>(_memStream);
+            }
+            return data;
+        }
+        //
+        [Benchmark]
+        public void Utf8JsonSerializerToStream()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                _utf8jsonSerializer.Serialize(_data, _memStream);
+                _memStream.Position = 0;
+            }
+        }
+        [Benchmark]
+        public object Utf8JsonRawDeserializerFromStream()
+        {
+            object data = null;
+            for (var i = 0; i < N; i++)
+            {
+                _memStream.Position = 0;
+                data = _utf8jsonSerializer.Deserialize<object>(_memStream);
             }
             return data;
         }

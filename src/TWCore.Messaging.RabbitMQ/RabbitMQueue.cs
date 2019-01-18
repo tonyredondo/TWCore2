@@ -33,7 +33,6 @@ namespace TWCore.Messaging.RabbitMQ
     internal class RabbitMQueue : MQConnection, IDisposable
     {
         private static readonly ConcurrentDictionary<string, IConnection> CurrentConnections = new ConcurrentDictionary<string, IConnection>();
-        private readonly Action _autoCloseAction;
         private readonly Action _internalConnection;
 
         #region Properties
@@ -69,13 +68,13 @@ namespace TWCore.Messaging.RabbitMQ
             ExchangeName = Parameters[nameof(ExchangeName)];
             ExchangeType = Parameters[nameof(ExchangeType)];
             Durable = Parameters[nameof(Durable)].ParseTo(true);
-            _autoCloseAction = ActionDelegate.Create(Close).CreateBufferedAction(60000);
             _internalConnection = InternalConnection;
         }
-        //~RabbitMQueue()
-        //{
-        //    Close();
-        //}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        ~RabbitMQueue()
+        {
+            Close();
+        }
         #endregion
 
         #region Public Methods
@@ -162,14 +161,7 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.LibVerbose("Closing channel for: Route={0}, Name={1}", Route, Name);
             }
         }
-        /// <summary>
-        /// Autoclose connection when inactive.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AutoClose()
-        {
-            _autoCloseAction();
-        }
         public void Dispose()
         {
             Close();

@@ -160,17 +160,25 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Guid> SendAsync<T>(T obj, Guid correlationId)
         {
-			var rqMsg = obj as RequestMessage ?? new RequestMessage(SenderSerializer.GetSerializedObject(obj))
-			{
-			    Header =
-			    {
-			        CorrelationId = correlationId,
-			        ApplicationSentDate = Core.Now,
-			        MachineName = Core.MachineName,
-			        Label = Config?.RequestOptions?.ClientSenderOptions?.Label ?? obj?.GetType().FullName,
-			        ClientName = Config?.Name
-			    }
-			};
+            bool disposeRequest = false;
+            RequestMessage rqMsg = null;
+            if (obj is RequestMessage rmsg)
+                rqMsg = rmsg;
+            else
+            {
+                rqMsg = new RequestMessage(SenderSerializer.GetSerializedObject(obj))
+                {
+                    Header =
+                    {
+                        CorrelationId = correlationId,
+                        ApplicationSentDate = Core.Now,
+                        MachineName = Core.MachineName,
+                        Label = Config?.RequestOptions?.ClientSenderOptions?.Label ?? obj?.GetType().FullName,
+                        ClientName = Config?.Name
+                    }
+                };
+                disposeRequest = true;
+            }
 			RequestSentEventArgs rsea = null;
 			if (OnBeforeSendRequest != null || MQueueClientEvents.OnBeforeSendRequest != null || 
 			    OnRequestSent != null || MQueueClientEvents.OnRequestSent != null)
@@ -181,19 +189,37 @@ namespace TWCore.Messaging.Client
                 if (MQueueClientEvents.OnBeforeSendRequest != null)
                     await MQueueClientEvents.OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
             }
-			
+
             if (!await OnSendAsync(rqMsg).ConfigureAwait(false))
+            {
+                if (disposeRequest)
+                {
+                    rqMsg.Body?.Dispose();
+                    rqMsg.Body = null;
+                }
                 return Guid.Empty;
+            }
             Counters.IncrementMessagesSent();
 
             if (rsea != null)
             {
                 if (OnRequestSent != null)
+                {
+                    disposeRequest = false;
                     await OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                }
                 if (MQueueClientEvents.OnRequestSent != null)
+                {
+                    disposeRequest = false;
                     await MQueueClientEvents.OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                }
             }
 
+            if (disposeRequest)
+            {
+                rqMsg.Body?.Dispose();
+                rqMsg.Body = null;
+            }
             return rqMsg.CorrelationId;
         }
 
@@ -218,6 +244,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
+            var disposeResponse = true;
             var rsMsg = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (rsMsg is null) return default;
 
@@ -227,6 +254,7 @@ namespace TWCore.Messaging.Client
 
             if (OnResponseReceived != null || MQueueClientEvents.OnResponseReceived != null)
             {
+                disposeResponse = false;
                 var rrea = new ResponseReceivedEventArgs(Name, rsMsg);
                 if (OnResponseReceived != null)
                     await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
@@ -247,6 +275,8 @@ namespace TWCore.Messaging.Client
             }
             if (EnableCompleteMessageCache && res != null)
                 _receivedMessagesCache.TryAdd(res, rsMsg);
+            else if (disposeResponse)
+                rsMsg.Body.Dispose();
             return res;
         }
         /// <inheritdoc />

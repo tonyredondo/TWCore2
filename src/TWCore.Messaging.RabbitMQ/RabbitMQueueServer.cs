@@ -88,7 +88,9 @@ namespace TWCore.Messaging.RabbitMQ
                 await Task.WhenAny(tsk).ConfigureAwait(false);
             }
 
-            return data.Count;
+            var count = data.Count;
+            data.ReturnContentToPoolAndDispose();
+            return count;
 
             async Task SendTaskAsync(MQConnection queue)
             {

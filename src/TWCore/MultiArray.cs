@@ -171,6 +171,20 @@ namespace TWCore
             _count = count;
             _segmentsLength = segmentsLength;
         }
+        /// <summary>
+        /// This method return all internal byte arrays to the SegmentPool and clear all content data. 
+        /// Please only use it if you know what are you doing!.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ReturnContentToPoolAndDispose()
+        {
+            if (ListOfArrays is List<byte[]> arrays)
+            {
+                foreach(var arr in arrays)
+                    SegmentPool.Return(arr);
+                ListOfArrays.Clear();
+            }
+        }
         #endregion
 
         #region ThrowHelpers

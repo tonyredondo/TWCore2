@@ -225,6 +225,7 @@ namespace TWCore.Messaging.RabbitMQ
                 tsk[i] = SendTaskAsync(_senders[i]);
             await Task.WhenAny(tsk).ConfigureAwait(false);
             Counters.IncrementTotalBytesSent(data.Count);
+            data.ReturnContentToPoolAndDispose();
             return true;
 
             async Task<bool> SendTaskAsync(RabbitMQueue sender)
@@ -245,7 +246,7 @@ namespace TWCore.Messaging.RabbitMQ
                         props.DeliveryMode = _deliveryMode;
                         props.Type = _senderOptions.Label ?? string.Empty;
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, sender.Route, sender.Name, message.Header.CorrelationId);
-                        sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, data.AsArray());
+                        sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, data.ToArray());
                         return true;
                     }
                 }

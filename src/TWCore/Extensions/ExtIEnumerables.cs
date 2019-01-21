@@ -80,8 +80,21 @@ namespace TWCore
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action)
         {
             if (enumerable is null || action is null) return enumerable;
+            int length;
+            if (enumerable is object[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++) action(enuArray[i]);
+                return enumerable;
+            }
+            if (enumerable is List<object> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++) action(enuLst[i]);
+                return enumerable;
+            }
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            var length = eachObject.Count;
+            length = eachObject.Count;
             for (var i = 0; i < length; i++) action(eachObject[i]);
             return eachObject;
         }
@@ -96,8 +109,31 @@ namespace TWCore
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action, CancellationToken token)
         {
             if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
+            int length;
+            if (enumerable is object[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuArray[i]);
+                }
+                return enumerable;
+            }
+            if (enumerable is List<object> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuLst[i]);
+                }
+                return enumerable;
+            }
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            var length = eachObject.Count;
+            length = eachObject.Count;
             for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
@@ -116,8 +152,21 @@ namespace TWCore
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action)
         {
             if (enumerable is null || action is null) return enumerable;
+            int length;
+            if (enumerable is object[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++) action(enuArray[i], i);
+                return enumerable;
+            }
+            if (enumerable is List<object> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++) action(enuLst[i], i);
+                return enumerable;
+            }
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            var length = eachObject.Count;
+            length = eachObject.Count;
             for (var i = 0; i < length; i++) action(eachObject[i], i);
             return eachObject;
         }
@@ -132,8 +181,31 @@ namespace TWCore
         public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
         {
             if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
+            int length;
+            if (enumerable is object[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuArray[i], i);
+                }
+                return enumerable;
+            }
+            if (enumerable is List<object> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuLst[i], i);
+                }
+                return enumerable;
+            }
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            var length = eachObject.Count;
+            length = eachObject.Count;
             for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
@@ -153,8 +225,21 @@ namespace TWCore
         public static IEnumerable EachObject<TArg>(this IEnumerable enumerable, Action<object, int, TArg> action, in TArg state)
         {
             if (enumerable is null || action is null) return enumerable;
+            int length;
+            if (enumerable is object[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++) action(enuArray[i], i, state);
+                return enumerable;
+            }
+            if (enumerable is List<object> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++) action(enuLst[i], i, state);
+                return enumerable;
+            }
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            var length = eachObject.Count;
+            length = eachObject.Count;
             for (var i = 0; i < length; i++) action(eachObject[i], i, state);
             return eachObject;
         }
@@ -170,8 +255,31 @@ namespace TWCore
         public static IEnumerable EachObject<TArg>(this IEnumerable enumerable, Action<object, int, TArg> action, in TArg state, CancellationToken token)
         {
             if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
+            int length;
+            if (enumerable is object[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuArray[i], i, state);
+                }
+                return enumerable;
+            }
+            if (enumerable is List<object> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuLst[i], i, state);
+                }
+                return enumerable;
+            }
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            var length = eachObject.Count;
+            length = eachObject.Count;
             for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
@@ -193,11 +301,23 @@ namespace TWCore
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action)
         {
             if (enumerable is null || action is null) return enumerable;
-            var objs = enumerable as IList<T> ?? enumerable.ToList();
-            var length = objs.Count;
-            for (var i = 0; i < length; i++)
-                action(objs[i]);
-            return objs;
+            int length;
+            if (enumerable is T[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++) action(enuArray[i]);
+                return enumerable;
+            }
+            if (enumerable is List<T> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++) action(enuLst[i]);
+                return enumerable;
+            }
+            var eachObject = enumerable as IList<T> ?? enumerable.ToList();
+            length = eachObject.Count;
+            for (var i = 0; i < length; i++) action(eachObject[i]);
+            return eachObject;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
@@ -210,15 +330,38 @@ namespace TWCore
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
         {
             if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
-            var objs = enumerable as IList<T> ?? enumerable.ToList();
-            var length = objs.Count;
+            int length;
+            if (enumerable is T[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuArray[i]);
+                }
+                return enumerable;
+            }
+            if (enumerable is List<T> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuLst[i]);
+                }
+                return enumerable;
+            }
+            var eachObject = enumerable as IList<T> ?? enumerable.ToList();
+            length = eachObject.Count;
             for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
-                action(objs[i]);
+                action(eachObject[i]);
             }
-            return objs;
+            return eachObject;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
@@ -230,11 +373,23 @@ namespace TWCore
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action)
         {
             if (enumerable is null || action is null) return enumerable;
-            var objs = enumerable as IList<T> ?? enumerable.ToList();
-            var length = objs.Count;
-            for (var i = 0; i < length; i++)
-                action(objs[i], i);
-            return objs;
+            int length;
+            if (enumerable is T[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++) action(enuArray[i], i);
+                return enumerable;
+            }
+            if (enumerable is List<T> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++) action(enuLst[i], i);
+                return enumerable;
+            }
+            var eachObject = enumerable as IList<T> ?? enumerable.ToList();
+            length = eachObject.Count;
+            for (var i = 0; i < length; i++) action(eachObject[i], i);
+            return eachObject;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
@@ -247,15 +402,38 @@ namespace TWCore
         public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action, CancellationToken token)
         {
             if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
-            var objs = enumerable as IList<T> ?? enumerable.ToList();
-            var length = objs.Count;
+            int length;
+            if (enumerable is T[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuArray[i], i);
+                }
+                return enumerable;
+            }
+            if (enumerable is List<T> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuLst[i], i);
+                }
+                return enumerable;
+            }
+            var eachObject = enumerable as IList<T> ?? enumerable.ToList();
+            length = eachObject.Count;
             for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
-                action(objs[i], i);
+                action(eachObject[i], i);
             }
-            return objs;
+            return eachObject;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
@@ -268,11 +446,23 @@ namespace TWCore
         public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, Action<T, int, TArg> action, in TArg state)
         {
             if (enumerable is null || action is null) return enumerable;
-            var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
-            var length = innerObjs.Count;
-            for (var i = 0; i < length; i++)
-                action(innerObjs[i], i, state);
-            return innerObjs;
+            int length;
+            if (enumerable is T[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++) action(enuArray[i], i, state);
+                return enumerable;
+            }
+            if (enumerable is List<T> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++) action(enuLst[i], i, state);
+                return enumerable;
+            }
+            var eachObject = enumerable as IList<T> ?? enumerable.ToList();
+            length = eachObject.Count;
+            for (var i = 0; i < length; i++) action(eachObject[i], i, state);
+            return eachObject;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
@@ -286,125 +476,154 @@ namespace TWCore
         public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, Action<T, int, TArg> action, in TArg state, CancellationToken token)
         {
             if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
-            var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
-            var length = innerObjs.Count;
+            int length;
+            if (enumerable is T[] enuArray)
+            {
+                length = enuArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuArray[i], i, state);
+                }
+                return enumerable;
+            }
+            if (enumerable is List<T> enuLst)
+            {
+                length = enuLst.Count;
+                for (var i = 0; i < length; i++)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+                    action(enuLst[i], i, state);
+                }
+                return enumerable;
+            }
+            var eachObject = enumerable as IList<T> ?? enumerable.ToList();
+            length = eachObject.Count;
             for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
-                action(innerObjs[i], i, state);
+                action(eachObject[i], i, state);
             }
-            return innerObjs;
+            return eachObject;
         }
         #endregion
 
-        #region IEnumerable<T> by Reference
+        #region T[] by Reference
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
         /// </summary>
-        /// <param name="enumerable">IEnumerable source object</param>
-        /// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-        /// <returns>IEnumerable instance</returns>
+        /// <param name="array">Array source object</param>
+        /// <param name="action">The Action delegate to perform on each element of the Array</param>
+        /// <returns>Array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T> action)
+        public static T[] Each<T>(this T[] array, ActionRef<T> action)
         {
-            if (enumerable is null || action is null) return enumerable;
-            var objs = enumerable as T[] ?? enumerable.ToArray();
-            for (var i = 0; i < objs.Length; i++)
-                action(ref objs[i]);
-            return objs;
+            if (array is null || action is null) return array;
+            var length = array.Length;
+            for (var i = 0; i < length; i++)
+            {
+                action(ref array[i]);
+            }
+            return array;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
         /// </summary>
-        /// <param name="enumerable">IEnumerable source object</param>
-        /// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+        /// <param name="array">Array source object</param>
+        /// <param name="action">The Action delegate to perform on each element of the Array</param>
         /// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-        /// <returns>IEnumerable instance</returns>
+        /// <returns>Array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T> action, CancellationToken token)
+        public static T[] Each<T>(this T[] array, ActionRef<T> action, CancellationToken token)
         {
-            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
-            var objs = enumerable as T[] ?? enumerable.ToArray();
-            for (var i = 0; i < objs.Length; i++)
+            if (array is null || action is null || token.IsCancellationRequested) return array;
+            var length = array.Length;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
-                action(ref objs[i]);
+                action(ref array[i]);
             }
-            return objs;
+            return array;
         }
         /// <summary>
-        /// Performs the specified action on each element of the IEnumerable
+        /// Performs the specified action on each element of the Array
         /// </summary>
-        /// <param name="enumerable">IEnumerable source object</param>
-        /// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-        /// <returns>IEnumerable instance</returns>
+        /// <param name="array">Array source object</param>
+        /// <param name="action">The Action delegate to perform on each element of the Array</param>
+        /// <returns>Array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int> action)
+        public static T[] Each<T>(this T[] array, ActionRef<T, int> action)
         {
-            if (enumerable is null || action is null) return enumerable;
-            var objs = enumerable as T[] ?? enumerable.ToArray();
-            for (var i = 0; i < objs.Length; i++)
-                action(ref objs[i], i);
-            return objs;
+            if (array is null || action is null) return array;
+            var length = array.Length;
+            for (var i = 0; i < length; i++)
+            {
+                action(ref array[i], i);
+            }
+            return array;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
         /// </summary>
-        /// <param name="enumerable">IEnumerable source object</param>
-        /// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+        /// <param name="array">Array source object</param>
+        /// <param name="action">The Action delegate to perform on each element of the Array</param>
         /// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-        /// <returns>IEnumerable instance</returns>
+        /// <returns>Array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int> action, CancellationToken token)
+        public static T[] Each<T>(this T[] array, ActionRef<T, int> action, CancellationToken token)
         {
-            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
-            var objs = enumerable as T[] ?? enumerable.ToArray();
-            for (var i = 0; i < objs.Length; i++)
+            if (array is null || action is null || token.IsCancellationRequested) return array;
+            var length = array.Length;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
-                action(ref objs[i], i);
+                action(ref array[i], i);
             }
-            return objs;
+            return array;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
         /// </summary>
-        /// <param name="enumerable">IEnumerable source object</param>
-        /// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-        /// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
-        /// <returns>IEnumerable instance</returns>
+        /// <param name="array">Array source object</param>
+        /// <param name="action">The Action delegate to perform on each element of the Array</param>
+        /// <param name="state">Object to pass to the Action on each element of the Array</param>
+        /// <returns>Array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, ActionRef<T, int, TArg> action, in TArg state)
+        public static T[] Each<T, TArg>(this T[] array, ActionRef<T, int, TArg> action, in TArg state)
         {
-            if (enumerable is null || action is null) return enumerable;
-            var innerObjs = enumerable as T[] ?? enumerable.ToArray();
-            for (var i = 0; i < innerObjs.Length; i++)
-                action(ref innerObjs[i], i, state);
-            return innerObjs;
+            if (array is null || action is null) return array;
+            var length = array.Length;
+            for (var i = 0; i < length; i++)
+            {
+                action(ref array[i], i, state);
+            }
+            return array;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable
         /// </summary>
-        /// <param name="enumerable">IEnumerable source object</param>
-        /// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-        /// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
+        /// <param name="array">Array source object</param>
+        /// <param name="action">The Action delegate to perform on each element of the Array</param>
+        /// <param name="state">Object to pass to the Action on each element of the Array</param>
         /// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-        /// <returns>IEnumerable instance</returns>
+        /// <returns>Array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, ActionRef<T, int, TArg> action, in TArg state, CancellationToken token)
+        public static T[] Each<T, TArg>(this T[] array, ActionRef<T, int, TArg> action, in TArg state, CancellationToken token)
         {
-            if (enumerable is null || action is null || token.IsCancellationRequested) return enumerable;
-            var innerObjs = enumerable as T[] ?? enumerable.ToArray();
-            for (var i = 0; i < innerObjs.Length; i++)
+            if (array is null || action is null || token.IsCancellationRequested) return array;
+            var length = array.Length;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
-                action(ref innerObjs[i], i, state);
+                action(ref array[i], i, state);
             }
-            return innerObjs;
+            return array;
         }
         #endregion
 
@@ -420,10 +639,18 @@ namespace TWCore
             if (linqExpression is null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
             var lqType = linqExpression.GetType();
             if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
-            var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            Type ienumerable = null;
+            foreach(var i in lqType.AllInterfaces())
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    ienumerable = i;
+                    break;
+                }
+            }
             if (ienumerable is null) return linqExpression;
-            var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
-            return (IList) Activator.CreateInstance(type, linqExpression);
+            var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments);
+            return (IList)Activator.CreateInstance(type, new object[] { linqExpression });
         }
         /// <summary>
         /// Enumerate the Linq expression to a IList
@@ -437,10 +664,18 @@ namespace TWCore
             if (linqExpression is null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
             var lqType = linqExpression.GetType();
             if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
-            var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            Type ienumerable = null;
+            foreach (var i in lqType.AllInterfaces())
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    ienumerable = i;
+                    break;
+                }
+            }
             if (ienumerable is null) return linqExpression;
-            var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
-            return (IList<T>)Activator.CreateInstance(type, linqExpression);
+            var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments);
+            return (IEnumerable<T>)Activator.CreateInstance(type, new object[] { linqExpression });
         }
         #endregion
 
@@ -467,7 +702,7 @@ namespace TWCore
             IEnumerable RemoveNullsInner(IEnumerable _enum)
             {
                 foreach (var item in _enum)
-                    if (item != null)
+                    if (!(item is null))
                         yield return item;
             }
         }
@@ -480,11 +715,21 @@ namespace TWCore
         public static IEnumerable<T> RemoveNulls<T>(this IEnumerable<T> enumerable) where T : class
         {
             if (enumerable is null) return null;
-            if (enumerable is IList<T> enumList)
+            if (enumerable is T[] enumArray)
             {
                 var noNullValues = new List<T>();
-                for (var i = 0; i < enumList.Count; i++)
-                    if (enumList[i] != null)
+                var count = enumArray.Length;
+                for (var i = 0; i < count; i++)
+                    if (!(enumArray[i] is null))
+                        noNullValues.Add(enumArray[i]);
+                return noNullValues;
+            }
+            if (enumerable is List<T> enumList)
+            {
+                var noNullValues = new List<T>();
+                var count = enumList.Count;
+                for (var i = 0; i < count; i++)
+                    if (!(enumList[i] is null))
                         noNullValues.Add(enumList[i]);
                 return noNullValues;
             }
@@ -493,7 +738,7 @@ namespace TWCore
             IEnumerable<T> RemoveNullsInner(IEnumerable<T> _enum)
             {
                 foreach (var item in _enum)
-                    if (item != null)
+                    if (!(item is null))
                         yield return item;
             }
         }
@@ -1053,7 +1298,7 @@ namespace TWCore
         /// <param name="firstKeySelector">Key selector for the first enumerable</param>
         /// <param name="secondKeySelector">Key selector for the second enumerable</param>
         /// <returns>True if both enumerables has the same count and keys</returns>
-        public static bool SequenceEqual<TSourceFirst, TSourceSecond, TSourceKey>(this IEnumerable<TSourceFirst> first, IEnumerable<TSourceSecond> second, 
+        public static bool SequenceEqual<TSourceFirst, TSourceSecond, TSourceKey>(this IEnumerable<TSourceFirst> first, IEnumerable<TSourceSecond> second,
             Func<TSourceFirst, TSourceKey> firstKeySelector, Func<TSourceSecond, TSourceKey> secondKeySelector)
         {
             if (first is null)
@@ -1067,7 +1312,7 @@ namespace TWCore
 
             var firstEnumerator = first.GetEnumerator();
             var secondEnumerator = second.GetEnumerator();
-            while(true)
+            while (true)
             {
                 var fbool = firstEnumerator.MoveNext();
                 var sbool = secondEnumerator.MoveNext();
@@ -1479,7 +1724,7 @@ namespace TWCore
             {
                 var res = item();
                 lock (_locker)
-                    Response[(int) index] = res;
+                    Response[(int)index] = res;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithCancellationToken(Func<T> item, ParallelLoopState state, long index)
@@ -1488,7 +1733,7 @@ namespace TWCore
                 {
                     var res = item();
                     lock (_locker)
-                        Response[(int) index] = res;
+                        Response[(int)index] = res;
                 }
                 else if (!state.IsStopped)
                     state.Stop();

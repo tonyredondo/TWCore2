@@ -221,8 +221,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item)
         {
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count, out var toPosition);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
                 int index;
@@ -292,8 +292,8 @@ namespace TWCore
             if (_count < 0) ThrowCountShouldBePositive();
             if (index > _count) ThrowIndexShouldBeLowerThanCount();
             if (_count - index < count) ThrowCountIsInvalid();
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(index);
-            var (toRowIndex, toPosition) = FromGlobalIndex(index + count - 1);
+            var fromRowIndex = FromGlobalIndex(index, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(index + count - 1, out var toPosition);
             var lst = new List<T[]>();
             for (var row = fromRowIndex; row <= toRowIndex; row++)
                 lst.Add(ListOfArrays[row]);
@@ -382,8 +382,8 @@ namespace TWCore
                 return;
             }
 
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
 #if COMPATIBILITY
@@ -433,8 +433,8 @@ namespace TWCore
                 return;
             }
 
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
 #if COMPATIBILITY
@@ -493,8 +493,8 @@ namespace TWCore
         public int CopyTo(Span<T> span)
         {
             var copyLength = _count <= span.Length ? _count : span.Length;
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + copyLength - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + copyLength - 1, out var toPosition);
             int writeCount = 0;
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
@@ -539,8 +539,8 @@ namespace TWCore
             }
             else
             {
-                var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-                var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+                var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+                var toRowIndex = FromGlobalIndex(_offset + _count, out var toPosition);
                 var firstSegment = new SequenceSegment(ListOfArrays[fromRowIndex]);
                 var lastSegment = firstSegment;
                 for (var rowIndex = fromRowIndex + 1; rowIndex <= toRowIndex; rowIndex++)
@@ -580,8 +580,8 @@ namespace TWCore
         {
             if (ListOfArrays.Count == 1)
                 return new Span<T>(ListOfArrays[0], _offset, _count);
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             if (fromRowIndex == toRowIndex)
                 return new Span<T>(ListOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new Span<T>(ToArray());
@@ -595,8 +595,8 @@ namespace TWCore
         {
             if (ListOfArrays.Count == 1)
                 return new ReadOnlySpan<T>(ListOfArrays[0], _offset, _count);
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             if (fromRowIndex == toRowIndex)
                 return new ReadOnlySpan<T>(ListOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new ReadOnlySpan<T>(ToArray());
@@ -610,8 +610,8 @@ namespace TWCore
         {
             if (ListOfArrays.Count == 1)
                 return new Memory<T>(ListOfArrays[0], _offset, _count);
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             if (fromRowIndex == toRowIndex)
                 return new Memory<T>(ListOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new Memory<T>(ToArray());
@@ -625,8 +625,8 @@ namespace TWCore
         {
             if (ListOfArrays.Count == 1)
                 return new ReadOnlyMemory<T>(ListOfArrays[0], _offset, _count);
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             if (fromRowIndex == toRowIndex)
                 return new ReadOnlyMemory<T>(ListOfArrays[fromRowIndex], fromPosition, (toPosition - fromPosition) + 1);
             return new ReadOnlyMemory<T>(ToArray());
@@ -638,8 +638,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MultiArray<T> Reduce()
         {
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var fromRowIndex = FromGlobalIndex(_offset, out var fromPosition);
+            var toRowIndex = FromGlobalIndex(_offset + _count - 1, out var toPosition);
             var lst = new List<T[]>();
             for (var row = fromRowIndex; row <= toRowIndex; row++)
                 lst.Add(ListOfArrays[row]);
@@ -674,16 +674,9 @@ namespace TWCore
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal (int ArrayIndex, int Position) FromGlobalIndex(int globalIndex)
-        {
-            var index = Math.DivRem(globalIndex, _segmentsLength, out var pos);
-            return (index, pos);
-        }
+        internal int FromGlobalIndex(int globalIndex, out int position) => Math.DivRem(globalIndex, _segmentsLength, out position);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal int ToGlobalIndex(int arrayIndex, int position)
-        {
-            return (arrayIndex * _segmentsLength) + position;
-        }
+        internal int ToGlobalIndex(int arrayIndex, int position) => (arrayIndex * _segmentsLength) + position;
         #endregion
 
         #region Nested Types

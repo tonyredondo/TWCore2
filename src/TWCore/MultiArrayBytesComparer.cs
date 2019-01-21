@@ -37,18 +37,18 @@ namespace TWCore
             var xSegmentsLength = x.SegmentsLength;
             if (xOffset == y.Offset && xSegmentsLength == y.SegmentsLength)
             {
-                var start = x.FromGlobalIndex(xOffset);
-                var end = x.FromGlobalIndex(xOffset + xCount - 1);
+                var startIndex = x.FromGlobalIndex(xOffset, out var startPosition);
+                var endIndex = x.FromGlobalIndex(xOffset + xCount - 1, out var endPosition);
                 var xList = x.ListOfArrays;
                 var yList = y.ListOfArrays;
 
                 #region Single List Comparison
-                if (start.ArrayIndex == end.ArrayIndex)
+                if (startIndex == endIndex)
                 {
-                    var length = end.Position - start.Position + 1;
+                    var length = endPosition - startPosition + 1;
                     var remain = length % 8;
-                    var xRow = xList[start.ArrayIndex].AsSpan(start.Position, length);
-                    var yRow = yList[start.ArrayIndex].AsSpan(start.Position, length);
+                    var xRow = xList[startIndex].AsSpan(startPosition, length);
+                    var yRow = yList[startIndex].AsSpan(startPosition, length);
                     if (remain > 0)
                     {
                         var splitIndex = length - remain;
@@ -73,24 +73,24 @@ namespace TWCore
                 
                 #region List Comparison
 
-                var startLength = xSegmentsLength - start.Position;
+                var startLength = xSegmentsLength - startPosition;
                 var startRemain = startLength % 8;
 
-                var endLength = end.Position + 1;
+                var endLength = endPosition + 1;
                 var endRemain = endLength % 8;
                 
                 int segmentRemain = 0;
-                if (end.ArrayIndex - start.ArrayIndex > 1)
+                if (endIndex - startIndex > 1)
                     segmentRemain = xSegmentsLength % 8;
 
-                for (var row = start.ArrayIndex; row <= end.ArrayIndex; row++)
+                for (var row = startIndex; row <= endIndex; row++)
                 {
                     Span<byte> xRow;
                     Span<byte> yRow;
-                    if (row == start.ArrayIndex)
+                    if (row == startIndex)
                     {
-                        xRow = xList[row].AsSpan(start.Position, startLength);
-                        yRow = yList[row].AsSpan(start.Position, startLength);
+                        xRow = xList[row].AsSpan(startPosition, startLength);
+                        yRow = yList[row].AsSpan(startPosition, startLength);
                         if (startRemain > 0)
                         {
                             var splitIndex = startLength - startRemain;
@@ -103,7 +103,7 @@ namespace TWCore
                             }
                         }
                     }
-                    else if (row == end.ArrayIndex)
+                    else if (row == endIndex)
                     {
                         xRow = xList[row].AsSpan(0, endLength);
                         yRow = yList[row].AsSpan(0, endLength);
@@ -168,15 +168,15 @@ namespace TWCore
             var count = data.Count;
             var offset = data.Offset;
             var segmentsLength = data.SegmentsLength;
-            var start = data.FromGlobalIndex(offset);
-            var end = data.FromGlobalIndex(offset + count - 1);
+            var startIndex = data.FromGlobalIndex(offset, out var startPosition);
+            var endIndex = data.FromGlobalIndex(offset + count - 1, out var endPosition);
             var list = data.ListOfArrays;
 
             #region Single List Hash
-            if (start.ArrayIndex == end.ArrayIndex)
+            if (startIndex == endIndex)
             {
-                var length = end.Position - start.Position + 1;
-                var row = list[start.ArrayIndex].AsSpan(start.Position, length);
+                var length = endPosition - startPosition + 1;
+                var row = list[startIndex].AsSpan(startPosition, length);
                 var cRow = MemoryMarshal.Cast<byte, long>(row);
                 var step = (cRow.Length / 16) + 1;
                 for (var i = 0; i < cRow.Length; i += step)
@@ -186,13 +186,13 @@ namespace TWCore
             #endregion
 
             #region List Comparison
-            for (var row = start.ArrayIndex; row <= end.ArrayIndex; row++)
+            for (var row = startIndex; row <= endIndex; row++)
             {
                 Span<byte> lRow;
-                if (row == start.ArrayIndex)
-                    lRow = list[row].AsSpan(start.Position, segmentsLength - start.Position);
-                else if (row == end.ArrayIndex)
-                    lRow = list[row].AsSpan(0, end.Position + 1);
+                if (row == startIndex)
+                    lRow = list[row].AsSpan(startPosition, segmentsLength - startPosition);
+                else if (row == endIndex)
+                    lRow = list[row].AsSpan(0, endPosition + 1);
                 else
                     lRow = list[row].AsSpan(0, segmentsLength);
 

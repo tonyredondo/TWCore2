@@ -1993,7 +1993,17 @@ namespace TWCore
         {
             if (source is null) return -1;
             if (predicate is null) return -1;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (predicate(sourceArray[i], state))
+                        return i;
+                }
+                return -1;
+            }
+            if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2024,7 +2034,17 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool All<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (!predicate(sourceArray[i], state))
+                        return false;
+                }
+                return true;
+            }
+            if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2053,7 +2073,17 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Any<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (predicate(sourceArray[i], state))
+                        return true;
+                }
+                return false;
+            }
+            if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2083,7 +2113,14 @@ namespace TWCore
         public static TSource First<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], state))
+                        return sourceArray[i];
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2111,7 +2148,14 @@ namespace TWCore
         public static TSource FirstOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], state))
+                        return sourceArray[i];
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2141,7 +2185,14 @@ namespace TWCore
         public static TSource FirstOrDefault<TSource, TArg, TArg2>(this IEnumerable<TSource> source, Func<TSource, TArg, TArg2, bool> predicate, TArg arg0, TArg2 arg1)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], arg0, arg1))
+                        return sourceArray[i];
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2173,7 +2224,14 @@ namespace TWCore
         public static TSource FirstOrDefault<TSource, TArg, TArg2, TArg3>(this IEnumerable<TSource> source, Func<TSource, TArg, TArg2, TArg3, bool> predicate, TArg arg0, TArg2 arg1, TArg3 arg2)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], arg0, arg1, arg2))
+                        return sourceArray[i];
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2201,7 +2259,14 @@ namespace TWCore
         public static TSource Last<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = length - 1; i >= 0; i--)
+                    if (predicate(sourceArray[i], state))
+                        return sourceArray[i];
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = length - 1; i >= 0; i--)
@@ -2229,7 +2294,14 @@ namespace TWCore
         public static TSource LastOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = length - 1; i >= 0; i--)
+                    if (predicate(sourceArray[i], state))
+                        return sourceArray[i];
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = length - 1; i >= 0; i--)
@@ -2258,7 +2330,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (maxValue.HasValue && maxValue.Value >= value) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2295,7 +2378,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (maxValue.HasValue && maxValue.Value >= value) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2332,7 +2426,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (maxValue.HasValue && !(maxValue.Value < value)) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2369,7 +2474,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (maxValue.HasValue && !(maxValue.Value < value)) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2406,7 +2522,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (maxValue.HasValue && maxValue.Value >= value) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2443,7 +2570,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2482,7 +2621,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2521,7 +2672,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2560,7 +2723,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2599,7 +2774,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? maxValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
+                    maxValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2639,7 +2826,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (minValue.HasValue && minValue.Value <= value) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2676,7 +2874,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (minValue.HasValue && minValue.Value <= value) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2713,7 +2922,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (minValue.HasValue && !(minValue.Value > value)) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2750,7 +2970,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (minValue.HasValue && !(minValue.Value > value)) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2787,7 +3018,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (minValue.HasValue && minValue.Value <= value) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2824,7 +3066,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             int? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (minValue.HasValue && minValue.Value <= value.Value) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2863,7 +3117,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             long? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (minValue.HasValue && minValue.Value <= value.Value) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2902,7 +3168,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             float? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2941,7 +3219,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             double? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -2980,7 +3270,19 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var resItem = default(TSource);
             decimal? minValue = null;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    var value = selector(sourceArray[i]);
+                    if (value is null) continue;
+                    if (minValue.HasValue && minValue.Value <= value.Value) continue;
+                    minValue = value;
+                    resItem = sourceArray[i];
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3022,7 +3324,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var @default = default(TSource);
             var found = false;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (!predicate(sourceArray[i], state)) continue;
+                    if (found) throw new InvalidOperationException("The input sequence contains more than one element");
+                    @default = sourceArray[i];
+                    found = true;
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3061,7 +3374,18 @@ namespace TWCore
             if (source is null) throw new ArgumentNullException(nameof(source));
             var @default = default(TSource);
             var found = false;
-            if (source is IList<TSource> sourceList)
+            if (source is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                {
+                    if (!predicate(sourceArray[i], state)) continue;
+                    if (found) throw new InvalidOperationException("The input sequence contains more than one element");
+                    @default = sourceArray[i];
+                    found = true;
+                }
+            }
+            else if (source is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3097,7 +3421,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TResult> Select<T, TArg, TResult>(this IEnumerable<T> enumerable, Func<T, TArg, TResult> selector, TArg state)
         {
-            if (enumerable is IList<T> sourceList)
+            if (enumerable is T[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    yield return selector(sourceArray[i], state);
+            }
+            else if (enumerable is List<T> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3122,7 +3452,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TResult> Select<T, TArg, TResult>(this IEnumerable<T> enumerable, Func<T, int, TArg, TResult> selector, TArg state)
         {
-            if (enumerable is IList<T> sourceList)
+            if (enumerable is T[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    yield return selector(sourceArray[i], i, state);
+            }
+            else if (enumerable is List<T> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3150,7 +3486,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TSource> Where<TSource, TArg>(this IEnumerable<TSource> enumerable, Func<TSource, TArg, bool> predicate, TArg state)
         {
-            if (enumerable is IList<TSource> sourceList)
+            if (enumerable is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], state))
+                        yield return sourceArray[i];
+            }
+            else if (enumerable is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3178,7 +3521,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TSource> Where<TSource, TArg, TArg2>(this IEnumerable<TSource> enumerable, Func<TSource, TArg, TArg2, bool> predicate, TArg arg0, TArg2 arg1)
         {
-            if (enumerable is IList<TSource> sourceList)
+            if (enumerable is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], arg0, arg1))
+                        yield return sourceArray[i];
+            }
+            else if (enumerable is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3208,7 +3558,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TSource> Where<TSource, TArg, TArg2, TArg3>(this IEnumerable<TSource> enumerable, Func<TSource, TArg, TArg2, TArg3, bool> predicate, TArg arg0, TArg2 arg1, TArg3 arg2)
         {
-            if (enumerable is IList<TSource> sourceList)
+            if (enumerable is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], arg0, arg1, arg2))
+                        yield return sourceArray[i];
+            }
+            else if (enumerable is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)
@@ -3234,7 +3591,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TSource> Where<TSource, TArg>(this IEnumerable<TSource> enumerable, Func<TSource, int, TArg, bool> predicate, TArg state)
         {
-            if (enumerable is IList<TSource> sourceList)
+            if (enumerable is TSource[] sourceArray)
+            {
+                var length = sourceArray.Length;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceArray[i], i, state))
+                        yield return sourceArray[i];
+            }
+            else if (enumerable is List<TSource> sourceList)
             {
                 var length = sourceList.Count;
                 for (var i = 0; i < length; i++)

@@ -39,7 +39,7 @@ namespace TWCore.Net.Multicast
     /// </summary>
     public class PeerConnection
     {
-        private const int PacketSize = 512;
+        private const int PacketSize = 8192;
         private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();
         private readonly TimeoutDictionary<(Guid, ushort), ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<(Guid, ushort), ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();

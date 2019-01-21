@@ -233,15 +233,9 @@ namespace TWCore.Messaging.RabbitMQ
                         Counters.IncrementReceivingTime(request.Header.TotalTime);
                         if (request.Header.ClientName != Config.Name)
                             Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                        var evArgs =
-                            new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length, SenderSerializer)
-                            {
-                                Metadata =
-                                {
-                                    ["ReplyTo"] = message.Properties.ReplyTo,
-                                    ["MessageId"] = message.Properties.MessageId
-                                }
-                            };
+                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length, SenderSerializer);
+                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
+                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
@@ -249,15 +243,9 @@ namespace TWCore.Messaging.RabbitMQ
                     case ResponseMessage response when response.Header != null:
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                        var evArgs2 =
-                            new ResponseReceivedEventArgs(_name, response, message.Body.Length)
-                            {
-                                Metadata =
-                                {
-                                    ["ReplyTo"] = message.Properties.ReplyTo,
-                                    ["MessageId"] = message.Properties.MessageId
-                                }
-                            };
+                        var evArgs2 = new ResponseReceivedEventArgs(_name, response, message.Body.Length);
+                        evArgs2.Metadata["ReplyTo"] = message.Properties.ReplyTo;
+                        evArgs2.Metadata["MessageId"] = message.Properties.MessageId;
                         await OnResponseReceivedAsync(evArgs2).ConfigureAwait(false);
                         break;
                 }

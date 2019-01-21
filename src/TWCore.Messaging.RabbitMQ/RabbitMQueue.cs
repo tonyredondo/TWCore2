@@ -86,9 +86,9 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async ValueTask<bool> EnsureConnectionAsync(int retryInterval, int retryCount)
         {
+            if (Channel != null) return true;
             try
             {
-                if (Channel != null) return true;
                 if (string.IsNullOrEmpty(Route))
                     throw new UriFormatException($"The route for the connection to {Name} is null.");
                 await _internalConnection.InvokeWithRetry(retryInterval, retryCount, "Trying to connect to " + Route).ConfigureAwait(false);
@@ -121,7 +121,7 @@ namespace TWCore.Messaging.RabbitMQ
                     {
                         Uri = new Uri(Route),
                         UseBackgroundThreadsForIO = true,
-                        AutomaticRecoveryEnabled = true,
+                        AutomaticRecoveryEnabled = true
                     };
                     connection = factory.CreateConnection();
                     if (string.IsNullOrEmpty(Name))

@@ -291,19 +291,7 @@ namespace TWCore.Messaging.RabbitMQ
                 await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
                 _receiver.EnsureQueue();
                 _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
-                _receiverConsumer.Received += (ch, ea) =>
-                {
-                    var correlationId = Guid.Parse(ea.BasicProperties.CorrelationId);
-                    if (!ReceivedMessages.TryRemove(correlationId, out var message))
-                    {
-                        _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
-                        return;
-                    }
-                    message.Body = ea.Body;
-                    message.Properties = ea.BasicProperties;
-                    message.WaitHandler.Set();
-                    _receiver.Channel.BasicAck(ea.DeliveryTag, false);
-                };
+                _receiverConsumer.Received += MessageReceivedHandler;
                 var rcvName = _receiver.Name;
                 if (!UseSingleResponseQueue)
                 {
@@ -313,6 +301,20 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiverConsumerTag = _receiver.Channel.BasicConsume(rcvName, false, _receiverConsumer);
                 Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been created.", rcvName);
             }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void MessageReceivedHandler(object sender, BasicDeliverEventArgs ea)
+        {
+            var correlationId = Guid.Parse(ea.BasicProperties.CorrelationId);
+            if (!ReceivedMessages.TryRemove(correlationId, out var message))
+            {
+                _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
+                return;
+            }
+            message.Body = ea.Body;
+            message.Properties = ea.BasicProperties;
+            message.WaitHandler.Set();
+            _receiver.Channel.BasicAck(ea.DeliveryTag, false);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RemoveReceiverConsumer()

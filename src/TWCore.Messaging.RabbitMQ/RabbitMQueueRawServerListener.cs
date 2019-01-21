@@ -40,23 +40,40 @@ namespace TWCore.Messaging.RabbitMQ
         private CancellationToken _token;
         private Task _monitorTask;
         private int _exceptionSleep;
+        private readonly Func<RabbitMessage, Task> _processingTaskAsyncDelegate;
         #endregion
 
         #region Nested Type
-        private readonly struct RabbitMessage
+        private class RabbitMessage
         {
-            public readonly Guid CorrelationId;
-            public readonly IBasicProperties Properties;
-            public readonly byte[] Body;
+            private readonly static ObjectPool<RabbitMessage> ObjectPool = new ObjectPool<RabbitMessage>(_ => new RabbitMessage());
+            public Guid CorrelationId;
+            public IBasicProperties Properties;
+            public byte[] Body;
 
-            public RabbitMessage(Guid correlationId, IBasicProperties properties, byte[] body)
+            private RabbitMessage() { }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static RabbitMessage Rent(Guid correlationId, IBasicProperties properties, byte[] body)
             {
-                CorrelationId = correlationId;
-                Properties = properties;
-                Body = body;
+                var item = ObjectPool.New();
+                item.CorrelationId = correlationId;
+                item.Properties = properties;
+                item.Body = body;
+                return item;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void Return(RabbitMessage value)
+            {
+                if (value == null) return;
+                value.CorrelationId = Guid.Empty;
+                value.Properties = null;
+                value.Body = null;
+                ObjectPool.Store(value);
             }
         }
         #endregion
+
 
         #region .ctor
         /// <inheritdoc />
@@ -70,6 +87,7 @@ namespace TWCore.Messaging.RabbitMQ
         public RabbitMQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
         {
             _name = server.Name;
+            _processingTaskAsyncDelegate = ProcessingTaskAsync;
         }
         #endregion
 
@@ -87,19 +105,7 @@ namespace TWCore.Messaging.RabbitMQ
             await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
             _receiver.EnsureQueue();
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
-            _receiverConsumer.Received += (ch, ea) =>
-            {
-                var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
-#if COMPATIBILITY
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
-#else
-                ThreadPool.QueueUserWorkItem(async item =>
-                {
-                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
-                }, msg, false);
-#endif                
-				_receiver.Channel.BasicAck(ea.DeliveryTag, false);
-			};
+            _receiverConsumer.Received += MessageReceivedHandler;
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
             _monitorTask = Task.Run(MonitorProcess, _token);
 
@@ -126,6 +132,20 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void MessageReceivedHandler(object sender, BasicDeliverEventArgs ea)
+        {
+            var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
+#if COMPATIBILITY
+                Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
+#else
+            ThreadPool.QueueUserWorkItem(item =>
+            {
+                _ = EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, item);
+            }, msg, true);
+#endif
+            _receiver.Channel.BasicAck(ea.DeliveryTag, false);
+        }
         /// <summary>
         /// Monitors the maximum concurrent message allowed for the listener
         /// </summary>
@@ -190,7 +210,11 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(RabbitMessage message)
         {
-            if (message.Body is null) return;
+            if (message.Body is null)
+            {
+                RabbitMessage.Return(message);
+                return;
+            }
             try
             {
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
@@ -246,6 +270,10 @@ namespace TWCore.Messaging.RabbitMQ
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
                 Interlocked.Exchange(ref _exceptionSleep, 1);
+            }
+            finally
+            {
+                RabbitMessage.Return(message);
             }
         }
         #endregion

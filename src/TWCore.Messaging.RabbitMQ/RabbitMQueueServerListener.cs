@@ -42,20 +42,36 @@ namespace TWCore.Messaging.RabbitMQ
         private CancellationToken _token;
         private Task _monitorTask;
         private int _exceptionSleep;
+        private readonly Func<RabbitMessage, Task> _processingTaskAsyncDelegate;
         #endregion
 
         #region Nested Type
-        private readonly struct RabbitMessage
+        private class RabbitMessage
         {
-            public readonly Guid CorrelationId;
-            public readonly IBasicProperties Properties;
-            public readonly byte[] Body;
+            private readonly static ObjectPool<RabbitMessage> ObjectPool = new ObjectPool<RabbitMessage>(_ => new RabbitMessage());
+            public Guid CorrelationId;
+            public IBasicProperties Properties;
+            public byte[] Body;
 
-            public RabbitMessage(Guid correlationId, IBasicProperties properties, byte[] body)
+            private RabbitMessage() { }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static RabbitMessage Rent(Guid correlationId, IBasicProperties properties, byte[] body)
             {
-                CorrelationId = correlationId;
-                Properties = properties;
-                Body = body;
+                var item = ObjectPool.New();
+                item.CorrelationId = correlationId;
+                item.Properties = properties;
+                item.Body = body;
+                return item;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void Return(RabbitMessage value)
+            {
+                if (value == null) return;
+                value.CorrelationId = Guid.Empty;
+                value.Properties = null;
+                value.Body = null;
+                ObjectPool.Store(value);
             }
         }
         #endregion
@@ -73,6 +89,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             _messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
             _name = server.Name;
+            _processingTaskAsyncDelegate = ProcessingTaskAsync;
             Core.Status.Attach(collection =>
             {
                 collection.Add("Message Type", _messageType);
@@ -94,19 +111,7 @@ namespace TWCore.Messaging.RabbitMQ
             await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
             _receiver.EnsureQueue();
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
-            _receiverConsumer.Received += (ch, ea) =>
-            {
-                var msg = new RabbitMessage(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
-#if COMPATIBILITY
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, msg));
-#else
-                ThreadPool.QueueUserWorkItem(async item =>
-                {
-                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
-                }, msg, false);
-#endif
-				_receiver.Channel.BasicAck(ea.DeliveryTag, false);
-            };
+            _receiverConsumer.Received += MessageReceivedHandler;
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
             _monitorTask = Task.Run(MonitorProcess, _token);
 
@@ -117,11 +122,6 @@ namespace TWCore.Messaging.RabbitMQ
 
             await _monitorTask.ConfigureAwait(false);
         }
-
-        private async void ThreadPoolWorkItem(RabbitMessage item)
-        {
-            await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
-        } 
         /// <inheritdoc />
         /// <summary>
         /// On Dispose
@@ -138,6 +138,20 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void MessageReceivedHandler(object sender, BasicDeliverEventArgs ea)
+        {
+            var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
+#if COMPATIBILITY
+                Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
+#else
+            ThreadPool.QueueUserWorkItem(item =>
+            {
+                _ = EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, item);
+            }, msg, true);
+#endif
+            _receiver.Channel.BasicAck(ea.DeliveryTag, false);
+        }
         /// <summary>
         /// Monitors the maximum concurrent message allowed for the listener
         /// </summary>
@@ -148,43 +162,43 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
-					if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
-					{
-						if (_receiverConsumerTag != null)
-							_receiver.Channel.BasicCancel(_receiverConsumerTag);
-						_receiver.Close();
-						Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
-						await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-						await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
-						_receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
-						Core.Log.Warning("The listener has been resumed.");
-					}
+                    if (Interlocked.CompareExchange(ref _exceptionSleep, 0, 1) == 1)
+                    {
+                        if (_receiverConsumerTag != null)
+                            _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                        _receiver.Close();
+                        Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+                        await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
+                        await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
+                        _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                        Core.Log.Warning("The listener has been resumed.");
+                    }
 
-					if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue && !_token.IsCancellationRequested)
-					{
-						if (_receiverConsumerTag != null)
-							_receiver.Channel.BasicCancel(_receiverConsumerTag);
-						Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
+                    if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue && !_token.IsCancellationRequested)
+                    {
+                        if (_receiverConsumerTag != null)
+                            _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                        Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
 
-						while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
-							await Task.Delay(500, _token).ConfigureAwait(false);
+                        while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
+                            await Task.Delay(500, _token).ConfigureAwait(false);
 
-						_receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
-						Core.Log.Warning("The listener has been resumed.");
-					}
+                        _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                        Core.Log.Warning("The listener has been resumed.");
+                    }
 
-					if (!_receiver.Channel.IsOpen && !_token.IsCancellationRequested)
-					{
-						Core.Log.Warning("The Receiver channel is closed and should be open, reconnecting.");
-						_receiver.Close();
-						await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
-						if (_receiverConsumerTag != null)
-							_receiver.Channel.BasicCancel(_receiverConsumerTag);
-						_receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
-						Core.Log.Warning("The listener has been resumed.");
-					}
+                    if (!_receiver.Channel.IsOpen && !_token.IsCancellationRequested)
+                    {
+                        Core.Log.Warning("The Receiver channel is closed and should be open, reconnecting.");
+                        _receiver.Close();
+                        await _receiver.EnsureConnectionAsync(5000, int.MaxValue).ConfigureAwait(false);
+                        if (_receiverConsumerTag != null)
+                            _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                        _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                        Core.Log.Warning("The listener has been resumed.");
+                    }
 
-					await Task.Delay(1000, _token).ConfigureAwait(false);
+                    await Task.Delay(1000, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 catch (Exception ex)
@@ -202,7 +216,11 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(RabbitMessage message)
         {
-            if (message.Body is null) return;
+            if (message.Body is null)
+            {
+                RabbitMessage.Return(message);
+                return;
+            }
             try
             {
                 Counters.IncrementTotalReceivingBytes(message.Body.Length);
@@ -250,6 +268,10 @@ namespace TWCore.Messaging.RabbitMQ
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
                 Interlocked.Exchange(ref _exceptionSleep, 1);
+            }
+            finally
+            {
+                RabbitMessage.Return(message);
             }
         }
         #endregion

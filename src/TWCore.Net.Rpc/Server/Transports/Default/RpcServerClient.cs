@@ -69,8 +69,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private Guid _sessionId;
         private CancellationTokenSource _tokenSource;
         private string _clientIp;
-        //private Thread _receiveThread;
-        private Task _receiveTask;
+        private Thread _receiveThread;
         #endregion
 
         #region Properties
@@ -170,29 +169,24 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
-            //if (_receiveThread is null || !_receiveThread.IsAlive)
-            //{
-            //    _receiveThread = new Thread(ReceiveThread)
-            //    {
-            //        IsBackground = true,
-            //        Name = "RPC.DefaultTransportServer.ReceiveThread",
-            //        Priority = ThreadPriority.Normal
-            //    };
-            //    _receiveThread.Start();
-            //}
-            if (_receiveTask is null || _receiveTask.IsCompleted)
-                _receiveTask = Task.Run(ReceiveThread);
+            if (_receiveThread is null || !_receiveThread.IsAlive)
+            {
+                _receiveThread = new Thread(ReceiveThread)
+                {
+                    IsBackground = true,
+                    Name = "RPC.DefaultTServer.ReceiveThread",
+                    Priority = ThreadPriority.Normal
+                };
+                _receiveThread.Start();
+            }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private void ReceiveThread()
-        private async Task ReceiveThread()
+        private void ReceiveThread()
         {
             while (_client != null && _client.Connected)
             {
                 try
                 {
-                    if (_client.Available == 0)
-                        await Task.Yield();
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
                     _ = Task.Factory.StartNew(_messageReceivedHandlerDelegate, message, _tokenSource.Token);
                 }
@@ -287,7 +281,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 _networkStream = null;
                 _tokenSource = null;
 
-                //_receiveThread = null;
+                _receiveThread = null;
             }
             catch
             {

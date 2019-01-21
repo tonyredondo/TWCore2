@@ -43,10 +43,8 @@ namespace TWCore.Messaging.Redis
         private static readonly ConcurrentDictionary<Guid, Message> ReceivedMessages = new ConcurrentDictionary<Guid, Message>();
 
         #region Fields
-        private List<(MQConnection, ConnectionMultiplexer, ISubscriber)> _senders;
-        private MQConnection _receiverConnection;
-        private ConnectionMultiplexer _receiverMultiplexer;
-        private ISubscriber _receiverSubscriber;
+        private List<RedisMQConnection> _senders;
+        private RedisMQConnection _receiverConnection;
         private MQClientQueues _clientQueues;
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
@@ -78,7 +76,7 @@ namespace TWCore.Messaging.Redis
         protected override void OnInit()
         {
             OnDispose();
-            _senders = new List<(MQConnection, ConnectionMultiplexer, ISubscriber)>();
+            _senders = new List<RedisMQConnection>();
 
             if (Config != null)
             {
@@ -100,33 +98,25 @@ namespace TWCore.Messaging.Redis
                     foreach (var queue in _clientQueues.SendQueues)
                     {
                         Core.Log.LibVerbose("New Producer from QueueClient");
-                        ConnectionMultiplexer connection = null;
-                        if (string.IsNullOrEmpty(queue.Route))
-                            throw new UriFormatException($"The route for the connection to {queue.Name} is null.");
-                        connection = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(queue.Route), 5000, int.MaxValue).WaitAsync();
-                        _senders.Add((queue, connection, connection.GetSubscriber()));
+                        var redisConnection = new RedisMQConnection(queue);
+                        _senders.Add(redisConnection);
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
                 {
-                    _receiverConnection = _clientQueues.RecvQueue;
-                    if (string.IsNullOrEmpty(_receiverConnection.Route))
-                        throw new UriFormatException($"The route for the connection to {_receiverConnection.Name} is null.");
-                    _receiverMultiplexer = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(_receiverConnection.Route), 5000, int.MaxValue).WaitAsync();
-                    var rcvName = _receiverConnection.Name;
+                    _receiverConnection = new RedisMQConnection(_clientQueues.RecvQueue);
                     if (!UseSingleResponseQueue)
                     {
-                        rcvName += "-" + Core.InstanceIdString;
-                        Core.Log.InfoBasic("Using custom response queue: {0}", rcvName);
+                        _receiverConnection.Name += "-" + Core.InstanceIdString;
+                        Core.Log.InfoBasic("Using custom response queue: {0}", _receiverConnection.Name);
                     }
-                    _receiverSubscriber = _receiverMultiplexer.GetSubscriber();
-                    _receiverSubscriber.Subscribe(rcvName, (channel, value) =>
+                    _receiverConnection.SubscribeAsync((channel, value) =>
                     {
                         (var body, var correlationId) = GetFromMessageBody(value);
                         var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
                         rMsg.Body = body;
                         rMsg.WaitHandler.Set();
-                    });
+                    }).WaitAsync();
                 }
             }
 
@@ -136,7 +126,7 @@ namespace TWCore.Messaging.Redis
                 {
                     for (var i = 0; i < _senders.Count; i++)
                     {
-                        collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Item1.Route);
+                        collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Route);
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
@@ -152,20 +142,12 @@ namespace TWCore.Messaging.Redis
         {
             if (_senders != null)
             {
-                foreach (var sender in _senders)
-                {
-                    sender.Item3.UnsubscribeAll();
-                    var conn = sender.Item2;
-                    conn.Close();
-                }
                 _senders.Clear();
                 _senders = null;
             }
-            if (_receiverMultiplexer is null) return;
-            _receiverSubscriber.UnsubscribeAll();
-            _receiverMultiplexer.Close();
-            _receiverSubscriber = null;
-            _receiverMultiplexer = null;
+            if (_receiverConnection is null) return;
+            _receiverConnection.UnsubscribeAsync().WaitAsync();
+            _receiverConnection = null;
         }
         #endregion
 
@@ -203,13 +185,15 @@ namespace TWCore.Messaging.Redis
             var data = SenderSerializer.Serialize(message);
             var body = CreateMessageBody(data, message.CorrelationId);
 
-            foreach ((var queue, var multiplexer, var subscriber) in _senders)
+            foreach (var queue in _senders)
             {
+                var subscriber = await queue.GetSubscriberAsync().ConfigureAwait(false);
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, message.Header.CorrelationId);
                 await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
             Counters.IncrementTotalBytesSent(data.Count);
+            data.ReturnContentToPoolAndDispose();
             return true;
         }
         #endregion

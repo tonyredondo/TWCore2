@@ -36,11 +36,13 @@ namespace TWCore.Messaging.Redis
     {
         #region Fields
         private readonly string _name;
-        private ConnectionMultiplexer _connection;
-        private ISubscriber _receiver;
+        private RedisMQConnection _connection;
         private CancellationToken _token;
         private Task _monitorTask;
         private int _exceptionSleep;
+        private readonly Action<RedisChannel, RedisValue> _messageHandlerDelegate;
+        private readonly Func<RedisValue, Task> _processDelegate;
+        private readonly Func<Task> _monitorDelegate;
         #endregion
 
         #region .ctor
@@ -55,6 +57,9 @@ namespace TWCore.Messaging.Redis
         public RedisQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
         {
             _name = server.Name;
+            _messageHandlerDelegate = new Action<RedisChannel, RedisValue>(MessageHandler);
+            _processDelegate = new Func<RedisValue, Task>(ProcessingTaskAsync);
+            _monitorDelegate = new Func<Task>(MonitorProcess);
         }
         #endregion
 
@@ -68,12 +73,9 @@ namespace TWCore.Messaging.Redis
         protected override async Task OnListenerTaskStartAsync(CancellationToken token)
         {
             _token = token;
-            if (string.IsNullOrEmpty(Connection.Route))
-                throw new UriFormatException($"The route for the connection to {Connection.Name} is null.");
-            _connection = await Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(Connection.Route), 5000, int.MaxValue).ConfigureAwait(false);
-            _receiver = _connection.GetSubscriber();
-            _receiver.SubscribeAsync(Connection.Name, MessageHandler);
-            _monitorTask = Task.Run(MonitorProcess, _token);
+            _connection = new RedisMQConnection(Connection);
+            await _connection.SubscribeAsync(_messageHandlerDelegate).ConfigureAwait(false);
+            _monitorTask = Task.Run(_monitorDelegate, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
             await _monitorTask.ConfigureAwait(false);
@@ -85,17 +87,15 @@ namespace TWCore.Messaging.Redis
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_receiver is null) return;
+            if (_connection is null) return;
             try
             {
-                _receiver.UnsubscribeAll();
-                _connection.Close();
+                _connection.UnsubscribeAsync().WaitAsync();
             }
             catch
             {
                 // ignored
             }
-            _receiver = null;
             _connection = null;
         }
         #endregion
@@ -109,7 +109,7 @@ namespace TWCore.Messaging.Redis
             Core.Log.LibVerbose("Message received");
             try
             {
-                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, value).ConfigureAwait(false);
+                await EnqueueMessageToProcessAsync(_processDelegate, value).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -131,10 +131,8 @@ namespace TWCore.Messaging.Redis
                         OnDispose();
                         Core.Log.Warning("An exception has been thrown, the listener has been stopped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
                         await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
-
-                        _connection = ConnectionMultiplexer.Connect(Connection.Route);
-                        _receiver = _connection.GetSubscriber();
-                        _receiver.SubscribeAsync(Connection.Name, MessageHandler);
+                        _connection = new RedisMQConnection(Connection);
+                        await _connection.SubscribeAsync(_messageHandlerDelegate).ConfigureAwait(false);
                         Core.Log.Warning("The listener has been resumed.");
                     }
 
@@ -146,9 +144,8 @@ namespace TWCore.Messaging.Redis
                         while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
                             await Task.Delay(500, _token).ConfigureAwait(false);
 
-                        _connection = ConnectionMultiplexer.Connect(Connection.Route);
-                        _receiver = _connection.GetSubscriber();
-                        _receiver.SubscribeAsync(Connection.Name, MessageHandler);
+                        _connection = new RedisMQConnection(Connection);
+                        await _connection.SubscribeAsync(_messageHandlerDelegate).ConfigureAwait(false);
                         Core.Log.Warning("The listener has been resumed.");
                     }
 

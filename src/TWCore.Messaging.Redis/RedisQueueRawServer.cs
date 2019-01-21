@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+using TWCore.Threading;
 
 // ReSharper disable InconsistentNaming
 
@@ -32,7 +33,7 @@ namespace TWCore.Messaging.Redis
     /// </summary>
     public class RedisQueueRawServer : MQueueRawServerBase
     {
-        private readonly ConcurrentDictionary<string, ConnectionMultiplexer> _rQueue = new ConcurrentDictionary<string, ConnectionMultiplexer>();
+        private readonly ConcurrentDictionary<string, RedisMQConnection> _rQueue = new ConcurrentDictionary<string, RedisMQConnection>();
 
         /// <inheritdoc />
         /// <summary>
@@ -71,32 +72,29 @@ namespace TWCore.Messaging.Redis
             {
                 try
                 {
-                    var producer = _rQueue.GetOrAdd(queue.Route, qRoute =>
-                    {
-                        Core.Log.LibVerbose("New Producer from QueueServer");
-                        return Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(qRoute), 5000, int.MaxValue).WaitAsync();
-                    });
-                    var prod = producer.GetSubscriber();
+                    var producer = _rQueue.GetOrAdd(queue.Route, _ => new RedisMQConnection(queue));
+                    var subscriber = await producer.GetSubscriberAsync().ConfigureAwait(false);
 
                     if (!string.IsNullOrEmpty(replyTo))
                     {
                         if (string.IsNullOrEmpty(queue.Name))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, replyTo, e.CorrelationId);
-                            await prod.PublishAsync(replyTo, body).ConfigureAwait(false);
+                            await subscriber.PublishAsync(replyTo, body).ConfigureAwait(false);
 
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
-                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name + "_" + replyTo, e.CorrelationId);
-                            await prod.PublishAsync(queue.Name + "_" + replyTo, body).ConfigureAwait(false);
+                            var nName = queue.Name + "_" + replyTo;
+                            Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, nName, e.CorrelationId);
+                            await subscriber.PublishAsync(nName, body).ConfigureAwait(false);
 
                         }
                     }
                     else
                     {
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, e.CorrelationId);
-                        await prod.PublishAsync(queue.Name, body).ConfigureAwait(false);
+                        await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex)
@@ -114,8 +112,6 @@ namespace TWCore.Messaging.Redis
         /// </summary>
         protected override void OnDispose()
         {
-            var producers = _rQueue.Select(i => i.Value).ToArray();
-            Parallel.ForEach(producers, p => p.Close());
             _rQueue.Clear();
         }
     }

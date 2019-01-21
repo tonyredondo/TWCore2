@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using TWCore.Threading;
 
 // ReSharper disable InconsistentNaming
 
@@ -32,7 +33,7 @@ namespace TWCore.Messaging.Redis
     /// </summary>
     public class RedisQueueServer : MQueueServerBase
     {
-        private readonly ConcurrentDictionary<string, ConnectionMultiplexer> _rQueue = new ConcurrentDictionary<string, ConnectionMultiplexer>();
+        private readonly ConcurrentDictionary<string, RedisMQConnection> _rQueue = new ConcurrentDictionary<string, RedisMQConnection>();
 
         /// <inheritdoc />
         /// <summary>
@@ -67,14 +68,10 @@ namespace TWCore.Messaging.Redis
             {
                 try
                 {
-                    var producer = _rQueue.GetOrAdd(queue.Route, qRoute =>
-                    {
-                        Core.Log.LibVerbose("New Producer from QueueServer");
-                        return Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(qRoute), 5000, int.MaxValue).WaitAsync();
-                    });
+                    var producer = _rQueue.GetOrAdd(queue.Route, _ => new RedisMQConnection(queue));
+                    var subscriber = await producer.GetSubscriberAsync().ConfigureAwait(false);
                     Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", data.Count, queue.Route, queue.Name, message.CorrelationId);
-                    var prod = producer.GetSubscriber();
-                    await prod.PublishAsync(queue.Name, body).ConfigureAwait(false);
+                    await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -82,7 +79,9 @@ namespace TWCore.Messaging.Redis
                     Core.Log.Write(ex);
                 }
             }
-            return response ? data.Count : -1;
+            var length = data.Count;
+            data.ReturnContentToPoolAndDispose();
+            return response ? length : -1;
         }
 
         /// <inheritdoc />
@@ -91,8 +90,6 @@ namespace TWCore.Messaging.Redis
         /// </summary>
         protected override void OnDispose()
         {
-            var producers = _rQueue.Select(i => i.Value).ToArray();
-            Parallel.ForEach(producers, p => p.Close());
             _rQueue.Clear();
         }
     }

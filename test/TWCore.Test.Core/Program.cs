@@ -147,7 +147,7 @@ namespace TWCore.Test.Core
                 TWCore.Core.Trace.AddSimpleFileStorage("./traces");
 
                 // TWCore.Core.Log.AddElasticSearchStorage("http://10.10.1.52:9200", "TestIndex{0:yyyy.MM}");
-                TWCore.Core.Counters.Storages.Add(new TWCore.Diagnostics.Counters.Storages.ConsoleCountersStorage());
+                //TWCore.Core.Counters.Storages.Add(new TWCore.Diagnostics.Counters.Storages.ConsoleCountersStorage());
                 //var queue = GetConfig().GetRawClient();
                 //TWCore.Core.Counters.Storages.Add(new TWCore.Diagnostics.Counters.Storages.MessagingCountersStorage(queue));
 

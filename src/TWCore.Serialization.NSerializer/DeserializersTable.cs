@@ -87,6 +87,9 @@ namespace TWCore.Serialization.NSerializer
                 ReadValuesFromType[attr.ReturnType] = method;
             }
         }
+        private void ThrowIOException() => throw new IOException("The stream has been closed.");
+        private void ThrowFormatException() => throw new FormatException("The stream is not in NSerializer format.");
+        private void ThrowUnexpectedBytes(byte type) => throw new Exception($"Unexpected byte type: {type}.");
         #endregion
 
         #region Normal Deserializer
@@ -99,9 +102,9 @@ namespace TWCore.Serialization.NSerializer
                 Stream = stream;
                 var firstByte = stream.ReadByte();
                 if (firstByte == -1)
-                    throw new IOException("The stream has been closed.");
+                    ThrowIOException();
                 if (firstByte != DataBytesDefinition.Start)
-                    throw new FormatException("The stream is not in NSerializer format.");
+                    ThrowFormatException();
                 value = ReadValue(StreamReadByte());
                 while (StreamReadByte() != DataBytesDefinition.End) { }
             }
@@ -191,7 +194,7 @@ namespace TWCore.Serialization.NSerializer
             }
             else
             {
-                throw new Exception($"Unexpected byte type: {type}.");
+                ThrowUnexpectedBytes(type);
             }
             if (metadata.Descriptor.IsNSerializable)
             {

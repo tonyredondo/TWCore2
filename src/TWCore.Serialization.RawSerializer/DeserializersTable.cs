@@ -68,6 +68,10 @@ namespace TWCore.Serialization.RawSerializer
                 ReadValuesFromType[attr.ReturnType] = method;
             }
         }
+
+        private void ThrowIOException() => throw new IOException("The stream has been closed.");
+        private void ThrowFormatException() => throw new FormatException("The stream is not in RAWSerializer format.");
+        private void ThrowUnexpectedBytes(byte type) => throw new Exception($"Unexpected byte type: {type}.");
         #endregion
 
         #region Normal Serializer
@@ -80,9 +84,9 @@ namespace TWCore.Serialization.RawSerializer
                 Stream = stream;
                 var firstByte = stream.ReadByte();
                 if (firstByte == -1)
-                    throw new IOException("The stream has been closed.");
+                    ThrowIOException();
                 if (firstByte != DataBytesDefinition.Start)
-                    throw new FormatException("The stream is not in RAWSerializer format.");
+                    ThrowFormatException();
                 value = ReadValue(StreamReadByte());
                 while (StreamReadByte() != DataBytesDefinition.End) {}
             }
@@ -159,7 +163,7 @@ namespace TWCore.Serialization.RawSerializer
             }
             else
             {
-                throw new Exception($"Unexpected byte type: {type}.");
+                ThrowUnexpectedBytes(type);
             }
             if (metadata.Descriptor.IsNSerializable)
             {

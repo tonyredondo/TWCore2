@@ -61,7 +61,7 @@ namespace TWCore.Messaging.Redis
                 {
                     if (!Multiplexers.TryGetValue(Route, out connection))
                     {
-                        connection = await Extensions.InvokeWithRetry(() => ConnectionMultiplexer.ConnectAsync(Route), conn => !conn.IsConnected, 5000, int.MaxValue).ConfigureAwait(false);
+                        connection = await Extensions.InvokeWithRetry(route => ConnectionMultiplexer.ConnectAsync(route), conn => !conn.IsConnected, Route, 5000, int.MaxValue).ConfigureAwait(false);
                         Multiplexers.TryAdd(Route, connection);
                     }
                 }

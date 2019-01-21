@@ -60,7 +60,7 @@ namespace TWCore.Cache.Client.Redis
         /// <param name="category">Cache category</param>
         public RedisCacheClient(string configuration, string category = null)
         {
-            _connection = Extensions.InvokeWithRetry(() => ConnectionMultiplexer.Connect(configuration), 5000, int.MaxValue).WaitAsync();
+            _connection = Extensions.InvokeWithRetry(cfg => ConnectionMultiplexer.Connect(cfg), configuration, 5000, int.MaxValue).WaitAsync();
             _database = _connection.GetDatabase();
             _category = category ?? string.Empty;
         }

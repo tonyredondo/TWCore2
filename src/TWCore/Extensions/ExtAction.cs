@@ -771,10 +771,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<TResult> InvokeWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
         {
-            var exceptions = new Queue<Exception>();
+            Exception exception = null;
             for (var retry = 0; retry < retryCount; retry++)
             {
-                var hasException = false;
+                exception = null;
                 try
                 {
                     var result = await function().ConfigureAwait(false);
@@ -783,21 +783,67 @@ namespace TWCore
                 }
                 catch (Exception ex)
                 {
-                    hasException = true;
-                    exceptions.Enqueue(ex);
-                    if (exceptions.Count > 10)
-                        exceptions.Dequeue();
+                    exception = ex;
                 }
                 if (retry < retryCount - 1)
                 {
-                    if (hasException)
-                        Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exceptions.Last().Message, retryInterval);
+                    if (exception != null)
+                        Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exception.Message, retryInterval);
                     else
                         Core.Log.Warning("Retrying in {0}ms...", retryInterval);
                     await Task.Delay(retryInterval).ConfigureAwait(false);
                 }
             }
-            throw new AggregateException("The function couldn't be executed successfully", exceptions);
+            throw new Exception("The function couldn't be executed successfully", exception);
+        }
+        /// <summary>
+        /// Tries to run the function maximum times until no error and it returns true with a time interval
+        /// </summary>
+        /// <param name="function">Function to try</param>
+        /// <param name="shouldRetry">Predicate to check if the function needs to be executed again</param>
+        /// <param name="state">State object value</param>
+        /// <param name="retryInterval">Time between retries</param>
+        /// <param name="retryCount">Number max of retries</param>
+        /// <returns>Result of the function</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<TResult> InvokeWithRetry<TState, TResult>(this Func<TState, Task<TResult>> function, Predicate<TResult> shouldRetry, TState state, TimeSpan? retryInterval, int retryCount = 3)
+            => InvokeWithRetry(function, shouldRetry, state, (int?)retryInterval?.TotalMilliseconds ?? 1000, retryCount);
+        /// <summary>
+        /// Tries to run the function maximum times until no error and it returns true with a time interval
+        /// </summary>
+        /// <param name="function">Function to try</param>
+        /// <param name="shouldRetry">Predicate to check if the function needs to be executed again</param>
+        /// <param name="state">State object value</param>
+        /// <param name="retryInterval">Time between retries</param>
+        /// <param name="retryCount">Number max of retries</param>
+        /// <returns>Result of the function</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<TResult> InvokeWithRetry<TState, TResult>(this Func<TState, Task<TResult>> function, Predicate<TResult> shouldRetry, TState state, int retryInterval = 1000, int retryCount = 3)
+        {
+            Exception exception = null;
+            for (var retry = 0; retry < retryCount; retry++)
+            {
+                exception = null;
+                try
+                {
+                    var result = await function(state).ConfigureAwait(false);
+                    if (!shouldRetry(result))
+                        return result;
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+                if (retry < retryCount - 1)
+                {
+                    if (exception != null)
+                        Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exception.Message, retryInterval);
+                    else
+                        Core.Log.Warning("Retrying in {0}ms...", retryInterval);
+                    await Task.Delay(retryInterval).ConfigureAwait(false);
+                }
+            }
+            throw new Exception("The function couldn't be executed successfully", exception);
         }
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
@@ -808,7 +854,7 @@ namespace TWCore
         /// <returns>Result of the function</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Task<bool>> CreateWithRetry(this Func<Task<bool>> function, TimeSpan? retryInterval, int retryCount = 3)
-            => () => function.InvokeWithRetry(retryInterval, retryCount);
+            => () => InvokeWithRetry(function, retryInterval, retryCount);
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
         /// </summary>
@@ -818,7 +864,7 @@ namespace TWCore
         /// <returns>Result of the function</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Task<bool>> CreateWithRetry(this Func<Task<bool>> function, int retryInterval = 1000, int retryCount = 3)
-            => () => function.InvokeWithRetry(retryInterval, retryCount);
+            => () => InvokeWithRetry(function, retryInterval, retryCount);
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
         /// </summary>
@@ -829,7 +875,7 @@ namespace TWCore
         /// <returns>Result of the function</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Task<TResult>> CreateWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, TimeSpan? retryInterval, int retryCount = 3)
-            => () => function.InvokeWithRetry(shouldRetry, retryInterval, retryCount);
+            => () => InvokeWithRetry(function, shouldRetry, retryInterval, retryCount);
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
         /// </summary>
@@ -840,7 +886,7 @@ namespace TWCore
         /// <returns>Result of the function</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Task<TResult>> CreateWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
-            => () => function.InvokeWithRetry(shouldRetry, retryInterval, retryCount);
+            => () => InvokeWithRetry(function, shouldRetry, retryInterval, retryCount);
         #endregion
 
         #region Retry Action
@@ -906,6 +952,40 @@ namespace TWCore
                 try
                 {
                     return func();
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+                if (retry < retryCount - 1)
+                {
+                    if (string.IsNullOrEmpty(errorMessage))
+                        Core.Log.Warning("Error: {0}, Retrying in {2}ms...", exception.Message, retryInterval);
+                    else
+                        Core.Log.Warning("Error: {0} - {1}, Retrying in {2}ms...", errorMessage, exception.Message, retryInterval);
+                    await Task.Delay(retryInterval).ConfigureAwait(false);
+                }
+            }
+            throw new Exception("The function couldn't be executed successfully", exception);
+        }
+        /// <summary>
+        /// Tries to run the action maximum times until no error with a time interval
+        /// </summary>
+        /// <param name="func">Func to try</param>
+        /// <param name="state">Object state value</param>
+        /// <param name="retryInterval">Time between retries</param>
+        /// <param name="retryCount">Number max of retries</param>
+        /// <param name="errorMessage">Message to show in case of an exception</param>
+        /// <returns>Retry Task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<TResult> InvokeWithRetry<TState, TResult>(this Func<TState, TResult> func, TState state, int retryInterval = 1000, int retryCount = 3, string errorMessage = null)
+        {
+            Exception exception = null;
+            for (var retry = 0; retry < retryCount; retry++)
+            {
+                try
+                {
+                    return func(state);
                 }
                 catch (Exception ex)
                 {

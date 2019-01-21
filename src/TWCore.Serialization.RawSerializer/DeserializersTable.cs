@@ -832,7 +832,7 @@ namespace TWCore.Serialization.RawSerializer
         {
             var res = Stream.ReadByte();
             if (res == -1)
-                throw new IOException("The stream has been closed.");
+                ThrowIOException();
             return (byte)res;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1016,9 +1016,9 @@ namespace TWCore.Serialization.RawSerializer
                 Stream = stream;
                 var firstByte = stream.ReadByte();
                 if (firstByte == -1)
-                    throw new IOException("The stream has been closed.");
+                    ThrowIOException();
                 if (firstByte != DataBytesDefinition.Start)
-                    throw new FormatException("The stream is not in RAWSerializer format.");
+                    ThrowFormatException();
                 value = GenericReadValue(StreamReadByte());
                 while (StreamReadByte() != DataBytesDefinition.End) { }
             }
@@ -1078,7 +1078,7 @@ namespace TWCore.Serialization.RawSerializer
             }
             else
             {
-                throw new Exception($"Unexpected byte type: {type}.");
+                ThrowUnexpectedBytes(type);
             }
             return GenericFillObject(metadata);
 

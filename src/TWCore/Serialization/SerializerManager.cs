@@ -198,8 +198,21 @@ namespace TWCore.Serialization
         {
             if (mimeType is null)
                 return null;
-            var ser = Serializers.FirstOrDefault((i, mType) => 
-                i.MimeTypes.Any((m, mime) => string.Equals(m, mime, StringComparison.OrdinalIgnoreCase), mType), mimeType);
+            var serializers = Serializers;
+            ISerializer ser = null;
+            foreach(var i in serializers)
+            {
+                foreach(var mime in i.MimeTypes)
+                {
+                    if (string.Equals(mime, mimeType, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ser = i;
+                        break;
+                    }
+                }
+                if (!(ser is null))
+                    break;
+            }
             return ser?.DeepClone();
         }
         /// <summary>
@@ -221,8 +234,21 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ISerializer GetByFileExtension(string fileExtension)
         {
-            var ser = Serializers.FirstOrDefault((i, fExt) => 
-                i.Extensions.Any((s, ext) => string.Equals(s, ext, StringComparison.OrdinalIgnoreCase), fExt), fileExtension);
+            var serializers = Serializers;
+            ISerializer ser = null;
+            foreach (var i in serializers)
+            {
+                foreach (var ext in i.Extensions)
+                {
+                    if (string.Equals(ext, fileExtension, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ser = i;
+                        break;
+                    }
+                }
+                if (!(ser is null))
+                    break;
+            }
             return ser?.DeepClone();
         }
         /// <summary>

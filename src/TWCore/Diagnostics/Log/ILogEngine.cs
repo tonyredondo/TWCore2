@@ -446,6 +446,15 @@ namespace TWCore.Diagnostics.Log
         /// Write a LibDebug item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        /// <param name="arg4">Fourth argument</param>
+        void LibDebug<T1, T2, T3, T4>(string message, in T1 arg1, in T2 arg2, in T3 arg3, in T4 arg4);
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
         /// <param name="args">Arguments to bing with the pattern</param>
         void LibDebug(string message, params object[] args);
         #endregion
@@ -477,6 +486,15 @@ namespace TWCore.Diagnostics.Log
         /// <param name="arg2">Second argument</param>
         /// <param name="arg3">Third argument</param>
         void LibVerbose<T1, T2, T3>(string message, in T1 arg1, in T2 arg2, in T3 arg3);
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        /// <param name="arg4">Fourth argument</param>
+        void LibVerbose<T1, T2, T3, T4>(string message, in T1 arg1, in T2 arg2, in T3 arg3, in T4 arg4);
         /// <summary>
         /// Write a LibVerbose item into the log storages
         /// </summary>

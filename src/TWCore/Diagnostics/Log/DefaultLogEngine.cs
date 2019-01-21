@@ -869,6 +869,21 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.LibDebug))
                 WriteUnsafe(LogLevel.LibDebug, null, message, arg1, arg2, arg3);
         }
+        /// <summary>
+        /// Write a LibDebug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        /// <param name="arg4">Fourth argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibDebug<T1, T2, T3, T4>(string message, in T1 arg1, in T2 arg2, in T3 arg3, in T4 arg4)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibDebug))
+                WriteUnsafe(LogLevel.LibDebug, null, message, arg1, arg2, arg3, arg4);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Write a LibDebug item into the log storages
@@ -938,6 +953,21 @@ namespace TWCore.Diagnostics.Log
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.LibVerbose))
                 WriteUnsafe(LogLevel.LibVerbose, null, message, arg1, arg2, arg3);
+        }
+        /// <summary>
+        /// Write a LibVerbose item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        /// <param name="arg4">Fourth argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void LibVerbose<T1, T2, T3, T4>(string message, in T1 arg1, in T2 arg2, in T3 arg3, in T4 arg4)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.LibVerbose))
+                WriteUnsafe(LogLevel.LibVerbose, null, message, arg1, arg2, arg3, arg4);
         }
         /// <inheritdoc />
         /// <summary>
@@ -1724,6 +1754,13 @@ namespace TWCore.Diagnostics.Log
         {
             if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
             message = string.Format(message, arg1, arg2, arg3);
+            WriteUnsafeInternal(level, groupName, message, ex);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteUnsafe(LogLevel level, string groupName, string message, object arg1, object arg2, object arg3, object arg4, Exception ex = null)
+        {
+            if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
+            message = string.Format(message, arg1, arg2, arg3, arg4);
             WriteUnsafeInternal(level, groupName, message, ex);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

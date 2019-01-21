@@ -34,6 +34,7 @@ namespace TWCore.Messaging.Redis
         private static readonly AsyncLock _creationLock = new AsyncLock();
         private static readonly ConcurrentDictionary<string, ConnectionMultiplexer> Multiplexers = new ConcurrentDictionary<string, ConnectionMultiplexer>();
         private ISubscriber _subscriber;
+        private Action<RedisChannel, RedisValue> _currentHandler;
 
         /// <summary>
         /// Redis queue connection
@@ -77,11 +78,12 @@ namespace TWCore.Messaging.Redis
         {
             if (!(_subscriber is null))
             {
-                await _subscriber.UnsubscribeAllAsync().ConfigureAwait(false);
+                await _subscriber.UnsubscribeAsync(Name, _currentHandler).ConfigureAwait(false);
                 _subscriber = null;
             }
             _subscriber = await GetSubscriberAsync().ConfigureAwait(false);
-            await _subscriber.SubscribeAsync(Name, handler).ConfigureAwait(false);
+            _currentHandler = handler;
+            await _subscriber.SubscribeAsync(Name, _currentHandler).ConfigureAwait(false);
         }
         /// <summary>
         /// Unsubscribe all handlers
@@ -91,7 +93,7 @@ namespace TWCore.Messaging.Redis
         {
             if (!(_subscriber is null))
             {
-                await _subscriber.UnsubscribeAsync(Name).ConfigureAwait(false);
+                await _subscriber.UnsubscribeAsync(Name, _currentHandler).ConfigureAwait(false);
                 _subscriber = null;
             }
         }

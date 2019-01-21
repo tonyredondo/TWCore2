@@ -62,8 +62,25 @@ namespace TWCore.Messaging.Redis
         #region Nested Type
         private class Message
         {
+            private static readonly ObjectPool<Message> Pool = new ObjectPool<Message>(_ => new Message());
+
             public MultiArray<byte> Body;
             public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
+
+
+            private Message() { }
+
+            //
+            public static Message Rent()
+            {
+                return Pool.New();
+            }
+            public static void Free(Message item)
+            {
+                item.Body = MultiArray<byte>.Empty;
+                item.WaitHandler.Reset();
+                Pool.Store(item);
+            }
         }
         #endregion
 
@@ -110,13 +127,7 @@ namespace TWCore.Messaging.Redis
                         _receiverConnection.Name += "-" + Core.InstanceIdString;
                         Core.Log.InfoBasic("Using custom response queue: {0}", _receiverConnection.Name);
                     }
-                    _receiverConnection.SubscribeAsync((channel, value) =>
-                    {
-                        (var body, var correlationId) = GetFromMessageBody(value);
-                        var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
-                        rMsg.Body = body;
-                        rMsg.WaitHandler.Set();
-                    }).WaitAsync();
+                    _receiverConnection.SubscribeAsync(new Action<RedisChannel, RedisValue>(ProcessReceivedMessage)).WaitAsync();
                 }
             }
 
@@ -213,24 +224,34 @@ namespace TWCore.Messaging.Redis
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
-            var message = ReceivedMessages.GetOrAdd(correlationId, cId => new Message());
+            var message = ReceivedMessages.GetOrAdd(correlationId, cId => Message.Rent());
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
+            if (message.Body == MultiArray<byte>.Empty)
+                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+
+            Counters.IncrementTotalBytesReceived(message.Body.Count);
+            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2} at {3}ms", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
+            var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+            ReceivedMessages.TryRemove(correlationId, out _);
+            Message.Free(message);
+            return rs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ProcessReceivedMessage(RedisChannel channel, RedisValue value)
+        {
             try
             {
-                if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
-                    throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
-
-                if (message.Body == MultiArray<byte>.Empty)
-                    throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-                Counters.IncrementTotalBytesReceived(message.Body.Count);
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2} at {3}ms", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
-                var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-                return rs;
+                (var body, var correlationId) = GetFromMessageBody(value);
+                var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => Message.Rent());
+                rMsg.Body = body;
+                rMsg.WaitHandler.Set();
             }
-            finally
+            catch (Exception ex)
             {
-                ReceivedMessages.TryRemove(correlationId, out _);
+                Core.Log.Write(ex);
             }
         }
         #endregion

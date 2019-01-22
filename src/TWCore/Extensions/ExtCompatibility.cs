@@ -51,7 +51,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TValue GetOrAdd<TKey, TValue, TArg>(this ConcurrentDictionary<TKey, TValue> item, TKey key, Func<TKey, TArg, TValue> valueFactory, TArg factoryArgument)
         {
-            return item.GetOrAdd(key, mKey => valueFactory(key, factoryArgument));
+            return item.GetOrAdd(key, mKey => valueFactory(mKey, factoryArgument));
         }
         /// <summary>
         /// Reports the zero-based index of the first occurrence of the specified char 

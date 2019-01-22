@@ -40,6 +40,8 @@ namespace TWCore.Collections
     {
         #region Fields
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentDictionary<TKey, TimeoutStruct> _dictionary;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<TKey, TValue, TimeSpan, TimeoutStruct> _createDelegate;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<TimeOutEventArgs> _fireEventDelegate;
         #endregion
 
         #region Events
@@ -114,6 +116,8 @@ namespace TWCore.Collections
         public TimeoutDictionary()
         {
             _dictionary = new ConcurrentDictionary<TKey, TimeoutStruct>();
+            _createDelegate = Create;
+            _fireEventDelegate = FireOnItemTimeout;
         }
         /// <summary>
         /// Timeout dictionary, a dictionary which items are saved and deleted using a timeout
@@ -202,7 +206,7 @@ namespace TWCore.Collections
         /// <returns>The value for the key. This will be either the existing value for the key if the key is already in the dictionary, or the new value if the key was not in the dictionary.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetOrAdd(TKey key, TValue value, TimeSpan valueTimeout)
-            => _dictionary.GetOrAdd(key, k => Create(key, value, valueTimeout)).Value;
+            => _dictionary.GetOrAdd(key, (k, tuple) => tuple._createDelegate(k, tuple.value, tuple.valueTimeout), (value, valueTimeout, _createDelegate)).Value;
         /// <summary>
         /// Adds a key/value pair to the TimeoutDictionary by using the specified function, if the key does not already exist.
         /// </summary>
@@ -212,11 +216,11 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetOrAdd(TKey key, Func<TKey, (TValue, TimeSpan)> valueFactory)
         {
-            return _dictionary.GetOrAdd(key, k =>
+            return _dictionary.GetOrAdd(key, (k, tuple) =>
             {
-                var val = valueFactory(k);
-                return Create(k, val.Item1, val.Item2);
-            }).Value;
+                var val = tuple.valueFactory(k);
+                return tuple._createDelegate(k, val.Item1, val.Item2);
+            }, (valueFactory, _createDelegate)).Value;
         }
         /// <summary>
         /// Copies the key and value pairs stored in the TimeoutDictionary to a new array.
@@ -303,6 +307,11 @@ namespace TWCore.Collections
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void FireOnItemTimeout(TimeOutEventArgs args)
+        {
+            OnItemTimeout?.Invoke(this, args);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private TimeoutStruct Create(TKey key, TValue value, TimeSpan valueTimeout)
         {
             var cts = new CancellationTokenSource();
@@ -314,9 +323,10 @@ namespace TWCore.Collections
                     var objArray = (object[])obj;
                     var mDictio = (ConcurrentDictionary<TKey, TimeoutStruct>)objArray[0];
                     var mKey = (TKey)objArray[1];
-                    if (mDictio != null && mDictio.TryRemove(mKey, out var tVal))
-                        OnItemTimeout?.Invoke(this, new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });
-                }, new object[] { _dictionary, key }, CancellationToken.None,
+                    var fEvent = (Action<TimeOutEventArgs>)objArray[2];
+                    if (mDictio != null && mDictio.TryRemove(mKey, out var tVal) && fEvent != null)
+                        fEvent.Invoke(new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });
+                }, new object[] { _dictionary, key, _fireEventDelegate }, CancellationToken.None,
                         TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                         TaskScheduler.Default),
                 valueTimeout,

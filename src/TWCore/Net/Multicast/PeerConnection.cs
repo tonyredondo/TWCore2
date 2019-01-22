@@ -39,7 +39,7 @@ namespace TWCore.Net.Multicast
     /// </summary>
     public class PeerConnection
     {
-        private const int PacketSize = 8192;
+        private const int PacketSize = 1024;
         private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();
         private readonly TimeoutDictionary<(Guid, ushort), ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<(Guid, ushort), ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
@@ -393,12 +393,15 @@ namespace TWCore.Net.Multicast
 
         private async Task ReceiveSocketThreadAsync(UdpClient client)
         {
+            var tskArray = new Task[2];
+            tskArray[1] = _cancellationTokenTask;
             while (!_token.IsCancellationRequested)
             {
                 try
                 {
                     var clientTask = client.ReceiveAsync();
-                    await Task.WhenAny(clientTask, _cancellationTokenTask).ConfigureAwait(false);
+                    tskArray[0] = clientTask;
+                    await Task.WhenAny(tskArray).ConfigureAwait(false);
                     if (_token.IsCancellationRequested)
                         return;
                     var udpReceiveResult = clientTask.Result;

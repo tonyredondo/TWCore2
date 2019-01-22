@@ -193,7 +193,7 @@ namespace TWCore.Diagnostics.Log.Storages
             var tsks = _procTaskPool.New();
             for (var i = 0; i < cItems.Length; i++)
             {
-                if (cItems[i].Item2.HasFlag(item.Level))
+                if ((cItems[i].Item2 & item.Level) != 0)
                     tsks.Add(InternalWriteAsync(cItems[i].Item1, item));
             }
             await Task.WhenAll(tsks).ConfigureAwait(false);

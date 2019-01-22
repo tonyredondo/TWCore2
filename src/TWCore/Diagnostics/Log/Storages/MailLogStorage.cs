@@ -195,7 +195,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteAsync(ILogItem item)
         {
-            if (!LevelAllowed.HasFlag(item.Level) || item.Message.Contains("SMTPERROR")) return Task.CompletedTask;
+            if ((LevelAllowed & item.Level) == 0 || item.Message.Contains("SMTPERROR")) return Task.CompletedTask;
             lock (_buffer)
             {
                 _buffer.Add(new LogItem

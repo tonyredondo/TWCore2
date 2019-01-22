@@ -142,7 +142,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task WriteAsync(ILogItem item)
         {
-            if (!LevelAllowed.HasFlag(item.Level)) return;
+            if ((LevelAllowed & item.Level) == 0) return;
             var msg = string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), item.MachineName, item.EnvironmentName, item.ApplicationName, item.Message);
             if (item.Exception != null)
             {

@@ -250,8 +250,8 @@ namespace TWCore.Cache.Client
             {
                 var enableTimes = _currentEnabledItems;
                 var iWhere = onlyMemoryStorages ?
-                    enableTimes.Where((i, sMode) => i.Mode.HasFlag(sMode) && i.Storage.Type == StorageType.Memory, mode) :
-                    enableTimes.Where((i, sMode) => i.Mode.HasFlag(sMode), mode);
+                    enableTimes.Where((i, sMode) => (i.Mode & sMode) != 0 && i.Storage.Type == StorageType.Memory, mode) :
+                    enableTimes.Where((i, sMode) => (i.Mode & sMode) != 0, mode);
                 poolItems = iWhere.ToArray();
 
                 if (poolItems.Length > 0)

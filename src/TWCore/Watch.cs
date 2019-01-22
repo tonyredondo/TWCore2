@@ -287,7 +287,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void WorkerMethod(LogStatItem item)
             {
-                if (!Core.Log.MaxLogLevel.HasFlag(item.Level))
+                if ((Core.Log.MaxLogLevel & item.Level) == 0)
                 {
                     LogStatItemPool.Store(item);
                     return;

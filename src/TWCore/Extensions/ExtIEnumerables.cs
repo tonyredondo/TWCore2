@@ -3638,6 +3638,31 @@ namespace TWCore
                         yield return item;
             }
         }
+
+        /// <summary>
+        /// First Item of an array or a default if is null or empty.
+        /// </summary>
+        /// <typeparam name="TSource">Type of the source</typeparam>
+        /// <param name="array">Array instance</param>
+        /// <returns>Item value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TSource FirstItemOrDefault<TSource>(this TSource[] array)
+        {
+            if (array != null && array.Length > 0) return array[0];
+            return default;
+        }
+        /// <summary>
+        /// First Item of aList or a default if is null or empty.
+        /// </summary>
+        /// <typeparam name="TSource">Type of the source</typeparam>
+        /// <param name="list">List instance</param>
+        /// <returns>Item value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TSource FirstItemOrDefault<TSource>(this List<TSource> list)
+        {
+            if (list != null && list.Count > 0) return list[0];
+            return default;
+        }
         #endregion
     }
 }

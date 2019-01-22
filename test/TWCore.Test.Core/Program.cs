@@ -83,7 +83,7 @@ namespace TWCore.Test.Core
             public string Name { get; set; }
         }
 
-        private static async Task Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
 //

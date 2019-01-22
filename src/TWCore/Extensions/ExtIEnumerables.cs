@@ -640,7 +640,7 @@ namespace TWCore
             var lqType = linqExpression.GetType();
             if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
             Type ienumerable = null;
-            foreach(var i in lqType.AllInterfaces())
+            foreach (var i in lqType.AllInterfaces())
             {
                 if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
@@ -650,7 +650,7 @@ namespace TWCore
             }
             if (ienumerable is null) return linqExpression;
             var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments);
-            return (IList)Activator.CreateInstance(type, new object[] { linqExpression });
+            return (IEnumerable)Activator.CreateInstance(type, new object[] { linqExpression });
         }
         /// <summary>
         /// Enumerate the Linq expression to a IList
@@ -753,7 +753,15 @@ namespace TWCore
             if (enumerable is null) return null;
             var comparer = EqualityComparer<T>.Default;
             T defaultValue = default;
-            if (enumerable is IList<T> enumList)
+            if (enumerable is T[] enumArray)
+            {
+                var noDefaults = new List<T>();
+                for (var i = 0; i < enumArray.Length; i++)
+                    if (!comparer.Equals(enumArray[i], defaultValue))
+                        noDefaults.Add(enumArray[i]);
+                return noDefaults;
+            }
+            else if (enumerable is List<T> enumList)
             {
                 var noDefaults = new List<T>();
                 for (var i = 0; i < enumList.Count; i++)
@@ -1485,9 +1493,10 @@ namespace TWCore
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action)
         {
             if (enumerable is null || action is null) return enumerable;
-            var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
-            Parallel.ForEach(parallelEach, action);
-            return parallelEach;
+            //var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
+            Parallel.ForEach(enumerable, action);
+            //return parallelEach;
+            return enumerable;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -1500,10 +1509,11 @@ namespace TWCore
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
         {
             if (enumerable is null || action is null) return enumerable;
-            var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
+            //var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelSimpleExecutor<T>(action, token);
-            Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
-            return parallelEach;
+            Parallel.ForEach(enumerable, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
+            //return parallelEach;
+            return enumerable;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -1515,10 +1525,11 @@ namespace TWCore
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action)
         {
             if (enumerable is null || action is null) return enumerable;
-            var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
+            //var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelExecutor<T>(action);
-            Parallel.ForEach(parallelEach, new ParallelOptions(), executor.Execute);
-            return parallelEach;
+            Parallel.ForEach(enumerable, new ParallelOptions(), executor.Execute);
+            //return parallelEach;
+            return enumerable;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -1531,10 +1542,11 @@ namespace TWCore
         public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action, CancellationToken token)
         {
             if (enumerable is null || action is null) return enumerable;
-            var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
+            //var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelExecutor<T>(action, token);
-            Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
-            return parallelEach;
+            Parallel.ForEach(enumerable, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
+            //return parallelEach;
+            return enumerable;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -1547,10 +1559,11 @@ namespace TWCore
         public static IEnumerable<T> ParallelEach<T, TArg>(this IEnumerable<T> enumerable, Action<T, long, TArg> action, in TArg state)
         {
             if (enumerable is null || action is null) return enumerable;
-            var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
+            //var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelStateExecutor<T, TArg>(state, action);
-            Parallel.ForEach(parallelEach, new ParallelOptions(), executor.ExecuteWithState);
-            return parallelEach;
+            Parallel.ForEach(enumerable, new ParallelOptions(), executor.ExecuteWithState);
+            //return parallelEach;
+            return enumerable;
         }
         /// <summary>
         /// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -1564,10 +1577,10 @@ namespace TWCore
         public static IEnumerable<T> ParallelEach<T, TArg>(this IEnumerable<T> enumerable, Action<T, long, TArg> action, in TArg state, CancellationToken token)
         {
             if (enumerable is null || action is null) return enumerable;
-            var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
+            //var parallelEach = enumerable as IList<T> ?? enumerable.ToArray();
             var executor = new ParallelStateExecutor<T, TArg>(state, action, token);
-            Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithStateAndCancellationToken);
-            return parallelEach;
+            Parallel.ForEach(enumerable, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithStateAndCancellationToken);
+            return enumerable;
         }
 
         private readonly struct ParallelSimpleExecutor<T>
@@ -1667,9 +1680,15 @@ namespace TWCore
         public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs)
         {
             if (funcs is null) return null;
-            var funcsArray = funcs as IList<Func<T>> ?? funcs.ToArray();
-            var executor = new ParallelInvokeExecutor<T>(funcsArray.Count);
-            Parallel.ForEach(funcsArray, executor.Execute);
+            int? length = null;
+            if (funcs is Func<T>[] arrFunc)
+                length = arrFunc.Length;
+            else if (funcs is List<Func<T>> lstFunc)
+                length = lstFunc.Count;
+            if (!length.HasValue)
+                length = funcs.Count();
+            var executor = new ParallelInvokeExecutor<T>(length.Value);
+            Parallel.ForEach(funcs, executor.Execute);
             return executor.Response;
         }
         /// <summary>
@@ -1682,9 +1701,15 @@ namespace TWCore
         public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs, CancellationToken token)
         {
             if (funcs is null) return null;
-            var funcsArray = funcs as IList<Func<T>> ?? funcs.ToArray();
-            var executor = new ParallelInvokeExecutor<T>(funcsArray.Count, token);
-            Parallel.ForEach(funcsArray, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
+            int? length = null;
+            if (funcs is Func<T>[] arrFunc)
+                length = arrFunc.Length;
+            else if (funcs is List<Func<T>> lstFunc)
+                length = lstFunc.Count;
+            if (!length.HasValue)
+                length = funcs.Count();
+            var executor = new ParallelInvokeExecutor<T>(length.Value, token);
+            Parallel.ForEach(funcs, new ParallelOptions { CancellationToken = token }, executor.ExecuteWithCancellationToken);
             return executor.Response;
         }
 

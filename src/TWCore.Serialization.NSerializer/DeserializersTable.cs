@@ -87,9 +87,9 @@ namespace TWCore.Serialization.NSerializer
                 ReadValuesFromType[attr.ReturnType] = method;
             }
         }
-        private void ThrowIOException() => throw new IOException("The stream has been closed.");
-        private void ThrowFormatException() => throw new FormatException("The stream is not in NSerializer format.");
-        private void ThrowUnexpectedBytes(byte type) => throw new Exception($"Unexpected byte type: {type}.");
+        private static void ThrowIOException() => throw new IOException("The stream has been closed.");
+        private static void ThrowFormatException() => throw new FormatException("The stream is not in NSerializer format.");
+        private static void ThrowUnexpectedBytes(byte type) => throw new Exception($"Unexpected byte type: {type}.");
         #endregion
 
         #region Normal Deserializer

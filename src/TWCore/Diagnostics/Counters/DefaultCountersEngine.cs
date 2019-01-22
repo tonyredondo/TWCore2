@@ -82,7 +82,7 @@ namespace TWCore.Diagnostics.Counters
         #endregion
 
         #region Private Methods
-        private void ThrowInvalidCounter() => throw new InvalidCounterException();
+        private static void ThrowInvalidCounter() => throw new InvalidCounterException();
         #endregion
 
         #region Public Methods

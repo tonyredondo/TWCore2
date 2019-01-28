@@ -39,17 +39,17 @@ namespace TWCore.Tests
 
             if (info.Arguments?.Contains("/complex") == true)
             {
-                var file = "c:\\temp\\complexObject.nbin.deflate";
+                var file = "c:\\temp\\complex.test.nbin.gz";
                 var serializer = SerializerManager.GetByFileName(file);
 
-                AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
-                //AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.1" });
+                AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.2" });
+                //AssemblyResolverManager.RegisterDomain(new[] { @"C:\Repo\AgswGit\Travel\src\Flights\Engines\Services\Agsw.Travel.Flights.Engines.Service\bin\Release\netcoreapp2.2" });
 
                 object value = null;
                 try
                 {
-                    var rMsg = serializer.DeserializeFromFile<ResponseMessage>(file);
-                    value = rMsg.Body.GetValue();
+                    value = serializer.DeserializeFromFile<object>(file);
+                    //value = rMsg.Body.GetValue();
                 }
                 catch(DeserializerException exGO)
                 {
@@ -59,7 +59,6 @@ namespace TWCore.Tests
                     var val = exGO.Value["Products"][5];
                 }
                 
-
                 RunTestEx(value, 200, null);
                 GC.Collect();
                 GC.WaitForFullGCComplete();
@@ -194,22 +193,25 @@ namespace TWCore.Tests
             var vType = value?.GetType() ?? typeof(object);
             //var memStream = new MemoryStream();
             var memStream = new RecycleMemoryStream();
+            //var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
+            //var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
-            var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
 
             Core.Log.Warning("Running Serializer Test. Use Compressor = {0}", compressor?.EncodingType ?? "(no)");
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
+            //Core.Log.InfoBasic("\tNewtonsoft Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
+            //Core.Log.InfoBasic("\tUTF8Json Bytes Count: {0}", SerializerSizeProcess(value, vType, ut8JsonSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
             Core.Log.InfoBasic("\tRawBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, rawBinarySerializer));
-            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
             Core.Log.WriteEmptyLine();
             Console.ReadLine();
             Core.Log.InfoBasic("By Times: {0}", times);
+            //SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            //SerializerProcess("UTF8Json", value, vType, times, ut8JsonSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("RawBinary", value, vType, times, rawBinarySerializer, memStream);
-            SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             Console.ReadLine();
         }
 

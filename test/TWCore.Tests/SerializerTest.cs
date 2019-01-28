@@ -59,13 +59,13 @@ namespace TWCore.Tests
                     var val = exGO.Value["Products"][5];
                 }
                 
-                RunTestEx(value, 200, null);
-                GC.Collect();
-                GC.WaitForFullGCComplete();
-                RunTestEx(value, 200, new GZipCompressor());
-                GC.Collect();
-                GC.WaitForFullGCComplete();
-                RunTestEx(value, 200, new DeflateCompressor());
+                RunTestEx(value, 500, null);
+                //GC.Collect();
+                //GC.WaitForFullGCComplete();
+                //RunTestEx(value, 200, new GZipCompressor());
+                //GC.Collect();
+                //GC.WaitForFullGCComplete();
+                //RunTestEx(value, 200, new DeflateCompressor());
 
                 return;
             }

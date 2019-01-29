@@ -760,6 +760,9 @@ namespace TWCore
             }
             #endregion
 
+            private static void ThrowReadOnlyException() => throw new IOException("The stream is read only.");
+            private static void ThrowArgumentOutOfRangeException() => throw new ArgumentOutOfRangeException();
+
             /// <inheritdoc />
             /// <summary>
             /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
@@ -833,7 +836,7 @@ namespace TWCore
                     res = _source._count + offset;
                 }
                 if (res < 0 || res > _source._count)
-                    throw new ArgumentOutOfRangeException();
+                    ThrowArgumentOutOfRangeException();
                 Position = res;
                 return Position;
             }
@@ -844,7 +847,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public sealed override void Flush()
             {
-                throw new IOException("The stream is read only.");
+                ThrowReadOnlyException();
             }
             /// <inheritdoc />
             /// <summary>
@@ -854,7 +857,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public sealed override void SetLength(long value)
             {
-                throw new IOException("The stream is read only.");
+                ThrowReadOnlyException();
             }
             /// <inheritdoc />
             /// <summary>
@@ -866,7 +869,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public sealed override void Write(byte[] buffer, int offset, int count)
             {
-                throw new IOException("The stream is read only.");
+                ThrowReadOnlyException();
             }
         }
 

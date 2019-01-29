@@ -118,6 +118,15 @@ namespace TWCore.Net.RPC.Client
         }
         #endregion
 
+        #region Exceptions
+        private static void ThrowArgumentException() => throw new ArgumentException("The type of the dynamic proxy should be an interface.");
+        private static void ThrowNotImplementedException() => throw new NotImplementedException("The server doesn't have an implementation for this Type.");
+        private static void ThrowResponseNullException() => throw new Exception("RPC Response is null.");
+        private static void ThrowSerializableException(SerializableException se) => throw se.GetException();
+        private static void ThrowMethodDescriptionNull(string serviceName, string method, object[] args)
+            => throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
+        #endregion
+
         #region Create Proxy
         /// <summary>
         /// Creates a dynamic object to act as client proxy
@@ -136,7 +145,7 @@ namespace TWCore.Net.RPC.Client
         public async Task<DynamicProxy> CreateDynamicProxyAsync(Type interfaceType)
         {
             if (!interfaceType.IsInterface)
-                throw new ArgumentException("The type of the dynamic proxy should be an interface.");
+                ThrowArgumentException();
             await InitTransportAsync().ConfigureAwait(false);
             Transport.Descriptors = Descriptors;
             if (Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
@@ -147,7 +156,7 @@ namespace TWCore.Net.RPC.Client
                 Descriptors.Add(descriptor);
             }
             else
-                throw new NotImplementedException("The server doesn't have an implementation for this Type.");
+                ThrowNotImplementedException();
             return new DynamicProxy(this, descriptor);
         }
         /// <summary>
@@ -161,7 +170,7 @@ namespace TWCore.Net.RPC.Client
             var typeInterfaces = typeof(T).GetInterfaces();
             var typeInterface = typeInterfaces.FirstOrDefault(i => i != typeof(IDisposable) && i != typeof(IEnumerable<>) && i != typeof(IDictionary<,>));
             if (typeInterface is null)
-                throw new ArgumentException("The type of the proxy should implement a service interface.");
+                ThrowArgumentException();
             var rpcClient = new T();
             await InitTransportAsync().ConfigureAwait(false);
             Transport.Descriptors = Descriptors;
@@ -173,7 +182,7 @@ namespace TWCore.Net.RPC.Client
                     Descriptors.Add(descriptor);
                 }
                 else
-                    throw new NotImplementedException("The server doesn't have an implementation for this Type.");
+                    ThrowNotImplementedException();
             }
             rpcClient.SetClient(this, descriptor.Name);
             return rpcClient;
@@ -210,9 +219,9 @@ namespace TWCore.Net.RPC.Client
             var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return response.ReturnValue;
         }
 
@@ -247,9 +256,9 @@ namespace TWCore.Net.RPC.Client
             var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return response.ReturnValue;
         }
         #endregion
@@ -394,9 +403,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs1Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -426,9 +435,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs2Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -462,9 +471,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs3Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -502,9 +511,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs4Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -546,9 +555,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs5Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
 
@@ -571,9 +580,9 @@ namespace TWCore.Net.RPC.Client
                 await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
             RPCRequestMessage.Store(request);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -597,9 +606,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs1Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -625,9 +634,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs2Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -655,9 +664,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs3Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -687,9 +696,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs4Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         /// <summary>
@@ -721,9 +730,9 @@ namespace TWCore.Net.RPC.Client
             RPCRequestMessage.Store(request);
             ServiceInvokeArgs5Pool.Store(arrayArgs);
             if (response is null)
-                throw new Exception("RPC Response is null.");
+                ThrowResponseNullException();
             if (response.Exception != null)
-                throw response.Exception.GetException();
+                ThrowSerializableException(response.Exception);
             return (TReturn)response.ReturnValue;
         }
         #endregion
@@ -807,7 +816,7 @@ namespace TWCore.Net.RPC.Client
             }
             var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), _getMethodDescriptorDelegate);
             if (mDesc is null)
-                throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
+                ThrowMethodDescriptionNull(serviceName, method, args);
 
             if (mDesc.Parameters?.Length == 1 && (args is null || args.Length == 0))
                 args = _nullItemArgs;

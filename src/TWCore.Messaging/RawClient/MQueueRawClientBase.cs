@@ -106,6 +106,10 @@ namespace TWCore.Messaging.RawClient
         }
         #endregion
 
+        #region Private Statics
+        private static void ThrowSendOnlyException() => throw new Exception("You can't receive data from this client. This client is configured only to send data.");
+        #endregion
+
         #region Public Methods
         /// <inheritdoc />
         /// <summary>
@@ -246,8 +250,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<byte[]> ReceiveBytesAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (SendOnly)
-                throw new Exception("You can't receive data from this client. This client is configured only to send data.");
+            if (SendOnly) ThrowSendOnlyException();
             var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (bytes is null) return null;
 

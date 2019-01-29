@@ -118,6 +118,11 @@ namespace TWCore.Messaging.Client
         }
         #endregion
 
+        #region Private Statics
+        private static void ThrowSendOnlyException() => throw new Exception("You can't receive data from this client. This client is configured only to send data.");
+        #endregion
+
+
         #region Public Methods
         /// <inheritdoc />
         /// <summary>
@@ -249,8 +254,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (SendOnly)
-                throw new Exception("You can't receive data from this client. This client is configured only to send data.");
+            if (SendOnly) ThrowSendOnlyException();
             var disposeResponse = true;
             var rsMsg = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (rsMsg is null) return default;
@@ -280,7 +284,7 @@ namespace TWCore.Messaging.Client
             {
                 Core.Log.Write(ex);
             }
-            if (EnableCompleteMessageCache && res != null)
+            if (EnableCompleteMessageCache && res != default)
                 _receivedMessagesCache.TryAdd(res, rsMsg);
             else if (disposeResponse)
                 rsMsg.Body.Dispose();

@@ -129,7 +129,7 @@ namespace TWCore.Messaging.NATS
                         _senders.Add((queue, connection));
                     }
                 }
-                if (_clientQueues?.RecvQueue != null)
+                if (_clientQueues?.RecvQueue != null && !SendOnly)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (string.IsNullOrEmpty(_receiverConnection.Route))

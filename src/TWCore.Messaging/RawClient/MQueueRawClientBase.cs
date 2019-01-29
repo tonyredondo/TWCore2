@@ -40,6 +40,10 @@ namespace TWCore.Messaging.RawClient
         /// Counters
         /// </summary>
         protected MQRawClientCounters Counters;
+        /// <summary>
+        /// Send only
+        /// </summary>
+        protected bool SendOnly;
 
         #region Properties
         /// <inheritdoc />
@@ -108,14 +112,17 @@ namespace TWCore.Messaging.RawClient
         /// Initialize client with the configuration
         /// </summary>
         /// <param name="config">Message queue client configuration</param>
+        /// <param name="sendOnly">Client send only</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(MQPairConfig config)
+        public void Init(MQPairConfig config, bool sendOnly)
         {
             if (config is null) return;
-            Config = config;
 
+            Config = config;
             Name = Config.Name;
+            SendOnly = sendOnly;
             Counters = new MQRawClientCounters(Name, Config.IgnoreClientCounters);
+
             SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
             if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
                 SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.RequestOptions?.CompressorEncodingType);
@@ -239,6 +246,8 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<byte[]> ReceiveBytesAsync(Guid correlationId, CancellationToken cancellationToken)
         {
+            if (SendOnly)
+                throw new Exception("You can't receive data from this client. This client is configured only to send data.");
             var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (bytes is null) return null;
 

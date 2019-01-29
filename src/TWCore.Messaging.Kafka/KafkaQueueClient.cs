@@ -111,7 +111,7 @@ namespace TWCore.Messaging.Kafka
                         _senders.Add((queue, connection));
                     }
                 }
-                if (_clientQueues?.RecvQueue != null)
+                if (_clientQueues?.RecvQueue != null && !SendOnly)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
 

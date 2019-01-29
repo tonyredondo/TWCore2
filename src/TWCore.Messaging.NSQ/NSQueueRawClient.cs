@@ -123,7 +123,7 @@ namespace TWCore.Messaging.NSQ
                         _senders.Add((queue, new Producer(queue.Route)));
                     }
                 }
-                if (_clientQueues?.RecvQueue != null)
+                if (_clientQueues?.RecvQueue != null && !SendOnly)
                 {
                     _receiverConnection = _clientQueues.RecvQueue;
                     var rcvName = _receiverConnection.Name;

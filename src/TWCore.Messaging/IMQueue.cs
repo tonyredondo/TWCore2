@@ -45,13 +45,5 @@ namespace TWCore.Messaging
         /// </summary>
         MQPairConfig Config { get; }
         #endregion
-
-        #region Methods
-        /// <summary>
-        /// Initialize client with the configuration
-        /// </summary>
-        /// <param name="config">Message queue client configuration</param>
-        void Init(MQPairConfig config);
-        #endregion
     }
 }

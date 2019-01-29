@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Messaging.Configuration;
 using TWCore.Threading;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMemberInSuper.Global
@@ -44,6 +45,15 @@ namespace TWCore.Messaging.Client
         /// Events that fires when a response message is received
         /// </summary>
         AsyncEvent<ResponseReceivedEventArgs> OnResponseReceived { get; set; }
+        #endregion
+
+        #region Methods
+        /// <summary>
+        /// Initialize client with the configuration
+        /// </summary>
+        /// <param name="config">Message queue client configuration</param>
+        /// <param name="sendOnly">Client send only</param>
+        void Init(MQPairConfig config, bool sendOnly);
         #endregion
 
         #region Async Methods

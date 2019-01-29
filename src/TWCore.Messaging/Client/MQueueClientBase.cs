@@ -43,6 +43,10 @@ namespace TWCore.Messaging.Client
         /// Counters
         /// </summary>
         protected MQClientCounters Counters;
+        /// <summary>
+        /// Send only
+        /// </summary>
+        protected bool SendOnly;
 
         #region Properties
         /// <inheritdoc />
@@ -120,13 +124,14 @@ namespace TWCore.Messaging.Client
         /// Initialize client with the configuration
         /// </summary>
         /// <param name="config">Message queue client configuration</param>
+        /// <param name="sendOnly">Client send only</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(MQPairConfig config)
+        public void Init(MQPairConfig config, bool sendOnly)
         {
             if (config is null) return;
 
             Config = config;
-
+            SendOnly = sendOnly;
             Name = Config.Name;
             Counters = new MQClientCounters(Name, Config.IgnoreClientCounters);
 
@@ -244,6 +249,8 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
+            if (SendOnly)
+                throw new Exception("You can't receive data from this client. This client is configured only to send data.");
             var disposeResponse = true;
             var rsMsg = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (rsMsg is null) return default;

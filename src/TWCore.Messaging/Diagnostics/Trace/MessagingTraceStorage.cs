@@ -131,7 +131,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                 Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
                 if (_queueClient is null)
                 {
-                    _queueClient = Core.Services.GetQueueRawClient(_queueName);
+                    _queueClient = Core.Services.GetQueueRawClient(_queueName, true);
                     Core.Status.AttachChild(_queueClient, this);
                 }
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();

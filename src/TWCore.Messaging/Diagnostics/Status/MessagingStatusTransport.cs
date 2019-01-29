@@ -83,7 +83,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
                 if (_queueClient is null)
                 {
-                    _queueClient = Core.Services.GetQueueRawClient(_queueName);
+                    _queueClient = Core.Services.GetQueueRawClient(_queueName, true);
                     Core.Status.AttachChild(_queueClient, this);
                 }
                 _queueClient.SendAsync(statusData).WaitAndResults();

@@ -119,7 +119,7 @@ namespace TWCore.Messaging.Redis
                         _senders.Add(redisConnection);
                     }
                 }
-                if (_clientQueues?.RecvQueue != null)
+                if (_clientQueues?.RecvQueue != null && !SendOnly)
                 {
                     _receiverConnection = new RedisMQConnection(_clientQueues.RecvQueue);
                     if (!UseSingleResponseQueue)

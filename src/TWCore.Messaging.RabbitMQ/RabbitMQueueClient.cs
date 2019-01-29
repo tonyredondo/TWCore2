@@ -133,7 +133,7 @@ namespace TWCore.Messaging.RabbitMQ
                         }
                     }
 
-                    if (_clientQueues.RecvQueue != null)
+                    if (_clientQueues.RecvQueue != null && !SendOnly)
                         _receiver = new RabbitMQueue(_clientQueues.RecvQueue);
                 }
                 if (_senderOptions is null) throw new Exception("Client Sender Options is Null.");

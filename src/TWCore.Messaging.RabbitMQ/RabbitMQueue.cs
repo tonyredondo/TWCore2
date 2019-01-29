@@ -67,7 +67,7 @@ namespace TWCore.Messaging.RabbitMQ
             Parameters = queue.Parameters ?? new KeyValueCollection();
             ExchangeName = Parameters[nameof(ExchangeName)];
             ExchangeType = Parameters[nameof(ExchangeType)];
-            Durable = Parameters[nameof(Durable)].ParseTo(true);
+            Durable = Parameters[nameof(Durable)].ParseTo(false);
             _internalConnection = InternalConnection;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,7 +141,17 @@ namespace TWCore.Messaging.RabbitMQ
         public void EnsureQueue()
         {
             if (!string.IsNullOrEmpty(Name))
-                Channel.QueueDeclare(Name, Durable, false, false, null);
+            {
+                try
+                {
+                    Channel.QueueDeclare(Name, Durable, false, false, null);
+                }
+                catch(Exception ex)
+                {
+                    Core.Log.Write(ex);
+                    throw;
+                }
+            }
         }
         /// <summary>
         /// Ensure Queue

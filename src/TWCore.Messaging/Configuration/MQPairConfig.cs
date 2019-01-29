@@ -97,14 +97,15 @@ namespace TWCore.Messaging.Configuration
         /// <summary>
         /// Gets the Queue Client from the configuration
         /// </summary>
+        /// <param name="sendOnly">Send only client</param>
         /// <returns>IMQueueClient instance</returns>
-        public IMQueueClient GetClient()
+        public IMQueueClient GetClient(bool sendOnly = false)
         {
             var type = Types?.ClientType;
             if (type != null)
             {
                 var client = (IMQueueClient)Activator.CreateInstance(type);
-                client.Init(this);
+                client.Init(this, sendOnly);
                 return client;
             }
             var typeName = Types?.Client;
@@ -115,14 +116,15 @@ namespace TWCore.Messaging.Configuration
         /// <summary>
         /// Gets the Queue Raw Client from the configuration
         /// </summary>
+        /// <param name="sendOnly">Send only client</param>
         /// <returns>IMQueueClient instance</returns>
-        public IMQueueRawClient GetRawClient()
+        public IMQueueRawClient GetRawClient(bool sendOnly = false)
         {
             var type = RawTypes?.ClientType;
             if (type != null)
             {
                 var client = (IMQueueRawClient)Activator.CreateInstance(type);
-                client.Init(this);
+                client.Init(this, sendOnly);
                 return client;
             }
             var typeName = RawTypes?.Client;

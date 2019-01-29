@@ -43,7 +43,7 @@ namespace TWCore.Diagnostics.Counters.Storages
         /// <param name="queueName">Queue pair config name</param>
         public MessagingCountersStorage(string queueName)
         {
-            _queueClient = Core.Services.GetQueueRawClient(queueName);
+            _queueClient = Core.Services.GetQueueRawClient(queueName, true);
         }
         /// <summary>
         /// Messaging log storage

@@ -169,7 +169,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", logItemsToSend.Count + metadataToSend.Count);
                 if (_queueClient is null)
                 {
-                    _queueClient = Core.Services.GetQueueRawClient(_queueName);
+                    _queueClient = Core.Services.GetQueueRawClient(_queueName, true);
                     Core.Status.AttachChild(_queueClient, this);
                 }
 

@@ -132,7 +132,7 @@ namespace TWCore.Messaging.RabbitMQ
                             _senders.Add(rabbitQueue);
                         }
                     }
-                    if (_clientQueues.RecvQueue != null)
+                    if (_clientQueues.RecvQueue != null && !SendOnly)
                         _receiver = new RabbitMQueue(_clientQueues.RecvQueue);
                 }
 

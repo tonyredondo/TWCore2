@@ -55,6 +55,7 @@ namespace TWCore.Services
             queuesConfigFile = queuesConfigFile?.Replace("{EnvironmentName}", Core.EnvironmentName);
             queuesConfigFile = queuesConfigFile?.Replace("{MachineName}", Core.MachineName);
             queuesConfigFile = queuesConfigFile?.Replace("{ApplicationName}", Core.ApplicationName);
+            queuesConfigFile = queuesConfigFile?.Replace("{InstanceId}", Core.InstanceIdString);
             queuesConfigFile = Factory.ResolveLowLowFilePath(queuesConfigFile);
             Core.Log.InfoBasic("Loading queues configuration: {0}", queuesConfigFile);
 
@@ -88,13 +89,14 @@ namespace TWCore.Services
         /// </summary>
         /// <param name="services">CoreServices instance</param>
         /// <param name="queuePairName">Queue config pair name</param>
+        /// <param name="sendOnly">Send only</param>
         /// <returns>IMQueueClient instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IMQueueClient GetQueueClient(this CoreServices services, string queuePairName)
+        public static IMQueueClient GetQueueClient(this CoreServices services, string queuePairName, bool sendOnly = false)
         {
             Init();
             if (_queues?.Items?.Contains(queuePairName) == true)
-                return _queues.Items[queuePairName].GetClient();
+                return _queues.Items[queuePairName].GetClient(sendOnly);
             throw new NullReferenceException($"The Queue Pair Name: {queuePairName} not found in the configuration file.");
         }
         /// <summary>
@@ -102,13 +104,14 @@ namespace TWCore.Services
         /// </summary>
         /// <param name="services">CoreServices instance</param>
         /// <param name="queuePairName">Queue config pair name</param>
+        /// <param name="sendOnly">Send only</param>
         /// <returns>IMQueueClient instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IMQueueRawClient GetQueueRawClient(this CoreServices services, string queuePairName)
+        public static IMQueueRawClient GetQueueRawClient(this CoreServices services, string queuePairName, bool sendOnly = false)
         {
             Init();
             if (_queues?.Items?.Contains(queuePairName) == true)
-                return _queues.Items[queuePairName].GetRawClient();
+                return _queues.Items[queuePairName].GetRawClient(sendOnly);
             throw new NullReferenceException($"The Queue Pair Name: {queuePairName} not found in the configuration file.");
         }
         /// <summary>

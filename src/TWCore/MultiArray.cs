@@ -180,7 +180,7 @@ namespace TWCore
         {
             if (ListOfArrays is List<byte[]> arrays)
             {
-                foreach(var arr in arrays)
+                foreach (var arr in arrays)
                     SegmentPool.Return(arr);
                 ListOfArrays.Clear();
             }
@@ -313,8 +313,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
-            if (ListOfArrays is List<byte[]> arrays)
-                return MultiArrayBytesComparer.Instance.GetHashCode(new MultiArray<byte>(arrays, _offset, _count, _segmentsLength));
+            if (this is MultiArray<byte> thisByte)
+                return MultiArrayBytesComparer.Instance.GetHashCode(thisByte);
             var res = 0x2D2816FE;
             var step = (_count / 64) + 1;
             for (var i = 0; i < _count; i += step)
@@ -336,6 +336,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(MultiArray<T> obj)
         {
+            if (this is MultiArray<byte> thisByte && obj is MultiArray<byte> objByte)
+                return MultiArrayBytesComparer.Instance.Equals(thisByte, objByte);
             if (obj._offset != _offset) return false;
             if (obj._count != _count) return false;
             if (obj._segmentsLength != _segmentsLength) return false;

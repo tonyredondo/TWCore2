@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -46,9 +47,11 @@ namespace TWCore
                 if (startIndex == endIndex)
                 {
                     var length = endPosition - startPosition + 1;
+                    var xRow = new Span<byte>(xList[startIndex], startPosition, length);
+                    var yRow = new Span<byte>(yList[startIndex], startPosition, length);
+
+#if COMPATIBILITY
                     var remain = length % 8;
-                    var xRow = xList[startIndex].AsSpan(startPosition, length);
-                    var yRow = yList[startIndex].AsSpan(startPosition, length);
                     if (remain > 0)
                     {
                         var splitIndex = length - remain;
@@ -68,6 +71,11 @@ namespace TWCore
                             return false;
                     }
                     return true;
+#else
+                    var xVector = new Vector<byte>(xRow);
+                    var yVector = new Vector<byte>(yRow);
+                    return Vector.EqualsAll(xVector, yVector);
+#endif
                 }
                 #endregion
                 
@@ -87,6 +95,8 @@ namespace TWCore
                 {
                     Span<byte> xRow;
                     Span<byte> yRow;
+
+#if COMPATIBILITY
                     if (row == startIndex)
                     {
                         xRow = xList[row].AsSpan(startPosition, startLength);
@@ -144,6 +154,28 @@ namespace TWCore
                         if (cxRow[i] != cyRow[i])
                             return false;
                     }
+#else
+                    if (row == startIndex)
+                    {
+                        xRow = xList[row].AsSpan(startPosition, startLength);
+                        yRow = yList[row].AsSpan(startPosition, startLength);
+                    }
+                    else if (row == endIndex)
+                    {
+                        xRow = xList[row].AsSpan(0, endLength);
+                        yRow = yList[row].AsSpan(0, endLength);
+                    }
+                    else
+                    {
+                        xRow = xList[row].AsSpan(0, xSegmentsLength);
+                        yRow = yList[row].AsSpan(0, xSegmentsLength);
+                    }
+
+                    var xVector = new Vector<byte>(xRow);
+                    var yVector = new Vector<byte>(yRow);
+                    if (!Vector.EqualsAll(xVector, yVector))
+                        return false;
+#endif
                 }
                 return true;
                 #endregion

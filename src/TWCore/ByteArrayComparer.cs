@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -51,27 +52,36 @@ namespace TWCore
             if (x is null || y is null || x.Length != y.Length)
                 return false;
 
+            var length = x.Length;
             var xs = x.AsSpan();
-            var xy = y.AsSpan();
-            var remain = x.Length % 8;
+            var ys = y.AsSpan();
+
+#if COMPATIBILITY
+            var remain = length % 8;
             if (remain > 0)
             {
-                var ryRow = xs.Slice(xs.Length - remain);
-                var rxRow = xy.Slice(xy.Length - remain);
+                var splitIndex = length - remain;
+                var rxRow = xs.Slice(splitIndex);
+                var ryRow = ys.Slice(splitIndex);
                 for (var i = 0; i < rxRow.Length; i++)
                 {
                     if (rxRow[i] != ryRow[i])
                         return false;
                 }
             }
-            var xls = MemoryMarshal.Cast<byte, long>(xs);
-            var yls = MemoryMarshal.Cast<byte, long>(xs);
-            for (var i = 0; i < xls.Length; i++)
+            var cxRow = MemoryMarshal.Cast<byte, long>(xs);
+            var cyRow = MemoryMarshal.Cast<byte, long>(ys);
+            for (var i = 0; i < cyRow.Length; i++)
             {
-                if (xls[i] != yls[i])
+                if (cxRow[i] != cyRow[i])
                     return false;
             }
             return true;
+#else
+            var xVector = new Vector<byte>(xs);
+            var yVector = new Vector<byte>(ys);
+            return Vector.EqualsAll(xVector, yVector);
+#endif
         }
         /// <inheritdoc />
         /// <summary>

@@ -10,7 +10,7 @@ namespace TWCore
     /// <summary>
     /// Byte MultiArray Comparer
     /// </summary>
-    public class MultiArrayBytesComparer: IEqualityComparer<MultiArray<byte>>
+    public class MultiArrayBytesComparer : IEqualityComparer<MultiArray<byte>>
     {
         /// <summary>
         /// Byte MultiArray comparer instance
@@ -51,34 +51,22 @@ namespace TWCore
                     var yRow = new Span<byte>(yList[startIndex], startPosition, length);
 
 #if COMPATIBILITY
-                    var remain = length % 8;
-                    if (remain > 0)
-                    {
-                        var splitIndex = length - remain;
-                        var ryRow = yRow.Slice(splitIndex);
-                        var rxRow = xRow.Slice(splitIndex);
-                        for (var i = 0; i < rxRow.Length; i++)
-                        {
-                            if (rxRow[i] != ryRow[i])
-                                return false;
-                        }
-                    }
-                    var cxRow = MemoryMarshal.Cast<byte, long>(xRow);
-                    var cyRow = MemoryMarshal.Cast<byte, long>(yRow);
-                    for (var i = 0; i < cyRow.Length; i++)
-                    {
-                        if (cxRow[i] != cyRow[i])
-                            return false;
-                    }
-                    return true;
+                    return CompareSlow(xRow, yRow);
 #else
-                    var xVector = new Vector<byte>(xRow);
-                    var yVector = new Vector<byte>(yRow);
-                    return Vector.EqualsAll(xVector, yVector);
+                    if (length > 32)
+                    {
+                        var xVector = new Vector<byte>(xRow);
+                        var yVector = new Vector<byte>(yRow);
+                        return Vector.EqualsAll(xVector, yVector);
+                    }
+                    else
+                    {
+                        return CompareSlow(xRow, yRow);
+                    }
 #endif
                 }
                 #endregion
-                
+
                 #region List Comparison
 
                 var startLength = xSegmentsLength - startPosition;
@@ -86,7 +74,7 @@ namespace TWCore
 
                 var endLength = endPosition + 1;
                 var endRemain = endLength % 8;
-                
+
                 int segmentRemain = 0;
                 if (endIndex - startIndex > 1)
                     segmentRemain = xSegmentsLength % 8;
@@ -96,85 +84,38 @@ namespace TWCore
                     Span<byte> xRow;
                     Span<byte> yRow;
 
-#if COMPATIBILITY
                     if (row == startIndex)
                     {
                         xRow = xList[row].AsSpan(startPosition, startLength);
                         yRow = yList[row].AsSpan(startPosition, startLength);
-                        if (startRemain > 0)
-                        {
-                            var splitIndex = startLength - startRemain;
-                            var rxRow = xRow.Slice(splitIndex);
-                            var ryRow = yRow.Slice(splitIndex);
-                            for (var i = 0; i < rxRow.Length; i++)
-                            {
-                                if (rxRow[i] != ryRow[i])
-                                    return false;
-                            }
-                        }
                     }
                     else if (row == endIndex)
                     {
                         xRow = xList[row].AsSpan(0, endLength);
                         yRow = yList[row].AsSpan(0, endLength);
-                        if (endRemain > 0)
-                        {
-                            var splitIndex = endLength - endRemain;
-                            var rxRow = xRow.Slice(splitIndex);
-                            var ryRow = yRow.Slice(splitIndex);
-                            for (var i = 0; i < rxRow.Length; i++)
-                            {
-                                if (rxRow[i] != ryRow[i])
-                                    return false;
-                            }
-                        }
                     }
                     else
                     {
                         xRow = xList[row].AsSpan(0, xSegmentsLength);
                         yRow = yList[row].AsSpan(0, xSegmentsLength);
-                        if (segmentRemain > 0)
-                        {
-                            var splitIndex = xSegmentsLength - segmentRemain;
-                            var rxRow = xRow.Slice(splitIndex);
-                            var ryRow = yRow.Slice(splitIndex);
-                            for (var i = 0; i < rxRow.Length; i++)
-                            {
-                                if (rxRow[i] != ryRow[i])
-                                    return false;
-                            }
-                        }
                     }
 
-                    var cxRow = MemoryMarshal.Cast<byte, long>(xRow);
-                    var cyRow = MemoryMarshal.Cast<byte, long>(yRow);
 
-                    for (var i = 0; i < cyRow.Length; i++)
+#if COMPATIBILITY
+                    if (!CompareSlow(xRow, yRow))
+                            return false;
+#else
+                    if (xRow.Length > 32)
                     {
-                        if (cxRow[i] != cyRow[i])
+                        var xVector = new Vector<byte>(xRow);
+                        var yVector = new Vector<byte>(yRow);
+                        if (!Vector.EqualsAll(xVector, yVector))
                             return false;
                     }
-#else
-                    if (row == startIndex)
+                    else if (!CompareSlow(xRow, yRow))
                     {
-                        xRow = xList[row].AsSpan(startPosition, startLength);
-                        yRow = yList[row].AsSpan(startPosition, startLength);
-                    }
-                    else if (row == endIndex)
-                    {
-                        xRow = xList[row].AsSpan(0, endLength);
-                        yRow = yList[row].AsSpan(0, endLength);
-                    }
-                    else
-                    {
-                        xRow = xList[row].AsSpan(0, xSegmentsLength);
-                        yRow = yList[row].AsSpan(0, xSegmentsLength);
-                    }
-
-                    var xVector = new Vector<byte>(xRow);
-                    var yVector = new Vector<byte>(yRow);
-                    if (!Vector.EqualsAll(xVector, yVector))
                         return false;
+                    }
 #endif
                 }
                 return true;
@@ -187,6 +128,33 @@ namespace TWCore
             }
             return true;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool CompareSlow(Span<byte> xRow, Span<byte> yRow)
+        {
+            var length = xRow.Length;
+            var remain = length % 8;
+            if (remain > 0)
+            {
+                var splitIndex = length - remain;
+                var ryRow = yRow.Slice(splitIndex);
+                var rxRow = xRow.Slice(splitIndex);
+                for (var i = 0; i < rxRow.Length; i++)
+                {
+                    if (rxRow[i] != ryRow[i])
+                        return false;
+                }
+            }
+            var cxRow = MemoryMarshal.Cast<byte, long>(xRow);
+            var cyRow = MemoryMarshal.Cast<byte, long>(yRow);
+            for (var i = 0; i < cyRow.Length; i++)
+            {
+                if (cxRow[i] != cyRow[i])
+                    return false;
+            }
+            return true;
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// Returns a hash code for the specified object.
@@ -234,7 +202,7 @@ namespace TWCore
                     res ^= (int)cRow[i];
             }
             #endregion
-            
+
             return res;
         }
     }

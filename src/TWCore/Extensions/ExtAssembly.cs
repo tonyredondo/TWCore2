@@ -17,6 +17,7 @@ limitations under the License.
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable CheckNamespace
@@ -34,6 +35,7 @@ namespace TWCore
         /// <param name="assembly">Assembly with the embedded resources</param>
         /// <param name="resourceName">Resource name to extract</param>
         /// <returns>Stream object with the resource content</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Stream GetResourceStream(this Assembly assembly, string resourceName)
         {
             var currentAssembly = assembly;
@@ -50,6 +52,7 @@ namespace TWCore
         /// <param name="assembly">Assembly with the embedded resources</param>
         /// <param name="resourceName">Resource name to extract</param>
         /// <returns>String object value with the resource content</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetResourceString(this Assembly assembly, string resourceName) 
             => GetResourceStream(assembly, resourceName)?.TextReadToEnd();
     }

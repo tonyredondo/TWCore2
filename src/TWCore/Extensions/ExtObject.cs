@@ -68,6 +68,7 @@ namespace TWCore
         /// <param name="source">Object source</param>
         /// <param name="name">Property or field name</param>
         /// <returns>Property or field value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type GetMemberObjectType(this object source, string name)
         {
             if (source is null) return null;
@@ -88,6 +89,7 @@ namespace TWCore
         /// <param name="source">Object source</param>
         /// <param name="name">Property or field name</param>
         /// <returns>Property or field value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object GetMemberObjectValue(this object source, string name)
         {
             if (source is null) return null;
@@ -125,6 +127,7 @@ namespace TWCore
         /// <param name="source">Object source</param>
         /// <param name="name">Property or field name</param>
         /// <returns>Property or field value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetMemberValue<T>(this object source, string name)
         {
             var objRes = GetMemberObjectValue(source, name);
@@ -144,6 +147,7 @@ namespace TWCore
         /// <param name="source">Object source</param>
         /// <param name="name">Property or field name</param>
         /// <param name="value">Property or field value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetMemberObjectValue(this object source, string name, object value)
         {
             if (source is null) return;

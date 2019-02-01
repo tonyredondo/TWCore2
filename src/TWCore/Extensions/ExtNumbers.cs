@@ -42,6 +42,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Bytes value</param>
         /// <param name="text">Human redable bytes text</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadableBytes(long value, string text)
         {
             Value = value;

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TWCore.Collections;
 // ReSharper disable CheckNamespace
 
@@ -31,6 +32,7 @@ namespace TWCore
         /// </summary>
         /// <param name="item">Item to convert</param>
         /// <returns>KeyValue item instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static KeyValue<TK, TV> GetKeyValue<TK, TV>(this KeyValuePair<TK, TV> item) 
             => new KeyValue<TK, TV>(item.Key, item.Value);
         /// <summary>
@@ -38,6 +40,7 @@ namespace TWCore
         /// </summary>
         /// <param name="dictionary">Dictionary to convert</param>
         /// <returns>KeyValueCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static KeyValueCollection<TK, TV> GetKeyValueCollection<TK, TV>(this IDictionary<TK, TV> dictionary)
             => new KeyValueCollection<TK, TV>(dictionary);
         /// <summary>
@@ -46,6 +49,7 @@ namespace TWCore
         /// <param name="dict">The dictionary.</param>
         /// <param name="key">The key.</param>
         /// <returns>The new or existing value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TValue GetOrAddValue<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()
         {
             if (dict.TryGetValue(key, out var value))
@@ -63,6 +67,7 @@ namespace TWCore
         /// <param name="key">The key.</param>
         /// <param name="creator">Used to create a new value if necessary</param>
         /// <returns>The new or existing value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TValue GetOrAddValue<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, Func<TValue> creator)
         {
             if (dict.TryGetValue(key, out var value))
@@ -79,6 +84,7 @@ namespace TWCore
         /// <param name="dict">The dictionary.</param>
         /// <param name="key">The key.</param>
         /// <returns>The value, or a default value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
         {
             // specification for IDictionary<> requires that the returned value be the default if it fails
@@ -94,6 +100,7 @@ namespace TWCore
         /// <param name="key">The key.</param>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>The value, or a default value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue defaultValue)
             => dict.TryGetValue(key, out var value) ? value : defaultValue;
         /// <summary>
@@ -105,6 +112,7 @@ namespace TWCore
         /// <param name="key">The key.</param>
         /// <param name="defaultCreator">The default value generator.</param>
         /// <returns>The value, or a default value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, Func<TValue> defaultCreator)
             => dict.TryGetValue(key, out var value) ? value : defaultCreator();
     }

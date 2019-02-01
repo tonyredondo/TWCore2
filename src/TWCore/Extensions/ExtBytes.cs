@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.IO;
+using System.Runtime.CompilerServices;
 using TWCore.Compression;
 // ReSharper disable PossibleNullReferenceException
 
@@ -33,6 +34,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>GZipped byte array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> ToGzip(this byte[] value)
         {
             if (value.IsGzip())
@@ -45,6 +47,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>GZipped byte array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> ToGzip(this MultiArray<byte> value)
         {
             if (value.IsGzip())
@@ -58,6 +61,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">GZipped byte array</param>
         /// <returns>Decompressed array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> FromGzip(this byte[] value)
         {
             if (!value.IsGzip())
@@ -70,6 +74,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">GZipped byte array</param>
         /// <returns>Decompressed array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> FromGzip(this MultiArray<byte> value)
         {
             if (!value.IsGzip())
@@ -83,6 +88,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>Deflated byte array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> ToDeflate(this byte[] value)
             => ToDeflate(value);
         /// <summary>
@@ -90,6 +96,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Source byte array</param>
         /// <returns>Deflated byte array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> ToDeflate(this MultiArray<byte> value)
         {
             var deflateCompressor = CompressorManager.Get<DeflateCompressor>() ?? new DeflateCompressor();
@@ -101,6 +108,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Deflated byte array</param>
         /// <returns>Decompressed array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> FromDeflate(this byte[] value)
             => FromDeflate(value);
         /// <summary>
@@ -108,6 +116,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Deflated byte array</param>
         /// <returns>Decompressed array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MultiArray<byte> FromDeflate(this MultiArray<byte> value)
         {
             var deflateCompressor = CompressorManager.Get<DeflateCompressor>() ?? new DeflateCompressor();
@@ -119,6 +128,7 @@ namespace TWCore
         /// </summary>
         /// <param name="path">The file to write to.</param>
         /// <param name="value">The bytes to write to the file.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteToFile(this byte[] value, string path) 
             => File.WriteAllBytes(path, value);
         /// <summary>
@@ -126,6 +136,7 @@ namespace TWCore
         /// </summary>
         /// <param name="path">The file to write to.</param>
         /// <param name="value">The bytes to write to the file.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteToFile(this MultiArray<byte> value, string path)
         {
             using (var fs = File.OpenWrite(path))
@@ -137,6 +148,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Byte array</param>
         /// <returns>true if have the gzip magic number; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsGzip(this byte[] value)
         {
             if (value?.Length > 2)
@@ -148,6 +160,7 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Byte array</param>
         /// <returns>true if have the gzip magic number; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsGzip(this MultiArray<byte> value)
         {
             if (value.Count > 2)

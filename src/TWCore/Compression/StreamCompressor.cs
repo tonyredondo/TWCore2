@@ -24,34 +24,28 @@ namespace TWCore.Compression
 {
     /// <inheritdoc />
     /// <summary>
-    /// Stream Compressor base class
+    /// Stream Compressor class
     /// </summary>
-    public abstract class StreamCompressor : ICompressor
+    public class StreamCompressor<T> : ICompressor
+        where T : struct, IStreamCompressorImpl
     {
         private static readonly ReferencePool<RecycleMemoryStream> _recMemStream = ReferencePool<RecycleMemoryStream>.Shared;
+        private readonly T _implementation = default;
 
         #region Properties
         /// <inheritdoc />
         /// <summary>
         /// Compressor encoding type
         /// </summary>
-        public abstract string EncodingType { get; }
+        public string EncodingType => _implementation.EncodingType;
         /// <inheritdoc />
         /// <summary>
         /// Compressor file extension
         /// </summary>
-        public abstract string FileExtension { get; }
+        public string FileExtension => _implementation.FileExtension;
         #endregion
 
         #region Compression Methods
-        /// <summary>
-        /// Gets a new compression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream compression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract Stream GetCompressionStream(Stream source);
-
         /// <inheritdoc />
         /// <summary>
         /// Compress a stream into another stream
@@ -59,9 +53,9 @@ namespace TWCore.Compression
         /// <param name="source">Stream source</param>
         /// <param name="destination">Stream destination</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void Compress(Stream source, Stream destination)
+        public void Compress(Stream source, Stream destination)
         {
-            using (var compressed = GetCompressionStream(destination))
+            using (var compressed = _implementation.GetCompressionStream(destination))
                 source.CopyTo(compressed);
         }
         /// <inheritdoc />
@@ -71,9 +65,9 @@ namespace TWCore.Compression
         /// <param name="source">Stream source</param>
         /// <param name="destination">Stream destination</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task CompressAsync(Stream source, Stream destination)
+        public async Task CompressAsync(Stream source, Stream destination)
         {
-            using (var compressed = GetCompressionStream(destination))
+            using (var compressed = _implementation.GetCompressionStream(destination))
                 await source.CopyToAsync(compressed).ConfigureAwait(false);
         }
         /// <inheritdoc />
@@ -83,7 +77,7 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual MultiArray<byte> Compress(MultiArray<byte> source)
+        public MultiArray<byte> Compress(MultiArray<byte> source)
         {
             var msDes = _recMemStream.New();
             using (var msOrg = source.AsReadOnlyStream())
@@ -100,7 +94,7 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<MultiArray<byte>> CompressAsync(MultiArray<byte> source)
+        public async Task<MultiArray<byte>> CompressAsync(MultiArray<byte> source)
         {
             var msDes = _recMemStream.New();
             await CompressAsync(source.AsReadOnlyStream(), msDes).ConfigureAwait(false);
@@ -112,13 +106,6 @@ namespace TWCore.Compression
         #endregion
 
         #region Decompression Methods
-        /// <summary>
-        /// Get a new decompression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream decompression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract Stream GetDecompressionStream(Stream source);
         /// <inheritdoc />
         /// <summary>
         /// Decompress a stream into another stream
@@ -126,9 +113,9 @@ namespace TWCore.Compression
         /// <param name="source">Compressed stream source</param>
         /// <param name="destination">Stream destination</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void Decompress(Stream source, Stream destination)
+        public void Decompress(Stream source, Stream destination)
         {
-            using (var decompressed = GetDecompressionStream(source))
+            using (var decompressed = _implementation.GetDecompressionStream(source))
                 decompressed.CopyTo(destination);
         }
         /// <inheritdoc />
@@ -138,9 +125,9 @@ namespace TWCore.Compression
         /// <param name="source">Compressed stream source</param>
         /// <param name="destination">Stream destination</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task DecompressAsync(Stream source, Stream destination)
+        public async Task DecompressAsync(Stream source, Stream destination)
         {
-            using (var decompressed = GetDecompressionStream(source))
+            using (var decompressed = _implementation.GetDecompressionStream(source))
                 await decompressed.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <inheritdoc />
@@ -150,7 +137,7 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual MultiArray<byte> Decompress(MultiArray<byte> source)
+        public MultiArray<byte> Decompress(MultiArray<byte> source)
         {
             var msDes = _recMemStream.New();
             using (var msOrg = source.AsReadOnlyStream())
@@ -167,7 +154,7 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async Task<MultiArray<byte>> DecompressAsync(MultiArray<byte> source)
+        public async Task<MultiArray<byte>> DecompressAsync(MultiArray<byte> source)
         {
             var msDes = _recMemStream.New();
             using (var msOrg = source.AsReadOnlyStream())

@@ -24,33 +24,25 @@ namespace TWCore.Compression
     /// <summary>
     /// Implements a Gzip Compresor
     /// </summary>
-    public class GZipCompressor : StreamCompressor
+    public class GZipCompressor : StreamCompressor<GZipCompressor.Impl>
     {
         /// <inheritdoc />
-        /// <summary>
-        /// Compressor encoding type
-        /// </summary>
-        public override string EncodingType { get; } = "gzip";
-        /// <inheritdoc />
-        /// <summary>
-        /// Compressor file extension
-        /// </summary>
-        public override string FileExtension { get; } = ".gz";
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets a new compression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream compression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Stream GetCompressionStream(Stream source) => new GZipStream(source, CompressionLevel.Fastest, true);
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets a new decompression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream decompression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Stream GetDecompressionStream(Stream source) => new GZipStream(source, CompressionMode.Decompress, true);
+        public readonly struct Impl : IStreamCompressorImpl
+        {
+            /// <inheritdoc />
+            public string EncodingType => "gzip";
+            /// <inheritdoc />
+            public string FileExtension => ".gz";
+
+            /// <inheritdoc />
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stream GetCompressionStream(Stream source)
+                => new GZipStream(source, CompressionLevel.Fastest, true);
+
+            /// <inheritdoc />
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stream GetDecompressionStream(Stream source)
+                => new GZipStream(source, CompressionMode.Decompress, true);
+        }
     }
 }

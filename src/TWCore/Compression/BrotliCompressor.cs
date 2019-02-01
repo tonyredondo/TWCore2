@@ -26,34 +26,26 @@ namespace TWCore.Compression
     /// <summary>
     /// Implements a Brotli Compresor
     /// </summary>
-    public class BrotliCompressor : StreamCompressor
+    public class BrotliCompressor : StreamCompressor<BrotliCompressor.Impl>
     {
         /// <inheritdoc />
-        /// <summary>
-        /// Compressor encoding type
-        /// </summary>
-        public override string EncodingType { get; } = "br";
-        /// <inheritdoc />
-        /// <summary>
-        /// Compressor file extension
-        /// </summary>
-        public override string FileExtension { get; } = ".br";
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets a new compression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream compression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Stream GetCompressionStream(Stream source) => new BrotliStream(source, CompressionLevel.Fastest, true);
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets a new decompression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream decompression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Stream GetDecompressionStream(Stream source) => new BrotliStream(source, CompressionMode.Decompress, true);
+        public readonly struct Impl : IStreamCompressorImpl
+        {
+            /// <inheritdoc />
+            public string EncodingType => "br";
+            /// <inheritdoc />
+            public string FileExtension => ".br";
+
+            /// <inheritdoc />
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stream GetCompressionStream(Stream source)
+                => new BrotliStream(source, CompressionLevel.Fastest, true);
+
+            /// <inheritdoc />
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stream GetDecompressionStream(Stream source)
+                => new BrotliStream(source, CompressionMode.Decompress, true);
+        }
     }
 #endif
 }

@@ -24,33 +24,25 @@ namespace TWCore.Compression
     /// <summary>
     /// Implements a Deflate Compressor
     /// </summary>
-    public class DeflateCompressor : StreamCompressor
+    public class DeflateCompressor : StreamCompressor<DeflateCompressor.Impl>
     {
         /// <inheritdoc />
-        /// <summary>
-        /// Compressor encoding type
-        /// </summary>
-        public override string EncodingType { get; } = "deflate";
-        /// <inheritdoc />
-        /// <summary>
-        /// Compressor file extension
-        /// </summary>
-        public override string FileExtension { get; } = ".deflate";
-        /// <inheritdoc />
-        /// <summary>
-        /// Creates a new compression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream compression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Stream GetCompressionStream(Stream source) => new DeflateStream(source, CompressionLevel.Fastest, true);
-        /// <inheritdoc />
-        /// <summary>
-        /// Creates a new decompression stream wrapper for the stream source
-        /// </summary>
-        /// <param name="source">Stream source</param>
-        /// <returns>Stream decompression wrapper</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Stream GetDecompressionStream(Stream source) => new DeflateStream(source, CompressionMode.Decompress, true);
+        public readonly struct Impl : IStreamCompressorImpl
+        {
+            /// <inheritdoc />
+            public string EncodingType => "deflate";
+            /// <inheritdoc />
+            public string FileExtension => ".deflate";
+
+            /// <inheritdoc />
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stream GetCompressionStream(Stream source)
+                => new DeflateStream(source, CompressionLevel.Fastest, true);
+
+            /// <inheritdoc />
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stream GetDecompressionStream(Stream source)
+                => new DeflateStream(source, CompressionMode.Decompress, true);
+        }
     }
 }

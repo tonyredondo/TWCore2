@@ -29,7 +29,7 @@ namespace TWCore.IO
         /// <summary>
         /// Maximum segment length
         /// </summary>
-        public const int SegmentLength = 1024;
+        public const int SegmentLength = 4096;
         private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
         private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ByteArrayListPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
 

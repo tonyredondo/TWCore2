@@ -59,7 +59,7 @@ namespace TWCore.Serialization.NSerializer
                     return Array.Empty<byte>();
                 case DataBytesDefinition.ByteArrayLength:
                     var buffer = new byte[StreamReadInt()];
-                    Stream.Read(buffer, 0, buffer.Length);
+                    Stream.ReadExact(buffer, 0, buffer.Length);
                     return buffer;
             }
             throw new InvalidOperationException($"Invalid type value. [{type}]");

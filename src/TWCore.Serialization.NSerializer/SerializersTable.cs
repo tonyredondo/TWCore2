@@ -1239,7 +1239,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[1];
             MemoryMarshal.Write(buffer, ref value);
-            Stream.Write(buffer, 0, 1);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteRefType(int refType)

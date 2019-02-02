@@ -1036,9 +1036,10 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefByte(byte type, byte value)
         {
-            _buffer[0] = type;
-            _buffer[1] = value;
-            Stream.Write(_buffer, 0, 2);
+            Span<byte> buffer = stackalloc byte[2];
+            buffer[0] = type;
+            buffer[1] = value;
+            Stream.Write(buffer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

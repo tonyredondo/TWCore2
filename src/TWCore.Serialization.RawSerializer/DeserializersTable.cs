@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using TWCore.Reflection;
 #pragma warning disable 1591
@@ -82,20 +83,30 @@ namespace TWCore.Serialization.RawSerializer
             try
             {
                 Stream = stream;
-                var firstByte = stream.ReadByte();
-                if (firstByte == -1)
-                    ThrowIOException();
-                if (firstByte != DataBytesDefinition.Start)
+                Span<byte> firstBuffer = stackalloc byte[2];
+                stream.Fill(firstBuffer);
+                if (firstBuffer[0] != DataBytesDefinition.Start)
                     ThrowFormatException();
-                value = ReadValue(StreamReadByte());
-                while (StreamReadByte() != DataBytesDefinition.End) {}
+                value = ReadValue(firstBuffer[1]);
+                if (firstBuffer[1] != DataBytesDefinition.ValueNull)
+                {
+                    while (StreamReadByte() != DataBytesDefinition.End) { }
+                }
             }
             catch (Exception ex)
             {
                 if (stream.CanSeek)
                 {
                     stream.Seek(0, SeekOrigin.Begin);
-                    var genericValue = (GenericObject)GenericObjectDeserialize(stream);
+                    GenericObject genericValue = null;
+                    try
+                    {
+                        genericValue = (GenericObject)GenericObjectDeserialize(stream);
+                    }
+                    catch
+                    {
+                        throw new DeserializerException(ex);
+                    }
                     throw new DeserializerException(ex, genericValue);
                 }
                 throw new DeserializerException(ex);
@@ -840,163 +851,90 @@ namespace TWCore.Serialization.RawSerializer
         {
             return (sbyte)Stream.ReadByte();
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ushort StreamReadUShort()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<ushort>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected int StreamReadInt()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<int>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected double StreamReadDouble()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<double>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected float StreamReadFloat()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<float>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long StreamReadLong()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<long>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ulong StreamReadULong()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<ulong>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected uint StreamReadUInt()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<uint>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected short StreamReadShort()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<short>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected char StreamReadChar()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return MemoryMarshal.Read<char>(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected decimal StreamReadDecimal()
+        {
+            Span<byte> buffer = stackalloc byte[16];
+            Stream.Fill(buffer);
+            var bits = new int[4];
+            for (var i = 0; i < 4; i++)
+                bits[i] = MemoryMarshal.Read<int>(buffer.Slice(i * 4, 4));
+            return new decimal(bits);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Guid StreamReadGuid()
+        {
+            Span<byte> buffer = stackalloc byte[16];
+            Stream.Fill(buffer);
 #if COMPATIBILITY
-        byte[] _buffer = new byte[16];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ushort StreamReadUShort()
-        {
-            Stream.ReadExact(_buffer, 0, 2);
-            return BitConverter.ToUInt16(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected int StreamReadInt()
-        {
-            Stream.ReadExact(_buffer, 0, 4);
-            return BitConverter.ToInt32(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected double StreamReadDouble()
-        {
-            Stream.ReadExact(_buffer, 0, 8);
-            return BitConverter.ToDouble(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected float StreamReadFloat()
-        {
-            Stream.ReadExact(_buffer, 0, 4);
-            return BitConverter.ToSingle(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected long StreamReadLong()
-        {
-            Stream.ReadExact(_buffer, 0, 8);
-            return BitConverter.ToInt64(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ulong StreamReadULong()
-        {
-            Stream.ReadExact(_buffer, 0, 8);
-            return BitConverter.ToUInt64(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected uint StreamReadUInt()
-        {
-            Stream.ReadExact(_buffer, 0, 4);
-            return BitConverter.ToUInt32(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected short StreamReadShort()
-        {
-            Stream.ReadExact(_buffer, 0, 2);
-            return BitConverter.ToInt16(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected char StreamReadChar()
-        {
-            Stream.ReadExact(_buffer, 0, 2);
-            return BitConverter.ToChar(_buffer, 0);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected decimal StreamReadDecimal()
-        {
-            Stream.ReadExact(_buffer, 0, 16);
-            var bits = new int[4];
-            for (var i = 0; i < 4; i++)
-                bits[i] = BitConverter.ToInt32(_buffer, i * 4);
-            return new decimal(bits);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Guid StreamReadGuid()
-        {
-            Stream.ReadExact(_buffer, 0, 16);
-            return new Guid(_buffer.AsSpan(0, 16).ToArray());
-        }
-
+            return new Guid(buffer.ToArray());
 #else
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ushort StreamReadUShort()
-        {
-            Span<byte> buffer = stackalloc byte[2];
-            Stream.Fill(buffer);
-            return BitConverter.ToUInt16(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected int StreamReadInt()
-        {
-            Span<byte> buffer = stackalloc byte[4];
-            Stream.Fill(buffer);
-            return BitConverter.ToInt32(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected double StreamReadDouble()
-        {
-            Span<byte> buffer = stackalloc byte[8];
-            Stream.Fill(buffer);
-            return BitConverter.ToDouble(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected float StreamReadFloat()
-        {
-            Span<byte> buffer = stackalloc byte[4];
-            Stream.Fill(buffer);
-            return BitConverter.ToSingle(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected long StreamReadLong()
-        {
-            Span<byte> buffer = stackalloc byte[8];
-            Stream.Fill(buffer);
-            return BitConverter.ToInt64(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ulong StreamReadULong()
-        {
-            Span<byte> buffer = stackalloc byte[8];
-            Stream.Fill(buffer);
-            return BitConverter.ToUInt64(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected uint StreamReadUInt()
-        {
-            Span<byte> buffer = stackalloc byte[4];
-            Stream.Fill(buffer);
-            return BitConverter.ToUInt32(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected short StreamReadShort()
-        {
-            Span<byte> buffer = stackalloc byte[2];
-            Stream.Fill(buffer);
-            return BitConverter.ToInt16(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected char StreamReadChar()
-        {
-            Span<byte> buffer = stackalloc byte[2];
-            Stream.Fill(buffer);
-            return BitConverter.ToChar(buffer);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected decimal StreamReadDecimal()
-        {
-            Span<byte> buffer = stackalloc byte[16];
-            Stream.Fill(buffer);
-            var bits = new int[4];
-            for (var i = 0; i < 4; i++)
-                bits[i] = BitConverter.ToInt32(buffer.Slice(i * 4, 4));
-            return new decimal(bits);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Guid StreamReadGuid()
-        {
-            Span<byte> buffer = stackalloc byte[16];
-            Stream.Fill(buffer);
             return new Guid(buffer);
-        }
-
 #endif
+        }
 
         #endregion
 
@@ -1014,13 +952,15 @@ namespace TWCore.Serialization.RawSerializer
             try
             {
                 Stream = stream;
-                var firstByte = stream.ReadByte();
-                if (firstByte == -1)
-                    ThrowIOException();
-                if (firstByte != DataBytesDefinition.Start)
+                Span<byte> firstBuffer = stackalloc byte[2];
+                stream.Fill(firstBuffer);
+                if (firstBuffer[0] != DataBytesDefinition.Start)
                     ThrowFormatException();
-                value = GenericReadValue(StreamReadByte());
-                while (StreamReadByte() != DataBytesDefinition.End) { }
+                value = GenericReadValue(firstBuffer[1]);
+                if (firstBuffer[1] != DataBytesDefinition.ValueNull)
+                {
+                    while (StreamReadByte() != DataBytesDefinition.End) { }
+                }
             }
             finally
             {

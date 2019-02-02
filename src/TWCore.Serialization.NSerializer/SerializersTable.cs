@@ -1076,17 +1076,19 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefByte(byte type, byte value)
         {
-            _buffer[0] = type;
-            _buffer[1] = value;
-            Stream.Write(_buffer, 0, 2);
+            Span<byte> buffer = stackalloc byte[2];
+            buffer[0] = type;
+            buffer[1] = value;
+            Stream.Write(buffer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefUshort(byte type, ushort value)
         {
-            _buffer[0] = type;
-            MemoryMarshal.Write(_buffer.AsSpan(1), ref value);
-            Stream.Write(_buffer, 0, 3);
+            Span<byte> buffer = stackalloc byte[3];
+            buffer[0] = type;
+            MemoryMarshal.Write(buffer.Slice(1), ref value);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDefInt(byte type, int value)

@@ -1194,7 +1194,7 @@ namespace TWCore.Serialization.NSerializer
         protected void WriteLong(long value)
         {
             Span<byte> buffer = stackalloc byte[8];
-            MemoryMarshal.Write(buffer, rf value);
+            MemoryMarshal.Write(buffer, ref value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

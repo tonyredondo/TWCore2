@@ -652,6 +652,8 @@ namespace TWCore.Cache.Storages.IO
             //await SaveMetadataAsync().ConfigureAwait(false);
             _disposedValue = true;
             Core.Log.InfoBasic("Saving Journal on: {0}", BasePath);
+            while(_removingExpiredItems != 0 || _savingMetadata != 0)
+                await Task.Delay(100).ConfigureAwait(false);
             if (_transactionStream.CanWrite)
             {
                 await _transactionStream.FlushAsync().ConfigureAwait(false);

@@ -52,7 +52,7 @@ namespace TWCore.IO
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
             public int DropTimeFrequencyInSeconds => 120;
             public void DropAction(List<byte[]> value) { }
-            public List<byte[]> New() => new List<byte[]>(512);
+            public List<byte[]> New() => new List<byte[]>(1024);
             public void Reset(List<byte[]> value) => value.Clear();
             public int DropMaxSizeThreshold => 20;
             public int MaximumSize => 10000;

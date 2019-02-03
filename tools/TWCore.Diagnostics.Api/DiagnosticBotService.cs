@@ -74,6 +74,11 @@ namespace TWCore.Diagnostics.Api
 
         private void BindCommands()
         {
+            _engine.Commands.Add(msg => msg.Equals("hola", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                await bot.SendTextMessageAsync(message.Chat, ">>>Que tal? " + message.User.Name).ConfigureAwait(false);
+                return true;
+            });
             _engine.Commands.Add(msg => msg.Equals(".getenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 await bot.SendTextMessageAsync(message.Chat, ">>>The current environment is: " + _currentEnvironment).ConfigureAwait(false);

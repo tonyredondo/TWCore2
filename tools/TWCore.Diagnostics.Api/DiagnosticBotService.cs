@@ -30,6 +30,7 @@ namespace TWCore.Diagnostics.Api
 
         protected override IBotEngine GetBotEngine()
         {
+            Core.DebugMode = true;
             var settings = Core.GetSettings<BotSettings>();
             var slackTransport = new SlackBotTransport(settings.SlackToken);
             var botEngine = new BotEngine(slackTransport);
@@ -62,9 +63,10 @@ namespace TWCore.Diagnostics.Api
                 await bot.SendTextMessageAsync(message.Chat, $"Querying for counters for {_currentEnvironment}...").ConfigureAwait(false);
                 var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
                 await bot.SendTextMessageAsync(message.Chat, "Counters: ").ConfigureAwait(false);
-                foreach(var counter in counters)
+                foreach(var batch in counters.Batch(30))
                 {
-                    await bot.SendTextMessageAsync(message.Chat, counter.Category + "\\" + counter.Name).ConfigureAwait(false);
+                    var str = batch.Select(c => c.Category + "\\" + c.Name).Join("\n");
+                    await bot.SendTextMessageAsync(message.Chat, str).ConfigureAwait(false);
                 }
                 return true;
             });
@@ -74,7 +76,7 @@ namespace TWCore.Diagnostics.Api
 
         private class BotSettings : Settings.SettingsBase
         {
-            public string SlackToken { get; set; } = "xoxb-400093501237-540678655155-dD1UnI2esPsXfK5BmlNlBvqz";
+            public string SlackToken { get; set; } = "ZX9YXvB6hTwTmurR4QguFgZZ-551556876045-732105390004-bxox".Reverse();
             public string DefaultEnvironment { get; set; } = "Docker";
         }
     }

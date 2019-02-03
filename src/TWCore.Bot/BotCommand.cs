@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 
+using System.Threading.Tasks;
+
 namespace TWCore.Bot
 {
     /// <summary>
@@ -29,7 +31,7 @@ namespace TWCore.Bot
     /// <param name="bot">Bot engine instance</param>
     /// <param name="message">Bot received text message</param>
     /// <returns>True if the handler is not going to allow other handlers to check the message; otherwise false.</returns>
-    public delegate bool TextMessageHandler(IBotEngine bot, BotTextMessage message);
+    public delegate Task<bool> TextMessageHandlerAsync(IBotEngine bot, BotTextMessage message);
 
     /// <summary>
     /// Defines a command handler for bot incoming messages
@@ -43,6 +45,6 @@ namespace TWCore.Bot
         /// <summary>
         /// Command handler action
         /// </summary>
-        public TextMessageHandler Handler;
+        public TextMessageHandlerAsync Handler;
     }
 }

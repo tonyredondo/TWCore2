@@ -15,6 +15,9 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TWCore.Bot.Slack\TWCore.Bot.Slack.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Bot\TWCore.Bot.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging.RabbitMQ\TWCore.Messaging.RabbitMQ.csproj" />

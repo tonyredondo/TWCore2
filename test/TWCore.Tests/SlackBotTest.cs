@@ -27,50 +27,50 @@ namespace TWCore.Tests
             var slackTransport = new SlackBotTransport(token);
             var botEngine = new BotEngine(slackTransport);
             
-            botEngine.Commands.Add(msg => msg.StartsWith("Hello"), (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith("Hello"), async (bot, message) =>
             {
                 Core.Log.Warning(message.SerializeToJson());
 
-                bot.SendTextMessageAsync(message.Chat, "Message Received");
+                await bot.SendTextMessageAsync(message.Chat, "Message Received").ConfigureAwait(false);
                 
                 return true;
             });
 
-            botEngine.Commands.Add(msg => msg.StartsWith("Hola"), (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith("Hola"), async (bot, message) =>
             {
                 Core.Log.Warning(message.SerializeToJson());
 
-                bot.SendTextMessageAsync(message.Chat, "Hola que tal?");
+                await bot.SendTextMessageAsync(message.Chat, "Hola que tal?").ConfigureAwait(false);
 
                 return true;
             });
 
 
-            botEngine.Commands.Add(msg => msg.StartsWith(":track"), (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith(":track"), async (bot, message) =>
             {
                 Core.Log.Warning(message.SerializeToJson());
 
                 bot.TrackChat(message.Chat);
-                bot.SendTextMessageAsync(message.Chat, "Chat tracked.");
+                await bot.SendTextMessageAsync(message.Chat, "Chat tracked.").ConfigureAwait(false);
 
                 return true;
             });
 
-            botEngine.Commands.Add(msg => msg.StartsWith(":untrack"), (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith(":untrack"), async (bot, message) =>
             {
                 Core.Log.Warning(message.SerializeToJson());
 
                 bot.UnTrackChat(message.Chat);
-                bot.SendTextMessageAsync(message.Chat, "Chat untracked.");
+                await bot.SendTextMessageAsync(message.Chat, "Chat untracked.").ConfigureAwait(false);
 
                 return true;
             });
 
-            botEngine.Commands.Add(msg => msg.StartsWith(":hello"), (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith(":hello"), async (bot, message) =>
             {
                 Core.Log.Warning(message.SerializeToJson());
 
-                bot.SendTextMessageToTrackedChatsAsync("Hola todos.");
+                await bot.SendTextMessageToTrackedChatsAsync("Hola todos.").ConfigureAwait(false);
 
                 return true;
             });

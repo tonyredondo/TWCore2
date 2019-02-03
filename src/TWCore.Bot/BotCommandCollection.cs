@@ -31,7 +31,7 @@ namespace TWCore.Bot
         /// <param name="condition">Command condition</param>
         /// <param name="handler">Command handler action</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add(TextMessageHandlerCondition condition, TextMessageHandler handler)
+        public void Add(TextMessageHandlerCondition condition, TextMessageHandlerAsync handler)
             => Add(new BotCommand { Condition = condition, Handler = handler });
     }
 }

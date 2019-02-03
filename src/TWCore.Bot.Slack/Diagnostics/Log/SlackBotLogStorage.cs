@@ -88,21 +88,21 @@ namespace TWCore.Diagnostics.Log.Storages
 
             var header = string.Format("Machine Name: {0}\r\nApplication Name: {1}\r\n", Core.MachineName, Core.ApplicationDisplayName);
 
-            bEngine.Commands.Add(txt => txt.Trim().StartsWith("/TrackLog"), (api, msg) =>
+            bEngine.Commands.Add(txt => txt.Trim().StartsWith("/TrackLog"), async (api, msg) =>
             {
                 api.TrackChat(msg.Chat);
-                api.SendTextMessageAsync(msg.Chat, header + "Tracking");
+                await api.SendTextMessageAsync(msg.Chat, header + "Tracking").ConfigureAwait(false);
                 return true;
             });
-            bEngine.Commands.Add(txt => txt.Trim().StartsWith("/UntrackLog"), (api, msg) =>
+            bEngine.Commands.Add(txt => txt.Trim().StartsWith("/UntrackLog"), async (api, msg) =>
             {
                 api.TrackChat(msg.Chat);
-                api.SendTextMessageAsync(msg.Chat, header + "Untracked");
+                await api.SendTextMessageAsync(msg.Chat, header + "Untracked").ConfigureAwait(false);
                 return true;
             });
-            bEngine.Commands.Add(txt => txt.Trim().StartsWith("/HelloLog"), (api, msg) =>
+            bEngine.Commands.Add(txt => txt.Trim().StartsWith("/HelloLog"), async (api, msg) =>
             {
-                api.SendTextMessageAsync(msg.Chat, header + "Hello");
+                await api.SendTextMessageAsync(msg.Chat, header + "Hello").ConfigureAwait(false);
                 return true;
             });
 

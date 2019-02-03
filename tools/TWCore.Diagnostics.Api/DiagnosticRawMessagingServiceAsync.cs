@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Collections.Generic;
+using TWCore.Bot;
 using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;

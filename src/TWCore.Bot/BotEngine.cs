@@ -103,10 +103,10 @@ namespace TWCore.Bot
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrackChat(BotChat chat)
         {
-			if (chat is null) return false;
+            if (chat is null) return false;
             lock (TrackedChats)
             {
-				if (TrackedChats.Contains(chat.Id)) return false;
+                if (TrackedChats.Contains(chat.Id)) return false;
                 TrackedChats.Add(chat);
                 Core.Log.LibVerbose("Chat Tracked");
                 _counterTrackedChat.Increment();
@@ -123,10 +123,10 @@ namespace TWCore.Bot
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool UnTrackChat(BotChat chat)
         {
-			if (chat is null) return false;
+            if (chat is null) return false;
             lock (TrackedChats)
             {
-				if (!TrackedChats.Contains(chat.Id)) return false;
+                if (!TrackedChats.Contains(chat.Id)) return false;
                 TrackedChats.Remove(chat.Id);
                 Core.Log.LibVerbose("Chat UnTracked");
                 _counterTrackedChat.Decrement();
@@ -196,9 +196,9 @@ namespace TWCore.Bot
         /// <param name="parseMode">Message parse mode</param>
         /// <returns>Async task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task SendTextMessageAsync(BotChat chat, string message, MessageParseMode parseMode = MessageParseMode.Default)
+        public async Task SendTextMessageAsync(BotChat chat, string message, MessageParseMode parseMode = MessageParseMode.Default)
         {
-			if (!IsConnected) return;
+            if (!IsConnected) return;
             Core.Log.LibVerbose("Sending text message. ChatId = {0}, Message = {1}", chat?.Id, message);
             await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
             Core.Log.LibVerbose("Message sent.");
@@ -212,41 +212,41 @@ namespace TWCore.Bot
         /// <param name="parseMode">Message parse mode</param>
         /// <returns>Async task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task SendTextMessageToTrackedChatsAsync(string message, MessageParseMode parseMode = MessageParseMode.Default)
+        public async Task SendTextMessageToTrackedChatsAsync(string message, MessageParseMode parseMode = MessageParseMode.Default)
         {
-			if (!IsConnected) return;
+            if (!IsConnected) return;
             Core.Log.LibVerbose("Sending text message to all tracked chats: Chats Count = {0} Message = {1}", TrackedChats.Count, message);
             foreach (var chat in TrackedChats)
-				await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
+                await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
             Core.Log.LibVerbose("Messages sent.");
             _counterMessagesSent.Increment();
         }
-		/// <inheritdoc />
-		/// <summary>
-		/// Send the typing action to the chat
-		/// </summary>
-		/// <param name="chat">Chat where the typing action will be sent</param>
-		/// <returns>Async task</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task SendTypingAsync(BotChat chat)
-		{
-			if (!IsConnected) return;
-			Core.Log.LibVerbose("Sending typing notification. ChatId = {0}", chat?.Id);
-			await Transport.SendTypingAsync(chat).ConfigureAwait(false);
-		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Send the typing action to all tracked chats
-		/// </summary>
-		/// <returns>Async task</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task SendTypingToTrackedChatsAsync()
-		{
-			if (!IsConnected) return;
-			Core.Log.LibVerbose("Sending typing notification to all tracked chats: Chats Count = {0}", TrackedChats.Count);
-			foreach (var chat in TrackedChats)
-				await Transport.SendTypingAsync(chat).ConfigureAwait(false);
-		}
+        /// <inheritdoc />
+        /// <summary>
+        /// Send the typing action to the chat
+        /// </summary>
+        /// <param name="chat">Chat where the typing action will be sent</param>
+        /// <returns>Async task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task SendTypingAsync(BotChat chat)
+        {
+            if (!IsConnected) return;
+            Core.Log.LibVerbose("Sending typing notification. ChatId = {0}", chat?.Id);
+            await Transport.SendTypingAsync(chat).ConfigureAwait(false);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Send the typing action to all tracked chats
+        /// </summary>
+        /// <returns>Async task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task SendTypingToTrackedChatsAsync()
+        {
+            if (!IsConnected) return;
+            Core.Log.LibVerbose("Sending typing notification to all tracked chats: Chats Count = {0}", TrackedChats.Count);
+            foreach (var chat in TrackedChats)
+                await Transport.SendTypingAsync(chat).ConfigureAwait(false);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Sends a photo message
@@ -318,43 +318,49 @@ namespace TWCore.Bot
         #endregion
 
         #region Private Methods
-        private void Transport_TextMessageReceived(object sender, EventArgs<BotTextMessage> e)
+        private async void Transport_TextMessageReceived(object sender, EventArgs<BotTextMessage> e)
         {
-            if (e?.Item1?.Text?.IsNullOrEmpty() != false) return;
-
-            Core.Log.LibVerbose("Message received, looking for command...");
-            _counterMessagesReceived.Increment();
-            var message = e.Item1;
-            var sCommands = Commands.Where((cmd, sMessage) => cmd.Condition(sMessage.Text), message).ToArray();
-            if (sCommands.Any())
+            try
             {
-                #region Get Chat
-                if (Chats.TryGet(message.Chat.Id, out var storedChat))
+                if (e?.Item1?.Text?.IsNullOrEmpty() != false) return;
+                Core.Log.LibVerbose("Message received, looking for command...");
+                _counterMessagesReceived.Increment();
+                var message = e.Item1;
+                var sCommands = Commands.Where((cmd, sMessage) => cmd.Condition(sMessage.Text), message).ToArray();
+                if (sCommands.Any())
                 {
-                    message.Chat.State = storedChat.State;
+                    #region Get Chat
+                    if (Chats.TryGet(message.Chat.Id, out var storedChat))
+                    {
+                        message.Chat.State = storedChat.State;
+                    }
+                    else
+                    {
+                        Chats.Add(message.Chat);
+                    }
+                    #endregion
+
+                    #region Get User
+                    if (!Users.Contains(message.User.Id))
+                        Users.Add(message.User);
+                    #endregion
+
+                    foreach (var sCommand in sCommands)
+                    {
+                        Core.Log.LibVerbose("Executing command for: {0}", message.Text);
+                        var res = await sCommand.Handler(this, message).ConfigureAwait(false);
+                        Core.Log.LibVerbose("Command executed.");
+                        if (res)
+                            break;
+                    }
                 }
                 else
-                {
-                    Chats.Add(message.Chat);
-                }
-                #endregion
-
-                #region Get User
-                if (!Users.Contains(message.User.Id))
-                    Users.Add(message.User);
-                #endregion
-
-                foreach (var sCommand in sCommands)
-                {
-                    Core.Log.LibVerbose("Executing command for: {0}", message.Text);
-                    var res = sCommand.Handler(this, message);
-                    Core.Log.LibVerbose("Command executed.");
-                    if (res)
-                        break;
-                }
+                    Core.Log.LibVerbose("Command not found for the message: {0}", message.Text);
             }
-            else
-                Core.Log.LibVerbose("Command not found for the message: {0}", message.Text);
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
         }
         private void Transport_PhotoMessageReceived(object sender, EventArgs<BotPhotoMessage> e)
         {

@@ -27,7 +27,8 @@ namespace TWCore.Diagnostics.Api
             Core.InitDefaults(false);
             Core.RunService(() => new ServiceList(
                 WebService.Create<Startup>(),
-                new DiagnosticRawMessagingServiceAsync()
+                new DiagnosticRawMessagingServiceAsync(),
+                new DiagnosticBotService()
                 ), args);
         }
     }

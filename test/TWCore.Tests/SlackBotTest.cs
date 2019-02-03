@@ -36,6 +36,45 @@ namespace TWCore.Tests
                 return true;
             });
 
+            botEngine.Commands.Add(msg => msg.StartsWith("Hola"), (bot, message) =>
+            {
+                Core.Log.Warning(message.SerializeToJson());
+
+                bot.SendTextMessageAsync(message.Chat, "Hola que tal?");
+
+                return true;
+            });
+
+
+            botEngine.Commands.Add(msg => msg.StartsWith(":track"), (bot, message) =>
+            {
+                Core.Log.Warning(message.SerializeToJson());
+
+                bot.TrackChat(message.Chat);
+                bot.SendTextMessageAsync(message.Chat, "Chat tracked.");
+
+                return true;
+            });
+
+            botEngine.Commands.Add(msg => msg.StartsWith(":untrack"), (bot, message) =>
+            {
+                Core.Log.Warning(message.SerializeToJson());
+
+                bot.UnTrackChat(message.Chat);
+                bot.SendTextMessageAsync(message.Chat, "Chat untracked.");
+
+                return true;
+            });
+
+            botEngine.Commands.Add(msg => msg.StartsWith(":hello"), (bot, message) =>
+            {
+                Core.Log.Warning(message.SerializeToJson());
+
+                bot.SendTextMessageToTrackedChatsAsync("Hola todos.");
+
+                return true;
+            });
+
             Core.Log.Warning("Connecting...");
             await botEngine.StartListenerAsync().ConfigureAwait(false);
 

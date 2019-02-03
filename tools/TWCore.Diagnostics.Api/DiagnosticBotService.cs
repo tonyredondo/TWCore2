@@ -34,13 +34,14 @@ namespace TWCore.Diagnostics.Api
             var slackTransport = new SlackBotTransport(settings.SlackToken);
             var botEngine = new BotEngine(slackTransport);
 
+            _currentEnvironment = settings.DefaultEnvironment;
 
-            botEngine.Commands.Add(msg => msg.StartsWith(".getEnvironment"), async (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith(".getenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 await bot.SendTextMessageAsync(message.Chat, "The current environment is: " + _currentEnvironment).ConfigureAwait(false);
                 return true;
             });
-            botEngine.Commands.Add(msg => msg.StartsWith(".setEnvironment"), async (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith(".setenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 var arrText = message.Text.SplitAndTrim(" ");
                 if (arrText.Length == 2)
@@ -56,7 +57,7 @@ namespace TWCore.Diagnostics.Api
             });
 
 
-            botEngine.Commands.Add(msg => msg.StartsWith(".getCounters"), async (bot, message) =>
+            botEngine.Commands.Add(msg => msg.StartsWith(".getcounters", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 await bot.SendTextMessageAsync(message.Chat, $"Querying for counters for {_currentEnvironment}...").ConfigureAwait(false);
                 var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
@@ -74,6 +75,7 @@ namespace TWCore.Diagnostics.Api
         private class BotSettings : Settings.SettingsBase
         {
             public string SlackToken { get; set; } = "xoxb-400093501237-540678655155-dD1UnI2esPsXfK5BmlNlBvqz";
+            public string DefaultEnvironment { get; set; } = "Docker";
         }
     }
 }

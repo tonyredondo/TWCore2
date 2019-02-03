@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using TWCore.Bot;
@@ -26,52 +27,86 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticBotService : BotService
     {
+        private BotEngine _engine;
         private string _currentEnvironment;
+        private ConcurrentDictionary<string, BotChat> _errorChats;
 
         protected override IBotEngine GetBotEngine()
         {
-            Core.DebugMode = true;
+            //Core.DebugMode = true;
             var settings = Core.GetSettings<BotSettings>();
             var slackTransport = new SlackBotTransport(settings.SlackToken);
-            var botEngine = new BotEngine(slackTransport);
-
+            _engine = new BotEngine(slackTransport);
             _currentEnvironment = settings.DefaultEnvironment;
+            _errorChats = new ConcurrentDictionary<string, BotChat>();
+            BindCommands();
+            return _engine;
+        }
 
-            botEngine.Commands.Add(msg => msg.StartsWith(".getenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+        private void BindCommands()
+        {
+            _engine.Commands.Add(msg => msg.Equals(".getenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-                await bot.SendTextMessageAsync(message.Chat, "The current environment is: " + _currentEnvironment).ConfigureAwait(false);
+                await bot.SendTextMessageAsync(message.Chat, ">>>The current environment is: " + _currentEnvironment).ConfigureAwait(false);
                 return true;
             });
-            botEngine.Commands.Add(msg => msg.StartsWith(".setenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            _engine.Commands.Add(msg => msg.StartsWith(".setenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 var arrText = message.Text.SplitAndTrim(" ");
                 if (arrText.Length == 2)
                 {
                     _currentEnvironment = arrText[1];
-                    await bot.SendTextMessageAsync(message.Chat, "Environment setted to: " + _currentEnvironment).ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, ">>>Environment setted to: " + _currentEnvironment).ConfigureAwait(false);
                 }
                 else
                 {
-                    await bot.SendTextMessageAsync(message.Chat, "Invalid syntax.").ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, ">Invalid syntax.").ConfigureAwait(false);
                 }
                 return true;
             });
 
+            //*****************************************************************************************************************************************
 
-            botEngine.Commands.Add(msg => msg.StartsWith(".getcounters", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            _engine.Commands.Add(msg => msg.Equals(".trackerrors", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-                await bot.SendTextMessageAsync(message.Chat, $"Querying for counters for {_currentEnvironment}...").ConfigureAwait(false);
+                var added = false;
+                lock(this)
+                    added = _errorChats.TryAdd(message.Chat.Id, message.Chat);
+                if (added)
+                    await bot.SendTextMessageAsync(message.Chat, ">>>Chat was added to the error tracking list.").ConfigureAwait(false);
+                else
+                    await bot.SendTextMessageAsync(message.Chat, ">>>Chat already added to the error tracking list.").ConfigureAwait(false);
+
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.Equals(".untrackerrors", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                var removed = false;
+                lock (this)
+                    removed = _errorChats.TryRemove(message.Chat.Id, out _);
+                if (removed)
+                    await bot.SendTextMessageAsync(message.Chat, ">>>Chat was removed from the error tracking list.").ConfigureAwait(false);
+
+                return true;
+            });
+
+            //*****************************************************************************************************************************************
+
+            _engine.Commands.Add(msg => msg.Equals(".getcounters", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                await bot.SendTextMessageAsync(message.Chat, $">>>Querying for counters for {_currentEnvironment}...").ConfigureAwait(false);
                 var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
-                await bot.SendTextMessageAsync(message.Chat, "Counters: ").ConfigureAwait(false);
-                foreach(var batch in counters.Batch(30))
+                await bot.SendTextMessageAsync(message.Chat, ">>>Counters: ").ConfigureAwait(false);
+                foreach (var batch in counters.Batch(30))
                 {
                     var str = batch.Select(c => c.Category + "\\" + c.Name).Join("\n");
-                    await bot.SendTextMessageAsync(message.Chat, str).ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, "```" + str + "```").ConfigureAwait(false);
                 }
                 return true;
             });
 
-            return botEngine;
+            //*****************************************************************************************************************************************
+
         }
 
         private class BotSettings : Settings.SettingsBase

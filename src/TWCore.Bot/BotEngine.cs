@@ -44,6 +44,14 @@ namespace TWCore.Bot
         /// Event when a photo message has been received
         /// </summary>
         public event EventHandler<EventArgs<BotPhotoMessage>> OnPhotoMessageReceived;
+        /// <summary>
+        /// Event when the transport has been connected
+        /// </summary>
+        public event EventHandler OnConnected;
+        /// <summary>
+        /// Event when the transport has been disconnected
+        /// </summary>
+        public event EventHandler OnDisconnected;
         #endregion
 
         #region Properties
@@ -173,6 +181,7 @@ namespace TWCore.Bot
         {
             Core.Log.LibVerbose("Starting Bot engine listener...");
             await Transport.ConnectAsync().ConfigureAwait(false);
+            OnConnected?.Invoke(this, EventArgs.Empty);
             Core.Log.LibVerbose("Started.");
         }
         /// <inheritdoc />
@@ -185,6 +194,7 @@ namespace TWCore.Bot
         {
             Core.Log.LibVerbose("Stopping Bot engine listener...");
             await Transport.DisconnectAsync().ConfigureAwait(false);
+            OnDisconnected?.Invoke(this, EventArgs.Empty);
             Core.Log.LibVerbose("Stopped.");
         }
         /// <inheritdoc />
@@ -332,6 +342,9 @@ namespace TWCore.Bot
                     #region Get Chat
                     if (Chats.TryGet(message.Chat.Id, out var storedChat))
                     {
+                        storedChat.ChatType = message.Chat.ChatType;
+                        storedChat.Name = message.Chat.Name;
+                        //
                         message.Chat.State = storedChat.State;
                     }
                     else

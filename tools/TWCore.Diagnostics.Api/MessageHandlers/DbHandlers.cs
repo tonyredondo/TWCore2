@@ -34,13 +34,15 @@ namespace TWCore.Diagnostics.Api
 {
 	public class DbHandlers : IDiagnosticHandler
 	{
-		public static IDiagnosticHandler Instance => Singleton<DbHandlers>.Instance;
+		public static DbHandlers Instance => Singleton<DbHandlers>.Instance;
 
 		private readonly IDiagnosticMessagesHandler[] _messageHandlers;
 
-		#region Public Methods
+		#region Public Properties
 		public IDiagnosticMessagesHandler Messages { get; } 
 		public IDiagnosticQueryHandler Query { get; }
+
+        public event EventHandler<LogItem> ErrorLogMessage;
 		#endregion
 
 		private DbHandlers()
@@ -55,6 +57,14 @@ namespace TWCore.Diagnostics.Api
 			
 			Messages = new MessagesHandler(this);
 		}
+
+        private void FireAsyncErrorLogMessage(LogItem item)
+        {
+            Task.Run(() =>
+            {
+                ErrorLogMessage?.Invoke(this, item);
+            });
+        }
 
 		#region Nested Types
 		
@@ -75,8 +85,15 @@ namespace TWCore.Diagnostics.Api
             }
             public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
 			{
-				foreach (var item in _parent._messageHandlers)
-					await item.ProcessLogItemsMessageAsync(message).ConfigureAwait(false);
+                if (message == null) return;
+                if (message.Count == 0) return;
+                foreach(var mItem in message)
+                {
+                    if (mItem.Level == LogLevel.Error)
+                        _parent.FireAsyncErrorLogMessage(mItem);
+                }
+                foreach (var item in _parent._messageHandlers)
+                    await item.ProcessLogItemsMessageAsync(message).ConfigureAwait(false);
 			}
             public async Task ProcessGroupMetadataMessageAsync(List<GroupMetadata> message)
             {

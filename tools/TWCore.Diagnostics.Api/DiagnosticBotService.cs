@@ -17,9 +17,12 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TWCore.Bot;
 using TWCore.Bot.Slack;
+using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
 
@@ -27,6 +30,8 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticBotService : BotService
     {
+        const string ErrorChatsFile = "errorchats.json";
+
         private BotEngine _engine;
         private string _currentEnvironment;
         private ConcurrentDictionary<string, BotChat> _errorChats;
@@ -37,10 +42,34 @@ namespace TWCore.Diagnostics.Api
             var settings = Core.GetSettings<BotSettings>();
             var slackTransport = new SlackBotTransport(settings.SlackToken);
             _engine = new BotEngine(slackTransport);
+            _engine.OnConnected += OnConnected;
+            _engine.OnDisconnected += OnDisconnected;
             _currentEnvironment = settings.DefaultEnvironment;
             _errorChats = new ConcurrentDictionary<string, BotChat>();
             BindCommands();
+
+            Task.Delay(20000).ContinueWith(_ =>
+            {
+                Instance_ErrorLogMessage(this, new Log.LogItem
+                {
+                    ApplicationName = "app 1",
+                    Timestamp = Core.Now,
+                    GroupName = Guid.NewGuid().ToString(),
+                    EnvironmentName = "Docker",
+                    Exception = new SerializableException(new Exception("Error de test")),
+                });
+            });
+
             return _engine;
+        }
+
+        private void OnConnected(object sender, EventArgs e)
+        {
+            LoadErrorChats();
+        }
+        private void OnDisconnected(object sender, EventArgs e)
+        {
+            SaveErrorChats();
         }
 
         private void BindCommands()
@@ -70,8 +99,11 @@ namespace TWCore.Diagnostics.Api
             _engine.Commands.Add(msg => msg.Equals(".trackerrors", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 var added = false;
-                lock(this)
+                lock (this)
+                {
                     added = _errorChats.TryAdd(message.Chat.Id, message.Chat);
+                    SaveErrorChats();
+                }
                 if (added)
                     await bot.SendTextMessageAsync(message.Chat, ">>>Chat was added to the error tracking list.").ConfigureAwait(false);
                 else
@@ -83,7 +115,10 @@ namespace TWCore.Diagnostics.Api
             {
                 var removed = false;
                 lock (this)
+                {
                     removed = _errorChats.TryRemove(message.Chat.Id, out _);
+                    SaveErrorChats();
+                }
                 if (removed)
                     await bot.SendTextMessageAsync(message.Chat, ">>>Chat was removed from the error tracking list.").ConfigureAwait(false);
 
@@ -106,7 +141,65 @@ namespace TWCore.Diagnostics.Api
             });
 
             //*****************************************************************************************************************************************
+            DbHandlers.Instance.ErrorLogMessage += Instance_ErrorLogMessage;
+        }
 
+        private void Instance_ErrorLogMessage(object sender, Log.LogItem e)
+        {
+            var message = $"```Error at: {e.Timestamp}\nEnvironment: {e.EnvironmentName}\nApplication: {e.ApplicationName}\nGroup: {e.GroupName}\nText: {e.Message}\nMessage: {e.Exception?.Message}\nType: {e.Exception?.ExceptionType}\nStacktrace: {e.Exception?.StackTrace}```";
+            foreach (var chat in _errorChats.Values)
+            {
+                _ = _engine.SendTextMessageAsync(chat, message);
+            }
+        }
+
+        private void SaveErrorChats()
+        {
+            try
+            {
+                Core.Log.InfoBasic("Saving error chats...");
+                var keys = _errorChats.Keys.ToArray();
+                keys.SerializeToJsonFile(ErrorChatsFile);
+                Core.Log.InfoBasic("Errors chats saved.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        private void LoadErrorChats()
+        {
+            try
+            {
+                if (File.Exists(ErrorChatsFile))
+                {
+                    Core.Log.InfoBasic("Loading error chats...");
+                    var keys = ErrorChatsFile.DeserializeFromJsonFile<string[]>();
+                    foreach(var key in keys)
+                    {
+                        if (_engine.Chats.TryGet(key, out var chat))
+                        {
+                            Core.Log.InfoBasic("Adding chat: {0} - {1}", key, chat.Name);
+                        }
+                        else
+                        {
+                            Core.Log.InfoBasic("Adding chat: {0}", key);
+                            chat = new BotChat
+                            {
+                                Id = key,
+                                ChatType = BotChatType.Private,
+                                Name = key
+                            };
+                        }
+                        _errorChats.TryAdd(key, chat);
+                    }
+                    Core.Log.InfoBasic("Errors chats loaded.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
         }
 
         private class BotSettings : Settings.SettingsBase

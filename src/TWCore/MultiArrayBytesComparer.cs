@@ -37,6 +37,7 @@ namespace TWCore
             var xSegmentsLength = x.SegmentsLength;
             if (xOffset == y.Offset && xSegmentsLength == y.SegmentsLength)
             {
+                if (xSegmentsLength == 0) return true;
                 var startIndex = x.FromGlobalIndex(xOffset, out var startPosition);
                 var endIndex = x.FromGlobalIndex(xOffset + xCount - 1, out var endPosition);
                 var xList = x.ListOfArrays;

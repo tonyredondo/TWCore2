@@ -526,6 +526,32 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }).ConfigureAwait(false);
         }
         /// <summary>
+        /// Get Counter by counterId
+        /// </summary>
+		/// <param name="counterId">Counter Id</param>
+        /// <returns>Counter data</returns>
+        public async Task<NodeCountersQueryItem> GetCounter(Guid counterId)
+        {
+            return await RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                return await session.Query<NodeCountersItem>()
+                    .Where(x => x.CountersId == counterId)
+                    .Select(i => new NodeCountersQueryItem
+                    {
+                        Application = i.Application,
+                        CountersId = i.CountersId,
+                        Category = i.Category,
+                        Name = i.Name,
+                        Type = i.Type,
+                        Level = i.Level,
+                        Kind = i.Kind,
+                        Unit = i.Unit,
+                        TypeOfValue = i.TypeOfValue
+                    })
+                    .FirstOrDefaultAsync().ConfigureAwait(false);
+            }).ConfigureAwait(false);
+        }
+        /// <summary>
         /// Get Counter Values
         /// </summary>
         /// <param name="counterId">Counter id</param>

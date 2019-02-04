@@ -263,6 +263,16 @@ namespace TWCore.Diagnostics.Api.Controllers
             return DbHandlers.Instance.Query.GetCounters(environment);
         }
         /// <summary>
+        /// Get Counters
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <returns>List of counters</returns>
+        [HttpGet("{environment}/counters/{counterId}")]
+        public Task<NodeCountersQueryItem> GetCounters([FromRoute] Guid counterId)
+        {
+            return DbHandlers.Instance.Query.GetCounter(counterId);
+        }
+        /// <summary>
         /// Get Counter Values
         /// </summary>
         /// <param name="counterId">Counter id</param>
@@ -270,7 +280,7 @@ namespace TWCore.Diagnostics.Api.Controllers
 		/// <param name="toDate">To date and time</param>
 		/// <param name="limit">Values count limit</param>
         /// <returns>List of counter values</returns>
-        [HttpGet("{environment}/counters/{counterId}")]
+        [HttpGet("{environment}/countervalues/{counterId}")]
         public Task<List<NodeCountersQueryValue>> GetCounterValues([FromRoute] string environment, [FromRoute] Guid counterId, DateTime fromDate, DateTime toDate, int limit = 3600)
         {
             if (toDate == DateTime.MinValue) toDate = Core.Now.Date;

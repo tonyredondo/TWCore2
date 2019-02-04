@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Bot;
 using TWCore.Bot.Slack;
+using TWCore.Diagnostics.Counters;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
@@ -56,11 +57,8 @@ namespace TWCore.Diagnostics.Api
         #region Bot Commands
         private void BindCommands()
         {
-            _engine.Commands.Add(msg => msg.Equals("hola", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
-            {
-                await bot.SendTextMessageAsync(message.Chat, ">>>Que tal? " + message.User.Name).ConfigureAwait(false);
-                return true;
-            });
+            //*****************************************************************************************************************************************
+
             _engine.Commands.Add(msg => msg.Equals(".getenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 await bot.SendTextMessageAsync(message.Chat, "`The current environment is: " + _currentEnvironment + "`").ConfigureAwait(false);
@@ -114,16 +112,25 @@ namespace TWCore.Diagnostics.Api
 
             //*****************************************************************************************************************************************
 
-            _engine.Commands.Add(msg => msg.Equals(".getcounters", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            _engine.Commands.Add(msg => msg.StartsWith(".getcounters", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-                await bot.SendTextMessageAsync(message.Chat, $"`Querying for counters for {_currentEnvironment}...`").ConfigureAwait(false);
-                var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
-                await bot.SendTextMessageAsync(message.Chat, "`Counters:`").ConfigureAwait(false);
-                counters = counters.OrderBy(c => c.Application).ThenBy(c => c.Category).ThenBy(c => c.Name).ToList();
-                foreach (var batch in counters.Batch(20))
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (arrText.Length == 2 && Enum.TryParse(typeof(CounterKind), arrText[1], out var counterKind))
                 {
-                    var str = batch.Select(c => c.CountersId + " | " + c.Application + "\\" + c.Category + "\\" + c.Name).Join("\n");
-                    await bot.SendTextMessageAsync(message.Chat, "```" + str + "```").ConfigureAwait(false);
+                    var cKind = (CounterKind)counterKind;
+                    await bot.SendTextMessageAsync(message.Chat, $"`Querying {cKind} counters for {_currentEnvironment}...`").ConfigureAwait(false);
+                    var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, "`Counters:`").ConfigureAwait(false);
+                    counters = counters.Where(c => c.Kind == cKind).OrderBy(c => c.Application).ThenBy(c => c.Category).ThenBy(c => c.Name).ToList();
+                    foreach (var batch in counters.Batch(20))
+                    {
+                        var str = batch.Select(c => c.CountersId + " | " + c.Application + "\\" + c.Category + "\\" + c.Name).Join("\n");
+                        await bot.SendTextMessageAsync(message.Chat, "```" + str + "```").ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, $":exclamation: `You need to specify a counter kind like: {CounterKind.Application}, {CounterKind.Bot}, {CounterKind.Cache}, {CounterKind.DataAccess}, {CounterKind.Messaging}, {CounterKind.RPC}, {CounterKind.Unknown}.`").ConfigureAwait(false);
                 }
                 return true;
             });
@@ -132,13 +139,27 @@ namespace TWCore.Diagnostics.Api
                 var arrText = message.Text.SplitAndTrim(" ");
                 if (arrText.Length == 2 && Guid.TryParse(arrText[1], out var counterId))
                 {
-                    var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
-                    var counterItem = counters.FirstOrDefault((c, cid) => c.CountersId == cid, counterId);
-                    var counterValues = await DbHandlers.Instance.Query.GetCounterValues(counterId, Core.Now.Date.AddMonths(-1), Core.Now.Date.AddDays(1), 10).ConfigureAwait(false);
-                    if (counterValues.Count > 0 && counterItem != null)
+                    var counterItem = await DbHandlers.Instance.Query.GetCounter(counterId).ConfigureAwait(false);
+                    if (counterItem != null)
+                        await bot.SendTextMessageAsync(message.Chat, $"`Today latest 20 counter values for {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]:`").ConfigureAwait(false);
+
+                    var counterValues = await DbHandlers.Instance.Query.GetCounterValues(counterId, Core.Now.Date.AddSeconds(-1), Core.Now.Date.AddDays(1)).ConfigureAwait(false);
+                    if (counterValues.Count > 0)
                     {
-                        var msg = counterValues.Select(v => v.Timestamp + ": " + v.Value).Join("\n");
-                        await bot.SendTextMessageAsync(message.Chat, $"`Last 10 counter values for {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name}:`\n```" + msg + "```").ConfigureAwait(false);
+                        var msg = "```" + counterValues.Take(20).Select(v => v.Timestamp + ": " + v.Value).Join("\n") + "\n\n";
+                        if (counterItem.Type == CounterType.Average)
+                        {
+                            var avg = counterValues.Average(i => Convert.ToDecimal(i.Value));
+                            msg += $"Total average for today: {avg}";
+                        }
+                        else if (counterItem.Type == CounterType.Cumulative)
+                        {
+                            var total = counterValues.Sum(i => Convert.ToDecimal(i.Value));
+                            msg += $"Total cumulative for today: {total}";
+                        }
+                        msg += "```";
+
+                        await bot.SendTextMessageAsync(message.Chat, msg).ConfigureAwait(false);
                     }
                     else
                     {
@@ -149,6 +170,21 @@ namespace TWCore.Diagnostics.Api
                 {
                     await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
                 }
+                return true;
+            });
+
+            //*****************************************************************************************************************************************
+
+            _engine.Commands.Add(msg => msg.Equals(".help", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                var helpMsg = $"`Available commands:`\n";
+                helpMsg += ">>>```.getenv : Get current environment.\n";
+                helpMsg += ".setenv : Set current environment.\n";
+                helpMsg += ".trackerrors : Sets the current chat to tracking errors.\n";
+                helpMsg += ".untrackerrors : Remove the current chat to the tracking errors list.\n";
+                helpMsg += ".getcounters : Get available counters.\n";
+                helpMsg += ".getcountervalue : Get values for a counter.\n```";
+                await bot.SendTextMessageAsync(message.Chat, helpMsg).ConfigureAwait(false);
                 return true;
             });
 

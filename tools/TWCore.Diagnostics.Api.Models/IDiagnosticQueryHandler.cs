@@ -147,6 +147,12 @@ namespace TWCore.Diagnostics.Api.Models
         /// <returns>List of counters</returns>
         Task<List<NodeCountersQueryItem>> GetCounters(string environment);
         /// <summary>
+        /// Get Counter by counterId
+        /// </summary>
+		/// <param name="counterId">Counter Id</param>
+        /// <returns>Counter data</returns>
+        Task<NodeCountersQueryItem> GetCounter(Guid counterId);
+        /// <summary>
         /// Get Counter Values
         /// </summary>
         /// <param name="counterId">Counter id</param>

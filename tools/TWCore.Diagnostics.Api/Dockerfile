@@ -16,6 +16,7 @@ EXPOSE 28905/tcp
 VOLUME /App/logs
 VOLUME /App/settings
 VOLUME /App/assemblies
+VOLUME /App/tracesdata
 
 WORKDIR /App
 ENTRYPOINT [ "./TWCore.Diagnostics.Api" ]

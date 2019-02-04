@@ -39,6 +39,7 @@
       <Item Key="RavenDb.Database" Value="Diagnostics" />
       <Item Key="RavenDb.Urls" Value="http://10.10.1.52:8080" />
       <Item Key="Bot.DefaultEnvironment" Value="Docker" />
+      <Item Key="Bot.DataFolder" Value="./botdata" />
 
       <Item Key="Diagnostics.TracesFolderPath" Value="./tracesdata" />
       <Item Key="Diagnostics.StoreTracesToDisk" Value="true" />

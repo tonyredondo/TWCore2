@@ -32,6 +32,8 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticBotService : BotService
     {
+        private static BotSettings Settings = Core.GetSettings<BotSettings>();
+
         const string ErrorChatsFile = "errorchats.json";
 
         private BotEngine _engine;
@@ -41,13 +43,11 @@ namespace TWCore.Diagnostics.Api
 
         protected override IBotEngine GetBotEngine()
         {
-            //Core.DebugMode = true;
-            var settings = Core.GetSettings<BotSettings>();
-            var slackTransport = new SlackBotTransport(settings.SlackToken);
+            var slackTransport = new SlackBotTransport(Settings.SlackToken);
             _engine = new BotEngine(slackTransport);
             _engine.OnConnected += OnConnected;
             _engine.OnDisconnected += OnDisconnected;
-            _currentEnvironment = settings.DefaultEnvironment;
+            _currentEnvironment = Settings.DefaultEnvironment;
             _errorChats = new ConcurrentDictionary<string, BotChat>();
             _errorsRegistry = new ConcurrentDictionary<(string, string, string), ErrorsRegister>();
             BindCommands();
@@ -231,9 +231,10 @@ namespace TWCore.Diagnostics.Api
                     message += $"Caller: {e.TypeName}\n";
                 if (e.Exception != null)
                 {
+                    message += "---\n";
                     message += $"Message: {e.Exception.Message}\n";
                     message += $"Type: {e.Exception.ExceptionType}\n";
-                    message += $"Stacktrace: {e.Exception.StackTrace}\n";
+                    message += $"Stacktrace: \n{e.Exception.StackTrace}\n";
                 }
                 message += "```";
                 foreach (var chat in _errorChats.Values)
@@ -249,10 +250,14 @@ namespace TWCore.Diagnostics.Api
         {
             try
             {
-                if (File.Exists(ErrorChatsFile))
+                if (!Directory.Exists(Settings.DataFolder))
+                    Directory.CreateDirectory(Settings.DataFolder);
+
+                var pFileName = Path.Combine(Settings.DataFolder, ErrorChatsFile);
+                if (File.Exists(pFileName))
                 {
                     Core.Log.InfoBasic("Loading error chats...");
-                    var keys = ErrorChatsFile.DeserializeFromJsonFile<string[]>();
+                    var keys = pFileName.DeserializeFromJsonFile<string[]>();
                     foreach(var key in keys)
                     {
                         if (_engine.Chats.TryGet(key, out var chat))
@@ -284,9 +289,12 @@ namespace TWCore.Diagnostics.Api
         {
             try
             {
+                if (!Directory.Exists(Settings.DataFolder))
+                    Directory.CreateDirectory(Settings.DataFolder);
+                var pFileName = Path.Combine(Settings.DataFolder, ErrorChatsFile);
                 Core.Log.InfoBasic("Saving error chats...");
                 var keys = _errorChats.Keys.ToArray();
-                keys.SerializeToJsonFile(ErrorChatsFile);
+                keys.SerializeToJsonFile(pFileName);
                 Core.Log.InfoBasic("Errors chats saved.");
             }
             catch (Exception ex)
@@ -300,6 +308,7 @@ namespace TWCore.Diagnostics.Api
         {
             public string SlackToken { get; set; } = "ZX9YXvB6hTwTmurR4QguFgZZ-551556876045-732105390004-bxox".Reverse();
             public string DefaultEnvironment { get; set; } = "Docker";
+            public string DataFolder { get; set; } = "./botdata";
         }
     }
 }

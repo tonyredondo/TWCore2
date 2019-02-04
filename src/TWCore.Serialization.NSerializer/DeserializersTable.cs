@@ -172,7 +172,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
-                Stream.Read(typeBytes, 0, length);
+                Stream.ReadExact(typeBytes, 0, length);
                 var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
                 if (!MultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
@@ -233,7 +233,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
-                Stream.Read(typeBytes, 0, length);
+                Stream.ReadExact(typeBytes, 0, length);
                 var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
                 if (!MultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
@@ -1106,7 +1106,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var length = StreamReadInt();
                 var typeBytes = ArrayPool<byte>.Shared.Rent(length);
-                Stream.Read(typeBytes, 0, length);
+                Stream.ReadExact(typeBytes, 0, length);
                 var subTypeBytes = new MultiArray<byte>(typeBytes, 0, length);
                 if (!GenericMultiArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {

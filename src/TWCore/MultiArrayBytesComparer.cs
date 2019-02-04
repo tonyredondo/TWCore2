@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -38,7 +37,6 @@ namespace TWCore
             var xSegmentsLength = x.SegmentsLength;
             if (xOffset == y.Offset && xSegmentsLength == y.SegmentsLength)
             {
-                if (xSegmentsLength == 0) return true;
                 var startIndex = x.FromGlobalIndex(xOffset, out var startPosition);
                 var endIndex = x.FromGlobalIndex(xOffset + xCount - 1, out var endPosition);
                 var xList = x.ListOfArrays;
@@ -48,23 +46,28 @@ namespace TWCore
                 if (startIndex == endIndex)
                 {
                     var length = endPosition - startPosition + 1;
-                    var xRow = new Span<byte>(xList[startIndex], startPosition, length);
-                    var yRow = new Span<byte>(yList[startIndex], startPosition, length);
-
-#if COMPATIBILITY
-                    return CompareSlow(xRow, yRow);
-#else
-                    if (length > 32)
+                    var remain = length % 8;
+                    var xRow = xList[startIndex].AsSpan(startPosition, length);
+                    var yRow = yList[startIndex].AsSpan(startPosition, length);
+                    if (remain > 0)
                     {
-                        var xVector = new Vector<byte>(xRow);
-                        var yVector = new Vector<byte>(yRow);
-                        return Vector.EqualsAll(xVector, yVector);
+                        var splitIndex = length - remain;
+                        var ryRow = yRow.Slice(splitIndex);
+                        var rxRow = xRow.Slice(splitIndex);
+                        for (var i = 0; i < rxRow.Length; i++)
+                        {
+                            if (rxRow[i] != ryRow[i])
+                                return false;
+                        }
                     }
-                    else
+                    var cxRow = MemoryMarshal.Cast<byte, long>(xRow);
+                    var cyRow = MemoryMarshal.Cast<byte, long>(yRow);
+                    for (var i = 0; i < cyRow.Length; i++)
                     {
-                        return CompareSlow(xRow, yRow);
+                        if (cxRow[i] != cyRow[i])
+                            return false;
                     }
-#endif
+                    return true;
                 }
                 #endregion
 
@@ -84,40 +87,63 @@ namespace TWCore
                 {
                     Span<byte> xRow;
                     Span<byte> yRow;
-
                     if (row == startIndex)
                     {
                         xRow = xList[row].AsSpan(startPosition, startLength);
                         yRow = yList[row].AsSpan(startPosition, startLength);
+                        if (startRemain > 0)
+                        {
+                            var splitIndex = startLength - startRemain;
+                            var rxRow = xRow.Slice(splitIndex);
+                            var ryRow = yRow.Slice(splitIndex);
+                            for (var i = 0; i < rxRow.Length; i++)
+                            {
+                                if (rxRow[i] != ryRow[i])
+                                    return false;
+                            }
+                        }
                     }
                     else if (row == endIndex)
                     {
                         xRow = xList[row].AsSpan(0, endLength);
                         yRow = yList[row].AsSpan(0, endLength);
+                        if (endRemain > 0)
+                        {
+                            var splitIndex = endLength - endRemain;
+                            var rxRow = xRow.Slice(splitIndex);
+                            var ryRow = yRow.Slice(splitIndex);
+                            for (var i = 0; i < rxRow.Length; i++)
+                            {
+                                if (rxRow[i] != ryRow[i])
+                                    return false;
+                            }
+                        }
                     }
                     else
                     {
                         xRow = xList[row].AsSpan(0, xSegmentsLength);
                         yRow = yList[row].AsSpan(0, xSegmentsLength);
+                        if (segmentRemain > 0)
+                        {
+                            var splitIndex = xSegmentsLength - segmentRemain;
+                            var rxRow = xRow.Slice(splitIndex);
+                            var ryRow = yRow.Slice(splitIndex);
+                            for (var i = 0; i < rxRow.Length; i++)
+                            {
+                                if (rxRow[i] != ryRow[i])
+                                    return false;
+                            }
+                        }
                     }
 
+                    var cxRow = MemoryMarshal.Cast<byte, long>(xRow);
+                    var cyRow = MemoryMarshal.Cast<byte, long>(yRow);
 
-#if COMPATIBILITY
-                    if (!CompareSlow(xRow, yRow))
-                            return false;
-#else
-                    if (xRow.Length > 32)
+                    for (var i = 0; i < cyRow.Length; i++)
                     {
-                        var xVector = new Vector<byte>(xRow);
-                        var yVector = new Vector<byte>(yRow);
-                        if (!Vector.EqualsAll(xVector, yVector))
+                        if (cxRow[i] != cyRow[i])
                             return false;
                     }
-                    else if (!CompareSlow(xRow, yRow))
-                    {
-                        return false;
-                    }
-#endif
                 }
                 return true;
                 #endregion
@@ -129,33 +155,6 @@ namespace TWCore
             }
             return true;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool CompareSlow(Span<byte> xRow, Span<byte> yRow)
-        {
-            var length = xRow.Length;
-            var remain = length % 8;
-            if (remain > 0)
-            {
-                var splitIndex = length - remain;
-                var ryRow = yRow.Slice(splitIndex);
-                var rxRow = xRow.Slice(splitIndex);
-                for (var i = 0; i < rxRow.Length; i++)
-                {
-                    if (rxRow[i] != ryRow[i])
-                        return false;
-                }
-            }
-            var cxRow = MemoryMarshal.Cast<byte, long>(xRow);
-            var cyRow = MemoryMarshal.Cast<byte, long>(yRow);
-            for (var i = 0; i < cyRow.Length; i++)
-            {
-                if (cxRow[i] != cyRow[i])
-                    return false;
-            }
-            return true;
-        }
-
         /// <inheritdoc />
         /// <summary>
         /// Returns a hash code for the specified object.
@@ -208,3 +207,4 @@ namespace TWCore
         }
     }
 }
+

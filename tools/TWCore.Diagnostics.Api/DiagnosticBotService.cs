@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Bot;
 using TWCore.Bot.Slack;
@@ -35,6 +36,7 @@ namespace TWCore.Diagnostics.Api
         private BotEngine _engine;
         private string _currentEnvironment;
         private ConcurrentDictionary<string, BotChat> _errorChats;
+        private ConcurrentDictionary<(string, string, string), ErrorsRegister> _errorsRegistry;
 
         protected override IBotEngine GetBotEngine()
         {
@@ -46,32 +48,12 @@ namespace TWCore.Diagnostics.Api
             _engine.OnDisconnected += OnDisconnected;
             _currentEnvironment = settings.DefaultEnvironment;
             _errorChats = new ConcurrentDictionary<string, BotChat>();
+            _errorsRegistry = new ConcurrentDictionary<(string, string, string), ErrorsRegister>();
             BindCommands();
-
-            Task.Delay(20000).ContinueWith(_ =>
-            {
-                Instance_ErrorLogMessage(this, new Log.LogItem
-                {
-                    ApplicationName = "app 1",
-                    Timestamp = Core.Now,
-                    GroupName = Guid.NewGuid().ToString(),
-                    EnvironmentName = "Docker",
-                    Exception = new SerializableException(new Exception("Error de test")),
-                });
-            });
-
             return _engine;
         }
 
-        private void OnConnected(object sender, EventArgs e)
-        {
-            LoadErrorChats();
-        }
-        private void OnDisconnected(object sender, EventArgs e)
-        {
-            SaveErrorChats();
-        }
-
+        #region Bot Commands
         private void BindCommands()
         {
             _engine.Commands.Add(msg => msg.Equals("hola", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
@@ -81,7 +63,7 @@ namespace TWCore.Diagnostics.Api
             });
             _engine.Commands.Add(msg => msg.Equals(".getenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-                await bot.SendTextMessageAsync(message.Chat, ">>>The current environment is: " + _currentEnvironment).ConfigureAwait(false);
+                await bot.SendTextMessageAsync(message.Chat, "`The current environment is: " + _currentEnvironment + "`").ConfigureAwait(false);
                 return true;
             });
             _engine.Commands.Add(msg => msg.StartsWith(".setenv", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
@@ -90,11 +72,11 @@ namespace TWCore.Diagnostics.Api
                 if (arrText.Length == 2)
                 {
                     _currentEnvironment = arrText[1];
-                    await bot.SendTextMessageAsync(message.Chat, ">>>Environment setted to: " + _currentEnvironment).ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, "`Environment setted to: " + _currentEnvironment + "`").ConfigureAwait(false);
                 }
                 else
                 {
-                    await bot.SendTextMessageAsync(message.Chat, ">Invalid syntax.").ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
                 }
                 return true;
             });
@@ -110,9 +92,9 @@ namespace TWCore.Diagnostics.Api
                     SaveErrorChats();
                 }
                 if (added)
-                    await bot.SendTextMessageAsync(message.Chat, ">>>Chat was added to the error tracking list.").ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, "`Chat was added to the error tracking list.`").ConfigureAwait(false);
                 else
-                    await bot.SendTextMessageAsync(message.Chat, ">>>Chat already added to the error tracking list.").ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, "`Chat already added to the error tracking list.`").ConfigureAwait(false);
 
                 return true;
             });
@@ -125,7 +107,7 @@ namespace TWCore.Diagnostics.Api
                     SaveErrorChats();
                 }
                 if (removed)
-                    await bot.SendTextMessageAsync(message.Chat, ">>>Chat was removed from the error tracking list.").ConfigureAwait(false);
+                    await bot.SendTextMessageAsync(message.Chat, "`Chat was removed from the error tracking list.`").ConfigureAwait(false);
 
                 return true;
             });
@@ -134,13 +116,38 @@ namespace TWCore.Diagnostics.Api
 
             _engine.Commands.Add(msg => msg.Equals(".getcounters", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-                await bot.SendTextMessageAsync(message.Chat, $">>>Querying for counters for {_currentEnvironment}...").ConfigureAwait(false);
+                await bot.SendTextMessageAsync(message.Chat, $"`Querying for counters for {_currentEnvironment}...`").ConfigureAwait(false);
                 var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
-                await bot.SendTextMessageAsync(message.Chat, ">>>Counters: ").ConfigureAwait(false);
-                foreach (var batch in counters.Batch(30))
+                await bot.SendTextMessageAsync(message.Chat, "`Counters:`").ConfigureAwait(false);
+                counters = counters.OrderBy(c => c.Application).ThenBy(c => c.Category).ThenBy(c => c.Name).ToList();
+                foreach (var batch in counters.Batch(20))
                 {
-                    var str = batch.Select(c => c.Category + "\\" + c.Name).Join("\n");
+                    var str = batch.Select(c => c.CountersId + " | " + c.Application + "\\" + c.Category + "\\" + c.Name).Join("\n");
                     await bot.SendTextMessageAsync(message.Chat, "```" + str + "```").ConfigureAwait(false);
+                }
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.StartsWith(".getcountervalue", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (arrText.Length == 2 && Guid.TryParse(arrText[1], out var counterId))
+                {
+                    var counters = await DbHandlers.Instance.Query.GetCounters(_currentEnvironment).ConfigureAwait(false);
+                    var counterItem = counters.FirstOrDefault((c, cid) => c.CountersId == cid, counterId);
+                    var counterValues = await DbHandlers.Instance.Query.GetCounterValues(counterId, Core.Now.Date.AddMonths(-1), Core.Now.Date.AddDays(1), 10).ConfigureAwait(false);
+                    if (counterValues.Count > 0 && counterItem != null)
+                    {
+                        var msg = counterValues.Select(v => v.Timestamp + ": " + v.Value).Join("\n");
+                        await bot.SendTextMessageAsync(message.Chat, $"`Last 10 counter values for {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name}:`\n```" + msg + "```").ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await bot.SendTextMessageAsync(message.Chat, ":exclamation: `No values were found.`").ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
                 }
                 return true;
             });
@@ -148,30 +155,60 @@ namespace TWCore.Diagnostics.Api
             //*****************************************************************************************************************************************
             DbHandlers.Instance.ErrorLogMessage += Instance_ErrorLogMessage;
         }
+        #endregion
 
+        #region Nested Types
+        private class ErrorsRegister
+        {
+            public DateTime LastDate;
+            public int Quantity;
+        }
+        #endregion
+
+        #region Event Handlers
+        private void OnConnected(object sender, EventArgs e)
+        {
+            LoadErrorChats();
+        }
+        private void OnDisconnected(object sender, EventArgs e)
+        {
+            SaveErrorChats();
+        }
         private void Instance_ErrorLogMessage(object sender, Log.LogItem e)
         {
-            var message = $"```Error at: {e.Timestamp}\nEnvironment: {e.EnvironmentName}\nApplication: {e.ApplicationName}\nGroup: {e.GroupName}\nText: {e.Message}\nMessage: {e.Exception?.Message}\nType: {e.Exception?.ExceptionType}\nStacktrace: {e.Exception?.StackTrace}```";
-            foreach (var chat in _errorChats.Values)
+            if (!string.Equals(e.EnvironmentName, _currentEnvironment, StringComparison.OrdinalIgnoreCase)) return;
+            var mKey = (e.EnvironmentName, e.ApplicationName, e.Message);
+            var register = _errorsRegistry.GetOrAdd(mKey, _ => new ErrorsRegister());
+            if (register.LastDate.Date != Core.Now.Date)
+                Interlocked.Exchange(ref register.Quantity, 0);
+            else
+                Interlocked.Increment(ref register.Quantity);
+            if (Core.Now - register.LastDate > TimeSpan.FromSeconds(30))
             {
-                _ = _engine.SendTextMessageAsync(chat, message);
+                register.LastDate = Core.Now;
+                var message = $":exclamation: `Error at: {e.Timestamp}`\n>>>```";
+                message += $"Application: {e.ApplicationName}\n";
+                message += $"Group: {e.GroupName}\n";
+                message += $"Numbers of repetitions of the same error today: {register.Quantity}\n";
+                message += $"Log: {e.Message}\n";
+                if (!string.IsNullOrEmpty(e.TypeName))
+                    message += $"Caller: {e.TypeName}\n";
+                if (e.Exception != null)
+                {
+                    message += $"Message: {e.Exception.Message}\n";
+                    message += $"Type: {e.Exception.ExceptionType}\n";
+                    message += $"Stacktrace: {e.Exception.StackTrace}\n";
+                }
+                message += "```";
+                foreach (var chat in _errorChats.Values)
+                {
+                    _ = _engine.SendTextMessageAsync(chat, message);
+                }
             }
         }
+        #endregion
 
-        private void SaveErrorChats()
-        {
-            try
-            {
-                Core.Log.InfoBasic("Saving error chats...");
-                var keys = _errorChats.Keys.ToArray();
-                keys.SerializeToJsonFile(ErrorChatsFile);
-                Core.Log.InfoBasic("Errors chats saved.");
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-            }
-        }
+        #region Load & Save Error Chats files.
         private void LoadErrorChats()
         {
             try
@@ -197,6 +234,7 @@ namespace TWCore.Diagnostics.Api
                             };
                         }
                         _errorChats.TryAdd(key, chat);
+                        _ = _engine.SendTextMessageAsync(chat, $":warning: `Diagnostics bot has started, you're listening to errors on environment: {_currentEnvironment}`");
                     }
                     Core.Log.InfoBasic("Errors chats loaded.");
                 }
@@ -206,6 +244,21 @@ namespace TWCore.Diagnostics.Api
                 Core.Log.Write(ex);
             }
         }
+        private void SaveErrorChats()
+        {
+            try
+            {
+                Core.Log.InfoBasic("Saving error chats...");
+                var keys = _errorChats.Keys.ToArray();
+                keys.SerializeToJsonFile(ErrorChatsFile);
+                Core.Log.InfoBasic("Errors chats saved.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        #endregion
 
         private class BotSettings : Settings.SettingsBase
         {

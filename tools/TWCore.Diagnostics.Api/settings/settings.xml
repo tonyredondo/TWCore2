@@ -38,6 +38,7 @@
       <Item Key="Core.Status.Transport.Http.Port" Value="28905" />
       <Item Key="RavenDb.Database" Value="Diagnostics" />
       <Item Key="RavenDb.Urls" Value="http://10.10.1.52:8080" />
+      <Item Key="Bot.DefaultEnvironment" Value="Docker" />
 
       <Item Key="Diagnostics.TracesFolderPath" Value="./tracesdata" />
       <Item Key="Diagnostics.StoreTracesToDisk" Value="true" />
@@ -52,6 +53,8 @@
       <Item Key="Core.Status.Transport.Http.Port" Value="{Env:DIAGNOSTICS_STATUS_HTTP_PORT}" />
       <Item Key="RavenDb.Database" Value="{Env:DIAGNOSTICS_RAVENDB_DATABASE}" />
       <Item Key="RavenDb.Urls" Value="{Env:DIAGNOSTICS_RAVENDB_URLS}" />
+      <Item Key="Bot.DefaultEnvironment" Value="{Env:DIAGNOSTICS_BOT_DEFAULTENVIRONMENT}" />
+      <Item Key="Bot.SlackToken" Value="{Env:DIAGNOSTICS_BOT_SLACKTOKEN}" />
     </Overwrite>
   </AppSettings>
 

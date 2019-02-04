@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -110,7 +111,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 await RavenHelper.BulkInsertAsync(async bulkOp =>
                 {
-                    try 
+                    try
                     {
                         foreach (var groupMetaItem in message)
                             await bulkOp.StoreAsync(groupMetaItem).ConfigureAwait(false);
@@ -187,23 +188,34 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                             switch (value)
                                             {
                                                 case ResponseMessage rsMessage when rsMessage?.Body != null:
-                                                    XmlSerializer.Serialize(rsMessage.Body.GetValue(), msXml);
-                                                    bXml = true;
+                                                    var bodyValueRS = rsMessage.Body.GetValue();
+                                                    if (!(bodyValueRS is IDictionary))
+                                                    {
+                                                        XmlSerializer.Serialize(bodyValueRS, msXml);
+                                                        bXml = true;
+                                                    }
                                                     break;
                                                 case RequestMessage rqMessage when rqMessage?.Body != null:
-                                                    XmlSerializer.Serialize(rqMessage.Body.GetValue(), msXml);
-                                                    bXml = true;
+                                                    var bodyValueRQ = rqMessage.Body.GetValue();
+                                                    if (!(bodyValueRQ is IDictionary))
+                                                    {
+                                                        XmlSerializer.Serialize(bodyValueRQ, msXml);
+                                                        bXml = true;
+                                                    }
                                                     break;
                                                 default:
                                                     if (value != null && value.GetType() != typeof(string))
                                                     {
-                                                        XmlSerializer.Serialize(value, msXml);
-                                                        bXml = true;
+                                                        if (!(value is IDictionary))
+                                                        {
+                                                            XmlSerializer.Serialize(value, msXml);
+                                                            bXml = true;
+                                                        }
                                                     }
                                                     break;
                                             }
                                         }
-                                        else if (!(traceItem.TraceObject is string))
+                                        else if (!(traceItem.TraceObject is string) && !(traceItem.TraceObject is IDictionary))
                                         {
                                             XmlSerializer.Serialize(traceItem.TraceObject, msXml);
                                             bXml = true;
@@ -412,7 +424,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             {
                                 Core.Log.Write(ex);
                             }
-                        }).ConfigureAwait(false);   
+                        }).ConfigureAwait(false);
                     }
                     else if (counter is CounterItem<double> doubleCounter)
                     {

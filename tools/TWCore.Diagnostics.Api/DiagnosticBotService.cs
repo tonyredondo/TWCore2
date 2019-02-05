@@ -231,7 +231,6 @@ namespace TWCore.Diagnostics.Api
                     message += $"Caller: {e.TypeName}\n";
                 if (e.Exception != null)
                 {
-                    message += "---\n";
                     message += $"Message: {e.Exception.Message}\n";
                     message += $"Type: {e.Exception.ExceptionType}\n";
                     message += $"Stacktrace: \n{e.Exception.StackTrace}\n";

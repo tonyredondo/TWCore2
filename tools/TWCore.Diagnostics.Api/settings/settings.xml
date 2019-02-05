@@ -49,6 +49,8 @@
       <Item Key="Diagnostics.ForceBinaryOnApp" Value="" />
       <Item Key="Diagnostics.ForceXmlOnApp" Value="" />
       <Item Key="Diagnostics.ForceJsonOnApp" Value="Agsw.Travel.Api;" />
+      
+      <Item Key="Core.Services.Queue.ConfigFile" Value="./settings/queues.xml" />
     </Items>
     <Overwrite EnvironmentName="Docker" MachineName="">
       <Item Key="Core.Status.Transport.Http.Port" Value="{Env:DIAGNOSTICS_STATUS_HTTP_PORT}" />
@@ -56,6 +58,7 @@
       <Item Key="RavenDb.Urls" Value="{Env:DIAGNOSTICS_RAVENDB_URLS}" />
       <Item Key="Bot.DefaultEnvironment" Value="{Env:DIAGNOSTICS_BOT_DEFAULTENVIRONMENT}" />
       <Item Key="Bot.SlackToken" Value="{Env:DIAGNOSTICS_BOT_SLACKTOKEN}" />
+      <Item Key="Core.Services.Queue.ConfigFile" Value="{Env:DIAGNOSTICS_QUEUE_CONFIG}" />
     </Overwrite>
   </AppSettings>
 

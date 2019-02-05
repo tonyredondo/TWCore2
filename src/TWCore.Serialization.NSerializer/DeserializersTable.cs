@@ -114,6 +114,19 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (stream.CanSeek)
                 {
+                    if (ex.Message?.StartsWith("Unexpected byte", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        stream.Seek(0, SeekOrigin.Begin);
+                        try
+                        {
+                            var fileName = "DesError-" + Guid.NewGuid() + ".nbin";
+                            using (var fs = new FileStream(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite))
+                                stream.CopyTo(fs);
+                            Core.Log.Warning("Deserializer exception filename: {0}", fileName);
+                        }
+                        catch { }
+                    }
+
                     stream.Seek(0, SeekOrigin.Begin);
                     GenericObject genericValue = null;
                     try

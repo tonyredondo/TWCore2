@@ -50,6 +50,8 @@ namespace TWCore.Diagnostics.Status
         private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
         private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
         private readonly Action _throttledUpdate;
+        private readonly Func<object, WeakValue> _createWeakValueFunc;
+        private readonly Func<object, WeakChildren> _createWeakChildrenFunc;
         private StatusItemCollection _lastResult;
         private long _currentItems;
 
@@ -68,6 +70,8 @@ namespace TWCore.Diagnostics.Status
         public DefaultStatusEngine()
         {
             _throttledUpdate = new Action(UpdateStatus).CreateThrottledAction(1000);
+            _createWeakValueFunc = new Func<object, WeakValue>(CreateWeakValue);
+            _createWeakChildrenFunc = new Func<object, WeakChildren>(CreateWeakChildren);
             Transports = new ObservableCollection<IStatusTransport>();
             Transports.CollectionChanged += (s, e) =>
             {
@@ -169,44 +173,59 @@ namespace TWCore.Diagnostics.Status
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
             var obj = objectToAttach ?? statusItemDelegate.Target;
-            var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
-            weakValue.Add(statusItemDelegate);
+            lock (this)
+            {
+                var weakValue = _weakValues.GetOrAdd(obj, _createWeakValueFunc);
+                weakValue.Add(statusItemDelegate);
+            }
         }
         /// <inheritdoc />
         public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
             var obj = objectToAttach ?? valuesFillerDelegate.Target;
-            var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
-            weakValue.Add(valuesFillerDelegate);
+            lock (this)
+            {
+                var weakValue = _weakValues.GetOrAdd(obj, _createWeakValueFunc);
+                weakValue.Add(valuesFillerDelegate);
+            }
         }
         /// <inheritdoc />
         public void AttachObject(object objectToAttach)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
             if (objectToAttach is null) return;
-            _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
+            lock (this)
+            {
+                _weakValues.GetOrAdd(objectToAttach, _createWeakValueFunc);
+            }
         }
         /// <inheritdoc />
         public void AttachChild(object objectToAttach, object parent)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
             if (objectToAttach is null) return;
-            var value = _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
-            if (parent is null) return;
-            value.SetParent(parent);
-            _weakValues.GetOrAdd(parent, CreateWeakValue);
-            var wChildren = _weakChildren.GetOrAdd(parent, CreateWeakChildren);
-            if (!wChildren.Children.Any((i, io) => i.IsAlive && i.Target == io, objectToAttach))
-                wChildren.Children.Add(new WeakReference(objectToAttach));
+            lock (this)
+            {
+                var value = _weakValues.GetOrAdd(objectToAttach, _createWeakValueFunc);
+                if (parent is null) return;
+                value.SetParent(parent);
+                _weakValues.GetOrAdd(parent, _createWeakValueFunc);
+                var wChildren = _weakChildren.GetOrAdd(parent, _createWeakChildrenFunc);
+                if (!wChildren.Children.Any((i, io) => i.IsAlive && i.Target == io, objectToAttach))
+                    wChildren.Children.Add(new WeakReference(objectToAttach));
+            }
         }
         /// <inheritdoc />
         public void DeAttachObject(object objectToDetach)
         {
             if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
             if (objectToDetach is null) return;
-            var value = _weakValues.GetOrAdd(objectToDetach, CreateWeakValue);
-            value.Enable = false;
+            lock (this)
+            {
+                var value = _weakValues.GetOrAdd(objectToDetach, _createWeakValueFunc);
+                value.Enable = false;
+            }
         }
         /// <inheritdoc />
         public void Dispose()

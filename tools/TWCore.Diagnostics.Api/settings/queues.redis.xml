@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<QueuesConfiguration>
+  
+  <QueueConfig Name="TWCore.Diagnostics.Api"  IgnoreClientCounters="true">
+    <Types Client="TWCore.Messaging.Redis.RedisQueueClient, TWCore.Messaging.Redis"
+           Server="TWCore.Messaging.Redis.RedisQueueServer, TWCore.Messaging.Redis" />
+    <RawTypes Client="TWCore.Messaging.Redis.RedisQueueRawClient, TWCore.Messaging.Redis"
+              Server="TWCore.Messaging.Redis.RedisQueueRawServer, TWCore.Messaging.Redis" />
+
+    <ClientQueues EnvironmentName="" MachineName="">
+      <SendQueue Route="127.0.0.1" Name="DIAGNOSTICS_RQ" />
+    </ClientQueues>
+    <ServerQueues EnvironmentName="" MachineName="">
+      <RecvQueue Route="127.0.0.1" Name="DIAGNOSTICS_RQ" />
+    </ServerQueues>
+    
+    <ClientQueues EnvironmentName="Docker" MachineName="">
+      <SendQueue Route="{Env:DIAGNOSTICS_QUEUE_ROUTE}" Name="{Env:DIAGNOSTICS_QUEUE_NAME}" />
+    </ClientQueues>
+    <ServerQueues EnvironmentName="Docker" MachineName="">
+      <RecvQueue Route="{Env:DIAGNOSTICS_QUEUE_ROUTE}" Name="{Env:DIAGNOSTICS_QUEUE_NAME}" />
+    </ServerQueues>
+    
+    <ClientQueues EnvironmentName="REMOTE" MachineName="">
+      <SendQueue Route="10.10.1.52" Name="DIAGNOSTICS_RQ" />
+    </ClientQueues>
+    <ServerQueues EnvironmentName="REMOTE" MachineName="">
+      <RecvQueue Route="10.10.1.52" Name="DIAGNOSTICS_RQ" />
+    </ServerQueues>
+
+    <RequestOptions SerializerMimeType="application/n-binary" CompressorEncodingType="deflate">
+      <ClientSenderOptions MessageExpirationInSec="30" MessagePriority="Normal" UseDeadLetter="true" Recoverable="false" Label="DIAGNOSTICS REQUEST" />
+      <ServerReceiverOptions ProcessingWaitOnFinalizeInSec="10" MaxSimultaneousMessagesPerQueue="200" SleepOnExceptionInSec="2" />
+    </RequestOptions>
+
+  </QueueConfig>
+
+</QueuesConfiguration>

@@ -19,8 +19,11 @@
     <ProjectReference Include="..\..\src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Bot\TWCore.Bot.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging.Kafka\TWCore.Messaging.Kafka.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging.NATS\TWCore.Messaging.NATS.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging.RabbitMQ\TWCore.Messaging.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging.Redis\TWCore.Messaging.Redis.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />

@@ -182,10 +182,10 @@ namespace TWCore.Messaging.Redis
                 throw new NullReferenceException("SenderOptions is null.");
 
             var recvQueue = _clientQueues.RecvQueue;
-            var name = recvQueue.Name;
-            if (!UseSingleResponseQueue)
+            var name = recvQueue?.Name;
+            if (!UseSingleResponseQueue && name != null)
                 name += "-" + Core.InstanceIdString;
-            var body = CreateRawMessageBody(message, correlationId, name);
+            var body = CreateRawMessageBody(message, correlationId, name ?? string.Empty);
 
             foreach (var queue in _senders)
             {

@@ -54,6 +54,8 @@ namespace TWCore.Messaging.Redis
         protected override async Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
+            var replyTo = e.Metadata["ReplyTo"] ?? string.Empty;
+
             queues.Add(new MQConnection
             {
                 Route = e.Sender.Route,
@@ -64,8 +66,7 @@ namespace TWCore.Messaging.Redis
             if (senderOptions is null)
                 throw new NullReferenceException("ServerSenderOptions is null.");
 
-            var body = RedisQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, e.Metadata["ReplyTo"]);
-            var replyTo = e.Metadata["ReplyTo"];
+            var body = RedisQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, replyTo);
 
             var response = true;
             foreach (var queue in e.ResponseQueues)

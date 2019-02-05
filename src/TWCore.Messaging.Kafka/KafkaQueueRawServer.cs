@@ -56,6 +56,8 @@ namespace TWCore.Messaging.Kafka
         protected override async Task<int> OnSendAsync(MultiArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
+            var replyTo = e.Metadata["ReplyTo"] ?? string.Empty;
+
             queues.Add(new MQConnection
             {
                 Route = e.Sender.Route,
@@ -66,9 +68,8 @@ namespace TWCore.Messaging.Kafka
             if (senderOptions is null)
                 throw new NullReferenceException("ServerSenderOptions is null.");
 
-            var header = KafkaQueueRawClient.CreateRawMessageHeader(e.CorrelationId, e.Metadata["ReplyTo"]);
+            var header = KafkaQueueRawClient.CreateRawMessageHeader(e.CorrelationId, replyTo);
             var body = message.AsArray();
-            var replyTo = e.Metadata["ReplyTo"];
 
             var response = true;
             foreach (var queue in e.ResponseQueues)

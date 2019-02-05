@@ -200,11 +200,11 @@ namespace TWCore.Messaging.Kafka
                 throw new NullReferenceException("SenderOptions is null.");
 
             var recvQueue = _clientQueues.RecvQueue;
-            var name = recvQueue.Name;
-            if (!UseSingleResponseQueue)
+            var name = recvQueue?.Name;
+            if (!UseSingleResponseQueue && name != null)
                 name += "-" + Core.InstanceIdString;
 
-            var key = CreateRawMessageHeader(correlationId, name);
+            var key = CreateRawMessageHeader(correlationId, name ?? string.Empty);
 
             foreach ((var queue, var producer) in _senders)
             {

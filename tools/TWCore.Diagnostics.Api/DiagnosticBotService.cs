@@ -233,7 +233,8 @@ namespace TWCore.Diagnostics.Api
                 {
                     message += $"Message: {e.Exception.Message}\n";
                     message += $"Type: {e.Exception.ExceptionType}\n";
-                    message += $"Stacktrace: \n{e.Exception.StackTrace}\n";
+                    if (!string.IsNullOrEmpty(e.Exception.StackTrace))
+                        message += $"Stacktrace: \n{e.Exception.StackTrace}\n";
                 }
                 message += "```";
                 foreach (var chat in _errorChats.Values)

@@ -48,7 +48,11 @@ namespace TWCore.Services
             _init = true;
 
             var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
-            if (string.IsNullOrEmpty(queueSettings.ConfigFile)) return;
+            if (string.IsNullOrEmpty(queueSettings.ConfigFile))
+            {
+                Core.Log.Warning("The queues configuration file wasn't setted.");
+                return;
+            }
             queueSettings.ServerName = queueSettings.ServerName ?? Core.ApplicationName;
 
             var queuesConfigFile = queueSettings.ConfigFile;

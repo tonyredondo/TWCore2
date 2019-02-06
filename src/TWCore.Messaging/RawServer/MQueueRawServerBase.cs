@@ -118,13 +118,6 @@ namespace TWCore.Messaging.RawServer
 		        collection.Add("Type", GetType().FullName);
 	        });
         }
-        /// <summary>
-        /// Message Queue server base finalizer
-        /// </summary>
-        ~MQueueRawServerBase()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Public Methods

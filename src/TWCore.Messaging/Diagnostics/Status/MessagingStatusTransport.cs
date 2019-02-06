@@ -58,13 +58,6 @@ namespace TWCore.Diagnostics.Status.Transports
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
-        /// <summary>
-        /// Messaging status transport finalizer
-        /// </summary>
-        ~MessagingStatusTransport()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Private methods

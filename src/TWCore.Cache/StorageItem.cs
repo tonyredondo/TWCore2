@@ -61,14 +61,6 @@ namespace TWCore.Cache
             Meta = meta;
             Data = data;
         }
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~StorageItem()
-        {
-            Dispose();
-        }
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources

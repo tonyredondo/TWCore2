@@ -63,13 +63,6 @@ namespace TWCore.Diagnostics.Trace.Storages
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
-        /// <summary>
-        /// Messaging trace storage finalizer
-        /// </summary>
-        ~MessagingTraceStorage()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Public methods

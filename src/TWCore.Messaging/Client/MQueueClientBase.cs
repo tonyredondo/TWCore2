@@ -109,13 +109,6 @@ namespace TWCore.Messaging.Client
 		        collection.Add("Type", GetType().FullName);
 	        });
         }
-        /// <summary>
-        /// Message Queue finalizer
-        /// </summary>
-        ~MQueueClientBase()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Private Statics

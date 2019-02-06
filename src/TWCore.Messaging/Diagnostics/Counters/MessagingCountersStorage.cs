@@ -53,13 +53,6 @@ namespace TWCore.Diagnostics.Counters.Storages
         {
             _queueClient = queueClient;
         }
-        /// <summary>
-        /// Messaging log storage finalizer
-        /// </summary>
-        ~MessagingCountersStorage()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Public methods

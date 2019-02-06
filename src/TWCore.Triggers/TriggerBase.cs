@@ -46,13 +46,6 @@ namespace TWCore.Triggers
                 collection.Add(nameof(Initiated), Initiated);
             });
         }
-        /// <summary>
-        /// Trigger deconstructor
-        /// </summary>
-        ~TriggerBase()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Methods

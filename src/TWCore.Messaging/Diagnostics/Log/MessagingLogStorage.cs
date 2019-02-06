@@ -61,13 +61,6 @@ namespace TWCore.Diagnostics.Log.Storages
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
-        /// <summary>
-        /// Messaging log storage finalizer
-        /// </summary>
-        ~MessagingLogStorage()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Public methods

@@ -105,13 +105,6 @@ namespace TWCore.Triggers
         {
             Action = triggeredAction;
         }
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        ~TriggeredAction()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Trigger Management

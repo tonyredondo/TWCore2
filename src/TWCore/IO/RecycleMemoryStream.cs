@@ -117,14 +117,6 @@ namespace TWCore.IO
                 Write(buffer.AsSpan(index, count));
         }
         /// <summary>
-        /// Releases unmanaged resources and performs other cleanup operations before the
-        /// <see cref="T:TWCore.IO.RecycleMemoryStream"/> is reclaimed by garbage collection.
-        /// </summary>
-        ~RecycleMemoryStream()
-        {
-            Dispose(false);
-        }
-        /// <summary>
         /// Dispose all internal resources
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources</param>

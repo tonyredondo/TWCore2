@@ -119,13 +119,6 @@ namespace TWCore.Messaging.Server
 		        collection.Add("Type", GetType().FullName);
 	        });
         }
-        /// <summary>
-        /// Message Queue server base finalizer
-        /// </summary>
-        ~MQueueServerBase()
-		{
-			Dispose();
-		}
 		#endregion
 
 		#region Public Methods

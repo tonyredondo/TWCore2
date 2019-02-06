@@ -784,14 +784,6 @@ namespace TWCore.Serialization
         }
 
         /// <summary>
-        /// Serialized Object finalizer
-        /// </summary>
-        ~SerializedObject()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
         /// Dispose this instance
         /// </summary>
         public void Dispose()

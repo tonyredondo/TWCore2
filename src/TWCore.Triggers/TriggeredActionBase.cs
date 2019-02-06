@@ -98,13 +98,6 @@ namespace TWCore.Triggers
                     Core.Status.AttachChild(trigger, this);
             });
         }
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        ~TriggeredActionBase()
-        {
-            Dispose();
-        }
         #endregion
 
         #region Trigger Management

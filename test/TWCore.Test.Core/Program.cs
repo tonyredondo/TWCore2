@@ -193,26 +193,26 @@ namespace TWCore.Test.Core
                 testValue.SerializeToNBinary();
 
 
-//                var testBytes = new byte[1024];
-//                var testBytes2 = new byte[1024];
-//                new Random().NextBytes(testBytes);
-//                new Random().NextBytes(testBytes2);
-//
-//                var multiTest1 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
-//                var multiTest2 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
-//
-//                for (var i = 0; i < 100000; i++)
-//                {
-//                    MultiArrayBytesComparer.Instance.GetHashCode(multiTest1);
-//                }
-//                
-//                using (Watch.Create("MultiArray Hash"))
-//                {
-//                    for (var i = 0; i < 100000; i++)
-//                    {
-//                        MultiArrayBytesComparer.Instance.GetHashCode(multiTest1);
-//                    }
-//                }
+                //                var testBytes = new byte[1024];
+                //                var testBytes2 = new byte[1024];
+                //                new Random().NextBytes(testBytes);
+                //                new Random().NextBytes(testBytes2);
+                //
+                //                var multiTest1 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
+                //                var multiTest2 = new MultiArray<byte>(new[] { testBytes, testBytes2, testBytes2, testBytes2 }).Slice(666, 3100);
+                //
+                //                for (var i = 0; i < 100000; i++)
+                //                {
+                //                    MultiArrayBytesComparer.Instance.GetHashCode(multiTest1);
+                //                }
+                //                
+                //                using (Watch.Create("MultiArray Hash"))
+                //                {
+                //                    for (var i = 0; i < 100000; i++)
+                //                    {
+                //                        MultiArrayBytesComparer.Instance.GetHashCode(multiTest1);
+                //                    }
+                //                }
 
 
                 //AssemblyResolverManager.RegisterDomain(new[] { "C:\\AGSW_GIT\\dlls" });

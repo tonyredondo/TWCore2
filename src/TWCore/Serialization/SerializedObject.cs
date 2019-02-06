@@ -461,6 +461,8 @@ namespace TWCore.Serialization
                 var rows = Math.DivRem(dataLength, segmentLength, out var pos);
                 if (pos > 0)
                     rows++;
+                else
+                    pos = segmentLength;
 
                 var bytes = SegmentPool.RentContainer();
                 for (var i = 0; i < rows; i++)
@@ -501,6 +503,8 @@ namespace TWCore.Serialization
                 var rows = Math.DivRem(dataLength, segmentLength, out var pos);
                 if (pos > 0)
                     rows++;
+                else
+                    pos = segmentLength;
 
                 var bytes = SegmentPool.RentContainer();
                 for (var i = 0; i < rows; i++)
@@ -558,6 +562,8 @@ namespace TWCore.Serialization
                 var pos = dataLength % segmentLength;
                 if (pos > 0)
                     rows++;
+                else
+                    pos = segmentLength;
 
                 var bytes = SegmentPool.RentContainer();
                 for (var i = 0; i < rows; i++)
@@ -597,6 +603,8 @@ namespace TWCore.Serialization
                 var rows = Math.DivRem(dataLength, segmentLength, out var pos);
                 if (pos > 0)
                     rows++;
+                else
+                    pos = segmentLength;
 
                 var bytes = SegmentPool.RentContainer();
                 for (var i = 0; i < rows; i++)

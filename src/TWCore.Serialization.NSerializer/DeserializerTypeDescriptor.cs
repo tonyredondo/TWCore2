@@ -34,6 +34,7 @@ namespace TWCore.Serialization.NSerializer
         public readonly bool IsNSerializable;
         public readonly DeserializerMetaDataOfType Metadata;
         public readonly DeserializeDelegate DeserializeFunc;
+        //public readonly Expression<DeserializeDelegate> Lambda;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerTypeDescriptor(Type type)

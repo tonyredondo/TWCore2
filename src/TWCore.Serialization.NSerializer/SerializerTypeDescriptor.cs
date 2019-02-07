@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2015-2018 Daniel Adrian Redondo Suarez
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -216,7 +216,7 @@ namespace TWCore.Serialization.NSerializer
                 if (!previousTypes.Add(itemType))
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
 
-                var innerDescriptor = new SerializerTypeDescriptor(itemType, previousTypes); //SerializersTable.Descriptors.GetOrAdd(itemType, tp => new SerializerTypeDescriptor(tp));
+                var innerDescriptor = SerializersTable.Descriptors.GetOrAdd(itemType, (tp, ptypes) => new SerializerTypeDescriptor(tp, ptypes), previousTypes);
 
                 var innerVarExpressions = new List<ParameterExpression>();
                 var innerSerExpressions = new List<Expression>();
@@ -301,7 +301,7 @@ namespace TWCore.Serialization.NSerializer
                 if (!previousTypes.Add(itemType))
                     return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
 
-                var innerDescriptor = new SerializerTypeDescriptor(itemType, previousTypes); //SerializersTable.Descriptors.GetOrAdd(itemType, tp => new SerializerTypeDescriptor(tp));
+                var innerDescriptor = SerializersTable.Descriptors.GetOrAdd(itemType, (tp, ptypes) => new SerializerTypeDescriptor(tp, ptypes), previousTypes);
 
                 var innerVarExpressions = new List<ParameterExpression>();
                 var innerSerExpressions = new List<Expression>();

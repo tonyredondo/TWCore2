@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
@@ -54,6 +56,15 @@ namespace TWCore.Tests
             var client = hClient.ActAs<ISampleProvider>();
 
             double perItemMs;
+
+            try
+            {
+                var intEnumerable = await client.GetInt().ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
 
             using (var watch = Watch.Create("GetSampleAsync"))
             {
@@ -107,6 +118,7 @@ namespace TWCore.Tests
             Task DelayTestAsync();
             Sample GetSample();
             Sample GetSample2();
+            Task<IEnumerable<int>> GetInt();
         }
 
         public class SampleProxy : RPCProxy, ISampleProvider
@@ -129,6 +141,10 @@ namespace TWCore.Tests
             public Sample GetSample2()
             {
                 return Invoke<Sample>();
+            }
+            public Task<IEnumerable<int>> GetInt()
+            {
+                return InvokeAsync<IEnumerable<int>>();
             }
         }
 
@@ -157,6 +173,12 @@ namespace TWCore.Tests
             public Sample GetSample2()
             {
                 return sampleValue;
+            }
+
+            public async Task<IEnumerable<int>> GetInt()
+            {
+                await Task.Delay(150).ConfigureAwait(false);
+                return Enumerable.Range(0, 1024);
             }
         }
     }

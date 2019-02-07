@@ -175,12 +175,27 @@ namespace TWCore.Reflection
 
         private static object ChangeType(object value, Type conversionType)
         {
-            if (!conversionType.IsGenericType ||
-                conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
+            if (value is IConvertible)
                 return Convert.ChangeType(value, conversionType);
-            if (value is null) return null;
-            conversionType = Nullable.GetUnderlyingType(conversionType);
-            return Convert.ChangeType(value, conversionType);
+            if (value is null)
+                return null;
+            var valueType = value.GetType();
+            if (conversionType.IsAssignableFrom(valueType))
+                return value;
+
+            if (conversionType.IsGenericType)
+            {
+                if (conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                {
+                    throw new InvalidCastException($"The value of type: '{valueType}' can't be converted to: '{conversionType}'");
+                }
+                else
+                {
+                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType));
+                }
+            }
+
+            return value;
         }
     }
 }

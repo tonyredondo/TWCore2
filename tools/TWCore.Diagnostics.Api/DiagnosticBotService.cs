@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2015-2018 Daniel Adrian Redondo Suarez
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -175,6 +175,24 @@ namespace TWCore.Diagnostics.Api
 
             //*****************************************************************************************************************************************
 
+            _engine.Commands.Add(msg => msg.StartsWith(".addcounteralert", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.StartsWith(".removecounteralert", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.StartsWith(".setcounteralertmessage", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+
+                return true;
+            });
+
+            //*****************************************************************************************************************************************
+
             _engine.Commands.Add(msg => msg.Equals(".help", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
                 var helpMsg = $"`Available commands:`\n";
@@ -184,6 +202,9 @@ namespace TWCore.Diagnostics.Api
                 helpMsg += ".untrackerrors : Remove the current chat to the tracking errors list.\n";
                 helpMsg += ".getcounters : Get available counters.\n";
                 helpMsg += ".getcountervalue : Get values for a counter.\n```";
+                helpMsg += ".addcounteralert : Adds this chat to a counter change alert.\n```";
+                helpMsg += ".removecounteralert : Removes this chat from a counter change alert.\n```";
+                helpMsg += ".setcounteralertmessage : Sets a counter change alert message.\n```";
                 await bot.SendTextMessageAsync(message.Chat, helpMsg).ConfigureAwait(false);
                 return true;
             });
@@ -258,24 +279,27 @@ namespace TWCore.Diagnostics.Api
                 {
                     Core.Log.InfoBasic("Loading error chats...");
                     var keys = pFileName.DeserializeFromJsonFile<string[]>();
-                    foreach(var key in keys)
+                    if (keys != null)
                     {
-                        if (_engine.Chats.TryGet(key, out var chat))
+                        foreach (var key in keys)
                         {
-                            Core.Log.InfoBasic("Adding chat: {0} - {1}", key, chat.Name);
-                        }
-                        else
-                        {
-                            Core.Log.InfoBasic("Adding chat: {0}", key);
-                            chat = new BotChat
+                            if (_engine.Chats.TryGet(key, out var chat))
                             {
-                                Id = key,
-                                ChatType = BotChatType.Private,
-                                Name = key
-                            };
+                                Core.Log.InfoBasic("Adding chat: {0} - {1}", key, chat.Name);
+                            }
+                            else
+                            {
+                                Core.Log.InfoBasic("Adding chat: {0}", key);
+                                chat = new BotChat
+                                {
+                                    Id = key,
+                                    ChatType = BotChatType.Private,
+                                    Name = key
+                                };
+                            }
+                            _errorChats.TryAdd(key, chat);
+                            _ = _engine.SendTextMessageAsync(chat, $":warning: `Diagnostics bot has started, you're listening to errors on environment: {_currentEnvironment}`");
                         }
-                        _errorChats.TryAdd(key, chat);
-                        _ = _engine.SendTextMessageAsync(chat, $":warning: `Diagnostics bot has started, you're listening to errors on environment: {_currentEnvironment}`");
                     }
                     Core.Log.InfoBasic("Errors chats loaded.");
                 }
@@ -304,11 +328,26 @@ namespace TWCore.Diagnostics.Api
         }
         #endregion
 
+
         private class BotSettings : Settings.SettingsBase
         {
             public string SlackToken { get; set; } = "ZX9YXvB6hTwTmurR4QguFgZZ-551556876045-732105390004-bxox".Reverse();
             public string DefaultEnvironment { get; set; } = "Docker";
             public string DataFolder { get; set; } = "./botdata";
+        }
+
+
+        //Config file
+        private class BotConfig
+        {
+            public string Environment { get; set; }
+            public List<string> ErrorChats { get; set; } = new List<string>();
+            public Dictionary<string, BotCounterWarning> CounterWarnings { get; set; } = new Dictionary<string, BotCounterWarning>();
+        }
+        private class BotCounterWarning
+        {
+            public List<string> Chats { get; set; } = new List<string>();
+            public string Message { get; set; }
         }
     }
 }

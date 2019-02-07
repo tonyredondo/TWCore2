@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2015-2018 Daniel Adrian Redondo Suarez
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,6 +43,7 @@ namespace TWCore.Diagnostics.Api
 		public IDiagnosticQueryHandler Query { get; }
 
         public event EventHandler<LogItem> ErrorLogMessage;
+        public event EventHandler<ICounterItem> CounterReceived;
 		#endregion
 
 		private DbHandlers()
@@ -60,15 +61,24 @@ namespace TWCore.Diagnostics.Api
 
         private void FireAsyncErrorLogMessage(LogItem item)
         {
+            if (ErrorLogMessage == null) return;
             Task.Run(() =>
             {
                 ErrorLogMessage?.Invoke(this, item);
             });
         }
+        private void FireAsyncCounterReceived(ICounterItem item)
+        {
+            if (CounterReceived == null) return;
+            Task.Run(() =>
+            {
+                CounterReceived?.Invoke(this, item);
+            });
+        }
 
-		#region Nested Types
-		
-		private class MessagesHandler : IDiagnosticMessagesHandler
+        #region Nested Types
+
+        private class MessagesHandler : IDiagnosticMessagesHandler
 		{
 			private readonly DbHandlers _parent;
 
@@ -97,21 +107,32 @@ namespace TWCore.Diagnostics.Api
 			}
             public async Task ProcessGroupMetadataMessageAsync(List<GroupMetadata> message)
             {
-				foreach (var item in _parent._messageHandlers)
+                if (message == null) return;
+                if (message.Count == 0) return;
+                foreach (var item in _parent._messageHandlers)
 					await item.ProcessGroupMetadataMessageAsync(message).ConfigureAwait(false);
             }
 			public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
 			{
-				foreach (var item in _parent._messageHandlers)
+                if (message == null) return;
+                if (message.Count == 0) return;
+                foreach (var item in _parent._messageHandlers)
 					await item.ProcessTraceItemsMessageAsync(message).ConfigureAwait(false);
 			}
 			public async Task ProcessStatusMessageAsync(StatusItemCollection message)
 			{
-				foreach (var item in _parent._messageHandlers)
+                if (message == null) return;
+                foreach (var item in _parent._messageHandlers)
 					await item.ProcessStatusMessageAsync(message).ConfigureAwait(false);
 			}
             public async Task ProcessCountersMessageAsync(List<ICounterItem> message)
             {
+                if (message == null) return;
+                if (message.Count == 0) return;
+                foreach (var counter in message)
+                {
+                    _parent.FireAsyncCounterReceived(counter);
+                }
                 foreach (var item in _parent._messageHandlers)
                     await item.ProcessCountersMessageAsync(message).ConfigureAwait(false);
             }

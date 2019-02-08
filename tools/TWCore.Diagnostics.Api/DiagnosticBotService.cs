@@ -280,7 +280,20 @@ namespace TWCore.Diagnostics.Api
                     var counterItem = await DbHandlers.Instance.Query.GetCounter(counterId).ConfigureAwait(false);
                     if (counterItem != null)
                     {
-                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ => new BotCounterAlerts());
+                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ =>
+                        {
+                            var counter = new BotCounterAlerts
+                            {
+                                Environment = _currentEnvironment,
+                                Application = counterItem.Application,
+                                Category = counterItem.Category,
+                                Name = counterItem.Name,
+                                Type = counterItem.Type,
+                                Unit = counterItem.Unit
+                            };
+                            _counterAlertsComparer.TryAdd((counter.Environment, counter.Application, counter.Category, counter.Name, counter.Type, counter.Unit), counter);
+                            return counter;
+                        });
                         lock (cAlert.Chats)
                         {
                             if (cAlert.Chats.Remove(message.Chat.Id))
@@ -309,7 +322,20 @@ namespace TWCore.Diagnostics.Api
                     var counterItem = await DbHandlers.Instance.Query.GetCounter(counterId).ConfigureAwait(false);
                     if (counterItem != null)
                     {
-                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ => new BotCounterAlerts());
+                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ =>
+                        {
+                            var counter = new BotCounterAlerts
+                            {
+                                Environment = _currentEnvironment,
+                                Application = counterItem.Application,
+                                Category = counterItem.Category,
+                                Name = counterItem.Name,
+                                Type = counterItem.Type,
+                                Unit = counterItem.Unit
+                            };
+                            _counterAlertsComparer.TryAdd((counter.Environment, counter.Application, counter.Category, counter.Name, counter.Type, counter.Unit), counter);
+                            return counter;
+                        });
                         cAlert.Message = arrText.Skip(2).Join(" ");
                         await bot.SendTextMessageAsync(message.Chat, $"`Alert message on counter: {counterItem.CountersId} | {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] was setted to: {cAlert.Message}`").ConfigureAwait(false);
                         SaveBotConfig();

@@ -1,5 +1,6 @@
 {
   "environment": "Docker",
+  "diagnosticsUrl": "http://10.10.1.52:55999",
   "errorChats": [],
   "counterAlerts": {
     "a5b240fe-4c90-468b-9f1e-8d7127294c81": {

@@ -40,9 +40,11 @@ namespace TWCore.Diagnostics.Api
         };
         private static BotSettings Settings = Core.GetSettings<BotSettings>();
         const string BotConfigFile = "botconfig.json";
+        const string UrlPathPattern = "/#/diagnostics/search?env={0}&term={1}";
 
         private BotEngine _engine;
         private string _currentEnvironment;
+        private string _currentDiagnosticsUrl;
         private ConcurrentDictionary<string, BotChat> _errorChats;
         private ConcurrentDictionary<Guid, BotCounterAlerts> _counterAlerts;
         private ConcurrentDictionary<(string, string, string, string, CounterType, CounterUnit), BotCounterAlerts> _counterAlertsComparer;
@@ -55,6 +57,7 @@ namespace TWCore.Diagnostics.Api
             _engine.OnConnected += OnConnected;
             _engine.OnDisconnected += OnDisconnected;
             _currentEnvironment = Settings.DefaultEnvironment;
+            _currentDiagnosticsUrl = Settings.DefaultDiagnosticsUrl;
             _errorChats = new ConcurrentDictionary<string, BotChat>();
             _counterAlerts = new ConcurrentDictionary<Guid, BotCounterAlerts>();
             _counterAlertsComparer = new ConcurrentDictionary<(string, string, string, string, CounterType, CounterUnit), BotCounterAlerts>();
@@ -81,6 +84,43 @@ namespace TWCore.Diagnostics.Api
                     _currentEnvironment = arrText[1];
                     SaveBotConfig();
                     await bot.SendTextMessageAsync(message.Chat, "`Environment setted to: " + _currentEnvironment + "`").ConfigureAwait(false);
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
+                }
+                return true;
+            });
+
+            //*****************************************************************************************************************************************
+
+            _engine.Commands.Add(msg => msg.Equals(".geturl", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                await bot.SendTextMessageAsync(message.Chat, "`The current diagnostics url is: " + _currentDiagnosticsUrl + "`").ConfigureAwait(false);
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.StartsWith(".seturl", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (arrText.Length == 2)
+                {
+                    _currentDiagnosticsUrl = arrText[1].Replace("<", string.Empty).Replace(">", string.Empty);
+                    SaveBotConfig();
+                    await bot.SendTextMessageAsync(message.Chat, "`Diagnostics url setted to: " + _currentDiagnosticsUrl + "`").ConfigureAwait(false);
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
+                }
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.StartsWith(".getlink", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (arrText.Length == 2)
+                {
+                    var group = arrText[1];
+                    await bot.SendTextMessageAsync(message.Chat, $"*<{_currentDiagnosticsUrl + string.Format(UrlPathPattern, _currentEnvironment, group)}|View Transaction>*").ConfigureAwait(false);
                 }
                 else
                 {
@@ -212,11 +252,11 @@ namespace TWCore.Diagnostics.Api
                             if (!cAlert.Chats.Contains(message.Chat.Id))
                             {
                                 cAlert.Chats.Add(message.Chat.Id);
-                                _ = bot.SendTextMessageAsync(message.Chat, $"`This chat is tracking changes on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
+                                _ = bot.SendTextMessageAsync(message.Chat, $"`This chat is tracking changes on counter: {counterItem.CountersId} | {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
                             }
                             else
                             {
-                                _ = bot.SendTextMessageAsync(message.Chat, $"`This chat is already tracking changes on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
+                                _ = bot.SendTextMessageAsync(message.Chat, $"`This chat is already tracking changes on counter: {counterItem.CountersId} | {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
                             }
                         }
                         SaveBotConfig();
@@ -245,7 +285,7 @@ namespace TWCore.Diagnostics.Api
                         {
                             if (cAlert.Chats.Remove(message.Chat.Id))
                             {
-                                _ = bot.SendTextMessageAsync(message.Chat, $"`Tracking changes removed on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
+                                _ = bot.SendTextMessageAsync(message.Chat, $"`Tracking changes removed on counter: {counterItem.CountersId} | {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
                             }
                         }
                         SaveBotConfig();
@@ -271,7 +311,7 @@ namespace TWCore.Diagnostics.Api
                     {
                         var cAlert = _counterAlerts.GetOrAdd(counterId, _ => new BotCounterAlerts());
                         cAlert.Message = arrText.Skip(2).Join(" ");
-                        await bot.SendTextMessageAsync(message.Chat, $"`Alert message on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] was setted to: {cAlert.Message}`").ConfigureAwait(false);
+                        await bot.SendTextMessageAsync(message.Chat, $"`Alert message on counter: {counterItem.CountersId} | {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] was setted to: {cAlert.Message}`").ConfigureAwait(false);
                         SaveBotConfig();
                     }
                     else
@@ -295,7 +335,7 @@ namespace TWCore.Diagnostics.Api
                         if (cAlert.Value.Chats.Contains(message.Chat.Id))
                         {
                             var counterItem = await DbHandlers.Instance.Query.GetCounter(cAlert.Key).ConfigureAwait(false);
-                            buffer += $"{counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] => {cAlert.Value.Message}\n";
+                            buffer += $"{counterItem.CountersId} | {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] => {cAlert.Value.Message}\n";
                         }
                     }
                     buffer += "```";
@@ -315,6 +355,8 @@ namespace TWCore.Diagnostics.Api
                 var helpMsg = $"`Available commands:`\n";
                 helpMsg += ">>>```.getenv : Get current environment.\n";
                 helpMsg += ".setenv : Set current environment.\n";
+                helpMsg += ".geturl : Gets the current diagnostics url.\n";
+                helpMsg += ".seturl : Sets the current diagnostics url.\n";
                 helpMsg += ".trackerrors : Sets the current chat to tracking errors.\n";
                 helpMsg += ".untrackerrors : Remove the current chat to the tracking errors list.\n";
                 helpMsg += ".getcounters : Get available counters.\n";
@@ -365,7 +407,8 @@ namespace TWCore.Diagnostics.Api
                 register.LastDate = Core.Now;
                 var message = $":exclamation: `Error at: {e.Timestamp}`\n>>>```";
                 message += $"Application: {e.ApplicationName}\n";
-                message += $"Group: {e.GroupName}\n";
+                if (!string.IsNullOrEmpty(e.GroupName))
+                    message += $"Group: {e.GroupName}\n";
                 message += $"Numbers of repetitions of the same error today: {register.Quantity}\n";
                 message += $"Log: {e.Message}\n";
                 if (!string.IsNullOrEmpty(e.TypeName))
@@ -378,6 +421,10 @@ namespace TWCore.Diagnostics.Api
                         message += $"Stacktrace: \n{e.Exception.StackTrace}\n";
                 }
                 message += "```";
+                if (!string.IsNullOrEmpty(e.GroupName) && !string.IsNullOrWhiteSpace(_currentDiagnosticsUrl))
+                {
+                    message += $"\n*<{_currentDiagnosticsUrl + string.Format(UrlPathPattern, e.EnvironmentName, e.GroupName)}|View Transaction>*";
+                }
                 foreach (var chat in _errorChats.Values)
                 {
                     _ = _engine.SendTextMessageAsync(chat, message);
@@ -416,6 +463,10 @@ namespace TWCore.Diagnostics.Api
                         //Environment
                         if (!string.IsNullOrEmpty(botConfig.Environment))
                             _currentEnvironment = botConfig.Environment;
+
+                        //Diagnostics url
+                        if (!string.IsNullOrEmpty(botConfig.DiagnosticsUrl))
+                            _currentDiagnosticsUrl = botConfig.DiagnosticsUrl;
 
                         //Error Chats
                         if (botConfig.ErrorChats != null)
@@ -483,6 +534,7 @@ namespace TWCore.Diagnostics.Api
                 var botConfig = new BotConfig
                 {
                     Environment = _currentEnvironment,
+                    DiagnosticsUrl = _currentDiagnosticsUrl,
                     ErrorChats = _errorChats.Keys.ToList(),
                     CounterAlerts = _counterAlerts.MapTo(cd =>
                     {
@@ -507,14 +559,15 @@ namespace TWCore.Diagnostics.Api
         {
             public string SlackToken { get; set; } = "ZX9YXvB6hTwTmurR4QguFgZZ-551556876045-732105390004-bxox".Reverse();
             public string DefaultEnvironment { get; set; } = "Docker";
+            public string DefaultDiagnosticsUrl { get; set; }
             public string DataFolder { get; set; } = "./botdata";
         }
-
 
         //Config file
         public class BotConfig
         {
             public string Environment { get; set; }
+            public string DiagnosticsUrl { get; set; }
             public List<string> ErrorChats { get; set; } = new List<string>();
             public Dictionary<Guid, BotCounterAlerts> CounterAlerts { get; set; } = new Dictionary<Guid, BotCounterAlerts>();
         }

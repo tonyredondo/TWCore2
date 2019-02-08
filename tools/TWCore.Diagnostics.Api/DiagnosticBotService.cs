@@ -32,13 +32,20 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticBotService : BotService
     {
+        private static readonly JsonTextSerializer JsonSerializer = new JsonTextSerializer
+        {
+            Indent = true,
+            EnumsAsStrings = true,
+            UseCamelCase = true
+        };
         private static BotSettings Settings = Core.GetSettings<BotSettings>();
-
-        const string ErrorChatsFile = "errorchats.json";
+        const string BotConfigFile = "botconfig.json";
 
         private BotEngine _engine;
         private string _currentEnvironment;
         private ConcurrentDictionary<string, BotChat> _errorChats;
+        private ConcurrentDictionary<Guid, BotCounterAlerts> _counterAlerts;
+        private ConcurrentDictionary<(string, string, string, string, CounterType, CounterUnit), BotCounterAlerts> _counterAlertsComparer;
         private ConcurrentDictionary<(string, string, string), ErrorsRegister> _errorsRegistry;
 
         protected override IBotEngine GetBotEngine()
@@ -49,6 +56,8 @@ namespace TWCore.Diagnostics.Api
             _engine.OnDisconnected += OnDisconnected;
             _currentEnvironment = Settings.DefaultEnvironment;
             _errorChats = new ConcurrentDictionary<string, BotChat>();
+            _counterAlerts = new ConcurrentDictionary<Guid, BotCounterAlerts>();
+            _counterAlertsComparer = new ConcurrentDictionary<(string, string, string, string, CounterType, CounterUnit), BotCounterAlerts>();
             _errorsRegistry = new ConcurrentDictionary<(string, string, string), ErrorsRegister>();
             BindCommands();
             return _engine;
@@ -70,6 +79,7 @@ namespace TWCore.Diagnostics.Api
                 if (arrText.Length == 2)
                 {
                     _currentEnvironment = arrText[1];
+                    SaveBotConfig();
                     await bot.SendTextMessageAsync(message.Chat, "`Environment setted to: " + _currentEnvironment + "`").ConfigureAwait(false);
                 }
                 else
@@ -87,7 +97,7 @@ namespace TWCore.Diagnostics.Api
                 lock (this)
                 {
                     added = _errorChats.TryAdd(message.Chat.Id, message.Chat);
-                    SaveErrorChats();
+                    SaveBotConfig();
                 }
                 if (added)
                     await bot.SendTextMessageAsync(message.Chat, "`Chat was added to the error tracking list.`").ConfigureAwait(false);
@@ -102,7 +112,7 @@ namespace TWCore.Diagnostics.Api
                 lock (this)
                 {
                     removed = _errorChats.TryRemove(message.Chat.Id, out _);
-                    SaveErrorChats();
+                    SaveBotConfig();
                 }
                 if (removed)
                     await bot.SendTextMessageAsync(message.Chat, "`Chat was removed from the error tracking list.`").ConfigureAwait(false);
@@ -177,17 +187,124 @@ namespace TWCore.Diagnostics.Api
 
             _engine.Commands.Add(msg => msg.StartsWith(".addcounteralert", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (arrText.Length == 2 && Guid.TryParse(arrText[1], out var counterId))
+                {
+                    var counterItem = await DbHandlers.Instance.Query.GetCounter(counterId).ConfigureAwait(false);
+                    if (counterItem != null)
+                    {
+                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ =>
+                        {
+                            var counter = new BotCounterAlerts
+                            {
+                                Environment = _currentEnvironment,
+                                Application = counterItem.Application,
+                                Category = counterItem.Category,
+                                Name = counterItem.Name,
+                                Type = counterItem.Type,
+                                Unit = counterItem.Unit
+                            };
+                            _counterAlertsComparer.TryAdd((counter.Environment, counter.Application, counter.Category, counter.Name, counter.Type, counter.Unit), counter);
+                            return counter;
+                        });
+                        lock (cAlert.Chats)
+                        {
+                            if (!cAlert.Chats.Contains(message.Chat.Id))
+                            {
+                                cAlert.Chats.Add(message.Chat.Id);
+                                _ = bot.SendTextMessageAsync(message.Chat, $"`This chat is tracking changes on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
+                            }
+                            else
+                            {
+                                _ = bot.SendTextMessageAsync(message.Chat, $"`This chat is already tracking changes on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
+                            }
+                        }
+                        SaveBotConfig();
+                    }
+                    else
+                    {
+                        await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Counter not found.`").ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
+                }
                 return true;
             });
             _engine.Commands.Add(msg => msg.StartsWith(".removecounteralert", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (arrText.Length == 2 && Guid.TryParse(arrText[1], out var counterId))
+                {
+                    var counterItem = await DbHandlers.Instance.Query.GetCounter(counterId).ConfigureAwait(false);
+                    if (counterItem != null)
+                    {
+                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ => new BotCounterAlerts());
+                        lock (cAlert.Chats)
+                        {
+                            if (cAlert.Chats.Remove(message.Chat.Id))
+                            {
+                                _ = bot.SendTextMessageAsync(message.Chat, $"`Tracking changes removed on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}]`");
+                            }
+                        }
+                        SaveBotConfig();
+                    }
+                    else
+                    {
+                        await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Counter not found.`").ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
+                }
                 return true;
             });
             _engine.Commands.Add(msg => msg.StartsWith(".setcounteralertmessage", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
             {
-
+                var arrText = message.Text.SplitAndTrim(" ");
+                if (Guid.TryParse(arrText[1], out var counterId))
+                {
+                    var counterItem = await DbHandlers.Instance.Query.GetCounter(counterId).ConfigureAwait(false);
+                    if (counterItem != null)
+                    {
+                        var cAlert = _counterAlerts.GetOrAdd(counterId, _ => new BotCounterAlerts());
+                        cAlert.Message = arrText.Skip(2).Join(" ");
+                        await bot.SendTextMessageAsync(message.Chat, $"`Alert message on counter: {counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] was setted to: {cAlert.Message}`").ConfigureAwait(false);
+                        SaveBotConfig();
+                    }
+                    else
+                    {
+                        await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Counter not found.`").ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `Invalid syntax.`").ConfigureAwait(false);
+                }
+                return true;
+            });
+            _engine.Commands.Add(msg => msg.Equals(".listcountersalerts", StringComparison.OrdinalIgnoreCase), async (bot, message) =>
+            {
+                if (_counterAlerts.Count > 0)
+                {
+                    string buffer = $"```Counters alerts:\n";
+                    foreach (var cAlert in _counterAlerts)
+                    {
+                        if (cAlert.Value.Chats.Contains(message.Chat.Id))
+                        {
+                            var counterItem = await DbHandlers.Instance.Query.GetCounter(cAlert.Key).ConfigureAwait(false);
+                            buffer += $"{counterItem.Application}\\{counterItem.Category}\\{counterItem.Name} [{counterItem.Type}] => {cAlert.Value.Message}\n";
+                        }
+                    }
+                    buffer += "```";
+                    await bot.SendTextMessageAsync(message.Chat, buffer).ConfigureAwait(false);
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat, ":exclamation: `There are not counters alerts.`").ConfigureAwait(false);
+                }
                 return true;
             });
 
@@ -201,9 +318,10 @@ namespace TWCore.Diagnostics.Api
                 helpMsg += ".trackerrors : Sets the current chat to tracking errors.\n";
                 helpMsg += ".untrackerrors : Remove the current chat to the tracking errors list.\n";
                 helpMsg += ".getcounters : Get available counters.\n";
-                helpMsg += ".getcountervalue : Get values for a counter.\n```";
-                helpMsg += ".addcounteralert : Adds this chat to a counter change alert.\n```";
-                helpMsg += ".removecounteralert : Removes this chat from a counter change alert.\n```";
+                helpMsg += ".getcountervalue : Get values for a counter.\n";
+                helpMsg += ".addcounteralert : Adds this chat to a counter change alert.\n";
+                helpMsg += ".removecounteralert : Removes this chat from a counter change alert.\n";
+                helpMsg += ".listcountersalerts : List counters alerts for this chat.\n";
                 helpMsg += ".setcounteralertmessage : Sets a counter change alert message.\n```";
                 await bot.SendTextMessageAsync(message.Chat, helpMsg).ConfigureAwait(false);
                 return true;
@@ -211,6 +329,7 @@ namespace TWCore.Diagnostics.Api
 
             //*****************************************************************************************************************************************
             DbHandlers.Instance.ErrorLogMessage += Instance_ErrorLogMessage;
+            DbHandlers.Instance.CounterReceived += Instance_CounterReceived;
         }
         #endregion
 
@@ -225,11 +344,12 @@ namespace TWCore.Diagnostics.Api
         #region Event Handlers
         private void OnConnected(object sender, EventArgs e)
         {
-            LoadErrorChats();
+            if (!LoadBotConfig())
+                SaveBotConfig();
         }
         private void OnDisconnected(object sender, EventArgs e)
         {
-            SaveErrorChats();
+            SaveBotConfig();
         }
         private void Instance_ErrorLogMessage(object sender, Log.LogItem e)
         {
@@ -264,62 +384,116 @@ namespace TWCore.Diagnostics.Api
                 }
             }
         }
+        private void Instance_CounterReceived(object sender, ICounterItem e)
+        {
+            if (_counterAlertsComparer.TryGetValue((e.Environment, e.Application, e.Category, e.Name, e.Type, e.Unit), out var alert))
+            {
+                lock(alert.Chats)
+                {
+                    foreach(var chat in alert.Chats)
+                        _ = _engine.SendTextMessageAsync(new BotChat { Id = chat }, "`" + (alert.Message ?? $"{alert.Application}\\{alert.Category}\\{alert.Name} [{alert.Type}] has a new value.") + "`");
+                }
+            }
+        }
         #endregion
 
-        #region Load & Save Error Chats files.
-        private void LoadErrorChats()
+        #region Load & Save Config File.
+        private bool LoadBotConfig()
         {
             try
             {
                 if (!Directory.Exists(Settings.DataFolder))
                     Directory.CreateDirectory(Settings.DataFolder);
 
-                var pFileName = Path.Combine(Settings.DataFolder, ErrorChatsFile);
+                var pFileName = Path.Combine(Settings.DataFolder, BotConfigFile);
                 if (File.Exists(pFileName))
                 {
-                    Core.Log.InfoBasic("Loading error chats...");
-                    var keys = pFileName.DeserializeFromJsonFile<string[]>();
-                    if (keys != null)
+                    Core.Log.InfoBasic("Loading bot config...");
+
+                    var botConfig = JsonSerializer.DeserializeFromFile<BotConfig>(pFileName);
+                    if (botConfig != null)
                     {
-                        foreach (var key in keys)
+                        //Environment
+                        if (!string.IsNullOrEmpty(botConfig.Environment))
+                            _currentEnvironment = botConfig.Environment;
+
+                        //Error Chats
+                        if (botConfig.ErrorChats != null)
                         {
-                            if (_engine.Chats.TryGet(key, out var chat))
+                            foreach (var key in botConfig.ErrorChats)
                             {
-                                Core.Log.InfoBasic("Adding chat: {0} - {1}", key, chat.Name);
-                            }
-                            else
-                            {
-                                Core.Log.InfoBasic("Adding chat: {0}", key);
-                                chat = new BotChat
+                                if (_engine.Chats.TryGet(key, out var chat))
                                 {
-                                    Id = key,
-                                    ChatType = BotChatType.Private,
-                                    Name = key
-                                };
+                                    Core.Log.InfoBasic("Adding chat: {0} - {1}", key, chat.Name);
+                                }
+                                else
+                                {
+                                    Core.Log.InfoBasic("Adding chat: {0}", key);
+                                    chat = new BotChat
+                                    {
+                                        Id = key,
+                                        ChatType = BotChatType.Private,
+                                        Name = key
+                                    };
+                                }
+                                _errorChats.TryAdd(key, chat);
+                                _ = _engine.SendTextMessageAsync(chat, $":warning: `Diagnostics bot has started, you're listening to errors on environment: {_currentEnvironment}`");
                             }
-                            _errorChats.TryAdd(key, chat);
-                            _ = _engine.SendTextMessageAsync(chat, $":warning: `Diagnostics bot has started, you're listening to errors on environment: {_currentEnvironment}`");
                         }
+
+                        //Counter Warnings
+                        if (botConfig.CounterAlerts != null)
+                        {
+                            foreach (var item in botConfig.CounterAlerts)
+                            {
+                                var counter = item.Value;
+                                _counterAlerts.TryAdd(item.Key, counter);
+                                _counterAlertsComparer.TryAdd((counter.Environment, counter.Application, counter.Category, counter.Name, counter.Type, counter.Unit), counter);
+                            }
+                        }
+
+                        return true;
                     }
-                    Core.Log.InfoBasic("Errors chats loaded.");
+                    else
+                        return false;
+
                 }
+                else
+                    return false;
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }
+            finally
+            {
+                Core.Log.InfoBasic("Bot config loaded.");
+            }
+            return false;
         }
-        private void SaveErrorChats()
+        private void SaveBotConfig()
         {
             try
             {
                 if (!Directory.Exists(Settings.DataFolder))
                     Directory.CreateDirectory(Settings.DataFolder);
-                var pFileName = Path.Combine(Settings.DataFolder, ErrorChatsFile);
-                Core.Log.InfoBasic("Saving error chats...");
-                var keys = _errorChats.Keys.ToArray();
-                keys.SerializeToJsonFile(pFileName);
-                Core.Log.InfoBasic("Errors chats saved.");
+                var pFileName = Path.Combine(Settings.DataFolder, BotConfigFile);
+                Core.Log.InfoBasic("Saving Bot config...");
+
+                var botConfig = new BotConfig
+                {
+                    Environment = _currentEnvironment,
+                    ErrorChats = _errorChats.Keys.ToList(),
+                    CounterAlerts = _counterAlerts.MapTo(cd =>
+                    {
+                        var dictio = new Dictionary<Guid, BotCounterAlerts>();
+                        foreach (var item in cd)
+                            dictio[item.Key] = item.Value;
+                        return dictio;
+                    })
+                };
+                JsonSerializer.SerializeToFile(botConfig, pFileName);
+                Core.Log.InfoBasic("Bot config saved.");
             }
             catch (Exception ex)
             {
@@ -338,16 +512,22 @@ namespace TWCore.Diagnostics.Api
 
 
         //Config file
-        private class BotConfig
+        public class BotConfig
         {
             public string Environment { get; set; }
             public List<string> ErrorChats { get; set; } = new List<string>();
-            public Dictionary<string, BotCounterWarning> CounterWarnings { get; set; } = new Dictionary<string, BotCounterWarning>();
+            public Dictionary<Guid, BotCounterAlerts> CounterAlerts { get; set; } = new Dictionary<Guid, BotCounterAlerts>();
         }
-        private class BotCounterWarning
+        public class BotCounterAlerts
         {
             public List<string> Chats { get; set; } = new List<string>();
             public string Message { get; set; }
+            public string Environment { get; set; }
+            public string Application { get; set; }
+            public string Category { get; set; }
+            public string Name { get; set; }
+            public CounterType Type { get; set; }
+            public CounterUnit Unit { get; set; }
         }
     }
 }

@@ -50,7 +50,7 @@
       <Item Key="Diagnostics.ForceXmlOnApp" Value="" />
       <Item Key="Diagnostics.ForceJsonOnApp" Value="Agsw.Travel.Api;" />
       
-      <Item Key="Core.Services.Queue.ConfigFile" Value="./settings/queues.xml" />
+      <Item Key="Core.Services.Queue.ConfigFile" Value="./settings/queues.redis.xml" />
     </Items>
     <Overwrite EnvironmentName="Docker" MachineName="">
       <Item Key="Core.Status.Transport.Http.Port" Value="{Env:DIAGNOSTICS_STATUS_HTTP_PORT}" />

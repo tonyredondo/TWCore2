@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SlackAPI;
 using SlackAPI.WebSocketMessages;
@@ -35,7 +36,8 @@ namespace TWCore.Bot.Slack
     public class SlackBotTransport : IBotTransport
     {
         private SlackSocketClient _client;
-        
+        private Timer _timer = null;
+
         #region Events
         /// <inheritdoc />
         /// <summary>
@@ -145,8 +147,9 @@ namespace TWCore.Bot.Slack
             _client.Connect(connected =>
             {
                 // This is called once the client has emitted the RTM start command
-                Core.Log.LibDebug("RTM started.");
+                Core.Log.InfoBasic("Connected.");
                 IsConnected = true;
+                _timer = new Timer(PingTimerAction, null, 30000, 30000);
                 tskSource.TrySetResult(connected);
             }, () =>
             {
@@ -166,6 +169,26 @@ namespace TWCore.Bot.Slack
             var tskSource = new TaskCompletionSource<UserListResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             _client.GetUserList(response => tskSource.TrySetResult(response));
             return tskSource.Task;
+        }
+        private void PingTimerAction(object state)
+        {
+            if (!IsConnected) return;
+            if (!_client.IsConnected)
+            {
+                Core.Log.Warning("Is disconnected and should be connected. Reconnecting.");
+                _client.Connect(connected =>
+                {
+                    Core.Log.InfoBasic("Connected.");
+                }, () =>
+                {
+                    Core.Log.LibDebug("Socket connected, waiting for RTM start.");
+                });
+            }
+            else
+            {
+                Core.Log.LibDebug("Sending ping");
+                _client.SendPing();
+            }
         }
         #endregion
         

@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2015-2018 Daniel Adrian Redondo Suarez
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,8 @@ namespace TWCore
         #region Private fields
         private readonly Func<T, Task> _func;
         private readonly Func<bool> _precondition;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        //private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AsyncManualResetEvent _resetEvent = new AsyncManualResetEvent();
         private ConcurrentQueue<T> _queue;
         private Task _processThread;
         private CancellationTokenSource _tokenSource;
@@ -58,10 +59,6 @@ namespace TWCore
         #endregion
 
         #region Properties
-        /// <summary>
-        /// List of all exceptions occurred when the Queue process.
-        /// </summary>
-        public List<(Exception, T)> Exceptions { get; }
         /// <summary>
         /// Current queued items.
         /// </summary>
@@ -108,7 +105,6 @@ namespace TWCore
             _precondition = null;
             _func = arg => { action(arg); return Task.CompletedTask; };
             Ensure.ArgumentNotNull(action, "The action can't be null.");
-            Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
@@ -130,7 +126,6 @@ namespace TWCore
             _precondition = precondition;
             _func = arg => { action(arg); return Task.CompletedTask; };
             Ensure.ArgumentNotNull(action, "The action can't be null.");
-            Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
@@ -151,7 +146,6 @@ namespace TWCore
             _precondition = null;
             _func = function;
             Ensure.ArgumentNotNull(_func, "The func can't be null.");
-            Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
@@ -173,7 +167,6 @@ namespace TWCore
             _precondition = precondition;
             _func = function;
             Ensure.ArgumentNotNull(_func, "The func can't be null.");
-            Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
@@ -204,7 +197,8 @@ namespace TWCore
             if (_startActive && Status == WorkerStatus.Stopped)
                 Start();
             else
-                _semaphore.Release();
+                _resetEvent.Set();
+                //_semaphore.Release();
             return true;
         }
         /// <summary>
@@ -233,7 +227,8 @@ namespace TWCore
         {
             if (Status == WorkerStatus.Stopped)
                 _status = WorkerStatus.Started;
-            _semaphore.Release();
+            _resetEvent.Set();
+            //_semaphore.Release();
         }
         /// <summary>
         /// Stops the processing thread
@@ -265,7 +260,6 @@ namespace TWCore
             _status = WorkerStatus.Stopped;
         }
 
-        private readonly object _locker = new object();
         [IgnoreStackFrameLog]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task OneLoopDequeueThreadWithPrecondition()
@@ -277,7 +271,8 @@ namespace TWCore
             {
                 if (Interlocked.Read(ref _queueCount) == 0)
                 {
-                    var smTask = _semaphore.WaitAsync(token);
+                    //var smTask = _semaphore.WaitAsync(token);
+                    var smTask = _resetEvent.WaitAsync(token);
                     if (useOwnThread)
                         await smTask;
                     else
@@ -307,18 +302,13 @@ namespace TWCore
                     {
                         if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
-                        lock (_locker)
-                        {
-                            if (Exceptions.Count >= 100)
-                                throw new Exception("Too many exceptions");
-                            Exceptions.Add((ex, item));
-                        }
                     }
                     finally
                     {
                         workDone = true;
                     }
                 }
+                _resetEvent.Reset();
                 if (workDone && OnWorkDone != null)
                 {
                     try
@@ -345,7 +335,8 @@ namespace TWCore
             {
                 if (Interlocked.Read(ref _queueCount) == 0)
                 {
-                    var smTask = _semaphore.WaitAsync(token);
+                    //var smTask = _semaphore.WaitAsync(token);
+                    var smTask = _resetEvent.WaitAsync(token);
                     if (useOwnThread)
                         await smTask;
                     else
@@ -366,18 +357,13 @@ namespace TWCore
                     {
                         if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
-                        lock (_locker)
-                        {
-                            if (Exceptions.Count >= 100)
-                                throw new Exception("Too many exceptions");
-                            Exceptions.Add((ex, item));
-                        }
                     }
                     finally
                     {
                         workDone = true;
                     }
                 }
+                _resetEvent.Reset();
 
                 if (workDone && OnWorkDone != null)
                 {
@@ -404,7 +390,8 @@ namespace TWCore
         public void Dispose()
         {
             StopAsync(int.MaxValue).WaitAsync();
-            _semaphore.Release();
+            //_semaphore.Release();
+            _resetEvent.Set();
             _tokenSource.Cancel();
             try
             {

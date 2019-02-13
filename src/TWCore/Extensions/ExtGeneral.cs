@@ -167,7 +167,7 @@ namespace TWCore
         }
         #endregion
 
-        
+
         #region Task extensions
         /// <summary>
         /// Waits for task finalization and returns the result value
@@ -867,9 +867,9 @@ namespace TWCore
         /// <param name="mapFunc">Map func</param>
         /// <returns>Destination object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TTo MapTo<TFrom, TTo>(this TFrom from, Func<TFrom, TTo> mapFunc) 
-            where TFrom: class
-            where TTo: class
+        public static TTo MapTo<TFrom, TTo>(this TFrom from, Func<TFrom, TTo> mapFunc)
+            where TFrom : class
+            where TTo : class
         {
             if (from == default)
                 return default;
@@ -1116,6 +1116,28 @@ namespace TWCore
         /// </summary>
         /// <returns>The consumer task</returns>
         /// <param name="channel">Channel reader</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        /// <typeparam name="TStruct">Struct type with IConsumerAction</typeparam>
+        public static async Task SetConsumerAsync<T, TStruct>(this ChannelReader<T> channel, CancellationToken cancellationToken = default)
+            where TStruct : struct, IConsumerActionStruct<T>
+        {
+            while (await channel.WaitToReadAsync(cancellationToken))
+            {
+                while (channel.TryRead(out var item))
+                {
+                    var consumer = default(TStruct);
+                    consumer.Consume(item);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
         /// <param name="consumerAction">Consumer action</param>
         /// <param name="numberOfParallelConsumers">Number of parallel consumers</param>
         /// <param name="cancellationToken">Cancellation token</param>
@@ -1126,9 +1148,29 @@ namespace TWCore
             if (numberOfParallelConsumers == 1) return SetConsumerAsync<T>(channel, consumerAction, cancellationToken);
             var tasks = new Task[numberOfParallelConsumers];
             for (var i = 0; i < numberOfParallelConsumers; i++)
-                tasks[i] = SetConsumerAsync<T>(channel, consumerAction, cancellationToken);
+                tasks[i] = SetConsumerAsync(channel, consumerAction, cancellationToken);
             return Task.WhenAll(tasks);
         }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="numberOfParallelConsumers">Number of parallel consumers</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        /// <typeparam name="TStruct">Struct type with IConsumerAction</typeparam>
+        public static Task SetConsumerAsync<T, TStruct>(this ChannelReader<T> channel, int numberOfParallelConsumers, CancellationToken cancellationToken = default)
+            where TStruct : struct, IConsumerActionStruct<T>
+        {
+            if (numberOfParallelConsumers < 1) return Task.CompletedTask;
+            if (numberOfParallelConsumers == 1) return SetConsumerAsync<T, TStruct>(channel, cancellationToken);
+            var tasks = new Task[numberOfParallelConsumers];
+            for (var i = 0; i < numberOfParallelConsumers; i++)
+                tasks[i] = SetConsumerAsync<T, TStruct>(channel, cancellationToken);
+            return Task.WhenAll(tasks);
+        }
+
         /// <summary>
         /// Sets a consumer channel task
         /// </summary>
@@ -1154,6 +1196,28 @@ namespace TWCore
         /// </summary>
         /// <returns>The consumer task</returns>
         /// <param name="channel">Channel reader</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        /// <typeparam name="TStruct">Struct type with IConsumerAction</typeparam>
+        public static async Task SetAsyncConsumerAsync<T, TStruct>(this ChannelReader<T> channel, CancellationToken cancellationToken = default)
+            where TStruct : struct, IConsumerActionAsyncStruct<T>
+        {
+            while (await channel.WaitToReadAsync(cancellationToken))
+            {
+                while (channel.TryRead(out var item))
+                {
+                    var consumer = default(TStruct);
+                    await consumer.ConsumeAsync(item).ConfigureAwait(false);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
         /// <param name="consumerFunc">Consumer func</param>
         /// <param name="numberOfParallelConsumers">Number of parallel consumers</param>
         /// <param name="cancellationToken">Cancellation token</param>
@@ -1164,8 +1228,53 @@ namespace TWCore
             if (numberOfParallelConsumers == 1) return SetConsumerAsync<T>(channel, consumerFunc, cancellationToken);
             var tasks = new Task[numberOfParallelConsumers];
             for (var i = 0; i < numberOfParallelConsumers; i++)
-                tasks[i] = SetConsumerAsync<T>(channel, consumerFunc, cancellationToken);
+                tasks[i] = SetConsumerAsync(channel, consumerFunc, cancellationToken);
             return Task.WhenAll(tasks);
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="numberOfParallelConsumers">Number of parallel consumers</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        /// <typeparam name="TStruct">Struct type with IConsumerAction</typeparam>
+        public static Task SetAsyncConsumerAsync<T, TStruct>(this ChannelReader<T> channel, int numberOfParallelConsumers, CancellationToken cancellationToken = default)
+            where TStruct : struct, IConsumerActionAsyncStruct<T>
+        {
+            if (numberOfParallelConsumers < 1) return Task.CompletedTask;
+            if (numberOfParallelConsumers == 1) return SetAsyncConsumerAsync<T, TStruct>(channel, cancellationToken);
+            var tasks = new Task[numberOfParallelConsumers];
+            for (var i = 0; i < numberOfParallelConsumers; i++)
+                tasks[i] = SetAsyncConsumerAsync<T, TStruct>(channel, cancellationToken);
+            return Task.WhenAll(tasks);
+        }
+
+        /// <summary>
+        /// Consumer action struct interface
+        /// </summary>
+        /// <typeparam name="T">Type of item to consume</typeparam>
+        public interface IConsumerActionStruct<T>
+        {
+            /// <summary>
+            /// Consume method
+            /// </summary>
+            /// <param name="item">Item to consume</param>
+            void Consume(T item);
+        }
+        /// <summary>
+        /// Consumer async action struct interface
+        /// </summary>
+        /// <typeparam name="T">Type of item to consume</typeparam>
+        public interface IConsumerActionAsyncStruct<T>
+        {
+            /// <summary>
+            /// Consume async method
+            /// </summary>
+            /// <param name="item">Item to consume</param>
+            /// <returns>Consume task</returns>
+            Task ConsumeAsync(T item);
         }
         #endregion
     }

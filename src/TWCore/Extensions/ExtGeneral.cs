@@ -23,10 +23,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using TWCore.Net;
 // ReSharper disable MethodSupportsCancellation
-
 // ReSharper disable CheckNamespace
 
 namespace TWCore
@@ -1042,6 +1042,130 @@ namespace TWCore
             if (timeSpan == TimeSpan.MinValue || timeSpan == TimeSpan.MaxValue)
                 return timeSpan;
             return timeSpan.Add(TimeSpan.FromTicks(-(timeSpan.Ticks % spanValue.Ticks)));
+        }
+        #endregion
+
+        #region Channels
+        /// <summary>
+        /// Publishs a value to the channel
+        /// </summary>
+        /// <returns>True if the value was published; otherwise false.</returns>
+        /// <param name="channel">Channel writer</param>
+        /// <param name="value">Value to publish</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to publish</typeparam>
+        public static ValueTask<bool> PublishAsync<T>(this ChannelWriter<T> channel, T value, CancellationToken cancellationToken = default)
+        {
+            return channel.TryWrite(value) ? new ValueTask<bool>(true) : new ValueTask<bool>(AsyncSlowPath(value));
+
+            async Task<bool> AsyncSlowPath(T thing)
+            {
+                while (await channel.WaitToWriteAsync(cancellationToken))
+                {
+                    if (channel.TryWrite(thing)) return true;
+                }
+                return false;
+            }
+        }
+        /// <summary>
+        /// Consume one item from the channel
+        /// </summary>
+        /// <returns>Item from the channel</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to retrieve</typeparam>
+        public static ValueTask<T> ConsumeAsync<T>(this ChannelReader<T> channel, CancellationToken cancellationToken = default)
+        {
+            return channel.TryRead(out var value) ? new ValueTask<T>(value) : new ValueTask<T>(AsyncSlowPath());
+
+            async Task<T> AsyncSlowPath()
+            {
+                while (await channel.WaitToReadAsync(cancellationToken))
+                {
+                    while (channel.TryRead(out var item))
+                    {
+                        return item;
+                    }
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                return default;
+            }
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="consumerAction">Consumer action</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        public static async Task SetConsumerAsync<T>(this ChannelReader<T> channel, Action<T> consumerAction, CancellationToken cancellationToken = default)
+        {
+            while (await channel.WaitToReadAsync(cancellationToken))
+            {
+                while (channel.TryRead(out var item))
+                {
+                    consumerAction(item);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="consumerAction">Consumer action</param>
+        /// <param name="numberOfParallelConsumers">Number of parallel consumers</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        public static Task SetConsumerAsync<T>(this ChannelReader<T> channel, Action<T> consumerAction, int numberOfParallelConsumers, CancellationToken cancellationToken = default)
+        {
+            if (numberOfParallelConsumers < 1) return Task.CompletedTask;
+            if (numberOfParallelConsumers == 1) return SetConsumerAsync<T>(channel, consumerAction, cancellationToken);
+            var tasks = new Task[numberOfParallelConsumers];
+            for (var i = 0; i < numberOfParallelConsumers; i++)
+                tasks[i] = SetConsumerAsync<T>(channel, consumerAction, cancellationToken);
+            return Task.WhenAll(tasks);
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="consumerFunc">Consumer func</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        public static async Task SetConsumerAsync<T>(this ChannelReader<T> channel, Func<T, Task> consumerFunc, CancellationToken cancellationToken = default)
+        {
+            while (await channel.WaitToReadAsync(cancellationToken))
+            {
+                while (channel.TryRead(out var item))
+                {
+                    await consumerFunc(item).ConfigureAwait(false);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        /// <summary>
+        /// Sets a consumer channel task
+        /// </summary>
+        /// <returns>The consumer task</returns>
+        /// <param name="channel">Channel reader</param>
+        /// <param name="consumerFunc">Consumer func</param>
+        /// <param name="numberOfParallelConsumers">Number of parallel consumers</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <typeparam name="T">Type of the value to consume</typeparam>
+        public static Task SetConsumerAsync<T>(this ChannelReader<T> channel, Func<T, Task> consumerFunc, int numberOfParallelConsumers, CancellationToken cancellationToken = default)
+        {
+            if (numberOfParallelConsumers < 1) return Task.CompletedTask;
+            if (numberOfParallelConsumers == 1) return SetConsumerAsync<T>(channel, consumerFunc, cancellationToken);
+            var tasks = new Task[numberOfParallelConsumers];
+            for (var i = 0; i < numberOfParallelConsumers; i++)
+                tasks[i] = SetConsumerAsync<T>(channel, consumerFunc, cancellationToken);
+            return Task.WhenAll(tasks);
         }
         #endregion
     }

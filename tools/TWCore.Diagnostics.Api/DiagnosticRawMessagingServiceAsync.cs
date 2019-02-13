@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using TWCore.Bot;
 using TWCore.Diagnostics.Counters;
@@ -30,6 +31,8 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticRawMessagingServiceAsync : RawMessagingServiceAsync
     {
+        private static readonly DiagnosticsSettings Settings = Core.GetSettings<DiagnosticsSettings>();
+
         protected override void OnInit(string[] args)
         {
             Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes = 1;
@@ -49,7 +52,7 @@ namespace TWCore.Diagnostics.Api
         /// <returns>Message processor instance</returns>
         protected override IMessageProcessorAsync GetMessageProcessorAsync(IMQueueRawServer server)
         {
-            var processor = new ActionMessageProcessorAsync();
+            var processor = new ActionMessageProcessorAsync(Settings.ParallelMessagingProcess);
             processor.RegisterAction<RawRequestReceivedEventArgs>(async (message, cancellationToken) =>
             {
                 var rcvMessage = server.ReceiverSerializer.Deserialize<object>(message.Request);

@@ -61,5 +61,9 @@ namespace TWCore.Diagnostics
         /// </summary>
         [SettingsArray(';')]
         public string[] ForceJsonOnApp { get; set; } = new string[0];
+        /// <summary>
+        /// Parallel messaging process
+        /// </summary>
+        public int ParallelMessagingProcess { get; set; } = 2;
     }
 }

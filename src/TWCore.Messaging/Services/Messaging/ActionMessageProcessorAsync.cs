@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging;
@@ -45,13 +46,36 @@ namespace TWCore.Services.Messaging
         /// Registered actions
         /// </summary>
         public Dictionary<Type, ActionMessageAsyncDelegate<object>> Actions { get; } = new Dictionary<Type, ActionMessageAsyncDelegate<object>>();
+        /// <summary>
+        /// Concurrency level
+        /// </summary>
+        private int _concurrency = 0;
+        /// <summary>
+        /// Channel
+        /// </summary>
+        private Channel<(object, CancellationToken)> _channel = null;
+        /// <summary>
+        /// Consumer task
+        /// </summary>
+        private Task _consumerTask = null;
 
         #region .ctor
         /// <summary>
         /// Process messages using different Action delegates for each message type
         /// </summary>
-        public ActionMessageProcessorAsync()
+        public ActionMessageProcessorAsync(int concurrency = 0)
         {
+            _concurrency = concurrency;
+            if (_concurrency > 0)
+            {
+                _channel = Channel.CreateUnbounded<(object, CancellationToken)>(new UnboundedChannelOptions
+                {
+                    SingleReader = concurrency == 1 ? true : false,
+                    SingleWriter = true
+                });
+                _consumerTask = _channel.Reader.SetConsumerAsync(item => InnerProcessAsync(item.Item1, item.Item2), concurrency);
+            }
+
             Core.Status.Attach(collection =>
             {
                 collection.Add("Type", "Action");
@@ -80,6 +104,7 @@ namespace TWCore.Services.Messaging
         public void Init()
         {
         }
+
         /// <inheritdoc />
         /// <summary>
         /// Process a message using the registered actions
@@ -88,6 +113,27 @@ namespace TWCore.Services.Messaging
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
         public async Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
+        {
+            if (_concurrency < 1)
+                await InnerProcessAsync(message, cancellationToken).ConfigureAwait(false);
+            else
+                await _channel.Writer.PublishAsync((message, cancellationToken)).ConfigureAwait(false);
+            return ResponseMessage.NoResponse;
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            if (_consumerTask != null)
+                _consumerTask.WaitAsync();
+            Actions.Clear();
+        }
+
+        #region Private Methods
+        private async Task InnerProcessAsync(object message, CancellationToken cancellationToken)
         {
             Core.Log.LibDebug("Processing message...");
             var msgType = message?.GetType() ?? Actions.Keys.First();
@@ -103,15 +149,7 @@ namespace TWCore.Services.Messaging
             }
             else
                 Core.Log.Warning("Message can't be processed because not Processor instance couldn't be found. Type = {0}", msgType);
-            return ResponseMessage.NoResponse;
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Dispose all resources
-        /// </summary>
-        public void Dispose()
-        {
-            Actions.Clear();
-        }
+        #endregion
     }
 }

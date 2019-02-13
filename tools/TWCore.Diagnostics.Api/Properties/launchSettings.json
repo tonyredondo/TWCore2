@@ -17,6 +17,7 @@
     },
     "TWCore.Diagnostics.Api": {
       "commandName": "Project",
+      "commandLineArgs": "/environment=REMOTE",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"

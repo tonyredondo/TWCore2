@@ -195,6 +195,19 @@ namespace TWCore.Serialization.NSerializer
                     return Expression.Call(serTableExpression, wMethodTuple.Method, itemGetExpression);
                 if (itemType.IsEnum)
                     return Expression.Call(serTableExpression, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(itemGetExpression, typeof(Enum)));
+                if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    var nullParam = Expression.Parameter(itemType);
+                    var nullBlock = Expression.Block(new[] { nullParam },
+                            Expression.Assign(nullParam, itemGetExpression),
+                            Expression.IfThenElse(
+                                Expression.Equal(nullParam, Expression.Constant(null, itemType)),
+                                Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                                WriteExpression(itemType.GenericTypeArguments[0], nullParam, serTableExpression)
+                            )
+                        );
+                    return nullBlock;
+                }
                 if (itemType == typeof(IEnumerable) || itemType == typeof(IEnumerable<>) || itemType.ReflectedType == typeof(IEnumerable) || itemType.ReflectedType == typeof(IEnumerable<>) ||
                     itemType.ReflectedType == typeof(Enumerable) || itemType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1 ||
                     itemType.IsAssignableFrom(typeof(IEnumerable)))
@@ -208,6 +221,18 @@ namespace TWCore.Serialization.NSerializer
 
                 //return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
             }
+
+            /*
+            var intParam = Expression.Parameter(typeof(int?));
+            var block = Expression.Block(new[] { intParam },
+                Expression.Assign(intParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(intParam, Expression.Constant(null, typeof(int?))),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                    WriteIntExpression(Expression.Call(intParam, IntValueProperty), serTable)));
+            return block.Reduce();             
+             */
+
 
             Expression WriteSealedExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
             {

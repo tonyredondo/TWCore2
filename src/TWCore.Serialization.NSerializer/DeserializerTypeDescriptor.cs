@@ -192,12 +192,7 @@ namespace TWCore.Serialization.NSerializer
             foreach (var prop in runtimeProperties)
             {
                 var setExp = Expression.Property(value, prop);
-                if (DeserializersTable.ReadValuesFromType.TryGetValue(prop.PropertyType, out var propMethod))
-                    serExpressions.Add(Expression.Assign(setExp, Expression.Call(table, propMethod, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)))); 
-                else if (prop.PropertyType.IsEnum)
-                    serExpressions.Add(Expression.Assign(setExp, Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
-                else
-                    serExpressions.Add(Expression.Assign(setExp, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
+                serExpressions.Add(Expression.Assign(setExp, GetValueExpression(prop.PropertyType, table)));
             }
 
             serExpressions.Add(Expression.Call(table, "StreamReadByte", Type.EmptyTypes));
@@ -208,6 +203,31 @@ namespace TWCore.Serialization.NSerializer
             var lambda = Expression.Lambda<DeserializeDelegate>(block, type.Name + "_Deserializer", new[] { table });
             //Lambda = lambda;
             DeserializeFunc = lambda.Compile();
+        }
+
+        private Expression GetValueExpression(Type propType, ParameterExpression table)
+        {
+            if (DeserializersTable.ReadValuesFromType.TryGetValue(propType, out var propMethod))
+                return Expression.Call(table, propMethod, Expression.Call(table, "StreamReadByte", Type.EmptyTypes));
+            else if (propType.IsEnum)
+                return Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), propType);
+            else if (propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                var getValueExp = Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes));
+                var nullParam = Expression.Parameter(typeof(object));
+                var returnTarget = Expression.Label(propType, "ValueReturnTarget");
+                var nullBlock = Expression.Block(new[] { nullParam },
+                    Expression.Assign(nullParam, getValueExp),
+                    Expression.IfThen(
+                        Expression.NotEqual(nullParam, Expression.Constant(null, typeof(object))),
+                        Expression.Return(returnTarget, Expression.Convert(Expression.Convert(nullParam, propType.GenericTypeArguments[0]), propType), propType)
+                    ),
+                    Expression.Label(returnTarget, Expression.Constant(null, propType))
+                );
+                return nullBlock;
+            }
+            else
+                return Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), propType);
         }
     }
 }

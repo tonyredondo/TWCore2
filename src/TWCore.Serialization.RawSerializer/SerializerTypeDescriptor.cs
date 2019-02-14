@@ -196,7 +196,20 @@ namespace TWCore.Serialization.RawSerializer
 					return Expression.Call(serTableExpression, wMethodTuple.Method, itemGetExpression);
 				if (itemType.IsEnum)
 					return Expression.Call(serTableExpression, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(itemGetExpression, typeof(Enum)));
-				if (itemType == typeof(IEnumerable) || itemType == typeof(IEnumerable<>) || itemType.ReflectedType == typeof(IEnumerable) || itemType.ReflectedType == typeof(IEnumerable<>) ||
+                if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    var nullParam = Expression.Parameter(itemType);
+                    var nullBlock = Expression.Block(new[] { nullParam },
+                            Expression.Assign(nullParam, itemGetExpression),
+                            Expression.IfThenElse(
+                                Expression.Equal(nullParam, Expression.Constant(null, itemType)),
+                                Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                                WriteExpression(itemType.GenericTypeArguments[0], nullParam, serTableExpression)
+                            )
+                        );
+                    return nullBlock;
+                }
+                if (itemType == typeof(IEnumerable) || itemType == typeof(IEnumerable<>) || itemType.ReflectedType == typeof(IEnumerable) || itemType.ReflectedType == typeof(IEnumerable<>) ||
 					itemType.ReflectedType == typeof(Enumerable) || itemType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1 ||
 					itemType.IsAssignableFrom(typeof(IEnumerable)))
 					return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);

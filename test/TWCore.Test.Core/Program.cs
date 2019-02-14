@@ -63,6 +63,15 @@ namespace TWCore.Test.Core
             public int[] Values { get; set; }
             public decimal DecimalValue { get; set; }
         }
+        public class ProblematicClass
+        {
+            public string Name { get; set; }
+            public VarEnum? EnumValue { get; set; }
+            public VarEnum? Value2 { get; set; }
+            public VarEnum? Value3 { get; set; }
+            public int? Number1 { get; set; }
+            public int? Number2 { get; set; }
+        }
 
         public sealed class ProviderCacheClone<T1, T2, T3, T4, T5>
         {
@@ -191,6 +200,19 @@ namespace TWCore.Test.Core
                 new int[] { 1, 2, 3 }.SerializeToNBinary();
 
                 testValue.SerializeToNBinary();
+
+                var probValue = new ProblematicClass
+                {
+                    Name = "Hola",
+                    EnumValue = VarEnum.Value2,
+                    Value2 = null,
+                    Value3 = VarEnum.Value1,
+                    Number1 = 143243,
+                    Number2 = null
+                };
+
+                var probValueSer = probValue.SerializeToNBinary();
+                var probValue2 = probValueSer.DeserializeFromNBinary<ProblematicClass>();
 
 
                 //                var testBytes = new byte[1024];

@@ -905,13 +905,16 @@ namespace TWCore.Serialization.NSerializer
             {
                 Stream = stream;
                 Stream.WriteByte(DataBytesDefinition.Start);
+                var valueType = typeof(T);
 
-                if (typeof(T).IsClass && EqualityComparer<T>.Default.Equals(value, default))
+                if (valueType.IsClass && EqualityComparer<T>.Default.Equals(value, default))
                 {
                     Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
-                if (WriteValues.TryGetValue(typeof(T), out var mTuple))
+                if (valueType.BaseType == typeof(Enum))
+                    valueType = typeof(Enum);
+                if (WriteValues.TryGetValue(valueType, out var mTuple))
                 {
                     _paramObj[0] = value;
                     mTuple.Accessor(this, _paramObj);

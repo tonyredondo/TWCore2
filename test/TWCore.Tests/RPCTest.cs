@@ -98,6 +98,9 @@ namespace TWCore.Tests
             //Proxy class test
             Core.Log.InfoBasic("Proxy class test");
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
+
+            var enumResult = await client.TestEnum("Valor", Option.Option1).ConfigureAwait(false);
+
             using (var watch = Watch.Create("Proxy class Time - GetAllAsync"))
             {
                 for (var i = 0; i < 10000; i++)
@@ -149,6 +152,11 @@ namespace TWCore.Tests
         public string Lastname { get; set; }
         public bool Enabled { get; set; }
     }
+    public enum Option
+    {
+        Option1,
+        Option2
+    }
     public interface IMyService
     {
         event EventHandler OnAddSimplePersona;
@@ -157,6 +165,7 @@ namespace TWCore.Tests
         List<SimplePerson> GetAll();
         bool AddSimplePersona(SimplePerson simplePersona);
         Task<bool> IsEnabled();
+        Task<Option> TestEnum(string name, Option option);
     }
 
     public interface IHello
@@ -234,6 +243,12 @@ namespace TWCore.Tests
         {
             return TaskHelper.CompleteTrue;
         }
+        public Task<Option> TestEnum(string name, Option option)
+        {
+            if (option == Option.Option1)
+                return Task.FromResult(Option.Option2);
+            return Task.FromResult(Option.Option1);
+        }
     }
 #pragma warning disable 67
     public class MyServiceProxy : RPCProxy, IMyService
@@ -246,6 +261,7 @@ namespace TWCore.Tests
 
         public Task<List<SimplePerson>> GetAllAsync() => InvokeAsAsync<List<SimplePerson>>();
         public Task<bool> IsEnabled() => InvokeAsync<bool>();
+        public Task<Option> TestEnum(string name, Option option) => InvokeAsync<string, Option, Option>(name, option);
     }
 
 #endregion

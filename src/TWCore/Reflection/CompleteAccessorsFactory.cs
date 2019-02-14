@@ -72,7 +72,9 @@ namespace TWCore.Reflection
             var ctors = type.GetConstructors();
             var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ??
                        ctors.FirstOrDefault(c => c.GetParameters().All(p => p.HasDefaultValue)) ??
-                       ctors[0];
+                       ctors.FirstOrDefault();
+            if (ctor == null)
+                return new ActivatorDelegate(args => Activator.CreateInstance(type));
             return CreateActivator(ctor);
         }
         /// <inheritdoc />
@@ -176,7 +178,11 @@ namespace TWCore.Reflection
         private static object ChangeType(object value, Type conversionType)
         {
             if (value is IConvertible)
+            {
+                if (conversionType.BaseType == typeof(Enum))
+                    return Enum.ToObject(conversionType, value);
                 return Convert.ChangeType(value, conversionType);
+            }
             if (value is null)
                 return null;
             var valueType = value.GetType();

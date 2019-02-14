@@ -843,6 +843,8 @@ namespace TWCore.Serialization.NSerializer
                         value = (IList)Activator.CreateInstance(valueType, iEValue);
                     }
                 }
+                if (valueType.BaseType == typeof(Enum))
+                    valueType = typeof(Enum);
                 if (WriteValues.TryGetValue(valueType, out var mTuple))
                 {
                     _paramObj[0] = value;
@@ -976,6 +978,8 @@ namespace TWCore.Serialization.NSerializer
                     value = (IList)Activator.CreateInstance(vType, iEValue);
                 }
             }
+            if (vType.BaseType == typeof(Enum))
+                vType = typeof(Enum);
             if (WriteValues.TryGetValue(vType, out var mTuple))
             {
                 _paramObj[0] = value;

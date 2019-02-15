@@ -40,7 +40,8 @@ namespace TWCore.Services
     /// </summary>
     public abstract class MessagingServiceAsync : IMessagingServiceAsync
     {
-        private static readonly ConcurrentDictionary<object, object> ReceivedMessagesCache = new ConcurrentDictionary<object, object>();
+        private static readonly ConditionalWeakTable<object, ResponseMessage> ResponseMessageCache = new ConditionalWeakTable<object, ResponseMessage>();
+        private static readonly ConditionalWeakTable<object, RequestMessage> RequestMessageCache = new ConditionalWeakTable<object, RequestMessage>();
         private CancellationTokenSource _cTokenSource;
 
         #region Events
@@ -143,7 +144,7 @@ namespace TWCore.Services
                 if (e.Request?.Body is null) return;
                 var body = e.Request.Body.GetValue();
                 if (EnableCompleteMessageCache)
-                    ReceivedMessagesCache.TryAdd(body, e.Request);
+                    RequestMessageCache.Add(body, e.Request);
                 object result;
                 Status.IncrementCurrentMessagesBeingProcessed();
                 try
@@ -161,7 +162,7 @@ namespace TWCore.Services
                 Status.DecrementCurrentMessagesBeingProcessed();
                 Status.IncrementTotalMessagesProccesed();
                 if (EnableCompleteMessageCache)
-                    ReceivedMessagesCache.TryRemove(body, out object _);
+                    RequestMessageCache.Remove(body);
             }
             catch (Exception ex)
             {
@@ -181,7 +182,7 @@ namespace TWCore.Services
                 if (e.Message?.Body is null) return;
                 var body = e.Message.Body.GetValue();
                 if (EnableCompleteMessageCache)
-                    ReceivedMessagesCache.TryAdd(body, e.Message);
+                    ResponseMessageCache.Add(body, e.Message);
                 Status.IncrementCurrentMessagesBeingProcessed();
                 try
                 {
@@ -197,7 +198,7 @@ namespace TWCore.Services
                 Status.DecrementCurrentMessagesBeingProcessed();
                 Status.IncrementTotalMessagesProccesed();
                 if (EnableCompleteMessageCache)
-                    ReceivedMessagesCache.TryRemove(body, out object _);
+                    ResponseMessageCache.Remove(body);
             }
             catch (Exception ex)
             {
@@ -370,8 +371,8 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static RequestMessage GetCompleteRequestMessage(object messageBody)
         {
-            if (ReceivedMessagesCache.TryGetValue(messageBody, out var _out))
-                return (RequestMessage)_out;
+            if (RequestMessageCache.TryGetValue(messageBody, out var msgout))
+                return msgout;
             return null;
         }
         /// <summary>
@@ -382,8 +383,8 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ResponseMessage GetCompleteResponseMessage(object messageBody)
         {
-            if (ReceivedMessagesCache.TryGetValue(messageBody, out var _out))
-                return (ResponseMessage)_out;
+            if (ResponseMessageCache.TryGetValue(messageBody, out var msgout))
+                return msgout;
             return null;
         }
         #endregion

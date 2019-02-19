@@ -430,4 +430,118 @@ namespace TWCore
         /// </summary>
         Disposed
     }
+
+    public class WorkerNew<T> : IDisposable
+    {
+        private CancellationTokenSource _tokenSource;
+        private readonly Func<T, Task> _func;
+        private readonly Func<bool> _precondition;
+        private readonly bool _startActive;
+        private readonly bool _ignoreExceptions;
+        private readonly bool _useOwnThread;
+
+
+
+        #region .ctor
+        /// <summary>
+        /// Action to process a Queue of elements in a new thread.
+        /// </summary>
+        /// <param name="action">Action to process each element of the queue</param>
+        /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public WorkerNew(Action<T> action, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = true)
+        {
+            Ensure.ArgumentNotNull(action, "The action can't be null.");
+            _precondition = null;
+            _func = item => 
+            {  
+                action(item);
+                return Task.CompletedTask;
+            };
+            _startActive = startActive;
+            _ignoreExceptions = ignoreExceptions;
+            _useOwnThread = useOwnThread;
+            _tokenSource = new CancellationTokenSource();
+            Init();
+        }
+        /// <summary>
+        /// Action to process a Queue of elements in a new thread.
+        /// </summary>
+        /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
+        /// <param name="action">Action to process each element of the queue</param>
+        /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public WorkerNew(Func<bool> precondition, Action<T> action, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = true)
+        {
+            Ensure.ArgumentNotNull(action, "The action can't be null.");
+            _precondition = precondition;
+            _func = item => 
+            {  
+                action(item);
+                return Task.CompletedTask;
+            };
+            _startActive = startActive;
+            _ignoreExceptions = ignoreExceptions;
+            _useOwnThread = useOwnThread;
+            _tokenSource = new CancellationTokenSource();
+            Init();
+        }
+        /// <summary>
+        /// Action to process a Queue of elements in a new thread.
+        /// </summary>
+        /// <param name="function">Func to process each element of the queue</param>
+        /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public WorkerNew(Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = false)
+        {
+            Ensure.ArgumentNotNull(_func, "The func can't be null.");
+            _precondition = null;
+            _func = function;
+            _startActive = startActive;
+            _ignoreExceptions = ignoreExceptions;
+            _useOwnThread = useOwnThread;
+            _tokenSource = new CancellationTokenSource();
+            Init();
+        }
+        /// <summary>
+        /// Action to process a Queue of elements in a new thread.
+        /// </summary>
+        /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
+        /// <param name="function">Func to process each element of the queue</param>
+        /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public WorkerNew(Func<bool> precondition, Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = false)
+        {
+            Ensure.ArgumentNotNull(_func, "The func can't be null.");
+            _precondition = precondition;
+            _func  = function;
+            _startActive = startActive;
+            _ignoreExceptions = ignoreExceptions;
+            _useOwnThread = useOwnThread;
+            _tokenSource = new CancellationTokenSource();
+            Init();
+        }
+        private void Init() 
+        {
+
+        }
+        #endregion
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
+        {
+        }
+    }
 }

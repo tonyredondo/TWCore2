@@ -79,8 +79,13 @@ namespace TWCore.Diagnostics
                 else
                     throw new Exception($"Trace data folder '{folderPath}' doesn't exist.");
             }
+            var idValue = string.Empty;
+            if (traceItem.TraceId != Guid.Empty)
+                idValue = $"[{traceItem.TraceId.ToString()}]";
+            else
+                idValue = $"[{traceItem.Timestamp.TimeOfDay.ToString()}]";
 
-            var fileName = traceItem.Name + extension.ToLowerInvariant();
+            var fileName = traceItem.Name + idValue + extension.ToLowerInvariant();
             fileName = fileName.RemoveFileNameInvalidChars();
 
             var filePath = Path.Combine(folderPath, fileName);

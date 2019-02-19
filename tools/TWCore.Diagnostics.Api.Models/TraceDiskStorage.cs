@@ -87,8 +87,19 @@ namespace TWCore.Diagnostics
 
             var fileName = traceItem.Name + idValue + extension.ToLowerInvariant();
             fileName = fileName.RemoveFileNameInvalidChars();
-
             var filePath = Path.Combine(folderPath, fileName);
+
+            if (!createIfNotExists)
+            {
+                if (!File.Exists(filePath))
+                {
+                    fileName = traceItem.Name + extension.ToLowerInvariant();
+                    fileName = fileName.RemoveFileNameInvalidChars();
+                    filePath = Path.Combine(folderPath, fileName);
+                    return filePath;
+                }
+            }
+
             return filePath;
         }
     }

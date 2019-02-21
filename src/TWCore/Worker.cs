@@ -432,6 +432,12 @@ namespace TWCore
         Disposed
     }
 
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Action to process a Queue of elements in a new thread.
+    /// </summary>
+    /// <typeparam name="T">Queue item type</typeparam>
     public class WorkerNew<T> : IDisposable
     {
         private CancellationTokenSource _tokenSource;

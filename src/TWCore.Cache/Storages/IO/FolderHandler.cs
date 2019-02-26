@@ -104,10 +104,7 @@ namespace TWCore.Cache.Storages.IO
             _oldIndexFilePath = _indexFilePath + ".old";
 
             _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
-            _storageWorker = new Worker<FileStorageMetaLog>(WorkerProcess)
-            {
-                EnableWaitTimeout = false
-            };
+            _storageWorker = new Worker<FileStorageMetaLog>(WorkerProcess);
             _storageWorker.OnWorkDone += (s, e) => _saveMetadataBuffered();
 
             Status = FolderHandlerStatus.Startup;
@@ -646,7 +643,7 @@ namespace TWCore.Cache.Storages.IO
         {
             if (_disposedValue) return;
             Core.Log.InfoBasic("Stopping storage folder worker on: {0}", BasePath);
-            await _storageWorker.StopAsync(int.MaxValue).ConfigureAwait(false);
+            await _storageWorker.StopAsync().ConfigureAwait(false);
             Core.Log.InfoBasic("Saving metadata on: {0}", BasePath);
             SaveMetadata();
             //await SaveMetadataAsync().ConfigureAwait(false);

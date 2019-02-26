@@ -76,7 +76,7 @@ namespace TWCore
         /// Default Worker WaitTimeout
         /// </summary>
         [SettingsKey("Worker.WaitTimeout")]
-        public int WorkerWaitTimeout { get; set; } = 10000;
+        public int WorkerWaitTimeout { get; set; } = 25000;
 
         //Log Settings
         /// <summary>

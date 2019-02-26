@@ -37,11 +37,6 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         LogLevel MaxLogLevel { get; set; }
         /// <summary>
-        /// Get all pending to write log items
-        /// </summary>
-        /// <returns>Pending log items array</returns>
-        IGroupItem[] GetPendingItems();
-        /// <summary>
         /// Enqueue to write the log items to the log storages
         /// </summary>
         /// <param name="items">Log items range</param>

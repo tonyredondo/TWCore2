@@ -66,6 +66,8 @@ namespace TWCore.Diagnostics.Log.Storages
         private class NonBlockingConsole
         {
             private static BlockingCollection<(string Message, ConsoleColor Color)> _queue = new BlockingCollection<(string Message, ConsoleColor Color)>();
+            private static CancellationTokenSource _tokenSource = new CancellationTokenSource();
+            private static ManualResetEventSlim _disposeEvent = new ManualResetEventSlim();
 
             static NonBlockingConsole()
             {
@@ -79,14 +81,37 @@ namespace TWCore.Diagnostics.Log.Storages
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void Write(string line, ConsoleColor color)
-                => _queue.Add((line, color));
+            {
+                if (!_tokenSource.IsCancellationRequested)
+                    _queue.Add((line, color));
+            }
 
             private static void ConsoleThread()
             {
                 var lastColor = DefaultColor;
+                var token = _tokenSource.Token;
                 while (true)
                 {
-                    (var message, var color) = _queue.Take();
+                    string message;
+                    ConsoleColor color;
+                    if (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            (message, color) = _queue.Take(token);
+                        }
+                        catch(OperationCanceledException)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (_queue.TryTake(out var mc))
+                    {
+                        message = mc.Message;
+                        color = mc.Color;
+                    }
+                    else
+                        break;
                     if (color != lastColor)
                     {
                         Console.ForegroundColor = color;
@@ -94,6 +119,13 @@ namespace TWCore.Diagnostics.Log.Storages
                     }
                     Console.Write(message);
                 }
+                _disposeEvent.Set();
+            }
+
+            public static void Dispose()
+            {
+                _tokenSource.Cancel();
+                _disposeEvent.Wait();
             }
         }
 
@@ -255,6 +287,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             if (ServiceContainer.HasConsole && UseColor)
                 Console.ForegroundColor = DefaultColor;
+            NonBlockingConsole.Dispose();
         }
     }
 }

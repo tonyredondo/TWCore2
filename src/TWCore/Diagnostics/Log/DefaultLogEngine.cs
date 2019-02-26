@@ -128,7 +128,7 @@ namespace TWCore.Diagnostics.Log
             if (_disposedValue) return;
             if (disposing)
             {
-                _itemsWorker?.StopAsync(int.MaxValue).WaitAsync();
+                _itemsWorker?.Stop();
                 _itemsWorker?.Clear();
                 Storages?.Dispose();
             }
@@ -1697,13 +1697,6 @@ namespace TWCore.Diagnostics.Log
         #region Pending Items
         /// <inheritdoc />
         /// <summary>
-        /// Get all pending to write log items
-        /// </summary>
-        /// <returns>Pending log items array</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IGroupItem[] GetPendingItems() => _itemsWorker?.QueueItems?.ToArray();
-        /// <inheritdoc />
-        /// <summary>
         /// Enqueue to write the log items to the log storages
         /// </summary>
         /// <param name="items">Log items range</param>
@@ -1872,6 +1865,8 @@ namespace TWCore.Diagnostics.Log
                             if (declarationType.Name.Contains("ConcurrentDictionary"))
                                 return DefaultMValue;
                             if (declarationType.Name.Contains("CacheCollectionBase`3"))
+                                return DefaultMValue;
+                            if (declarationType == typeof(Thread))
                                 return DefaultMValue;
                             assemblyName = declarationType.Assembly.FullName;
                             typeName = declarationType.Name;

@@ -677,10 +677,7 @@ namespace TWCore
         public static void SetLogEngine(ILogEngine engine)
         {
             if (engine is null) return;
-            var prevItems = Log?.GetPendingItems();
             Log = engine;
-            if (prevItems != null)
-                engine.EnqueueItemsArray(prevItems);
         }
         /// <summary>
         /// Sets a new Trace Engine

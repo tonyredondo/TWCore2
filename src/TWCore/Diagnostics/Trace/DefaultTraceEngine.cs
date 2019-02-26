@@ -211,7 +211,7 @@ namespace TWCore.Diagnostics.Trace
         {
             if (_disposed) return;
             _disposed = true;
-            _itemsWorker?.StopAsync(50).WaitAsync();
+            _itemsWorker?.Stop(true);
             _itemsWorker?.Clear();
             Storages?.Clear();
         }

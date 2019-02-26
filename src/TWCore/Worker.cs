@@ -450,7 +450,20 @@ namespace TWCore
         private ChannelReader<T> _reader;
         private ChannelWriter<T> _writer;
         private volatile WorkerStatus _status = WorkerStatus.Stopped;
+        private Task _processTask;
+        private Thread _processThread;
+        private ManualResetEventSlim _processThreadResetEvent;
 
+        #region Events
+        /// <summary>
+        /// Events that triggers when the action couldn't process an element from the Queue.
+        /// </summary>
+        public event EventHandler<(Exception, T)> OnException;
+        /// <summary>
+        /// Event that triggers when the worker has finished to do all elements in the queue.
+        /// </summary>
+        public event EventHandler OnWorkDone;
+        #endregion
 
         #region .ctor
         /// <summary>
@@ -572,7 +585,7 @@ namespace TWCore
         public void Clear()
         {
             var prevStatus = _status;
-            Stop();
+            Stop(false);
             CreateChannels();
             if (prevStatus == WorkerStatus.Started)
                 Start();
@@ -586,24 +599,142 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Start()
         {
+            if (_status != WorkerStatus.Stopped) return;
+            if (_useOwnThread)
+            {
+                _processThread = new Thread(ProcessThread);
+                _processThread.IsBackground = true;
+                _processThread.Start();
+            }
+            else
+            {
+                _processTask = ProcessAsync();
+            }
         }
         /// <summary>
         /// Stops the processing thread
         /// </summary>
-        /// <param name="afterNumItemsInQueue">Number of element to process before stopping the worker.</param>
+        /// <param name="forceInmediate">Force inmediate end.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task StopAsync(int afterNumItemsInQueue)
+        public async Task StopAsync(bool forceInmediate = false)
         {
+            if (_status != WorkerStatus.Started) return;
+            _status = WorkerStatus.Stopping;
+            _writer.TryComplete();
+            if (forceInmediate)
+                _tokenSource.Cancel();
+            if (_useOwnThread)
+                await TaskHelper.SleepUntil(() => _processThreadResetEvent.IsSet, 5000).ConfigureAwait(false);
+            else
+                await _processTask.ConfigureAwait(false);
+            _processThreadResetEvent.Reset();
+            CreateChannels();
         }
         /// <summary>
         /// Stops the processing thread
         /// </summary>
+        /// <param name="forceInmediate">Force inmediate end.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Stop()
+        public void Stop(bool forceInmediate = false)
         {
+            if (_status != WorkerStatus.Started) return;
+            _status = WorkerStatus.Stopping;
+            _writer.TryComplete();
+            if (forceInmediate)
+                _tokenSource.Cancel();
+            if (_useOwnThread)
+                _processThreadResetEvent.Wait(5000);
+            else
+                _processTask.WaitAsync();
+            _processThreadResetEvent.Reset();
+            CreateChannels();
         }
         #endregion
 
+        #region Private Worker Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task ProcessAsync()
+        {
+            _status = WorkerStatus.Started;
+            var isFunc = _func != null;
+            var usePrecondition = _precondition != null;
+            var token = _tokenSource.Token;
+            var maxInCancellation = 25;
+            while(await _reader.WaitToReadAsync(token))
+            {
+                while (_reader.TryRead(out var item))
+                {
+                    try
+                    {
+                        if (usePrecondition)
+                        {
+                            await TaskHelper.SleepUntil(_precondition, token).ConfigureAwait(false);
+                            if (token.IsCancellationRequested) return;
+                        }
+                        if (isFunc)
+                            await _func(item).ConfigureAwait(false);
+                        else
+                            _action(item);
+                    }
+                    catch(Exception ex)
+                    {
+                        if (!_ignoreExceptions && OnException != null)
+                            OnException(this, (ex, item));
+                    }
+                    if (token.IsCancellationRequested)
+                    {
+                        if (maxInCancellation-- == 0)
+                            break;
+                    }
+                }
+                OnWorkDone?.Invoke(this, EventArgs.Empty);
+            }
+            _status = WorkerStatus.Stopped;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessThread()
+        {
+            _status = WorkerStatus.Started;
+            _processThreadResetEvent = new ManualResetEventSlim();
+            var isFunc = _func != null;
+            var usePrecondition = _precondition != null;
+            var token = _tokenSource.Token;
+            var maxInCancellation = 25;
+            while (_reader.WaitToReadAsync(_tokenSource.Token).WaitAndResults())
+            {
+                while (_reader.TryRead(out var item))
+                {
+                    try
+                    {
+                        if (usePrecondition)
+                        {
+                            while (!token.IsCancellationRequested && !_precondition())
+                                Thread.Sleep(250);
+                            if (token.IsCancellationRequested) return;
+                        }
+
+                        if (isFunc)
+                            _func(item).WaitAsync();
+                        else
+                            _action(item);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!_ignoreExceptions && OnException != null)
+                            OnException(this, (ex, item));
+                    }
+                    if (token.IsCancellationRequested)
+                    {
+                        if (maxInCancellation-- == 0)
+                            break;
+                    }
+                }
+                OnWorkDone?.Invoke(this, EventArgs.Empty);
+            }
+            _status = WorkerStatus.Stopped;
+            _processThreadResetEvent.Set();
+        }
+        #endregion
 
         /// <inheritdoc />
         /// <summary>
@@ -612,6 +743,15 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
+            if (_status != WorkerStatus.Started) return;
+            _status = WorkerStatus.Stopping;
+            _writer.TryComplete();
+            _tokenSource.Cancel();
+            if (_useOwnThread)
+                _processThreadResetEvent.Wait(5000);
+            else
+                _processTask.WaitAsync();
+            _status = WorkerStatus.Disposed;
         }
     }
 }

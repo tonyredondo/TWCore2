@@ -39,10 +39,14 @@ namespace TWCore.Diagnostics.Log.Storages
         private static readonly ConsoleColor DefaultColor;
         private static readonly ConcurrentStack<StringBuilder> StringBuilderPool;
         private static readonly bool HasConsole;
+        private readonly NonBlockingConsole nonBlockingConsole = new NonBlockingConsole();
+
+        #region Properties
         /// <summary>
         /// Use Color Schema on Console
         /// </summary>
         public static bool UseColor { get; set; } = true;
+        #endregion
 
         #region .ctor Static
         static ConsoleLogStorage()
@@ -61,76 +65,34 @@ namespace TWCore.Diagnostics.Log.Storages
         }
         #endregion
 
-        #region Nested Types
-
-        private class NonBlockingConsole
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void GetExceptionDescription(SerializableException itemEx, StringBuilder sbuilder)
         {
-            private static BlockingCollection<(string Message, ConsoleColor Color)> _queue = new BlockingCollection<(string Message, ConsoleColor Color)>();
-            private static CancellationTokenSource _tokenSource = new CancellationTokenSource();
-            private static ManualResetEventSlim _disposeEvent = new ManualResetEventSlim();
-
-            static NonBlockingConsole()
+            while (true)
             {
-                var thread = new Thread(ConsoleThread)
+                if (itemEx.Data == null || itemEx.Data.Count == 0)
+                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                else
                 {
-                    IsBackground = true,
-                    Priority = ThreadPriority.Lowest,
-                    Name = "Console Thread"
-                };
-                thread.Start();
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void Write(string line, ConsoleColor color)
-            {
-                if (!_tokenSource.IsCancellationRequested)
-                    _queue.Add((line, color));
-            }
+                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tData:\r\n",
+                        itemEx.ExceptionType,
+                        itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"));
 
-            private static void ConsoleThread()
-            {
-                var lastColor = DefaultColor;
-                var token = _tokenSource.Token;
-                while (true)
-                {
-                    string message;
-                    ConsoleColor color;
-                    if (!token.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            (message, color) = _queue.Take(token);
-                        }
-                        catch(OperationCanceledException)
-                        {
-                            continue;
-                        }
-                    }
-                    else if (_queue.TryTake(out var mc))
-                    {
-                        message = mc.Message;
-                        color = mc.Color;
-                    }
-                    else
-                        break;
-                    if (color != lastColor)
-                    {
-                        Console.ForegroundColor = color;
-                        lastColor = color;
-                    }
-                    Console.Write(message);
+                    foreach (var dataItem in itemEx.Data)
+                        sbuilder.AppendFormat("\t\t{0}: {1}\r\n", dataItem.Key, dataItem.Value);
+
+                    sbuilder.AppendFormat("\tStack: {0}\r\n\r\n",
+                        itemEx.StackTrace);
                 }
-                _disposeEvent.Set();
-            }
-
-            public static void Dispose()
-            {
-                _tokenSource.Cancel();
-                _disposeEvent.Wait();
+                if (itemEx.InnerException is null)
+                    break;
+                itemEx = itemEx.InnerException;
             }
         }
-
         #endregion
 
+        #region Public Methods
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
@@ -198,35 +160,9 @@ namespace TWCore.Diagnostics.Log.Storages
                         break;
                 }
             }
-            NonBlockingConsole.Write(message, color);
+            nonBlockingConsole.Write(message, color);
             return Task.CompletedTask;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void GetExceptionDescription(SerializableException itemEx, StringBuilder sbuilder)
-        {
-            while (true)
-            {
-                if (itemEx.Data == null || itemEx.Data.Count == 0)
-                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
-                else
-                {
-                    sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tData:\r\n",
-                        itemEx.ExceptionType,
-                        itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"));
-
-                    foreach (var dataItem in itemEx.Data)
-                        sbuilder.AppendFormat("\t\t{0}: {1}\r\n", dataItem.Key, dataItem.Value);
-
-                    sbuilder.AppendFormat("\tStack: {0}\r\n\r\n",
-                        itemEx.StackTrace);
-                }
-                if (itemEx.InnerException is null)
-                    break;
-                itemEx = itemEx.InnerException;
-            }
-        }
-
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
@@ -234,7 +170,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteEmptyLineAsync()
         {
-            NonBlockingConsole.Write("\r\n", DefaultColor);
+            nonBlockingConsole.Write("\r\n", DefaultColor);
             return Task.CompletedTask;
         }
         /// <summary>
@@ -242,6 +178,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Group metadata item</param>
         /// <returns>Task process</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteAsync(IGroupMetadata item)
         {
             if (!HasConsole) return Task.CompletedTask;
@@ -275,7 +212,7 @@ namespace TWCore.Diagnostics.Log.Storages
 
             if (UseColor)
                 color = ConsoleColor.Cyan;
-            NonBlockingConsole.Write(message, color);
+            nonBlockingConsole.Write(message, color);
             return Task.CompletedTask;
         }
         /// <inheritdoc />
@@ -287,7 +224,81 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             if (ServiceContainer.HasConsole && UseColor)
                 Console.ForegroundColor = DefaultColor;
-            NonBlockingConsole.Dispose();
+            nonBlockingConsole.Dispose();
         }
+        #endregion
+
+        #region Nested Types
+
+        private class NonBlockingConsole
+        {
+            private BlockingCollection<(string Message, ConsoleColor Color)> _queue = new BlockingCollection<(string Message, ConsoleColor Color)>();
+            private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+            private ManualResetEventSlim _disposeEvent = new ManualResetEventSlim();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public NonBlockingConsole()
+            {
+                var thread = new Thread(ConsoleThread)
+                {
+                    IsBackground = true,
+                    Priority = ThreadPriority.Lowest,
+                    Name = "Console Thread"
+                };
+                thread.Start();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Write(string line, ConsoleColor color)
+            {
+                if (!_tokenSource.IsCancellationRequested)
+                    _queue.Add((line, color));
+            }
+
+            private void ConsoleThread()
+            {
+                var lastColor = DefaultColor;
+                var token = _tokenSource.Token;
+                while (true)
+                {
+                    string message;
+                    ConsoleColor color;
+                    if (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            (message, color) = _queue.Take(token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (_queue.TryTake(out var mc))
+                    {
+                        message = mc.Message;
+                        color = mc.Color;
+                    }
+                    else
+                        break;
+                    if (color != lastColor)
+                    {
+                        Console.ForegroundColor = color;
+                        lastColor = color;
+                    }
+                    Console.Write(message);
+                }
+                _disposeEvent.Set();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Dispose()
+            {
+                _tokenSource.Cancel();
+                _disposeEvent.Wait();
+            }
+        }
+
+        #endregion
     }
 }

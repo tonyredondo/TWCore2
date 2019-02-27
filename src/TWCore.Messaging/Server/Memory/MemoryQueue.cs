@@ -42,7 +42,7 @@ namespace TWCore.Messaging
             /// <summary>
             /// Value
             /// </summary>
-            public object Value;
+            public IMessage Value;
             /// <summary>
             /// Reset event
             /// </summary>
@@ -56,7 +56,7 @@ namespace TWCore.Messaging
         /// <param name="correlationId">CorrelationId value</param>
         /// <param name="value">Object value</param>
         /// <returns>true if the item was enqueued; otherwise false.</returns>
-        public bool Enqueue(Guid correlationId, object value)
+        public bool Enqueue(Guid correlationId, IMessage value)
         {
             var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
             message.Value = value;
@@ -72,22 +72,15 @@ namespace TWCore.Messaging
         /// <returns>Object value</returns>
         public async Task<Message> DequeueAsync(CancellationToken cancellationToken)
         {
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                if (_messageQueue.TryDequeue(out var correlationId))
                 {
-                    if (_messageQueue.TryDequeue(out var correlationId))
-                    {
-                        if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
-                        _resetEvent.Reset();
-                        return message;
-                    }
-                    await _resetEvent.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
+                    _resetEvent.Reset();
+                    return message;
                 }
-            }
-            catch
-            {
-                //
+                await _resetEvent.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
             return null;
         }
@@ -100,19 +93,11 @@ namespace TWCore.Messaging
         /// <returns>Object value</returns>
         public async Task<Message> DequeueAsync(Guid correlationId, int waitTime, CancellationToken cancellationToken)
         {
-            try
-            {
-                var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
-                if (!await message.ResetEvent.WaitAsync(waitTime, cancellationToken).ConfigureAwait(false))
-                    return null;
-                _messageStorage.TryRemove(correlationId, out var _);
-                return message;
-            }
-            catch
-            {
-                //
-            }
-            return null;
+            var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
+            if (!await message.ResetEvent.WaitAsync(waitTime, cancellationToken).ConfigureAwait(false))
+                return null;
+            _messageStorage.TryRemove(correlationId, out var _);
+            return message;
         }
         #endregion
     }

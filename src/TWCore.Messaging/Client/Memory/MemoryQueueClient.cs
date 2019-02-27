@@ -113,7 +113,7 @@ namespace TWCore.Messaging
                 var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
                 {
-                    message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
+                    message.Header.ResponseQueue = recvQueue; //new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                 }

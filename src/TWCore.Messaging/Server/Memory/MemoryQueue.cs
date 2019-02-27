@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable MethodSupportsCancellation
 
 // ReSharper disable CheckNamespace
@@ -29,10 +30,9 @@ namespace TWCore.Messaging
     /// </summary>
     public class MemoryQueue
     {
-        private static readonly ConcurrentDictionary<CancellationToken, Task> CancellationTasks = new ConcurrentDictionary<CancellationToken, Task>();
         private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
         private readonly ConcurrentDictionary<Guid, Message> _messageStorage = new ConcurrentDictionary<Guid, Message>();
-        private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly AsyncManualResetEvent _resetEvent = new AsyncManualResetEvent(false);
         
         /// <summary>
         /// Memory Queue message
@@ -44,9 +44,9 @@ namespace TWCore.Messaging
             /// </summary>
             public object Value;
             /// <summary>
-            /// Task completion source
+            /// Reset event
             /// </summary>
-            public readonly TaskCompletionSource<bool> TaskSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            public readonly AsyncManualResetEvent ResetEvent = new AsyncManualResetEvent(false);
         }
 
         #region Queue Methods
@@ -60,9 +60,9 @@ namespace TWCore.Messaging
         {
             var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
             message.Value = value;
-            message.TaskSource.TrySetResult(true);
+            message.ResetEvent.Set();
             _messageQueue.Enqueue(correlationId);
-            _queueTask.TrySetResult(true);
+            _resetEvent.Set();
             return true;
         }
         /// <summary>
@@ -74,16 +74,15 @@ namespace TWCore.Messaging
         {
             try
             {
-                var tokenTask = CancellationTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     if (_messageQueue.TryDequeue(out var correlationId))
                     {
                         if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
-                        Interlocked.Exchange(ref _queueTask, new TaskCompletionSource<bool>());
+                        _resetEvent.Reset();
                         return message;
                     }
-                    await Task.WhenAny(_queueTask.Task, tokenTask).ConfigureAwait(false);
+                    await _resetEvent.WaitAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
             catch
@@ -104,12 +103,8 @@ namespace TWCore.Messaging
             try
             {
                 var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
-                var delayCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken.None);
-                var wTask = message.TaskSource.Task;
-                var dTask = Task.Delay(waitTime, delayCancellation.Token);
-                var rTask = await Task.WhenAny(wTask, dTask).ConfigureAwait(false);
-                if (rTask != wTask) return null;
-                delayCancellation.Cancel();
+                if (!await message.ResetEvent.WaitAsync(waitTime, cancellationToken).ConfigureAwait(false))
+                    return null;
                 _messageStorage.TryRemove(correlationId, out var _);
                 return message;
             }

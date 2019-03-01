@@ -73,6 +73,7 @@ namespace TWCore.Serialization.RawSerializer
         private static void ThrowIOException() => throw new IOException("The stream has been closed.");
         private static void ThrowFormatException() => throw new FormatException("The stream is not in RAWSerializer format.");
         private static void ThrowUnexpectedBytes(byte type) => throw new Exception($"Unexpected byte type: {type}.");
+        private static void ThrowInvalidOperationException(byte type) => throw new InvalidOperationException($"Invalid type value. [{type}]");
         #endregion
 
         #region Normal Serializer

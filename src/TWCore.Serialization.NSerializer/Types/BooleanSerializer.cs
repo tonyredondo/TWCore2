@@ -86,7 +86,8 @@ namespace TWCore.Serialization.NSerializer
                 return true;
             if (value == DataBytesDefinition.BoolFalse)
                 return false;
-            throw new InvalidOperationException($"Invalid type value. [{value}]");
+            ThrowInvalidOperationException(value);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(bool?))]
@@ -99,7 +100,8 @@ namespace TWCore.Serialization.NSerializer
                 return true;
             if (value == DataBytesDefinition.BoolFalse)
                 return false;
-            throw new InvalidOperationException($"Invalid type value. [{value}]");
+            ThrowInvalidOperationException(value);
+            return default;
         }
     }
 }

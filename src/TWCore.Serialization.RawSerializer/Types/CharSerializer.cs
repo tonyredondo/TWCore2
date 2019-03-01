@@ -26,7 +26,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(char value)
         {
-            if (value == default(char))
+            if (value == default)
                 WriteByte(DataBytesDefinition.CharDefault);
             else
                 WriteDefChar(DataBytesDefinition.Char, value);
@@ -57,7 +57,8 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (value == DataBytesDefinition.Char)
                 return StreamReadChar();
-            throw new InvalidOperationException($"Invalid type value. [{value}]");
+            ThrowInvalidOperationException(value);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(char?))]
@@ -70,7 +71,8 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (value == DataBytesDefinition.Char)
                 return StreamReadChar();
-            throw new InvalidOperationException($"Invalid type value. [{value}]");
+            ThrowInvalidOperationException(value);
+            return default;
         }
     }
 }

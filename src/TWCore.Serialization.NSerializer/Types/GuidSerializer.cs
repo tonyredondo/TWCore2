@@ -75,7 +75,8 @@ namespace TWCore.Serialization.NSerializer
                 _guidCache.Set(guidValue);
                 return guidValue;
             }
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(Guid?))]

@@ -96,7 +96,8 @@ namespace TWCore.Serialization.RawSerializer
                     length = StreamReadInt();
                     break;
                 default:
-                    throw new InvalidOperationException($"Invalid type value. [{type}]");
+                    ThrowInvalidOperationException(type);
+                    return default;
             }
 
             string strValue = null;

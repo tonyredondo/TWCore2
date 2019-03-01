@@ -37,8 +37,10 @@ namespace TWCore.Serialization.RawSerializer
         {
             if (value is null)
                 WriteByte(DataBytesDefinition.ValueNull);
+            else if (value == default(DateTime))
+                WriteByte(DataBytesDefinition.DateTimeDefault);
             else
-                WriteValue(value.Value);
+                WriteDefLong(DataBytesDefinition.DateTime, value.Value.ToBinary());
         }
     }
 
@@ -55,7 +57,8 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (type == DataBytesDefinition.DateTime)
                 return DateTime.FromBinary(StreamReadLong());
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(DateTime?))]
@@ -64,7 +67,12 @@ namespace TWCore.Serialization.RawSerializer
         {
             if (type == DataBytesDefinition.ValueNull)
                 return null;
-            return ReadDateTime(type);
+            if (type == DataBytesDefinition.DateTimeDefault)
+                return default;
+            if (type == DataBytesDefinition.DateTime)
+                return DateTime.FromBinary(StreamReadLong());
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 }

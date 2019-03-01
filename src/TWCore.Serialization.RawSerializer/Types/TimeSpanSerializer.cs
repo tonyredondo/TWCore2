@@ -35,8 +35,12 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan? value)
         {
-            if (value is null) WriteByte(DataBytesDefinition.ValueNull);
-            else WriteValue(value.Value);
+            if (value is null)
+                WriteByte(DataBytesDefinition.ValueNull);
+            else if (value == default(TimeSpan))
+                WriteByte(DataBytesDefinition.TimeSpanDefault);
+            else
+                WriteDefLong(DataBytesDefinition.TimeSpan, value.Value.Ticks);
         }
     }
 
@@ -55,7 +59,8 @@ namespace TWCore.Serialization.RawSerializer
                 case DataBytesDefinition.TimeSpan:
                     return TimeSpan.FromTicks(StreamReadLong());
             }
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(TimeSpan?))]

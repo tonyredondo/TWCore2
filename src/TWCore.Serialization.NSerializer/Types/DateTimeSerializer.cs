@@ -66,7 +66,8 @@ namespace TWCore.Serialization.NSerializer
                 _dateTimeCache.Set(cValue);
                 return cValue;
             }
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(DateTime?))]

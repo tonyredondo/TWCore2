@@ -37,8 +37,10 @@ namespace TWCore.Serialization.RawSerializer
         {
             if (value is null)
                 WriteByte(DataBytesDefinition.ValueNull);
+            else if (value == default(DateTimeOffset))
+                WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
             else
-                WriteValue(value.Value);
+                WriteDefLong(DataBytesDefinition.DateTimeOffset, value.Value.ToFileTime());
         }
     }
 
@@ -55,7 +57,8 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (type == DataBytesDefinition.DateTimeOffset)
                 return DateTimeOffset.FromFileTime(StreamReadLong());
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(DateTimeOffset?))]
@@ -68,7 +71,8 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (type == DataBytesDefinition.DateTimeOffset)
                 return DateTimeOffset.FromFileTime(StreamReadLong());
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 

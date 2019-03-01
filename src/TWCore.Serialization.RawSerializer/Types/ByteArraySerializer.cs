@@ -62,7 +62,8 @@ namespace TWCore.Serialization.RawSerializer
                     Stream.ReadExact(buffer, 0, buffer.Length);
                     return buffer;
             }
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 }

@@ -66,7 +66,8 @@ namespace TWCore.Serialization.RawSerializer
                 return default;
             if (type == DataBytesDefinition.Guid)
                 return StreamReadGuid();
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(Guid?))]
@@ -75,7 +76,12 @@ namespace TWCore.Serialization.RawSerializer
         {
             if (type == DataBytesDefinition.ValueNull)
                 return null;
-            return StreamReadGuid(type);
+            if (type == DataBytesDefinition.GuidDefault)
+                return default;
+            if (type == DataBytesDefinition.Guid)
+                return StreamReadGuid();
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 }

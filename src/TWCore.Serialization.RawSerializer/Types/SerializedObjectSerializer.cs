@@ -43,10 +43,12 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject ReadSerializedObject(byte type)
         {
-            if (type == DataBytesDefinition.SerializedObjectNull) return null;
-            if (type != DataBytesDefinition.SerializedObject)
-                throw new InvalidOperationException($"Invalid type value. [{type}]");
-            return SerializedObject.FromStream(Stream);
+            if (type == DataBytesDefinition.SerializedObjectNull)
+                return null;
+            if (type == DataBytesDefinition.SerializedObject)
+                return SerializedObject.FromStream(Stream);
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 }

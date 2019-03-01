@@ -44,7 +44,8 @@ namespace TWCore.Serialization.RawSerializer
         {
             if (type == DataBytesDefinition.EnumInt)
                 return StreamReadInt();
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 }

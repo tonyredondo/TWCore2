@@ -66,7 +66,8 @@ namespace TWCore.Serialization.NSerializer
                 _dateTimeOffsetCache.Set(cValue);
                 return cValue;
             }
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
 
         [DeserializerMethod(ReturnType = typeof(DateTimeOffset?))]
@@ -85,7 +86,8 @@ namespace TWCore.Serialization.NSerializer
                 _dateTimeOffsetCache.Set(cValue);
                 return cValue;
             }
-            throw new InvalidOperationException($"Invalid type value. [{type}]");
+            ThrowInvalidOperationException(type);
+            return default;
         }
     }
 

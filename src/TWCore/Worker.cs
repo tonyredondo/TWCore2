@@ -62,8 +62,8 @@ namespace TWCore
         private readonly Func<T, Task> _func;
         private readonly Func<bool> _precondition;
         private readonly bool _startActive;
-        private bool _ignoreExceptions;
         private readonly bool _useOwnThread;
+        private bool _ignoreExceptions;
         private ChannelReader<T> _reader;
         private ChannelWriter<T> _writer;
         private volatile WorkerStatus _status = WorkerStatus.Stopped;
@@ -71,6 +71,7 @@ namespace TWCore
         private Thread _processThread;
         private ManualResetEventSlim _processThreadResetEvent;
         private long _queueCount;
+        private int _workerStartStatus;
 
         #region Events
         /// <summary>
@@ -248,6 +249,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Start()
         {
+            if (Interlocked.CompareExchange(ref _workerStartStatus, 1, 0) == 1) return;
             if (_status != WorkerStatus.Stopped) return;
             if (_useOwnThread)
             {
@@ -267,6 +269,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task StopAsync(bool forceInmediate = false)
         {
+            if (Interlocked.CompareExchange(ref _workerStartStatus, 0, 1) == 0) return;
             if (_status != WorkerStatus.Started) return;
             _status = WorkerStatus.Stopping;
             _writer.TryComplete();
@@ -289,6 +292,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Stop(bool forceInmediate = false)
         {
+            if (Interlocked.CompareExchange(ref _workerStartStatus, 0, 1) == 0) return;
             if (_status != WorkerStatus.Started) return;
             _status = WorkerStatus.Stopping;
             _writer.TryComplete();

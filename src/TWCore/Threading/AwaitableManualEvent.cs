@@ -204,19 +204,27 @@ namespace TWCore.Threading
         public void Fire()
         {
             if (Interlocked.CompareExchange(ref _wasFired, 1, 0) == 1) return;
+            Action<object> lContinuation = null;
+            object lState = null;
+
             lock (_locker)
             {
                 if (_continuation != null)
                 {
-#if COMPATIBILITY
-                    var nCont = _continuation;
-                    ThreadPool.QueueUserWorkItem(state => nCont(state), _state);
-#else
-                    ThreadPool.QueueUserWorkItem(_continuation, _state, _preferLocal);
-#endif
+                    lContinuation = _continuation;
+                    lState = _state;
+                    _continuation = null;
+                    _state = null;
                 }
-                _continuation = null;
-                _state = null;
+            }
+
+            if (lContinuation != null)
+            {
+#if COMPATIBILITY
+                ThreadPool.QueueUserWorkItem(state => lContinuation(state), lState);
+#else
+                ThreadPool.QueueUserWorkItem(lContinuation, lState, _preferLocal);
+#endif
             }
         }
 

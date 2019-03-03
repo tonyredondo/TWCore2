@@ -322,7 +322,7 @@ namespace TWCore
             var maxInCancellation = 50;
             try
             {
-                while (await _reader.WaitToReadAsync(token))
+                while (await _reader.WaitToReadAsync(token).ConfigureAwait(false))
                 {
                     if (usePrecondition)
                     {
@@ -360,7 +360,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessThread()
         {
-            Thread.CurrentThread.Name = "Worker Thread";
+            Thread.CurrentThread.Name = typeof(T).Name + " Worker Thread";
             _status = WorkerStatus.Started;
             _processThreadResetEvent = new ManualResetEventSlim();
             var isFunc = _func != null;

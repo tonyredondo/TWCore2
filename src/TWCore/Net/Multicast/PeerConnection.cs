@@ -27,6 +27,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
+using TWCore.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedField.Local
@@ -59,7 +60,7 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// On receive message event
         /// </summary>
-        public event EventHandler<PeerConnectionMessageReceivedEventArgs> OnReceive;
+        public AsyncEvent<PeerConnectionMessageReceivedEventArgs> OnReceiveAsync;
 
         #region Allocators
         private readonly struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
@@ -429,12 +430,12 @@ namespace TWCore.Net.Multicast
                     if (!receivedDatagrams.Complete)
                         continue;
 
-                    if (OnReceive != null)
+                    if (OnReceiveAsync != null)
                     {
                         try
                         {
                             var bufferMessage = receivedDatagrams.GetMessage();
-                            OnReceive.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage));
+                            await OnReceiveAsync.InvokeAsync(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage)).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {

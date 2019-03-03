@@ -21,10 +21,12 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
+using TWCore.Threading;
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable EventNeverSubscribedTo.Global
@@ -40,6 +42,7 @@ namespace TWCore.Net.Multicast
         private static readonly List<RegisteredServiceContainer> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
         private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(70);
+        private static AsyncLock ReceivedServicesLock = new AsyncLock();
         private static Timer _sendTimer;
         private static bool _connected;
 
@@ -95,7 +98,7 @@ namespace TWCore.Net.Multicast
             ReceivedServices = new TimeoutDictionary<Guid, ReceivedService>();
             ReceivedServices.OnItemTimeout += (s, e) => Try.Do(vTuple => OnServiceExpired?.Invoke(vTuple.s, new EventArgs<ReceivedService>(vTuple.e.Value)), (s, e), false);
             PeerConnection = new PeerConnection();
-            PeerConnection.OnReceive += PeerConnection_OnReceive;
+            PeerConnection.OnReceiveAsync += PeerConnection_OnReceiveAsync;
             _connected = false;
         }
         #endregion
@@ -248,8 +251,8 @@ namespace TWCore.Net.Multicast
         /// <returns>Received registered services array</returns>
         public static ReceivedService[] GetRegisteredServices()
         {
-            lock (ReceivedServices)
-                return ReceivedServices.ToValueArray();
+            using (ReceivedServicesLock.GetLock())
+                    return ReceivedServices.ToValueArray();
         }
         /// <summary>
         /// Get registered services
@@ -257,7 +260,7 @@ namespace TWCore.Net.Multicast
         /// <returns>Received registered services array</returns>
         public static ReceivedService[] GetLocalRegisteredServices()
         {
-            lock (ReceivedServices)
+            using (ReceivedServicesLock.GetLock())
                 return ReceivedServices.ToValueArray().Where(s => s.MachineName == Core.MachineName).ToArray();
         }
         /// <summary>
@@ -267,7 +270,7 @@ namespace TWCore.Net.Multicast
         /// <returns>Received registered services array</returns>
         public static ReceivedService[] GetRegisteredServices(string name)
         {
-            lock (ReceivedServices)
+            using (ReceivedServicesLock.GetLock())
                 return ReceivedServices.ToValueArray().Where((r, mName) => r.Name == mName, name).ToArray();
         }
         /// <summary>
@@ -277,7 +280,7 @@ namespace TWCore.Net.Multicast
         /// <returns>Received registered services array</returns>
         public static ReceivedService[] GetLocalRegisteredServices(string name)
         {
-            lock (ReceivedServices)
+            using (ReceivedServicesLock.GetLock())
                 return ReceivedServices.ToValueArray().Where((s, mName) => s.MachineName == Core.MachineName && s.Name == mName, name).ToArray();
         }
         #endregion
@@ -285,7 +288,7 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Private Methods
-        private static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
+        private static async Task PeerConnection_OnReceiveAsync(object sender, PeerConnectionMessageReceivedEventArgs e)
         {
             try
             {
@@ -311,14 +314,13 @@ namespace TWCore.Net.Multicast
                             Addresses = new[] { e.Address }
                         };
                         bool exist;
-                        lock (ReceivedServices)
+                        using (await ReceivedServicesLock.LockAsync().ConfigureAwait(false))
                         {
                             exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
                             if (exist)
                                 received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
                             ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
                         }
-
                         var eArgs = new EventArgs<ReceivedService>(received);
                         if (!exist)
                             OnNewServiceReceived?.Invoke(sender, eArgs);

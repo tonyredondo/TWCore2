@@ -286,6 +286,84 @@ namespace TWCore.Serialization
 #endif
         }
         /// <summary>
+        /// Get SubArray representation of the SerializedObject instance
+        /// </summary>
+        /// <returns>SubArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task CopyToAsync(Stream stream)
+        {
+            if (disposedValue) ThrowDisposedValue();
+            var hasDataType = !string.IsNullOrEmpty(_dataType);
+            var hasMimeType = !string.IsNullOrEmpty(_serializerMimeType);
+
+            var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(_dataType) : 0;
+            var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(_serializerMimeType) : 0;
+
+#if COMPATIBILITY
+            byte[] buffer;
+
+            //DataType
+            buffer = BitConverter.GetBytes(hasDataType ? dataTypeLength : -1);
+            await stream.WriteBytesAsync(buffer).ConfigureAwait(false);
+            if (hasDataType)
+            {
+                buffer = Encoding.UTF8.GetBytes(_dataType);
+                await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+            }
+
+            //MimeType
+            buffer = BitConverter.GetBytes(hasMimeType ? serializerMimeTypeLength : -1);
+            await stream.WriteBytesAsync(buffer).ConfigureAwait(false);
+            if (hasMimeType)
+            {
+                buffer = Encoding.UTF8.GetBytes(_serializerMimeType);
+                await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+            }
+
+            //Data
+            buffer = BitConverter.GetBytes(_data.Count);
+            await stream.WriteBytesAsync(buffer).ConfigureAwait(false);
+            await _data.CopyToAsync(stream).ConfigureAwait(false);
+#else
+            using (var intBuffer = MemoryPool<byte>.Shared.Rent(4))
+            {
+                var intBufferMemory = intBuffer.Memory.Slice(0, 4);
+
+                //DataType
+                BitConverter.TryWriteBytes(intBufferMemory.Span, hasDataType ? dataTypeLength : -1);
+                await stream.WriteAsync(intBufferMemory).ConfigureAwait(false);
+                if (hasDataType)
+                {
+                    using (var dataTypeBuffer = MemoryPool<byte>.Shared.Rent(dataTypeLength))
+                    {
+                        var dataTypeBufferMemory = dataTypeBuffer.Memory.Slice(0, dataTypeLength);
+                        Encoding.UTF8.GetBytes(_dataType, dataTypeBufferMemory.Span);
+                        await stream.WriteAsync(dataTypeBufferMemory).ConfigureAwait(false);
+                    }
+                }
+
+                //MimeType
+                BitConverter.TryWriteBytes(intBufferMemory.Span, hasMimeType ? serializerMimeTypeLength : -1);
+                await stream.WriteAsync(intBufferMemory).ConfigureAwait(false);
+                if (hasMimeType)
+                {
+                    using (var mimeTypeBuffer = MemoryPool<byte>.Shared.Rent(serializerMimeTypeLength))
+                    {
+                        var mimeTypeBufferMemory = mimeTypeBuffer.Memory.Slice(0, serializerMimeTypeLength);
+                        Encoding.UTF8.GetBytes(_serializerMimeType, mimeTypeBufferMemory.Span);
+                        await stream.WriteAsync(mimeTypeBufferMemory).ConfigureAwait(false);
+                    }
+                }
+
+                //Data
+                BitConverter.TryWriteBytes(intBufferMemory.Span, _data.Count);
+                await stream.WriteAsync(intBufferMemory).ConfigureAwait(false);
+                await _data.CopyToAsync(stream).ConfigureAwait(false);
+            }
+#endif
+        }
+
+        /// <summary>
         /// Write the SerializedObject to a file
         /// </summary>
         /// <param name="filepath">Filepath to save the serialized object instance</param>
@@ -301,7 +379,7 @@ namespace TWCore.Serialization
             {
                 using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 {
-                    CopyTo(fs);
+                    await CopyToAsync(fs).ConfigureAwait(false);
                     await fs.FlushAsync().ConfigureAwait(false);
                 }
             }

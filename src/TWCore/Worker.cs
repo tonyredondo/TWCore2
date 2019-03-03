@@ -360,6 +360,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessThread()
         {
+            Thread.CurrentThread.Name = "Worker Thread";
             _status = WorkerStatus.Started;
             _processThreadResetEvent = new ManualResetEventSlim();
             var isFunc = _func != null;

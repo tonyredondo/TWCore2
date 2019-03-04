@@ -305,7 +305,9 @@ namespace TWCore.Serialization
                 Serialize(item, itemType, stream);
                 stream.Position = 0;
                 using (var fstream = File.Open(resPath, FileMode.Create, FileAccess.Write))
+                {
                     await stream.CopyToAsync(fstream).ConfigureAwait(false);
+                }
             }
         }
         /// <inheritdoc />

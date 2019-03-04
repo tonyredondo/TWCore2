@@ -68,7 +68,9 @@ namespace TWCore.Compression
         public async Task CompressAsync(Stream source, Stream destination)
         {
             using (var compressed = _implementation.GetCompressionStream(destination))
+            {
                 await source.CopyToAsync(compressed).ConfigureAwait(false);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -128,7 +130,9 @@ namespace TWCore.Compression
         public async Task DecompressAsync(Stream source, Stream destination)
         {
             using (var decompressed = _implementation.GetDecompressionStream(source))
+            {
                 await decompressed.CopyToAsync(destination).ConfigureAwait(false);
+            }
         }
         /// <inheritdoc />
         /// <summary>

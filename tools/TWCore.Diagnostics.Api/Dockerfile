@@ -1,4 +1,4 @@
-﻿FROM microsoft/dotnet:2.1-runtime-deps
+﻿FROM microsoft/dotnet:2.2-runtime-deps
 COPY ./app/. ./App/.
 
 ENV TWCORE_FORCE_ENVIRONMENT=Docker

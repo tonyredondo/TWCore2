@@ -358,9 +358,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         /// <param name="fromDate">From date and time</param>
         /// <param name="toDate">To date and time</param>
         /// <returns>Search results</returns>
-        public Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
+        public async Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
         {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            var logsSearch = RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem, Logs_Search>()
                     .WhereEquals(x => x.Environment, environment)
@@ -373,11 +373,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Message, "*" + searchTerm + "*")
                     .CloseSubclause()
                     .OrderBy(x => x.Timestamp);
+                return await logQuery.Take(1000).ToListAsync().ConfigureAwait(false);
+            });
 
-                var logQueryLazy = logQuery
-                                        .Take(1000)
-                                        .LazilyAsync();
-
+            var tracesSearch = RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
                 var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem, Traces_Search>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
@@ -390,21 +390,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Name, "*" + searchTerm + "*")
                     .CloseSubclause()
                     .OrderBy(x => x.Timestamp);
-
-                var traceQueryLazy = traceQuery
-                                        .Take(1000)
-                                        .LazilyAsync();
-
-                await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
-                var logResults = await logQueryLazy.Value.ConfigureAwait(false);
-                var traceResults = await traceQueryLazy.Value.ConfigureAwait(false);
-
-                return new SearchResults
-                {
-                    Logs = new List<NodeLogItem>(logResults),
-                    Traces = new List<NodeTraceItem>(traceResults)
-                };
+                return await traceQuery.Take(1000).ToListAsync().ConfigureAwait(false);
             });
+
+            await Task.WhenAll(logsSearch, tracesSearch).ConfigureAwait(false);
+
+            return new SearchResults
+            {
+                Logs = new List<NodeLogItem>(await logsSearch),
+                Traces = new List<NodeTraceItem>(await tracesSearch)
+            };
         }
         /// <summary>
         /// Get metadata from a group name

@@ -14525,6 +14525,9 @@ var SearchComponent = /** @class */ (function () {
                             };
                             groupItem.items.push(appItem);
                         }
+                        if (aItem.tags === null || aItem.tags === undefined) {
+                            aItem.tags = '';
+                        }
                         var itemTags = aItem.tags.split(', ');
                         var tags = [];
                         for (var it = 0; it < itemTags.length; it++) {
@@ -14795,7 +14798,7 @@ var SearchComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<div>\nNot ready yet :(\n</div>\n"
+module.exports = "<div class=\"counter-page\">\r\n\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 1\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 2\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 3\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 4\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 5\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n</div>\r\n"
 
 /***/ }),
 
@@ -14826,6 +14829,18 @@ var StatusComponent = /** @class */ (function () {
     function StatusComponent(_activatedRoute, _router) {
         this._activatedRoute = _activatedRoute;
         this._router = _router;
+        // barChart
+        this.barChartOptions = {
+            scaleShowVerticalLines: false,
+            responsive: true
+        };
+        this.barChartLabels = ['2006', '2007', '2008', '2009', '2010', '2011', '2012'];
+        this.barChartType = 'bar';
+        this.barChartLegend = false;
+        this.barChartData = [
+            { data: [65, 59, 80, 81, 56, 55, 40], label: 'Series A' },
+            { data: [28, 48, 40, 19, 86, 27, 90], label: 'Series B' }
+        ];
     }
     StatusComponent.prototype.ngOnInit = function () {
         this._params = Object.assign({}, this._activatedRoute.snapshot.params);

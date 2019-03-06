@@ -107,10 +107,16 @@ namespace TWCore.Tests
         {
             using (var mqServer = mqConfig.GetServer())
             {
-                mqServer.RequestReceived += (s, e) =>
+                mqServer.RequestReceived += async (s, e) =>
                 {
+                    //Core.Log.Warning("Waiting...");
+                    //try
+                    //{
+                    //    await Task.Delay(int.MaxValue, e.ProcessResponseTimeoutCancellationToken);
+                    //}
+                    //catch { }
+                    //Core.Log.Warning("Cancelled.");
                     e.Response.Body = new SerializedObject("Bienvenido!!!");
-                    return Task.CompletedTask;
                 };
                 mqServer.StartListeners();
 

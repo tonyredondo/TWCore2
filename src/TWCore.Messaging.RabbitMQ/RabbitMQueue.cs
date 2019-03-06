@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
@@ -103,34 +104,43 @@ namespace TWCore.Messaging.RabbitMQ
 
         private void InternalConnection()
         {
-            lock (this)
+            try
             {
-                if (Channel != null) return;
-                if (CurrentConnections.TryGetValue(Route, out var connection))
+                lock (this)
                 {
-                    if (string.IsNullOrEmpty(Name))
-                        Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}", Route);
-                    else
-                        Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
-                    Channel = connection.CreateModel();
-                }
-                else
-                {
-                    Core.Log.InfoDetail("Creating connection for: Route={0}", Route);
-                    var factory = new ConnectionFactory
+                    if (Channel != null) return;
+                    if (CurrentConnections.TryGetValue(Route, out var connection))
                     {
-                        Uri = new Uri(Route),
-                        UseBackgroundThreadsForIO = true,
-                        AutomaticRecoveryEnabled = true
-                    };
-                    connection = factory.CreateConnection();
-                    if (string.IsNullOrEmpty(Name))
-                        Core.Log.InfoDetail("Creating channel for: Route={0}", Route);
+                        if (string.IsNullOrEmpty(Name))
+                            Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}", Route);
+                        else
+                            Core.Log.InfoDetail("Using existing connection, creating channel for: Route={0}, Name={1}", Route, Name);
+                        Channel = connection.CreateModel();
+                    }
                     else
-                        Core.Log.InfoDetail("Creating channel for: Route={0}, Name={1}", Route, Name);
-                    Channel = connection.CreateModel();
-                    CurrentConnections.TryAdd(Route, connection);
+                    {
+                        Core.Log.InfoDetail("Creating connection for: Route={0}", Route);
+                        var factory = new ConnectionFactory
+                        {
+                            Uri = new Uri(Route),
+                            UseBackgroundThreadsForIO = true,
+                            AutomaticRecoveryEnabled = true
+                        };
+                        connection = factory.CreateConnection();
+                        if (string.IsNullOrEmpty(Name))
+                            Core.Log.InfoDetail("Creating channel for: Route={0}", Route);
+                        else
+                            Core.Log.InfoDetail("Creating channel for: Route={0}, Name={1}", Route, Name);
+                        Channel = connection.CreateModel();
+                        CurrentConnections.TryAdd(Route, connection);
+                    }
                 }
+            }
+            catch (ChannelAllocationException)
+            {
+                CurrentConnections.TryRemove(Route, out var _);
+                Channel = null;
+                throw;
             }
         }
 

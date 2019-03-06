@@ -85,8 +85,9 @@ namespace TWCore.Messaging.Server
         /// <param name="request">Request message</param>
         /// <param name="messageLength">Message length</param>
         /// <param name="senderSerializer">Sender serializer</param>
+        /// <param name="cancellationBeforeClientResponseTimeoutInSec">Cancellation time before client response timeout in seconds</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request, int messageLength, ISerializer senderSerializer)
+		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request, int messageLength, ISerializer senderSerializer, int cancellationBeforeClientResponseTimeoutInSec)
         {
             _senderSerializer = senderSerializer;
             Name = name;
@@ -100,7 +101,18 @@ namespace TWCore.Messaging.Server
             {
                 _cancellationTokenSource = new CancellationTokenSource();
                 ProcessResponseTimeoutCancellationToken = _cancellationTokenSource.Token;
-                _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));
+                if (cancellationBeforeClientResponseTimeoutInSec > ProcessResponseTimeoutInSeconds)
+                {
+                    Core.Log.Warning($"The cancellation time before client response timeout can't be greater than the ProcessResponseTimeout sent by the client. [CancellationBeforeClientResponseTimeout={cancellationBeforeClientResponseTimeoutInSec}, ProcessResponseTimeoutInSeconds={ProcessResponseTimeoutInSeconds}]");
+                    _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));
+                }
+                else if (cancellationBeforeClientResponseTimeoutInSec < 0)
+                {
+                    Core.Log.Warning($"The cancellation time before client response timeout can't be lower than 0.");
+                    _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));
+                }
+                else
+                    _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds - cancellationBeforeClientResponseTimeoutInSec));
             }
             else
                 ProcessResponseTimeoutCancellationToken = CancellationToken.None;

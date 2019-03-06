@@ -233,7 +233,7 @@ namespace TWCore.Messaging.RabbitMQ
                         Counters.IncrementReceivingTime(request.Header.TotalTime);
                         if (request.Header.ClientName != Config.Name)
                             Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length, SenderSerializer);
+                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length, SenderSerializer, Config.RequestOptions.ServerReceiverOptions.CancellationBeforeClientResponseTimeoutInSec);
                         evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
                         evArgs.Metadata["MessageId"] = message.Properties.MessageId;
                         if (request.Header.ResponseQueue != null)

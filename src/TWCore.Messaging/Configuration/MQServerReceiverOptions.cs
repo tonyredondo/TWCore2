@@ -44,6 +44,11 @@ namespace TWCore.Messaging.Configuration
         [XmlAttribute, DataMember]
         public int SleepOnExceptionInSec { get; set; } = 5;
         /// <summary>
+        /// Cancellation time before client response timeout in seconds
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public int CancellationBeforeClientResponseTimeoutInSec { get; set; } = 5;
+        /// <summary>
         /// Additional parameters
         /// </summary>
         [XmlElement("Param"), DataMember]

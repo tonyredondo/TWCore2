@@ -92,35 +92,60 @@ namespace TWCore.Test.Core
             public string Name { get; set; }
         }
 
+        private static AsyncLocal<string> _asyncLocal = new AsyncLocal<string>();
+
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
-//
-//            var awaitCount = 0;
-//            var awaitableSample = new AwaitableManualEvent();
-//            _ = Task.Run(async () =>
-//            {
-//                while (true)
-//                {
-//                    Console.WriteLine("FIRE!!! - Count: " + awaitCount);
-//                    awaitCount = 0;
-//                    awaitableSample.Fire();
-//                    await Task.Delay(1000).ConfigureAwait(false);
-//                    awaitableSample.Reset();
-//                    Console.WriteLine("RESET!!! - Count: " + awaitCount);
-//                    awaitCount = 0;
-//                    await Task.Delay(2000).ConfigureAwait(false);
-//                }
-//            });
-//
-//            while (true)
-//            {
-//                var task = awaitableSample.WaitAsync();
-//                await task.ConfigureAwait(false);
-//                awaitCount++;
-//            }
-            
-            
+            //
+            //            var awaitCount = 0;
+            //            var awaitableSample = new AwaitableManualEvent();
+            //            _ = Task.Run(async () =>
+            //            {
+            //                while (true)
+            //                {
+            //                    Console.WriteLine("FIRE!!! - Count: " + awaitCount);
+            //                    awaitCount = 0;
+            //                    awaitableSample.Fire();
+            //                    await Task.Delay(1000).ConfigureAwait(false);
+            //                    awaitableSample.Reset();
+            //                    Console.WriteLine("RESET!!! - Count: " + awaitCount);
+            //                    awaitCount = 0;
+            //                    await Task.Delay(2000).ConfigureAwait(false);
+            //                }
+            //            });
+            //
+            //            while (true)
+            //            {
+            //                var task = awaitableSample.WaitAsync();
+            //                await task.ConfigureAwait(false);
+            //                awaitCount++;
+            //            }
+
+            //_ = Task.Run(async () =>
+            //{
+            //    int i = 0;
+            //    while(true)
+            //    {
+            //        i++;
+            //        _asyncLocal.Value = "Task 1 - " + i;
+            //        await Task.Delay(500).ConfigureAwait(false);
+            //        Console.WriteLine(_asyncLocal.Value);
+            //    }
+            //});
+            //_ = Task.Run(async () =>
+            //{
+            //    int i = 0;
+            //    while (true)
+            //    {
+            //        i++;
+            //        _asyncLocal.Value = "Task 2 - " + i;
+            //        await Task.Delay(500).ConfigureAwait(false);
+            //        Console.WriteLine(_asyncLocal.Value);
+            //    }
+            //});
+            //Console.ReadLine();
+
             var aValue = new AItem { Name = "Test" };
             var bValue = aValue.MapTo(i => new BItem { Name = i.Name });
 

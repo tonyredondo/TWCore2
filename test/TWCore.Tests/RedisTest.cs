@@ -116,6 +116,7 @@ namespace TWCore.Tests
                     //}
                     //catch { }
                     //Core.Log.Warning("Cancelled.");
+                    //Core.Log.InfoBasic("Received");
                     e.Response.Body = new SerializedObject("Bienvenido!!!");
                 };
                 mqServer.StartListeners();
@@ -144,9 +145,16 @@ namespace TWCore.Tests
                     Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
+                        var oldContext = Core.ContextGroupName;
                         Task.WaitAll(
-                            Enumerable.Range(0, totalQ).Select((i, mc) => (Task)mc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
-                        );
+                            Enumerable.Range(0, totalQ).Select((i, mc) => 
+                            {
+                                Core.ContextGroupName = "Message: " + i;
+                                return (Task)mc.SendAndReceiveAsync<string>("Hola mundo");
+                            }
+                        , mqClient).ToArray());
+                        Core.ContextGroupName = oldContext;
+
                         //Parallel.For(0, totalQ, i =>
                         //{
                         //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();

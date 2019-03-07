@@ -205,6 +205,7 @@ namespace TWCore.Messaging.NSQ
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
+                        var oldContext = Core.ContextGroupName;
                         if (!string.IsNullOrEmpty(request.Header.ContextGroupName))
                             Core.ContextGroupName = request.Header.ContextGroupName;
                         request.Header.ApplicationReceivedTime = Core.Now;
@@ -215,6 +216,7 @@ namespace TWCore.Messaging.NSQ
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
+                        Core.ContextGroupName = oldContext;
                         break;
                     case ResponseMessage response when response.Header != null:
                         response.Header.Response.ApplicationReceivedTime = Core.Now;

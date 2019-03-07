@@ -204,14 +204,19 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task OnMethodCallAsync(object sender, MethodEventArgs e)
         {
+            var oldContext = Core.ContextGroupName;
+            if (!string.IsNullOrEmpty(e.Request.ContextGroupName))
+                Core.ContextGroupName = e.Request.ContextGroupName;
             if (_methods.TryGetValue(e.Request.MethodId, out var desc))
             {
                 e.Response = await desc.Service.ProcessRequestAsync(e.Request, e.ClientId, desc.Method, e.CancellationToken).ConfigureAwait(false);
+                Core.ContextGroupName = oldContext;
                 return;
             }
             var responseMessage = RPCResponseMessage.Retrieve(e.Request);
             responseMessage.Exception = new SerializableException(new NotImplementedException($"The MethodId = {e.Request.MethodId} was not found on the service."));
             e.Response = responseMessage;
+            Core.ContextGroupName = oldContext;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnResponseSent(object sender, RPCResponseMessage responseMessage)

@@ -43,6 +43,11 @@ namespace TWCore.Net.RPC
         /// </summary>
         [DataMember]
         public bool CancellationToken { get; set; }
+        /// <summary>
+        /// Context group name
+        /// </summary>
+        [DataMember]
+        public string ContextGroupName { get; set; }
 
         #region .ctor
         /// <inheritdoc />
@@ -63,6 +68,7 @@ namespace TWCore.Net.RPC
             MethodId = methodId;
             Parameters = parameters;
             CancellationToken = cancellationToken;
+            ContextGroupName = Core.ContextGroupName;
         }
         #endregion
         
@@ -78,6 +84,7 @@ namespace TWCore.Net.RPC
             message.MethodId = methodId;
             message.Parameters = parameters;
             message.CancellationToken = cancellationToken;
+            message.ContextGroupName = Core.ContextGroupName;
             return message;
         }
         /// <summary>
@@ -91,6 +98,7 @@ namespace TWCore.Net.RPC
             message.MethodId = Guid.Empty;
             message.Parameters = null;
             message.CancellationToken = false;
+            message.ContextGroupName = null;
             ReferencePool<RPCRequestMessage>.Shared.Store(message);
         }
         #endregion

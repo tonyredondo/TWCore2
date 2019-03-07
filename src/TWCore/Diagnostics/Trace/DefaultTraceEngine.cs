@@ -227,7 +227,7 @@ namespace TWCore.Diagnostics.Trace
                 Id = Factory.NewGuid(),
                 Tags = tags,
                 Timestamp = Core.Now,
-                GroupName = groupName,
+                GroupName = groupName ?? Core.ContextGroupName,
                 TraceName = traceName,
                 TraceObject = traceObject
             };

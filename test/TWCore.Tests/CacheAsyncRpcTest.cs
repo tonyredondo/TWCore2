@@ -69,6 +69,7 @@ namespace TWCore.Tests
 
                 await cachePool.GetAsync("-TEST").ConfigureAwait(false);
                 await cachePool.SetAsync("-TEST", "bla bla bla bla bla").ConfigureAwait(false);
+
                 using (var watch = Watch.Create("Get And Sets"))
                 {
                     for (var i = 0; i < 5000; i++)

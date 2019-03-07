@@ -402,7 +402,7 @@ namespace TWCore
                 Interlocked.CompareExchange(ref _watcherCount, 0, 99);
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._margin = Interlocked.Increment(ref _watcherMargin);
-                item._groupValue = null;
+                item._groupValue = Core.ContextGroupName;
                 item._counterKey = null;
                 return item;
             }
@@ -413,7 +413,7 @@ namespace TWCore
                 Interlocked.CompareExchange(ref _watcherCount, 0, 99);
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._margin = Interlocked.Increment(ref _watcherMargin);
-                item._groupValue = null;
+                item._groupValue = Core.ContextGroupName;
                 item._level = level;
                 item._counterKey = null;
                 return item;
@@ -426,7 +426,7 @@ namespace TWCore
                 Interlocked.CompareExchange(ref _watcherCount, 0, 99);
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._margin = Interlocked.Increment(ref _watcherMargin);
-                item._groupValue = null;
+                item._groupValue = Core.ContextGroupName;
                 item._counterKey = message;
                 item.StartedTap(message);
                 return item;
@@ -439,7 +439,7 @@ namespace TWCore
                 Interlocked.CompareExchange(ref _watcherCount, 0, 99);
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._margin = Interlocked.Increment(ref _watcherMargin);
-                item._groupValue = null;
+                item._groupValue = Core.ContextGroupName;
                 item._level = level;
                 item._counterKey = message;
                 item.StartedTap(message);
@@ -453,7 +453,7 @@ namespace TWCore
                 Interlocked.CompareExchange(ref _watcherCount, 0, 99);
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._margin = Interlocked.Increment(ref _watcherMargin);
-                item._groupValue = null;
+                item._groupValue = Core.ContextGroupName;
                 item._counterKey = startMessage;
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
@@ -466,7 +466,7 @@ namespace TWCore
                 Interlocked.CompareExchange(ref _watcherCount, 0, 99);
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._margin = Interlocked.Increment(ref _watcherMargin);
-                item._groupValue = null;
+                item._groupValue = Core.ContextGroupName;
                 item._level = level;
                 item._counterKey = startMessage;
                 item.StartedTap(startMessage ?? lastMessage);

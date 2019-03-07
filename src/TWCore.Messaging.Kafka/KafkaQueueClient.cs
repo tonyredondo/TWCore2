@@ -213,6 +213,7 @@ namespace TWCore.Messaging.Kafka
                     message.Header.ResponseTimeoutInSeconds = -1;
                 }
             }
+            message.Header.ContextGroupName = Core.ContextGroupName;
             var data = SenderSerializer.Serialize(message);
 
             foreach ((var queue, var producer) in _senders)

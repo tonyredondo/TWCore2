@@ -39,6 +39,11 @@ namespace TWCore.Messaging
         [XmlAttribute, DataMember]
         public string ClientName { get; set; }
         /// <summary>
+        /// Context Group Name
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public string ContextGroupName { get; set; }
+        /// <summary>
         /// Response queue
         /// </summary>
         [XmlElement, DataMember]

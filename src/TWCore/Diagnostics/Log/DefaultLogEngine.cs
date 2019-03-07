@@ -1909,7 +1909,7 @@ namespace TWCore.Diagnostics.Log
             lItem.Level = level;
             lItem.Code = code;
             lItem.Message = message;
-            lItem.GroupName = groupName;
+            lItem.GroupName = groupName ?? Core.ContextGroupName;
             lItem.AssemblyName = assemblyName;
             lItem.TypeName = typeName;
             lItem.Exception = ex != null ? new SerializableException(ex) : null;

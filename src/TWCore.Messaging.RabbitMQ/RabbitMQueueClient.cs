@@ -213,6 +213,7 @@ namespace TWCore.Messaging.RabbitMQ
                     message.Header.ResponseTimeoutInSeconds = -1;
                 }
             }
+            message.Header.ContextGroupName = Core.ContextGroupName;
             var data = SenderSerializer.Serialize(message);
             var correlationId = message.CorrelationId.ToString();
             var replyTo = message.Header.ResponseQueue?.Name;

@@ -175,6 +175,7 @@ namespace TWCore.Test.Core
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>
             {
+                //TWCore.Core.ContextGroupName = "TEST CONTEXT";
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
                 TWCore.Core.Log.AddSimpleFileStorage("./log/testlog.txt");
                 TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");

@@ -61,6 +61,7 @@ namespace TWCore
         private static readonly Regex EncriptionTemplateFormatRegex = new Regex(@"{Encripted:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
         private static readonly ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
+        private static readonly AsyncLocal<string> _contextGroupName = new AsyncLocal<string>();
         private static CoreSettings _globalSettings;
         private static Dictionary<string, object> _data;
         private static Dictionary<object, object> _objectData;
@@ -125,11 +126,33 @@ namespace TWCore
         /// <summary>
         /// Task global data dictionary
         /// </summary>
-        public static Dictionary<string, object> TaskData => _taskData?.Value ?? (_taskData = new AsyncLocal<Dictionary<string, object>>()).Value;
+        public static Dictionary<string, object> TaskData
+        {
+            get
+            {
+                if (_taskData == null)
+                {
+                    _taskData = new AsyncLocal<Dictionary<string, object>>();
+                    _taskData.Value = new Dictionary<string, object>();
+                }
+                return _taskData.Value;
+            }
+        }
         /// <summary>
         /// Task global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> TaskObjectData => _taskObjectData?.Value ?? (_taskObjectData = new AsyncLocal<Dictionary<object, object>>()).Value;
+        public static Dictionary<object, object> TaskObjectData
+        {
+            get
+            {
+                if (_taskObjectData == null)
+                {
+                    _taskObjectData = new AsyncLocal<Dictionary<object, object>>();
+                    _taskObjectData.Value = new Dictionary<object, object>();
+                }
+                return _taskObjectData.Value;
+            }
+        }
         /// <summary>
         /// Current Framework version
         /// </summary>
@@ -202,15 +225,23 @@ namespace TWCore
         /// Process id
         /// </summary>
         public static int ProcessId { get; } = System.Diagnostics.Process.GetCurrentProcess().Id;
-		#endregion
+        /// <summary>
+        /// Context group name
+        /// </summary>
+        public static string ContextGroupName
+        {
+            get => _contextGroupName.Value;
+            set => _contextGroupName.Value = value;
+        }
+        #endregion
 
-		#region Init
-		/// <summary>
-		/// Initialize core framework
-		/// </summary>
-		/// <returns>The init.</returns>
-		/// <param name="factories">Factories.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Init
+        /// <summary>
+        /// Initialize core framework
+        /// </summary>
+        /// <returns>The init.</returns>
+        /// <param name="factories">Factories.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Init(Factories factories)
         {
             if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1) return;

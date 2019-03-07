@@ -229,6 +229,8 @@ namespace TWCore.Messaging.RabbitMQ
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
+                        if (!string.IsNullOrEmpty(request.Header.ContextGroupName))
+                            Core.ContextGroupName = request.Header.ContextGroupName;
                         request.Header.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(request.Header.TotalTime);
                         if (request.Header.ClientName != Config.Name)

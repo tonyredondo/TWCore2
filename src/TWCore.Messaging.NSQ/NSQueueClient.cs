@@ -202,6 +202,7 @@ namespace TWCore.Messaging.NSQ
                     message.Header.ResponseTimeoutInSeconds = -1;
                 }
             }
+            message.Header.ContextGroupName = Core.ContextGroupName;
             var data = SenderSerializer.Serialize(message);
             var body = CreateMessageBody(data, message.CorrelationId);
 

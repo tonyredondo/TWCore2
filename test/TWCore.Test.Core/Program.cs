@@ -175,7 +175,7 @@ namespace TWCore.Test.Core
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>
             {
-                TWCore.Core.ContextGroupName = "TEST";
+                TWCore.Core.SetContextGroupNameIfIsNullOrEmpty("TEST");
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
                 TWCore.Core.Log.AddSimpleFileStorage("./log/testlog.txt");
                 TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");
@@ -190,8 +190,8 @@ namespace TWCore.Test.Core
                 var folder = Factory.ResolveLowLowPath("<</temp/copyright.txt");
                 var folder2 = Factory.ResolveLowLowPath("<<(Github)/logs");
 
-                TWCore.Core.Log.AddGroupMetadata("Group Name", ("Key", "Value"), ("Key2", "Value"));
-                TWCore.Core.Log.AddGroupMetadata("Group Name", ("Key3", "Value"));
+                TWCore.Core.Log.AddGroupMetadata(("Key", "Value"), ("Key2", "Value"));
+                TWCore.Core.Log.AddGroupMetadata(("Key3", "Value"));
 
                 var matchTest = "value value value {Env:CONFIG_CACHESERVERIP} value value \r\n{Env:CONFIG_CACHESERVERIP} values";
                 matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);

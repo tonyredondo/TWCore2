@@ -880,6 +880,18 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Adds metadata values to the group name
         /// </summary>
+        /// <param name="keyValues">Key value pairs to add</param>
+        void AddGroupMetadata(params KeyValue[] keyValues);
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
+        /// <param name="keyValues">Key value pairs to add</param>
+        void AddGroupMetadata(params (string Key, string Value)[] keyValues);
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
         /// <param name="groupName">Group name</param>
         /// <param name="keyValues">Key value pairs to add</param>
         void AddGroupMetadata(string groupName, params KeyValue[] keyValues);

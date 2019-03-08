@@ -909,6 +909,16 @@ namespace TWCore
 
         #region Misc Methods
         /// <summary>
+        /// Sets the context groupname if is null or empty
+        /// </summary>
+        /// <param name="contextGroupName">Context group name</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetContextGroupNameIfIsNullOrEmpty(string contextGroupName)
+        {
+            if (string.IsNullOrEmpty(_contextGroupName.Value))
+                _contextGroupName.Value = contextGroupName;
+        }
+        /// <summary>
         /// One line if method
         /// </summary>
         /// <param name="conditionResult">Condition result</param>

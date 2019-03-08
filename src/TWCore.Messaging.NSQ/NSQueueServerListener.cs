@@ -196,6 +196,7 @@ namespace TWCore.Messaging.NSQ
         private async Task ProcessingTaskAsync(byte[] data)
         {
             if (data == null) return;
+            var oldContext = Core.ContextGroupName;
             try
             {
                 (var body, var correlationId) = NSQueueClient.GetFromMessageBody(data);
@@ -205,7 +206,6 @@ namespace TWCore.Messaging.NSQ
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
-                        var oldContext = Core.ContextGroupName;
                         if (!string.IsNullOrEmpty(request.Header.ContextGroupName))
                             Core.ContextGroupName = request.Header.ContextGroupName;
                         request.Header.ApplicationReceivedTime = Core.Now;
@@ -216,9 +216,10 @@ namespace TWCore.Messaging.NSQ
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
-                        Core.ContextGroupName = oldContext;
                         break;
                     case ResponseMessage response when response.Header != null:
+                        if (!string.IsNullOrEmpty(response.Header.Request.Header.ContextGroupName))
+                            Core.ContextGroupName = response.Header.Request.Header.ContextGroupName;
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
                         var evArgs2 = new ResponseReceivedEventArgs(_name, response, body.Count);
@@ -232,6 +233,10 @@ namespace TWCore.Messaging.NSQ
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
                 Interlocked.Exchange(ref _exceptionSleep, 1);
+            }
+            finally
+            {
+                Core.ContextGroupName = oldContext;
             }
         }
         #endregion

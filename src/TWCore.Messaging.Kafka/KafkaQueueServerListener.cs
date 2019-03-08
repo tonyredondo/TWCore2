@@ -121,6 +121,7 @@ namespace TWCore.Messaging.Kafka
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(Message message)
         {
+            var oldContext = Core.ContextGroupName;
             try
             {
                 var body = message.Value;
@@ -131,7 +132,6 @@ namespace TWCore.Messaging.Kafka
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
-                        var oldContext = Core.ContextGroupName;
                         if (!string.IsNullOrEmpty(request.Header.ContextGroupName))
                             Core.ContextGroupName = request.Header.ContextGroupName;
                         request.Header.ApplicationReceivedTime = Core.Now;
@@ -142,9 +142,10 @@ namespace TWCore.Messaging.Kafka
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
-                        Core.ContextGroupName = oldContext;
                         break;
                     case ResponseMessage response when response.Header != null:
+                        if (!string.IsNullOrEmpty(response.Header.Request.Header.ContextGroupName))
+                            Core.ContextGroupName = response.Header.Request.Header.ContextGroupName;
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
                         var evArgs2 = new ResponseReceivedEventArgs(_name, response, body.Length);
@@ -157,6 +158,10 @@ namespace TWCore.Messaging.Kafka
             {
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
+            }
+            finally
+            {
+                Core.ContextGroupName = oldContext;
             }
         }
         #endregion

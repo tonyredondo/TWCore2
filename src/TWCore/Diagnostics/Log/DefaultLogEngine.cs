@@ -1658,8 +1658,33 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Adds metadata values to the group name
         /// </summary>
+        /// <param name="keyValues">Key value pairs to add</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddGroupMetadata(params KeyValue[] keyValues)
+        {
+            var groupName = Core.ContextGroupName;
+            if (!string.IsNullOrEmpty(groupName))
+                AddGroupMetadata(groupName, keyValues);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
+        /// <param name="keyValues">Key value pairs to add</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddGroupMetadata(params (string Key, string Value)[] keyValues)
+        {
+            var groupName = Core.ContextGroupName;
+            if (!string.IsNullOrEmpty(groupName))
+                AddGroupMetadata(groupName, keyValues);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Adds metadata values to the group name
+        /// </summary>
         /// <param name="groupName">Group name</param>
         /// <param name="keyValues">Key value pairs to add</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddGroupMetadata(string groupName, params KeyValue[] keyValues)
         {
             if (string.IsNullOrWhiteSpace(groupName) || keyValues is null) return;
@@ -1677,6 +1702,7 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         /// <param name="groupName">Group name</param>
         /// <param name="keyValues">Key value pairs to add</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddGroupMetadata(string groupName, params (string Key, string Value)[] keyValues)
         {
             if (string.IsNullOrWhiteSpace(groupName) || keyValues is null) return;

@@ -33,8 +33,6 @@ namespace TWCore.Diagnostics.Api.Models.Status
         public DateTime Date { get; set; }
         [XmlAttribute, DataMember]
         public DateTime StartTime { get; set; }
-        [XmlAttribute, DataMember]
-        public DateTime Timestamp { get; set; }
         [XmlElement("Value"), DataMember]
         public List<NodeStatusItemValue> Values { get; set; }
 

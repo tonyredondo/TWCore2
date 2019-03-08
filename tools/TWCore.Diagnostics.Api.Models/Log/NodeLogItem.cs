@@ -40,7 +40,5 @@ namespace TWCore.Diagnostics.Api.Models.Log
         public string Message { get; set; }
         [XmlElement, DataMember]
         public SerializableException Exception { get; set; }
-        [XmlAttribute, DataMember]
-        public DateTime Timestamp { get; set; }
     }
 }

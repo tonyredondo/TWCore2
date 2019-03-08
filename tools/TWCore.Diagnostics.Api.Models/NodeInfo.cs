@@ -27,5 +27,7 @@ namespace TWCore.Diagnostics.Api.Models
         public Guid InstanceId { get; set; }
         [XmlAttribute, DataMember]
         public string Id { get; set; }
+        [XmlAttribute, DataMember]
+        public DateTime Timestamp { get; set; }
     }
 }

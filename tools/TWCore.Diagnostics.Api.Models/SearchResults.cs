@@ -10,8 +10,6 @@ namespace TWCore.Diagnostics.Api.Models
     public class SearchResults
     {
         [XmlElement, DataMember]
-        public List<NodeLogItem> Logs { get; set; }
-        [XmlElement, DataMember]
-        public List<NodeTraceItem> Traces { get; set; }
+        public List<NodeInfo> Data { get; set; }
     }
 }

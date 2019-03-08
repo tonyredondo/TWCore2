@@ -395,10 +395,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
             await Task.WhenAll(logsSearch, tracesSearch).ConfigureAwait(false);
 
+            var logsData = await logsSearch;
+            var tracesData = await tracesSearch;
+
+            var lstData = new List<NodeInfo>(logsData);
+            lstData.AddRange(tracesData);
+            lstData.Sort((ia, ib) => ia.Timestamp.CompareTo(ib.Timestamp));
+
             return new SearchResults
             {
-                Logs = new List<NodeLogItem>(await logsSearch),
-                Traces = new List<NodeTraceItem>(await tracesSearch)
+                Data = lstData
             };
         }
         /// <summary>

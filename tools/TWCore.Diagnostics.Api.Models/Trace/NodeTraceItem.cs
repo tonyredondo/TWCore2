@@ -31,8 +31,6 @@ namespace TWCore.Diagnostics.Api.Models.Trace
         public string Group { get; set; }
         [XmlAttribute, DataMember]
         public string Name { get; set; }
-        [XmlAttribute, DataMember]
-        public DateTime Timestamp { get; set; }
         [XmlElement, DataMember]
         public string[] Formats { get; set; }
     }

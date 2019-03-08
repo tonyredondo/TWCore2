@@ -14307,7 +14307,7 @@ var LogsComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<ol class=\"breadcrumb breadcrumb-body\">\n  <table>\n    <tr>\n      <td class=\"breadcrumb-icon\">\n      </td>\n      <td class=\"breadcrumb-title\">\n        <div class=\"input-group\">\n          <div class=\"input-group-prepend\">\n            <span class=\"input-group-text\">\n              <i class=\"fa fa-search\"></i>\n            </span>\n          </div>\n          <input type=\"text\" [(ngModel)]=\"searchValue\" (keyup.enter)=\"doSearch()\" id=\"search\" name=\"search\" class=\"form-control\" placeholder=\"Enter your search\">\n          <input type=\"text\" placeholder=\"Showing dates\" class=\"form-control fa-pointer input-date\" bsDaterangepicker [bsConfig]=\"bsConfig\"\n              [bsValue]=\"bsValue\" [(ngModel)]=\"bsValue\" (ngModelChange)=\"doSearch()\" />\n          <span class=\"input-group-append\">\n            <button class=\"btn btn-secondary\" type=\"button\" (click)=\"doSearch()\">Search</button>\n          </span>\n\n\n        </div>\n      </td>\n      <td class=\"breadcrumb-icon\">\n          <span class=\"fa-pointer float-right\" *ngIf=\"bHasResults == true\" (click)=\"getData()\">\n              <i class=\"fa fa-refresh\"></i>&nbsp;\n              <span>Refresh</span>\n          </span>\n      </td>\n    </tr>\n  </table>\n</ol>\n\n<div>\n\n  <div *ngIf=\"bProcessing\">\n    <strong>Searching ...</strong>\n  </div>\n\n  <div class=\"card\" *ngIf=\"bHasResults == false\">\n    <div class=\"card-body\">\n      <alert type=\"info\" class=\"no-bottom-margin-alert\">\n        <strong>Nothing found!</strong>\n        <br/> There are not results for this query, try another query and hit search again.\n      </alert>\n    </div>\n  </div>\n\n  <div *ngIf=\"bHasResults == true\">\n\n    <tabset>\n      <tab *ngFor=\"let groupItem of groupResults\" class=\"tab-search\">\n        <ng-template tabHeading><i class=\"icon-tag\"></i> Group: {{groupItem.groupName}} <span class=\"goToClass\" *ngIf=\"groupItem.groupName !== searchValue\" (click)=\"goToGroup(groupItem.groupName)\">Load Group</span></ng-template>\n\n        <div class=\"metadatas\" *ngIf=\"groupItem.metadata != null && groupItem.metadata.length > 0\">\n          <div class=\"item\" *ngFor=\"let metaItem of groupItem.metadata\">\n            <div class=\"itemKey\">{{metaItem.key}}</div>\n            <div class=\"itemValue\">{{metaItem.value}}</div>\n          </div>\n        </div>\n\n        <div class=\"card card-search\" *ngFor=\"let appItem of groupItem.items\" >\n          <div class=\"card-header\" (click)=\"appItem.hidden = !appItem.hidden\"  [ngStyle]=\"{ 'border-bottom' : appItem.hasError ? '4px solid #f86c6b' : appItem.hasWarning ? '4px solid #ffc421' : '' }\">\n            <div class=\"title\"><i class=\"fa fa-gear\"></i>&nbsp;&nbsp;{{appItem.appName}}</div>\n            <div class=\"counter\">{{appItem.items.length}} items</div>\n          </div>\n          <div class=\"card-body\" [collapse]=\"appItem.hidden\">\n            <div class=\"dvData\">\n              <div *ngFor=\"let rowItem of appItem.items; let isFirst = first\" class=\"dvRow\"  [ngClass]=\"{\n                'dv-level-error': rowItem.level == 'Error',\n                'dv-level-warning': rowItem.level == 'Warning',\n                'dv-level-success': rowItem.level == 'Stats',\n                'dv-level-trace' : rowItem.traceId != null,\n                'messageEnd' : rowItem.message && rowItem.message.indexOf('[END') > -1,\n                'messageStart' : rowItem.message && rowItem.message.indexOf('[START') > -1,\n                'nextIsStart' : rowItem.nextIsStart,\n                'prevIsEnd' : rowItem.prevIsEnd\n              }\">\n                <div class=\"dvTimeCol\" *ngIf=\"isFirst\">\n                  {{rowItem.timestamp | date:'HH:mm:ss.SSS'}}\n                </div>\n                <div class=\"dvTimeCol addTime\" *ngIf=\"!isFirst\" [tooltip]=\"rowItem.timestamp | date:'HH:mm:ss.SSS'\">\n                  {{rowItem.diffTime}}\n                </div>\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.logId != null\">\n                    <div class=\"rightSide\">\n                      <span class=\"dvMessageType\" *ngIf=\"rowItem.type != null\">{{rowItem.type}}</span>\n                      <span *ngIf=\"rowItem.exception != null\" (click)=\"showException(rowItem)\" class=\"badge button-exception\">Show Exception</span>\n                    </div>\n                    <span class=\"spanMessage\">{{rowItem.message}}</span>\n                </div>\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.traceId != null\">\n                  <div class=\"dvText\"><!-- <i class=\"fa fa-file-code-o\" style=\"font-size:14px\"></i> -->{{rowItem.name}}</div>\n                  <div class=\"dvButtons\">\n                    <ng-container *ngFor=\"let tag of rowItem.tagsArray\">\n                        <button class=\"btn\" [ngClass]=\"{\n                          'button-info' : tag.key.indexOf('Status') == -1,\n                          'button-success' : tag.key.indexOf('Status') > -1 && tag.value == 'Success',\n                          'button-warning' : tag.key.indexOf('Status') > -1 && tag.value == 'Warning',\n                          'button-error' : tag.key.indexOf('Status') > -1 && tag.value == 'Error'\n                        }\" [tooltip]=\"tag.value\" [popover]=\"tag.value\" [popoverTitle]=\"tag.key\" placement=\"top\" [outsideClick]=\"true\">{{tag.key}}</button>\n                    </ng-container>\n                    <div class=\"separator\"></div>\n                    <button class=\"btn\" *ngIf=\"rowItem.hasXml\" (click)=\"showXmlData(rowItem.id, rowItem.name)\">XML</button>\n                    <button class=\"btn\" *ngIf=\"rowItem.hasJson\" (click)=\"showJsonData(rowItem.id, rowItem.name)\">JSON</button>\n                    <button class=\"btn\" *ngIf=\"rowItem.hasTxt\" (click)=\"showTxtData(rowItem.id, rowItem.name)\">TXT</button>\n                  </div>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n\n      </tab>\n    </tabset>\n    <br/>\n\n  </div>\n\n</div>\n\n\n\n\n<!-- Exception View -->\n<div bsModal #exceptionModal=\"bs-modal\" class=\"modal fade exception-view\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-danger modal-exception\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Exception View</h4>\n        <button type=\"button\" class=\"close\" (click)=\"exceptionModal.hide()\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n\n        <div class=\"exceptionHeader\">\n          <div class=\"headerRow\">\n            <div>Timestamp</div>\n            <div>Application</div>\n            <div>Machine</div>\n          </div>\n          <div class=\"valueRow\">\n            <div>{{exceptionTimestamp | date:'dd/MM/yy HH:mm:ss.SSS'}}</div>\n            <div>{{exceptionApplication}}</div>\n            <div>{{exceptionMachine}}</div>\n          </div>\n        </div>\n        <div class=\"exceptionBody\">\n          <div class=\"item\" *ngIf=\"exceptionData?.exceptionType\">\n            <div class=\"key\">Type</div>\n            <div class=\"value\">{{exceptionData?.exceptionType}}</div>\n          </div>\n          <div class=\"item\" *ngIf=\"exceptionData?.source\">\n            <div class=\"key\">Source</div>\n            <div class=\"value\">{{exceptionData?.source}}</div>\n          </div>\n          <div class=\"item\">\n            <div class=\"key\">Message</div>\n            <div class=\"value important\">{{exceptionData?.message}}</div>\n          </div>\n          <div class=\"data\" *ngIf=\"exceptionData?.data && exceptionData.data.length > 0\">\n            <div class=\"item\" *ngFor=\"let itemData of exceptionData?.data\">\n              <div class=\"key\">{{itemData.key}}</div>\n              <div class=\"value important\">{{itemData.value}}</div>\n            </div>\n          </div>\n          <div class=\"exceptionStacktrace\">\n              <div class=\"title\">Stacktrace</div>\n              <div class=\"data\">\n                <div class=\"content\" *ngIf=\"exceptionData?.stackTrace\">{{exceptionData?.stackTrace}}</div>\n                <div class=\"content\" *ngIf=\"!(exceptionData?.stackTrace)\">Stacktrace data is not available</div>\n              </div>\n          </div>\n        </div>\n        <div class=\"exceptionBody inner\" *ngFor=\"let innerException of innerExceptionsData\">\n          <div class=\"item\" *ngIf=\"innerException?.exceptionType\">\n            <div class=\"key\">Type</div>\n            <div class=\"value\">{{innerException?.exceptionType}}</div>\n          </div>\n          <div class=\"item\" *ngIf=\"innerException?.source\">\n            <div class=\"key\">Source</div>\n            <div class=\"value\">{{innerException?.source}}</div>\n          </div>\n          <div class=\"item\">\n            <div class=\"key\">Message</div>\n            <div class=\"value important\">{{innerException?.message}}</div>\n          </div>\n          <div class=\"data\" *ngIf=\"innerException?.data && innerException.data.length > 0\">\n            <div class=\"item\" *ngFor=\"let itemData of innerException?.data\">\n              <div class=\"key\">{{itemData.key}}</div>\n              <div class=\"value important\">{{itemData.value}}</div>\n            </div>\n          </div>\n          <div class=\"exceptionStacktrace\">\n              <div class=\"title\">Stacktrace</div>\n              <div class=\"data\">\n                <div class=\"content\" *ngIf=\"innerException?.stackTrace\">{{innerException?.stackTrace}}</div>\n                <div class=\"content\" *ngIf=\"!(innerException?.stackTrace)\">Stacktrace data is not available</div>\n              </div>\n          </div>\n        </div>\n\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" class=\"btn btn-secondary\" (click)=\"exceptionModal.hide()\">Close</button>\n      </div>\n    </div>\n    <!-- /.modal-content -->\n  </div>\n  <!-- /.modal-dialog -->\n</div>\n<!-- /.modal -->\n\n\n<!-- Trace View -->\n<div bsModal #traceModal=\"bs-modal\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n    <div class=\"modal-dialog modal-primary modal-code\" role=\"document\">\n      <div class=\"modal-content\">\n        <div class=\"modal-header\">\n          <h5 class=\"modal-title\">\n            <strong>Trace View: </strong> {{traceName}}</h5>\n          <button type=\"button\" class=\"close\" (click)=\"traceModal.hide()\" aria-label=\"Close\">\n            <span aria-hidden=\"true\">&times;</span>\n          </button>\n        </div>\n        <div class=\"modal-body\">\n          <ngx-codemirror></ngx-codemirror>\n        </div>\n      </div>\n    </div>\n  </div>\n"
+module.exports = "<ol class=\"breadcrumb breadcrumb-body\">\n  <table>\n    <tr>\n      <td class=\"breadcrumb-icon\">\n      </td>\n      <td class=\"breadcrumb-title\">\n        <div class=\"input-group\">\n          <div class=\"input-group-prepend\">\n            <span class=\"input-group-text\">\n              <i class=\"fa fa-search\"></i>\n            </span>\n          </div>\n          <input type=\"text\" [(ngModel)]=\"searchValue\" (keyup.enter)=\"doSearch()\" id=\"search\" name=\"search\" class=\"form-control\" placeholder=\"Enter your search\">\n          <input type=\"text\" placeholder=\"Showing dates\" class=\"form-control fa-pointer input-date\" bsDaterangepicker [bsConfig]=\"bsConfig\"\n              [bsValue]=\"bsValue\" [(ngModel)]=\"bsValue\" (ngModelChange)=\"doSearch()\" />\n          <span class=\"input-group-append\">\n            <button class=\"btn btn-secondary\" type=\"button\" (click)=\"doSearch()\">Search</button>\n          </span>\n\n\n        </div>\n      </td>\n      <td class=\"breadcrumb-icon\">\n          <span class=\"fa-pointer float-right\" *ngIf=\"bHasResults == true\" (click)=\"getData()\">\n              <i class=\"fa fa-refresh\"></i>&nbsp;\n              <span>Refresh</span>\n          </span>\n      </td>\n    </tr>\n  </table>\n</ol>\n\n<div>\n\n  <div *ngIf=\"bProcessing\">\n    <strong>Searching ...</strong>\n  </div>\n\n  <div class=\"card\" *ngIf=\"bHasResults == false\">\n    <div class=\"card-body\">\n      <alert type=\"info\" class=\"no-bottom-margin-alert\">\n        <strong>Nothing found!</strong>\n        <br/> There are not results for this query, try another query and hit search again.\n      </alert>\n    </div>\n  </div>\n\n  <div *ngIf=\"bHasResults == true\">\n\n    <tabset>\n      <tab *ngFor=\"let groupItem of groupResults\" class=\"tab-search\">\n        <ng-template tabHeading><i class=\"icon-tag\"></i> Group: {{groupItem.groupName}} <span class=\"goToClass\" *ngIf=\"groupItem.groupName !== searchValue\" (click)=\"goToGroup(groupItem.groupName)\">Load Group</span></ng-template>\n\n        <div class=\"metadatas\" *ngIf=\"groupItem.metadata != null && groupItem.metadata.length > 0\">\n          <div class=\"item\" *ngFor=\"let metaItem of groupItem.metadata\">\n            <div class=\"itemKey\">{{metaItem.key}}</div>\n            <div class=\"itemValue\">{{metaItem.value}}</div>\n          </div>\n        </div>\n\n        <div class=\"card card-search\" *ngFor=\"let appItem of groupItem.items\" >\n          <div class=\"card-header\" (click)=\"appItem.hidden = !appItem.hidden\"  [ngStyle]=\"{ 'border-bottom' : appItem.hasError ? '4px solid #f86c6b' : appItem.hasWarning ? '4px solid #ffc421' : '' }\">\n            <div class=\"title\"><i class=\"fa fa-gear\"></i>&nbsp;&nbsp;{{appItem.appName}}</div>\n            <div class=\"counter\">{{appItem.items.length}} items</div>\n          </div>\n          <div class=\"card-body\" [collapse]=\"appItem.hidden\">\n            <div class=\"dvData\">\n              <div *ngFor=\"let rowItem of appItem.items; let isFirst = first\" class=\"dvRow\"  [ngClass]=\"{\n                'dv-level-error': rowItem.level == 'Error',\n                'dv-level-warning': rowItem.level == 'Warning',\n                'dv-level-success': rowItem.level == 'Stats',\n                'dv-level-trace' : rowItem.traceId != null,\n                'messageEnd' : rowItem.message && rowItem.message.indexOf('[END') > -1,\n                'messageStart' : rowItem.message && rowItem.message.indexOf('[START') > -1,\n                'nextIsStart' : rowItem.nextIsStart,\n                'prevIsEnd' : rowItem.prevIsEnd,\n                'noDiff' : !rowItem.diffTime\n              }\">\n                <div class=\"dvTimeCol\" *ngIf=\"!rowItem.diffTime\">\n                  {{rowItem.timestamp | date:'HH:mm:ss.SSS'}}\n                </div>\n                <div class=\"dvTimeCol addTime\" *ngIf=\"rowItem.diffTime\" [tooltip]=\"rowItem.timestamp | date:'HH:mm:ss.SSS'\">\n                  {{rowItem.diffTime}}\n                </div>\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.logId != null\">\n                    <div class=\"rightSide\">\n                      <span class=\"dvMessageType\" *ngIf=\"rowItem.type != null\">{{rowItem.type}}</span>\n                      <span *ngIf=\"rowItem.exception != null\" (click)=\"showException(rowItem)\" class=\"badge button-exception\">Show Exception</span>\n                    </div>\n                    <span class=\"spanMessage\">{{rowItem.message}}</span>\n                </div>\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.traceId != null\">\n                  <div class=\"dvText\"><!-- <i class=\"fa fa-file-code-o\" style=\"font-size:14px\"></i> -->{{rowItem.name}}</div>\n                  <div class=\"dvButtons\">\n                    <ng-container *ngFor=\"let tag of rowItem.tagsArray\">\n                        <button class=\"btn\" [ngClass]=\"{\n                          'button-info' : tag.key.indexOf('Status') == -1,\n                          'button-success' : tag.key.indexOf('Status') > -1 && tag.value == 'Success',\n                          'button-warning' : tag.key.indexOf('Status') > -1 && tag.value == 'Warning',\n                          'button-error' : tag.key.indexOf('Status') > -1 && tag.value == 'Error'\n                        }\" [tooltip]=\"tag.value\" [popover]=\"tag.value\" [popoverTitle]=\"tag.key\" placement=\"top\" [outsideClick]=\"true\">{{tag.key}}</button>\n                    </ng-container>\n                    <div class=\"separator\"></div>\n                    <button class=\"btn\" *ngIf=\"rowItem.hasXml\" (click)=\"showXmlData(rowItem.id, rowItem.name)\">XML</button>\n                    <button class=\"btn\" *ngIf=\"rowItem.hasJson\" (click)=\"showJsonData(rowItem.id, rowItem.name)\">JSON</button>\n                    <button class=\"btn\" *ngIf=\"rowItem.hasTxt\" (click)=\"showTxtData(rowItem.id, rowItem.name)\">TXT</button>\n                  </div>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n\n      </tab>\n    </tabset>\n    <br/>\n\n  </div>\n\n</div>\n\n\n\n\n<!-- Exception View -->\n<div bsModal #exceptionModal=\"bs-modal\" class=\"modal fade exception-view\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-danger modal-exception\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Exception View</h4>\n        <button type=\"button\" class=\"close\" (click)=\"exceptionModal.hide()\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n\n        <div class=\"exceptionHeader\">\n          <div class=\"headerRow\">\n            <div>Timestamp</div>\n            <div>Application</div>\n            <div>Machine</div>\n          </div>\n          <div class=\"valueRow\">\n            <div>{{exceptionTimestamp | date:'dd/MM/yy HH:mm:ss.SSS'}}</div>\n            <div>{{exceptionApplication}}</div>\n            <div>{{exceptionMachine}}</div>\n          </div>\n        </div>\n        <div class=\"exceptionBody\">\n          <div class=\"item\" *ngIf=\"exceptionData?.exceptionType\">\n            <div class=\"key\">Type</div>\n            <div class=\"value\">{{exceptionData?.exceptionType}}</div>\n          </div>\n          <div class=\"item\" *ngIf=\"exceptionData?.source\">\n            <div class=\"key\">Source</div>\n            <div class=\"value\">{{exceptionData?.source}}</div>\n          </div>\n          <div class=\"item\">\n            <div class=\"key\">Message</div>\n            <div class=\"value important\">{{exceptionData?.message}}</div>\n          </div>\n          <div class=\"data\" *ngIf=\"exceptionData?.data && exceptionData.data.length > 0\">\n            <div class=\"item\" *ngFor=\"let itemData of exceptionData?.data\">\n              <div class=\"key\">{{itemData.key}}</div>\n              <div class=\"value important\">{{itemData.value}}</div>\n            </div>\n          </div>\n          <div class=\"exceptionStacktrace\">\n              <div class=\"title\">Stacktrace</div>\n              <div class=\"data\">\n                <div class=\"content\" *ngIf=\"exceptionData?.stackTrace\">{{exceptionData?.stackTrace}}</div>\n                <div class=\"content\" *ngIf=\"!(exceptionData?.stackTrace)\">Stacktrace data is not available</div>\n              </div>\n          </div>\n        </div>\n        <div class=\"exceptionBody inner\" *ngFor=\"let innerException of innerExceptionsData\">\n          <div class=\"item\" *ngIf=\"innerException?.exceptionType\">\n            <div class=\"key\">Type</div>\n            <div class=\"value\">{{innerException?.exceptionType}}</div>\n          </div>\n          <div class=\"item\" *ngIf=\"innerException?.source\">\n            <div class=\"key\">Source</div>\n            <div class=\"value\">{{innerException?.source}}</div>\n          </div>\n          <div class=\"item\">\n            <div class=\"key\">Message</div>\n            <div class=\"value important\">{{innerException?.message}}</div>\n          </div>\n          <div class=\"data\" *ngIf=\"innerException?.data && innerException.data.length > 0\">\n            <div class=\"item\" *ngFor=\"let itemData of innerException?.data\">\n              <div class=\"key\">{{itemData.key}}</div>\n              <div class=\"value important\">{{itemData.value}}</div>\n            </div>\n          </div>\n          <div class=\"exceptionStacktrace\">\n              <div class=\"title\">Stacktrace</div>\n              <div class=\"data\">\n                <div class=\"content\" *ngIf=\"innerException?.stackTrace\">{{innerException?.stackTrace}}</div>\n                <div class=\"content\" *ngIf=\"!(innerException?.stackTrace)\">Stacktrace data is not available</div>\n              </div>\n          </div>\n        </div>\n\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" class=\"btn btn-secondary\" (click)=\"exceptionModal.hide()\">Close</button>\n      </div>\n    </div>\n    <!-- /.modal-content -->\n  </div>\n  <!-- /.modal-dialog -->\n</div>\n<!-- /.modal -->\n\n\n<!-- Trace View -->\n<div bsModal #traceModal=\"bs-modal\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n    <div class=\"modal-dialog modal-primary modal-code\" role=\"document\">\n      <div class=\"modal-content\">\n        <div class=\"modal-header\">\n          <h5 class=\"modal-title\">\n            <strong>Trace View: </strong> {{traceName}}</h5>\n          <button type=\"button\" class=\"close\" (click)=\"traceModal.hide()\" aria-label=\"Close\">\n            <span aria-hidden=\"true\">&times;</span>\n          </button>\n        </div>\n        <div class=\"modal-body\">\n          <ngx-codemirror></ngx-codemirror>\n        </div>\n      </div>\n    </div>\n  </div>\n"
 
 /***/ }),
 
@@ -14418,7 +14418,7 @@ var SearchComponent = /** @class */ (function () {
         }
         this._queryService.apiQueryByEnvironmentSearchBySearchTermGet(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name, searchVal, this.bsValue[0], this.bsValue[1]).subscribe(function (data) {
             _this.bProcessing = false;
-            if (data == null || (data.logs.length === 0 && data.traces.length === 0)) {
+            if (data == null || data.data == null || data.data.length === 0) {
                 _this.bHasResults = false;
                 return;
             }
@@ -14426,13 +14426,13 @@ var SearchComponent = /** @class */ (function () {
             _this.searchResults = data;
             var groupArray = Array();
             if (_this.searchResults !== null) {
-                if (_this.searchResults.logs !== null) {
+                if (_this.searchResults.data !== null) {
                     var _loop_1 = function (i) {
-                        var aItem = _this.searchResults.logs[i];
-                        var groupItem = groupArray.find(function (item) { return item.groupName === aItem.group; });
+                        var dataItem = _this.searchResults.data[i];
+                        var groupItem = groupArray.find(function (item) { return item.groupName === dataItem.group; });
                         if (groupItem === undefined) {
                             groupItem = {
-                                groupName: aItem.group,
+                                groupName: dataItem.group,
                                 items: [],
                                 metadata: []
                             };
@@ -14446,10 +14446,10 @@ var SearchComponent = /** @class */ (function () {
                             }
                             groupArray.push(groupItem);
                         }
-                        var appItem = groupItem.items.find(function (item) { return item.appName === aItem.application; });
+                        var appItem = groupItem.items.find(function (item) { return item.appName === dataItem.application; });
                         if (appItem === undefined) {
                             appItem = {
-                                appName: aItem.application,
+                                appName: dataItem.application,
                                 hidden: true,
                                 hasError: false,
                                 hasWarning: false,
@@ -14457,29 +14457,53 @@ var SearchComponent = /** @class */ (function () {
                             };
                             groupItem.items.push(appItem);
                         }
+                        if (dataItem.tags === null || dataItem.tags === undefined) {
+                            dataItem.tags = '';
+                        }
+                        if (dataItem.traceId === undefined) {
+                            dataItem.traceId = null;
+                        }
+                        if (dataItem.name === undefined) {
+                            dataItem.name = null;
+                        }
+                        if (dataItem.type === undefined) {
+                            dataItem.type = null;
+                        }
+                        if (dataItem.formats === undefined) {
+                            dataItem.formats = null;
+                        }
+                        var itemTags = dataItem.tags.split(', ');
+                        var tags = [];
+                        for (var it = 0; it < itemTags.length; it++) {
+                            var itemTagItem = itemTags[it].split(': ');
+                            tags.push({ key: itemTagItem[0], value: itemTagItem[1] });
+                        }
                         var nodeItem = {
-                            assembly: aItem.assembly,
-                            code: aItem.code,
-                            exception: aItem.exception,
-                            id: aItem.id,
-                            application: aItem.application,
-                            instanceId: aItem.instanceId,
-                            level: aItem.level,
-                            logId: aItem.logId,
-                            machine: aItem.machine,
-                            message: aItem.message,
-                            timestamp: new Date(aItem.timestamp),
-                            type: aItem.type,
-                            tags: null,
-                            tagsArray: null,
-                            name: null,
-                            traceId: null,
+                            assembly: dataItem.assembly,
+                            code: dataItem.code,
+                            exception: dataItem.exception,
+                            id: dataItem.id,
+                            application: dataItem.application,
+                            instanceId: dataItem.instanceId,
+                            level: dataItem.level,
+                            logId: dataItem.logId,
+                            machine: dataItem.machine,
+                            message: dataItem.message,
+                            timestamp: new Date(dataItem.timestamp),
+                            type: dataItem.type,
+                            tags: dataItem.tags,
+                            tagsArray: tags,
+                            name: dataItem.name,
+                            traceId: dataItem.traceId,
                             nextIsStart: false,
                             prevIsEnd: false,
-                            hasXml: false,
-                            hasJson: false,
-                            hasTxt: false
+                            hasXml: ((dataItem.formats !== null && dataItem.formats.indexOf('XML') > -1) || dataItem.formats === null),
+                            hasJson: ((dataItem.formats !== null && dataItem.formats.indexOf('JSON') > -1) || dataItem.formats === null),
+                            hasTxt: (dataItem.formats !== null && dataItem.formats.indexOf('TXT') > -1)
                         };
+                        if (nodeItem.tags.indexOf('Status: Error') > -1) {
+                            appItem.hasError = true;
+                        }
                         if (nodeItem.level === _services_api__WEBPACK_IMPORTED_MODULE_5__["NodeLogItem"].LevelEnum.Error) {
                             appItem.hasError = true;
                             // appItem.hidden = false;
@@ -14490,73 +14514,8 @@ var SearchComponent = /** @class */ (function () {
                         }
                         appItem.items.push(nodeItem);
                     };
-                    for (var i = 0; i < _this.searchResults.logs.length; i++) {
+                    for (var i = 0; i < _this.searchResults.data.length; i++) {
                         _loop_1(i);
-                    }
-                }
-                if (_this.searchResults.traces !== null) {
-                    var _loop_2 = function (i) {
-                        var aItem = _this.searchResults.traces[i];
-                        var groupItem = groupArray.find(function (item) { return item.groupName === aItem.group; });
-                        if (groupItem === undefined) {
-                            groupItem = {
-                                groupName: aItem.group,
-                                items: [],
-                                metadata: []
-                            };
-                            // Buscar los metadatas del grupo.
-                            if (groupItem.groupName) {
-                                _this._queryService.apiQueryGetGroupMetadata(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name, groupItem.groupName).subscribe(function (metadata) {
-                                    if (metadata) {
-                                        groupItem.metadata = metadata.filter(function (mitem) { return mitem.value !== null && mitem.value !== ''; });
-                                    }
-                                });
-                            }
-                            groupArray.push(groupItem);
-                        }
-                        var appItem = groupItem.items.find(function (item) { return item.appName === aItem.application; });
-                        if (appItem === undefined) {
-                            appItem = {
-                                appName: aItem.application,
-                                hidden: true,
-                                hasError: false,
-                                hasWarning: false,
-                                items: []
-                            };
-                            groupItem.items.push(appItem);
-                        }
-                        if (aItem.tags === null || aItem.tags === undefined) {
-                            aItem.tags = '';
-                        }
-                        var itemTags = aItem.tags.split(', ');
-                        var tags = [];
-                        for (var it = 0; it < itemTags.length; it++) {
-                            var itemTagItem = itemTags[it].split(': ');
-                            tags.push({ key: itemTagItem[0], value: itemTagItem[1] });
-                        }
-                        var nodeItem = {
-                            id: aItem.id,
-                            application: aItem.application,
-                            instanceId: aItem.instanceId,
-                            machine: aItem.machine,
-                            timestamp: new Date(aItem.timestamp),
-                            traceId: aItem.traceId,
-                            tags: aItem.tags,
-                            name: aItem.name,
-                            tagsArray: tags,
-                            nextIsStart: false,
-                            prevIsEnd: false,
-                            hasXml: ((aItem.formats !== null && aItem.formats.indexOf('XML') > -1) || aItem.formats === null),
-                            hasJson: ((aItem.formats !== null && aItem.formats.indexOf('JSON') > -1) || aItem.formats === null),
-                            hasTxt: (aItem.formats !== null && aItem.formats.indexOf('TXT') > -1)
-                        };
-                        if (nodeItem.tags.indexOf('Status: Error') > -1) {
-                            appItem.hasError = true;
-                        }
-                        appItem.items.push(nodeItem);
-                    };
-                    for (var i = 0; i < _this.searchResults.traces.length; i++) {
-                        _loop_2(i);
                     }
                 }
             }
@@ -14610,40 +14569,50 @@ var SearchComponent = /** @class */ (function () {
                         }
                         return 1;
                     });
+                    var startIndex = [];
                     for (var n = 0; n < appItem.items.length; n++) {
                         var nodeItem = appItem.items[n];
+                        var isStart = nodeItem.message && nodeItem.message.indexOf('[START') > -1;
+                        var isEnd = nodeItem.message && nodeItem.message.indexOf('[END') > -1;
+                        if (isStart) {
+                            startIndex.push(n);
+                        }
+                        var started = startIndex.length > 0;
+                        var startedIndex = started ? startIndex[startIndex.length - 1] : -1;
                         if (n > 0) {
-                            var oldNodeItem = appItem.items[0];
-                            var duration = Object(ngx_bootstrap_chronos_test_chain__WEBPACK_IMPORTED_MODULE_4__["moment"])(nodeItem.timestamp).diff(oldNodeItem.timestamp);
-                            var minutes = Math.floor(duration / 1000 / 60);
-                            var seconds = Math.floor((duration / 1000) - (minutes * 60));
-                            var milliseconds = duration - (Math.floor(duration / 1000) * 1000);
-                            var diffTime = '+ ';
-                            if (minutes > 0) {
-                                diffTime += minutes + 'min';
-                                if (seconds > 0 || milliseconds > 0) {
-                                    diffTime += ', ';
+                            if (started && startedIndex !== n) {
+                                var oldNodeItem = appItem.items[startedIndex];
+                                var duration = Object(ngx_bootstrap_chronos_test_chain__WEBPACK_IMPORTED_MODULE_4__["moment"])(nodeItem.timestamp).diff(oldNodeItem.timestamp);
+                                var minutes = Math.floor(duration / 1000 / 60);
+                                var seconds = Math.floor((duration / 1000) - (minutes * 60));
+                                var milliseconds = duration - (Math.floor(duration / 1000) * 1000);
+                                var diffTime = '+ ';
+                                if (minutes > 0) {
+                                    diffTime += minutes + 'min';
+                                    if (seconds > 0 || milliseconds > 0) {
+                                        diffTime += ', ';
+                                    }
                                 }
-                            }
-                            if (seconds > 0) {
-                                diffTime += seconds + 's';
-                                if (milliseconds > 0) {
-                                    diffTime += ', ';
+                                if (seconds > 0) {
+                                    diffTime += seconds + 's';
+                                    if (milliseconds > 0) {
+                                        diffTime += ', ';
+                                    }
                                 }
+                                diffTime += milliseconds + 'ms';
+                                nodeItem.diffTime = diffTime;
+                                // console.log(nodeItem.diffTime);
                             }
-                            diffTime += milliseconds + 'ms';
-                            nodeItem.diffTime = diffTime;
-                            // console.log(nodeItem.diffTime);
                             var prevItem = appItem.items[n - 1];
-                            if (prevItem.message && prevItem.message.indexOf('[END') > -1) {
-                                nodeItem.prevIsEnd = true;
+                            if (prevItem) {
+                                var prevDuration = Object(ngx_bootstrap_chronos_test_chain__WEBPACK_IMPORTED_MODULE_4__["moment"])(nodeItem.timestamp).diff(prevItem.timestamp);
+                                if (prevDuration > 5000 && !started) {
+                                    nodeItem.prevIsEnd = true;
+                                }
                             }
                         }
-                        if (n + 1 < appItem.items.length) {
-                            var nextItem = appItem.items[n + 1];
-                            if (nextItem.message && nextItem.message.indexOf('[START') > -1) {
-                                nodeItem.nextIsStart = true;
-                            }
+                        if (isEnd) {
+                            startIndex.pop();
                         }
                     }
                 }

@@ -685,8 +685,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         break;
                     case Counters.CounterType.Cumulative:
                         res = cValues.Sum(item => (double)Convert.ChangeType(item.Value, TypeCode.Double));
-                        if (i > 0)
-                            res += (double)lstValues[i - 1].Value;
+                        //if (i > 0)
+                        //    res += (double)lstValues[i - 1].Value;
                         break;
                     case Counters.CounterType.Current:
                         res = cValues.Sum(item => (double)Convert.ChangeType(item.Value, TypeCode.Double));

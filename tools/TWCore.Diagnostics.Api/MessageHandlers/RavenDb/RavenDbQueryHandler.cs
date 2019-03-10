@@ -663,7 +663,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             var counterData = await counterDataTask.ConfigureAwait(false);
             var counterValues = await counterValuesTask.ConfigureAwait(false);
 
-            #region FillValues
+            #region Fill Values
             for (var i = 0; i < lstValues.Count; i++)
             {
                 IEnumerable<NodeCountersQueryValue> cValues;
@@ -692,7 +692,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         res = cValues.Sum(item => (double)Convert.ChangeType(item.Value, TypeCode.Double));
                         break;
                 }
-                lstValues[i].Value = res;
+                currentItem.Timestamp = currentItem.Timestamp.TruncateTo(TimeSpan.FromMinutes(1));
+                currentItem.Value = res;
             }
             #endregion
 

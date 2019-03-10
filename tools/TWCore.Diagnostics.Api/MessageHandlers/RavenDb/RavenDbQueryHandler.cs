@@ -579,6 +579,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }).ConfigureAwait(false);
         }
 
+        public async Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision)
+        {
+            return null;
+        }
 
         #region Nested Types
         private class TraceTempResult

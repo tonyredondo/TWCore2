@@ -95,4 +95,23 @@ namespace TWCore.Diagnostics.Api.Models.Counters
         [XmlAttribute, DataMember]
         public object Value { get; set; }
     }
+
+
+    [DataContract]
+    public class NodeLastCountersValue
+    {
+        [XmlAttribute, DataMember]
+        public DateTime Timestamp { get; set; }
+        [XmlAttribute, DataMember]
+        public object Value { get; set; }
+    }
+
+
+    public enum CounterValuesDivision
+    {
+        QuarterDay,
+        HalfDay,
+        Day,
+        Month
+    }
 }

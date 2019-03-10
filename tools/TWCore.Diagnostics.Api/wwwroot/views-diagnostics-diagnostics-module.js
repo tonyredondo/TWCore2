@@ -14307,7 +14307,7 @@ var LogsComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<ol class=\"breadcrumb breadcrumb-body\">\r\n  <table>\r\n    <tr>\r\n      <td class=\"breadcrumb-icon\">\r\n      </td>\r\n      <td class=\"breadcrumb-title\">\r\n        <div class=\"input-group\">\r\n          <div class=\"input-group-prepend\">\r\n            <span class=\"input-group-text\">\r\n              <i class=\"fa fa-search\"></i>\r\n            </span>\r\n          </div>\r\n          <input type=\"text\" [(ngModel)]=\"searchValue\" (keyup.enter)=\"doSearch()\" id=\"search\" name=\"search\" class=\"form-control\" placeholder=\"Enter your search\">\r\n          <input type=\"text\" placeholder=\"Showing dates\" class=\"form-control fa-pointer input-date\" bsDaterangepicker [bsConfig]=\"bsConfig\"\r\n              [bsValue]=\"bsValue\" [(ngModel)]=\"bsValue\" (ngModelChange)=\"doSearch()\" />\r\n          <span class=\"input-group-append\">\r\n            <button class=\"btn btn-secondary\" type=\"button\" (click)=\"doSearch()\">Search</button>\r\n          </span>\r\n\r\n\r\n        </div>\r\n      </td>\r\n      <td class=\"breadcrumb-icon\">\r\n          <span class=\"fa-pointer float-right\" *ngIf=\"bHasResults == true\" (click)=\"getData()\">\r\n              <i class=\"fa fa-refresh\"></i>&nbsp;\r\n              <span>Refresh</span>\r\n          </span>\r\n      </td>\r\n    </tr>\r\n  </table>\r\n</ol>\r\n\r\n<div>\r\n\r\n  <div *ngIf=\"bProcessing\">\r\n    <strong>Searching ...</strong>\r\n  </div>\r\n\r\n  <div class=\"card\" *ngIf=\"bHasResults == false\">\r\n    <div class=\"card-body\">\r\n      <alert type=\"info\" class=\"no-bottom-margin-alert\">\r\n        <strong>Nothing found!</strong>\r\n        <br/> There are not results for this query, try another query and hit search again.\r\n      </alert>\r\n    </div>\r\n  </div>\r\n\r\n  <div *ngIf=\"bHasResults == true\">\r\n\r\n    <tabset>\r\n      <tab *ngFor=\"let groupItem of groupResults\" class=\"tab-search\">\r\n        <ng-template tabHeading><i class=\"icon-tag\"></i> Group: {{groupItem.groupName}} <span class=\"goToClass\" *ngIf=\"groupItem.groupName !== searchValue\" (click)=\"goToGroup(groupItem.groupName)\">Load Group</span></ng-template>\r\n\r\n        <div class=\"metadatas\" *ngIf=\"groupItem.metadata != null && groupItem.metadata.length > 0\">\r\n          <div class=\"item\" *ngFor=\"let metaItem of groupItem.metadata\">\r\n            <div class=\"itemKey\">{{metaItem.key}}</div>\r\n            <div class=\"itemValue\">{{metaItem.value}}</div>\r\n          </div>\r\n        </div>\r\n\r\n        <div class=\"card card-search\" *ngFor=\"let appItem of groupItem.items\" >\r\n          <div class=\"card-header\" (click)=\"appItem.hidden = !appItem.hidden\"  [ngStyle]=\"{ 'border-bottom' : appItem.hasError ? '4px solid #f86c6b' : appItem.hasWarning ? '4px solid #ffc421' : '' }\">\r\n            <div class=\"title\"><i class=\"fa fa-gear\"></i>&nbsp;&nbsp;{{appItem.appName}}</div>\r\n            <div class=\"counter\">{{appItem.items.length}} items</div>\r\n          </div>\r\n          <div class=\"card-body\" [collapse]=\"appItem.hidden\">\r\n            <div class=\"dvData\">\r\n              <div *ngFor=\"let rowItem of appItem.items; let isFirst = first\" class=\"dvRow\"  [ngClass]=\"{\r\n                'dv-level-error': rowItem.level == 'Error',\r\n                'dv-level-warning': rowItem.level == 'Warning',\r\n                'dv-level-success': rowItem.level == 'Stats',\r\n                'dv-level-trace' : rowItem.traceId != null,\r\n                'messageEnd' : rowItem.message && rowItem.message.indexOf('[END') > -1,\r\n                'messageStart' : rowItem.message && rowItem.message.indexOf('[START') > -1,\r\n                'nextIsStart' : rowItem.nextIsStart,\r\n                'prevIsEnd' : rowItem.prevIsEnd,\r\n                'noDiff' : !rowItem.diffTime\r\n              }\">\r\n                <div class=\"dvTimeCol\" *ngIf=\"!rowItem.diffTime\">\r\n                  {{rowItem.timestamp | date:'HH:mm:ss.SSS'}}\r\n                </div>\r\n                <div class=\"dvTimeCol addTime\" *ngIf=\"rowItem.diffTime\" [tooltip]=\"rowItem.timestamp | date:'HH:mm:ss.SSS'\">\r\n                  {{rowItem.diffTime}}\r\n                </div>\r\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.logId != null\">\r\n                    <div class=\"rightSide\">\r\n                      <span class=\"dvMessageType\" *ngIf=\"rowItem.type != null\">{{rowItem.type}}</span>\r\n                      <span *ngIf=\"rowItem.exception != null\" (click)=\"showException(rowItem)\" class=\"badge button-exception\">Show Exception</span>\r\n                    </div>\r\n                    <span class=\"spanMessage\">{{rowItem.message}}</span>\r\n                </div>\r\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.traceId != null\">\r\n                  <div class=\"dvText\"><!-- <i class=\"fa fa-file-code-o\" style=\"font-size:14px\"></i> -->{{rowItem.name}}</div>\r\n                  <div class=\"dvButtons\">\r\n                    <ng-container *ngFor=\"let tag of rowItem.tagsArray\">\r\n                        <button class=\"btn\" [ngClass]=\"{\r\n                          'button-info' : tag.key.indexOf('Status') == -1,\r\n                          'button-success' : tag.key.indexOf('Status') > -1 && tag.value == 'Success',\r\n                          'button-warning' : tag.key.indexOf('Status') > -1 && tag.value == 'Warning',\r\n                          'button-error' : tag.key.indexOf('Status') > -1 && tag.value == 'Error'\r\n                        }\" [tooltip]=\"tag.value\" [popover]=\"tag.value\" [popoverTitle]=\"tag.key\" placement=\"top\" [outsideClick]=\"true\">{{tag.key}}</button>\r\n                    </ng-container>\r\n                    <div class=\"separator\"></div>\r\n                    <button class=\"btn\" *ngIf=\"rowItem.hasXml\">\r\n                      XML\r\n                      <ul>\r\n                        <li (click)=\"showXmlData(rowItem.id, rowItem.name)\">View</li>\r\n                        <li (click)=\"downloadXmlData(rowItem.id, rowItem.name)\">Download</li>\r\n                      </ul>\r\n                    </button>\r\n                    <button class=\"btn\" *ngIf=\"rowItem.hasJson\">\r\n                      JSON\r\n                      <ul>\r\n                        <li (click)=\"showJsonData(rowItem.id, rowItem.name)\">View</li>\r\n                        <li (click)=\"downloadJsonData(rowItem.id, rowItem.name)\">Download</li>\r\n                      </ul>\r\n                    </button>\r\n                    <button class=\"btn\" *ngIf=\"rowItem.hasTxt\">\r\n                      TXT\r\n                      <ul>\r\n                        <li (click)=\"showTxtData(rowItem.id, rowItem.name)\">View</li>\r\n                        <li (click)=\"downloadTxtData(rowItem.id, rowItem.name)\">Download</li>\r\n                      </ul>\r\n                    </button>\r\n                  </div>\r\n                </div>\r\n              </div>\r\n            </div>\r\n          </div>\r\n        </div>\r\n\r\n      </tab>\r\n    </tabset>\r\n    <br/>\r\n\r\n  </div>\r\n\r\n</div>\r\n\r\n\r\n\r\n\r\n<!-- Exception View -->\r\n<div bsModal #exceptionModal=\"bs-modal\" class=\"modal fade exception-view\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\r\n  <div class=\"modal-dialog modal-danger modal-exception\" role=\"document\">\r\n    <div class=\"modal-content\">\r\n      <div class=\"modal-header\">\r\n        <h4 class=\"modal-title\">Exception View</h4>\r\n        <button type=\"button\" class=\"close\" (click)=\"exceptionModal.hide()\" aria-label=\"Close\">\r\n          <span aria-hidden=\"true\">&times;</span>\r\n        </button>\r\n      </div>\r\n      <div class=\"modal-body\">\r\n\r\n        <div class=\"exceptionHeader\">\r\n          <div class=\"headerRow\">\r\n            <div>Timestamp</div>\r\n            <div>Application</div>\r\n            <div>Machine</div>\r\n          </div>\r\n          <div class=\"valueRow\">\r\n            <div>{{exceptionTimestamp | date:'dd/MM/yy HH:mm:ss.SSS'}}</div>\r\n            <div>{{exceptionApplication}}</div>\r\n            <div>{{exceptionMachine}}</div>\r\n          </div>\r\n        </div>\r\n        <div class=\"exceptionBody\">\r\n          <div class=\"item\" *ngIf=\"exceptionData?.exceptionType\">\r\n            <div class=\"key\">Type</div>\r\n            <div class=\"value\">{{exceptionData?.exceptionType}}</div>\r\n          </div>\r\n          <div class=\"item\" *ngIf=\"exceptionData?.source\">\r\n            <div class=\"key\">Source</div>\r\n            <div class=\"value\">{{exceptionData?.source}}</div>\r\n          </div>\r\n          <div class=\"item\">\r\n            <div class=\"key\">Message</div>\r\n            <div class=\"value important\">{{exceptionData?.message}}</div>\r\n          </div>\r\n          <div class=\"data\" *ngIf=\"exceptionData?.data && exceptionData.data.length > 0\">\r\n            <div class=\"item\" *ngFor=\"let itemData of exceptionData?.data\">\r\n              <div class=\"key\">{{itemData.key}}</div>\r\n              <div class=\"value important\">{{itemData.value}}</div>\r\n            </div>\r\n          </div>\r\n          <div class=\"exceptionStacktrace\">\r\n              <div class=\"title\">Stacktrace</div>\r\n              <div class=\"data\">\r\n                <div class=\"content\" *ngIf=\"exceptionData?.stackTrace\">{{exceptionData?.stackTrace}}</div>\r\n                <div class=\"content\" *ngIf=\"!(exceptionData?.stackTrace)\">Stacktrace data is not available</div>\r\n              </div>\r\n          </div>\r\n        </div>\r\n        <div class=\"exceptionBody inner\" *ngFor=\"let innerException of innerExceptionsData\">\r\n          <div class=\"item\" *ngIf=\"innerException?.exceptionType\">\r\n            <div class=\"key\">Type</div>\r\n            <div class=\"value\">{{innerException?.exceptionType}}</div>\r\n          </div>\r\n          <div class=\"item\" *ngIf=\"innerException?.source\">\r\n            <div class=\"key\">Source</div>\r\n            <div class=\"value\">{{innerException?.source}}</div>\r\n          </div>\r\n          <div class=\"item\">\r\n            <div class=\"key\">Message</div>\r\n            <div class=\"value important\">{{innerException?.message}}</div>\r\n          </div>\r\n          <div class=\"data\" *ngIf=\"innerException?.data && innerException.data.length > 0\">\r\n            <div class=\"item\" *ngFor=\"let itemData of innerException?.data\">\r\n              <div class=\"key\">{{itemData.key}}</div>\r\n              <div class=\"value important\">{{itemData.value}}</div>\r\n            </div>\r\n          </div>\r\n          <div class=\"exceptionStacktrace\">\r\n              <div class=\"title\">Stacktrace</div>\r\n              <div class=\"data\">\r\n                <div class=\"content\" *ngIf=\"innerException?.stackTrace\">{{innerException?.stackTrace}}</div>\r\n                <div class=\"content\" *ngIf=\"!(innerException?.stackTrace)\">Stacktrace data is not available</div>\r\n              </div>\r\n          </div>\r\n        </div>\r\n\r\n      </div>\r\n      <div class=\"modal-footer\">\r\n        <button type=\"button\" class=\"btn btn-secondary\" (click)=\"exceptionModal.hide()\">Close</button>\r\n      </div>\r\n    </div>\r\n    <!-- /.modal-content -->\r\n  </div>\r\n  <!-- /.modal-dialog -->\r\n</div>\r\n<!-- /.modal -->\r\n\r\n\r\n<!-- Trace View -->\r\n<div bsModal #traceModal=\"bs-modal\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\r\n    <div class=\"modal-dialog modal-primary modal-code\" role=\"document\">\r\n      <div class=\"modal-content\">\r\n        <div class=\"modal-header\">\r\n          <h5 class=\"modal-title\">\r\n            <strong>Trace View: </strong> {{traceName}}</h5>\r\n          <button type=\"button\" class=\"close\" (click)=\"traceModal.hide()\" aria-label=\"Close\">\r\n            <span aria-hidden=\"true\">&times;</span>\r\n          </button>\r\n        </div>\r\n        <div class=\"modal-body\">\r\n          <ngx-codemirror></ngx-codemirror>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n"
+module.exports = "<ol class=\"breadcrumb breadcrumb-body\">\n  <table>\n    <tr>\n      <td class=\"breadcrumb-icon\">\n      </td>\n      <td class=\"breadcrumb-title\">\n        <div class=\"input-group\">\n          <div class=\"input-group-prepend\">\n            <span class=\"input-group-text\">\n              <i class=\"fa fa-search\"></i>\n            </span>\n          </div>\n          <input type=\"text\" [(ngModel)]=\"searchValue\" (keyup.enter)=\"doSearch()\" id=\"search\" name=\"search\" class=\"form-control\" placeholder=\"Enter your search\">\n          <input type=\"text\" placeholder=\"Showing dates\" class=\"form-control fa-pointer input-date\" bsDaterangepicker [bsConfig]=\"bsConfig\"\n              [bsValue]=\"bsValue\" [(ngModel)]=\"bsValue\" (ngModelChange)=\"doSearch()\" />\n          <span class=\"input-group-append\">\n            <button class=\"btn btn-secondary\" type=\"button\" (click)=\"doSearch()\">Search</button>\n          </span>\n\n\n        </div>\n      </td>\n      <td class=\"breadcrumb-icon\">\n          <span class=\"fa-pointer float-right\" *ngIf=\"bHasResults == true\" (click)=\"getData()\">\n              <i class=\"fa fa-refresh\"></i>&nbsp;\n              <span>Refresh</span>\n          </span>\n      </td>\n    </tr>\n  </table>\n</ol>\n\n<div>\n\n  <div *ngIf=\"bProcessing\">\n    <strong>Searching ...</strong>\n  </div>\n\n  <div class=\"card\" *ngIf=\"bHasResults == false\">\n    <div class=\"card-body\">\n      <alert type=\"info\" class=\"no-bottom-margin-alert\">\n        <strong>Nothing found!</strong>\n        <br/> There are not results for this query, try another query and hit search again.\n      </alert>\n    </div>\n  </div>\n\n  <div *ngIf=\"bHasResults == true\">\n\n    <tabset>\n      <tab *ngFor=\"let groupItem of groupResults\" class=\"tab-search\">\n        <ng-template tabHeading><i class=\"icon-tag\"></i> Group: {{groupItem.groupName}} <span class=\"goToClass\" *ngIf=\"groupItem.groupName !== searchValue\" (click)=\"goToGroup(groupItem.groupName)\">Load Group</span></ng-template>\n\n        <div class=\"metadatas\" *ngIf=\"groupItem.metadata != null && groupItem.metadata.length > 0\">\n          <div class=\"item\" *ngFor=\"let metaItem of groupItem.metadata\">\n            <div class=\"itemKey\">{{metaItem.key}}</div>\n            <div class=\"itemValue\">{{metaItem.value}}</div>\n          </div>\n        </div>\n\n        <div class=\"card card-search\" *ngFor=\"let appItem of groupItem.items\" >\n          <div class=\"card-header\" (click)=\"appItem.hidden = !appItem.hidden\"  [ngStyle]=\"{ 'border-bottom' : appItem.hasError ? '4px solid #f86c6b' : appItem.hasWarning ? '4px solid #ffc421' : '' }\">\n            <div class=\"title\"><i class=\"fa fa-gear\" [ngStyle]=\"{ 'color' : appItem.hasError ? '#f14948' : appItem.hasWarning ? '#ffc107' : '#383838' }\"></i>&nbsp;&nbsp;{{appItem.appName}}</div>\n            <div class=\"counter\">{{appItem.items.length}} items</div>\n          </div>\n          <div class=\"card-body\" [collapse]=\"appItem.hidden\">\n            <div class=\"dvData\">\n              <div *ngFor=\"let rowItem of appItem.items; let isFirst = first\" class=\"dvRow\"  [ngClass]=\"{\n                'dv-level-error': rowItem.level == 'Error',\n                'dv-level-warning': rowItem.level == 'Warning',\n                'dv-level-success': rowItem.level == 'Stats',\n                'dv-level-trace' : rowItem.traceId != null,\n                'messageEnd' : rowItem.message && rowItem.message.indexOf('[END') > -1,\n                'messageStart' : rowItem.message && rowItem.message.indexOf('[START') > -1,\n                'nextIsStart' : rowItem.nextIsStart,\n                'prevIsEnd' : rowItem.prevIsEnd,\n                'noDiff' : !rowItem.diffTime\n              }\">\n                <div class=\"dvTimeCol\" *ngIf=\"!rowItem.diffTime\">\n                  {{rowItem.timestamp | date:'HH:mm:ss.SSS'}}\n                </div>\n                <div class=\"dvTimeCol addTime\" *ngIf=\"rowItem.diffTime\" [tooltip]=\"rowItem.timestamp | date:'HH:mm:ss.SSS'\">\n                  {{rowItem.diffTime}}\n                </div>\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.logId != null\">\n                    <div class=\"rightSide\">\n                      <span class=\"dvMessageType\" *ngIf=\"rowItem.type != null\">{{rowItem.type}}</span>\n                      <span *ngIf=\"rowItem.exception != null\" (click)=\"showException(rowItem)\" class=\"badge button-exception\">Show Exception</span>\n                    </div>\n                    <span class=\"spanMessage\">{{rowItem.message}}</span>\n                </div>\n                <div class=\"dvMessageCol\" *ngIf=\"rowItem.traceId != null\">\n                  <div class=\"dvText\"><!-- <i class=\"fa fa-file-code-o\" style=\"font-size:14px\"></i> -->{{rowItem.name}}</div>\n                  <div class=\"dvButtons\">\n                    <ng-container *ngFor=\"let tag of rowItem.tagsArray\">\n                        <button class=\"btn\" [ngClass]=\"{\n                          'button-info' : tag.key.indexOf('Status') == -1,\n                          'button-success' : tag.key.indexOf('Status') > -1 && tag.value == 'Success',\n                          'button-warning' : tag.key.indexOf('Status') > -1 && tag.value == 'Warning',\n                          'button-error' : tag.key.indexOf('Status') > -1 && tag.value == 'Error'\n                        }\" [tooltip]=\"tag.value\" [popover]=\"tag.value\" [popoverTitle]=\"tag.key\" placement=\"top\" [outsideClick]=\"true\">{{tag.key}}</button>\n                    </ng-container>\n                    <div class=\"separator\"></div>\n                    <button class=\"btn drop\" *ngIf=\"rowItem.hasXml\">\n                      XML\n                      <ul>\n                        <li (click)=\"showXmlData(rowItem.id, rowItem.name)\">View</li>\n                        <li (click)=\"downloadXmlData(rowItem.id, rowItem.name)\">Download</li>\n                      </ul>\n                    </button>\n                    <button class=\"btn drop\" *ngIf=\"rowItem.hasJson\">\n                      JSON\n                      <ul>\n                        <li (click)=\"showJsonData(rowItem.id, rowItem.name)\">View</li>\n                        <li (click)=\"downloadJsonData(rowItem.id, rowItem.name)\">Download</li>\n                      </ul>\n                    </button>\n                    <button class=\"btn drop\" *ngIf=\"rowItem.hasTxt\">\n                      TXT\n                      <ul>\n                        <li (click)=\"showTxtData(rowItem.id, rowItem.name)\">View</li>\n                        <li (click)=\"downloadTxtData(rowItem.id, rowItem.name)\">Download</li>\n                      </ul>\n                    </button>\n                  </div>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n\n      </tab>\n    </tabset>\n    <br/>\n\n  </div>\n\n</div>\n\n\n\n\n<!-- Exception View -->\n<div bsModal #exceptionModal=\"bs-modal\" class=\"modal fade exception-view\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-danger modal-exception\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Exception View</h4>\n        <button type=\"button\" class=\"close\" (click)=\"exceptionModal.hide()\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n\n        <div class=\"exceptionHeader\">\n          <div class=\"headerRow\">\n            <div>Timestamp</div>\n            <div>Application</div>\n            <div>Machine</div>\n          </div>\n          <div class=\"valueRow\">\n            <div>{{exceptionTimestamp | date:'dd/MM/yy HH:mm:ss.SSS'}}</div>\n            <div>{{exceptionApplication}}</div>\n            <div>{{exceptionMachine}}</div>\n          </div>\n        </div>\n        <div class=\"exceptionBody\">\n          <div class=\"item\" *ngIf=\"exceptionData?.exceptionType\">\n            <div class=\"key\">Type</div>\n            <div class=\"value\">{{exceptionData?.exceptionType}}</div>\n          </div>\n          <div class=\"item\" *ngIf=\"exceptionData?.source\">\n            <div class=\"key\">Source</div>\n            <div class=\"value\">{{exceptionData?.source}}</div>\n          </div>\n          <div class=\"item\">\n            <div class=\"key\">Message</div>\n            <div class=\"value important\">{{exceptionData?.message}}</div>\n          </div>\n          <div class=\"data\" *ngIf=\"exceptionData?.data && exceptionData.data.length > 0\">\n            <div class=\"item\" *ngFor=\"let itemData of exceptionData?.data\">\n              <div class=\"key\">{{itemData.key}}</div>\n              <div class=\"value important\">{{itemData.value}}</div>\n            </div>\n          </div>\n          <div class=\"exceptionStacktrace\">\n              <div class=\"title\">Stacktrace</div>\n              <div class=\"data\">\n                <div class=\"content\" *ngIf=\"exceptionData?.stackTrace\">{{exceptionData?.stackTrace}}</div>\n                <div class=\"content\" *ngIf=\"!(exceptionData?.stackTrace)\">Stacktrace data is not available</div>\n              </div>\n          </div>\n        </div>\n        <div class=\"exceptionBody inner\" *ngFor=\"let innerException of innerExceptionsData\">\n          <div class=\"item\" *ngIf=\"innerException?.exceptionType\">\n            <div class=\"key\">Type</div>\n            <div class=\"value\">{{innerException?.exceptionType}}</div>\n          </div>\n          <div class=\"item\" *ngIf=\"innerException?.source\">\n            <div class=\"key\">Source</div>\n            <div class=\"value\">{{innerException?.source}}</div>\n          </div>\n          <div class=\"item\">\n            <div class=\"key\">Message</div>\n            <div class=\"value important\">{{innerException?.message}}</div>\n          </div>\n          <div class=\"data\" *ngIf=\"innerException?.data && innerException.data.length > 0\">\n            <div class=\"item\" *ngFor=\"let itemData of innerException?.data\">\n              <div class=\"key\">{{itemData.key}}</div>\n              <div class=\"value important\">{{itemData.value}}</div>\n            </div>\n          </div>\n          <div class=\"exceptionStacktrace\">\n              <div class=\"title\">Stacktrace</div>\n              <div class=\"data\">\n                <div class=\"content\" *ngIf=\"innerException?.stackTrace\">{{innerException?.stackTrace}}</div>\n                <div class=\"content\" *ngIf=\"!(innerException?.stackTrace)\">Stacktrace data is not available</div>\n              </div>\n          </div>\n        </div>\n\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" class=\"btn btn-secondary\" (click)=\"exceptionModal.hide()\">Close</button>\n      </div>\n    </div>\n    <!-- /.modal-content -->\n  </div>\n  <!-- /.modal-dialog -->\n</div>\n<!-- /.modal -->\n\n\n<!-- Trace View -->\n<div bsModal #traceModal=\"bs-modal\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n    <div class=\"modal-dialog modal-primary modal-code\" role=\"document\">\n      <div class=\"modal-content\">\n        <div class=\"modal-header\">\n          <h5 class=\"modal-title\">\n            <strong>Trace View: </strong> {{traceName}}</h5>\n          <button type=\"button\" class=\"close\" (click)=\"traceModal.hide()\" aria-label=\"Close\">\n            <span aria-hidden=\"true\">&times;</span>\n          </button>\n        </div>\n        <div class=\"modal-body\">\n          <ngx-codemirror></ngx-codemirror>\n        </div>\n      </div>\n    </div>\n  </div>\n"
 
 /***/ }),
 
@@ -14814,7 +14814,7 @@ var SearchComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"counter-page\">\r\n\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 1\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 2\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 3\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 4\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n    <div class=\"card counter-card\">\r\n      <div class=\"card-header\">\r\n        Chart 5\r\n      </div>\r\n      <div class=\"card-body counter-body\">\r\n        <div class=\"chart-wrapper\">\r\n          <canvas baseChart class=\"chart\" style=\"height:200px; max-height: 200px;\"\r\n          [datasets]=\"barChartData\"\r\n          [labels]=\"barChartLabels\"\r\n          [options]=\"barChartOptions\"\r\n          [legend]=\"barChartLegend\"\r\n          [chartType]=\"barChartType\"\r\n          (chartHover)=\"chartHovered($event)\"\r\n          (chartClick)=\"chartClicked($event)\"></canvas>\r\n        </div>\r\n        <div>Data Values</div>\r\n      </div>\r\n    </div>\r\n\r\n</div>\r\n"
+module.exports = "<div class=\"counter-page\">\n\n    <!-- No Data Alert -->\n    <div class=\"card noData\" *ngIf=\"noData == true\">\n      <div class=\"card-body\">\n        <alert type=\"info\" class=\"no-bottom-margin-alert\">\n          <strong>Ups!, there is not satus data in this environment</strong>\n        </alert>\n      </div>\n    </div>\n\n    <div class=\"countersViewport\" *ngIf=\"noData == false\">\n\n      <div class=\"countersSidebar little\" [ngClass]=\"{'hide': showSideBar}\" (click)=\"toggleSidebar()\">\n          <i class=\"fa fa-area-chart\"></i>\n      </div>\n      <div class=\"countersSidebar\" [ngClass]=\"{'hide': !showSideBar}\">\n        <span class=\"countersTitle\" (click)=\"hideSidebar()\">Counters</span>\n        <div class=\"appCounter\" *ngFor=\"let appItem of counters\">\n          <span (click)=\"toggleVisible(appItem)\"><i class=\"fa fa-gear\"></i>{{appItem.applicationName}}</span>\n          <div class=\"kindCounter\" [ngClass]=\"{'hide': !appItem.itemsVisible}\" *ngFor=\"let kindItem of appItem.items\">\n            <span (click)=\"toggleVisible(kindItem)\"><i class=\"fa fa-caret-right\"></i>{{kindItem.kindName}}</span>\n            <div class=\"categoryCounter\" [ngClass]=\"{'hide': !kindItem.itemsVisible}\" *ngFor=\"let categoryItem of kindItem.items\">\n              <span (click)=\"toggleVisible(categoryItem)\"><i class=\"fa fa-caret-right\"></i>{{categoryItem.categoryName}}</span>\n              <div class=\"counterItem\" [ngClass]=\"{'hide': !categoryItem.itemsVisible}\" *ngFor=\"let counterItem of categoryItem.items\">\n                <span (click)=\"toggleSelect(counterItem)\"><i class=\"fa\" [ngClass]=\"{'fa-square-o': !counterItem.selected, 'fa-square': counterItem.selected }\"></i>{{counterItem.name}}</span>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"title\" (click)=\"hideSidebar()\">Services Status</div>\n\n      <div class=\"countersContent\" (click)=\"hideSidebar()\">\n\n        <div class=\"card counter-card\" *ngFor=\"let counterItem of shownCounters\">\n          <div class=\"card-header\">\n            <div class=\"app-title\">{{counterItem.application}}</div>\n            <div class=\"name-title\">{{counterItem.name}}</div>\n          </div>\n          <div class=\"card-body counter-body\">\n            <div class=\"chart-wrapper\">\n              <canvas baseChart class=\"chart\" style=\"height:250px; max-height: 250px;\"\n                [datasets]=\"counterItem.barChartData\"\n                [labels]=\"counterItem.barChartLabels\"\n                [options]=\"barChartOptions\"\n                [legend]=\"barChartLegend\"\n                [chartType]=\"barChartType\"\n                (chartHover)=\"chartHovered($event)\"\n                (chartClick)=\"chartClicked($event)\"></canvas>\n            </div>\n            <div>Values</div>\n          </div>\n        </div>\n\n      </div>\n\n    </div>\n\n</div>\n"
 
 /***/ }),
 
@@ -14830,6 +14830,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "StatusComponent", function() { return StatusComponent; });
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm5/router.js");
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var _services_api_api_query_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../services/api/api/query.service */ "./src/app/services/api/api/query.service.ts");
+/* harmony import */ var _environments_environment__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../environments/environment */ "./src/environments/environment.ts");
+/* harmony import */ var ngx_bootstrap_chronos_test_chain__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ngx-bootstrap/chronos/test/chain */ "./node_modules/ngx-bootstrap/chronos/test/chain.js");
+/* harmony import */ var ngx_bootstrap_chronos__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ngx-bootstrap/chronos */ "./node_modules/ngx-bootstrap/chronos/index.js");
+/* harmony import */ var ngx_bootstrap_locale__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ngx-bootstrap/locale */ "./node_modules/ngx-bootstrap/locale.js");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -14841,36 +14846,253 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 };
 
 
+
+
+
+
+
+Object(ngx_bootstrap_chronos__WEBPACK_IMPORTED_MODULE_5__["defineLocale"])('en-gb', ngx_bootstrap_locale__WEBPACK_IMPORTED_MODULE_6__["enGbLocale"]);
 var StatusComponent = /** @class */ (function () {
-    function StatusComponent(_activatedRoute, _router) {
+    function StatusComponent(_queryService, _activatedRoute, _router) {
+        this._queryService = _queryService;
         this._activatedRoute = _activatedRoute;
         this._router = _router;
+        this.selectedCounters = [];
+        this.shownCounters = [];
         // barChart
         this.barChartOptions = {
             scaleShowVerticalLines: false,
             responsive: true
         };
-        this.barChartLabels = ['2006', '2007', '2008', '2009', '2010', '2011', '2012'];
         this.barChartType = 'bar';
         this.barChartLegend = false;
+        this.barChartLabels = ['2006', '2007', '2008', '2009', '2010', '2011', '2012'];
         this.barChartData = [
             { data: [65, 59, 80, 81, 56, 55, 40], label: 'Series A' },
             { data: [28, 48, 40, 19, 86, 27, 90], label: 'Series B' }
         ];
+        this.showSideBar = false;
     }
     StatusComponent.prototype.ngOnInit = function () {
         this._params = Object.assign({}, this._activatedRoute.snapshot.params);
         this._queryParams = Object.assign({}, this._activatedRoute.snapshot.queryParams);
+        this.updateParams();
+        this.getData();
+    };
+    StatusComponent.prototype.getData = function () {
+        var _this = this;
+        if (!_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name) {
+            return;
+        }
+        console.log(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name);
+        this.noData = null;
+        this.counters = null;
+        this._queryService.getCounters(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name).subscribe(function (data) {
+            if (data && data.length > 0) {
+                _this.noData = false;
+                _this.counters = _this.createCountersTree(data);
+                _this.rawCounters = {};
+                for (var i = 0; i < data.length; i++) {
+                    var item = Object.assign(data[i], { selected: false, lastData: [], barChartLabels: [], barChartData: [] });
+                    for (var j = 0; j < _this.selectedCounters.length; j++) {
+                        if (_this.selectedCounters[i] === item.countersId) {
+                            item.selected = true;
+                        }
+                    }
+                    _this.rawCounters[data[i].countersId] = item;
+                }
+            }
+            else {
+                _this.noData = true;
+            }
+            console.log(_this.counters);
+            console.log(_this.rawCounters);
+        });
+    };
+    StatusComponent.prototype.refreshGraphs = function () {
+        var _this = this;
+        if (this.timerValue)
+            clearTimeout(this.timerValue);
+        var yesterdayTime = new Date().getTime() - (24 * 60 * 60 * 1000);
+        var fromTime = new Date();
+        fromTime.setTime(yesterdayTime);
+        console.log(fromTime);
+        this.shownCounters = [];
+        var _loop_1 = function (i) {
+            var item = this_1.rawCounters[this_1.selectedCounters[i]];
+            if (item !== undefined) {
+                this_1._queryService.getLastCounterValues(item.countersId, 'Week', 84, _environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name).subscribe(function (data) {
+                    if (data) {
+                        item.lastData = data;
+                        item.barChartLabels = [];
+                        item.barChartData = [{ data: [], label: 'Values' }];
+                        for (var j = 0; j < data.length; j++) {
+                            var itemData = data[j];
+                            item.barChartLabels.push(Object(ngx_bootstrap_chronos_test_chain__WEBPACK_IMPORTED_MODULE_4__["moment"])(itemData.timestamp).format('MM-DD (HH:mm)'));
+                            item.barChartData[0].data.push(itemData.value);
+                        }
+                        if (_this.shownCounters.findIndex(function (citem) { return citem.countersId == item.countersId; }) > -1) {
+                            return;
+                        }
+                        _this.shownCounters.push(item);
+                        _this.shownCounters.sort(function (a, b) {
+                            if (a.application < b.application) {
+                                return -1;
+                            }
+                            else if (a.application > b.application) {
+                                return 1;
+                            }
+                            else {
+                                if (a.kind < b.kind) {
+                                    return -1;
+                                }
+                                else if (a.kind > b.kind) {
+                                    return 1;
+                                }
+                                else {
+                                    if (a.category < b.category) {
+                                        return -1;
+                                    }
+                                    else if (a.category > b.category) {
+                                        return 1;
+                                    }
+                                    else {
+                                        if (a.name < b.name) {
+                                            return -1;
+                                        }
+                                        else if (a.name > b.name) {
+                                            return 1;
+                                        }
+                                        else {
+                                            return 0;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    console.log(item);
+                });
+            }
+        };
+        var this_1 = this;
+        for (var i = 0; i < this.selectedCounters.length; i++) {
+            _loop_1(i);
+        }
+        var self = this;
+        this.timerValue = setTimeout(function () {
+            console.log('Refreshing');
+            self.refreshGraphs();
+        }, 60000);
+    };
+    StatusComponent.prototype.toggleVisible = function (item) {
+        console.log(item);
+        item.itemsVisible = !item.itemsVisible;
+    };
+    StatusComponent.prototype.toggleSelect = function (item) {
+        item.selected = !item.selected;
+        if (item.selected) {
+            this.selectedCounters.push(item.countersId);
+        }
+        else {
+            var nSelected = new Array();
+            for (var i = 0; i < this.selectedCounters.length; i++) {
+                if (this.selectedCounters[i] !== item.countersId) {
+                    nSelected.push(this.selectedCounters[i]);
+                }
+            }
+            this.selectedCounters = nSelected;
+        }
+        this.refreshGraphs();
+    };
+    StatusComponent.prototype.toggleSidebar = function () {
+        this.showSideBar = !this.showSideBar;
+    };
+    StatusComponent.prototype.hideSidebar = function () {
+        this.showSideBar = false;
+    };
+    StatusComponent.prototype.showSidebar = function () {
+        this.showSideBar = true;
+    };
+    // Private Methods
+    StatusComponent.prototype.createCountersTree = function (data) {
+        var counters = new Array();
+        var _loop_2 = function (i) {
+            var currentItem = data[i];
+            var appItem = counters.find(function (item) { return item.applicationName == currentItem.application; });
+            if (appItem === undefined) {
+                appItem = {
+                    applicationName: currentItem.application,
+                    items: new Array(),
+                    itemsVisible: false
+                };
+                counters.push(appItem);
+                counters.sort(function (a, b) { return a.applicationName < b.applicationName ? -1 : 1; });
+            }
+            var kindItem = appItem.items.find(function (item) { return item.kindName == currentItem.kind; });
+            if (kindItem === undefined) {
+                kindItem = {
+                    kindName: currentItem.kind,
+                    items: new Array(),
+                    itemsVisible: false
+                };
+                appItem.items.push(kindItem);
+                appItem.items.sort(function (a, b) { return a.kindName < b.kindName ? -1 : 1; });
+            }
+            var categoryItem = kindItem.items.find(function (item) { return item.categoryName == currentItem.category; });
+            if (categoryItem === undefined) {
+                categoryItem = {
+                    categoryName: currentItem.category,
+                    items: new Array(),
+                    itemsVisible: false
+                };
+                kindItem.items.push(categoryItem);
+                kindItem.items.sort(function (a, b) { return a.categoryName < b.categoryName ? -1 : 1; });
+            }
+            categoryItem.items.push(Object.assign(currentItem, { selected: false, lastData: [], barChartLabels: [], barChartData: [] }));
+        };
+        for (var i = 0; i < data.length; i++) {
+            _loop_2(i);
+        }
+        return counters;
+    };
+    StatusComponent.prototype.updateParams = function () {
+        this._queryParams.env = _environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name;
+        this._router.navigate([], {
+            relativeTo: this._activatedRoute,
+            queryParams: this._queryParams,
+            replaceUrl: true
+        });
     };
     StatusComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
             template: __webpack_require__(/*! ./status.component.html */ "./src/app/views/diagnostics/status.component.html")
         }),
-        __metadata("design:paramtypes", [_angular_router__WEBPACK_IMPORTED_MODULE_0__["ActivatedRoute"], _angular_router__WEBPACK_IMPORTED_MODULE_0__["Router"]])
+        __metadata("design:paramtypes", [_services_api_api_query_service__WEBPACK_IMPORTED_MODULE_2__["QueryService"],
+            _angular_router__WEBPACK_IMPORTED_MODULE_0__["ActivatedRoute"],
+            _angular_router__WEBPACK_IMPORTED_MODULE_0__["Router"]])
     ], StatusComponent);
     return StatusComponent;
 }());
 
+var AppCounters = /** @class */ (function () {
+    function AppCounters() {
+        this.itemsVisible = false;
+    }
+    return AppCounters;
+}());
+var KindCounters = /** @class */ (function () {
+    function KindCounters() {
+        this.itemsVisible = false;
+    }
+    return KindCounters;
+}());
+var CategoryCounters = /** @class */ (function () {
+    function CategoryCounters() {
+        this.itemsVisible = false;
+    }
+    return CategoryCounters;
+}());
 
 
 /***/ }),
@@ -14882,7 +15104,7 @@ var StatusComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<ol class=\"breadcrumb breadcrumb-body\">\n  <table>\n    <tr>\n      <td class=\"breadcrumb-icon\">\n        <span class=\"back-link fa-pointer\" (click)=\"goBack()\">\n          <i class=\"fa fa-chevron-left \">&nbsp;&nbsp;</i>Back\n        </span>\n      </td>\n      <td class=\"breadcrumb-title\"><strong>Trace Group:</strong>&nbsp;&nbsp;{{group}}</td>\n    </tr>\n  </table>\n</ol>\n\n<div>\n\n  <!-- No Group Alert -->\n  <div class=\"card\" *ngIf=\"group == null\">\n    <div class=\"card-body\">\n      <alert type=\"info\" class=\"no-bottom-margin-alert\">\n        <strong>Ups!, something went wrong</strong>\n        <br/> You must select a trace group in order to view it's details.\n      </alert>\n    </div>\n  </div>\n\n  <div class=\"row\">\n    <div class=\"col-lg-12\">\n      <div class=\"card\">\n        <!-- <div class=\"card-header\">\n          <i class=\"fa fa-cubes\"></i>\n          <strong>Group:</strong> {{group}}\n        </div> -->\n        <div class=\"card-body\">\n          <i class=\"fa fa-pointer fa-refresh float-right\" (click)=\"updateData()\"></i>\n          <table class=\"table table-sm table-striped table-trace\">\n            <thead>\n              <tr>\n                <th style=\"width: 5px\"></th>\n                <th style=\"width: max-content;\">Name</th>\n                <th style=\"width: 380px\">Application</th>\n                <th style=\"width: 90px\">Machine</th>\n                <th style=\"width: 180px\">Tags</th>\n                <th style=\"width: 90px\">Timestamp</th>\n                <th style=\"width: 80px\"></th>\n              </tr>\n            </thead>\n            <tbody>\n              <tr *ngFor=\"let item of items\">\n                <td>\n                    <i class=\"fa fa-big\" [ngClass]=\"item.application.indexOf('Api') > -1 ? 'fa-cloud' :\n                        item.application.indexOf('Engine') > -1 ? 'fa-cog' :\n                        item.application.indexOf('Provider') > -1 ? 'fa-plane' :\n                        'fa-cube'\"></i>\n                </td>\n                <td class=\"breakWord\">{{item.name}}</td>\n                <td class=\"breakWord\">{{item.application}}</td>\n                <td>{{item.machine}}</td>\n                <td>\n                  <button *ngFor=\"let tag of item.tagsArray\" class=\"btn badge badge-tag\" [ngClass]=\"{\n                      'button-info' : tag.key != 'Status',\n                      'button-success' : tag.key == 'Status' && tag.value == 'Success',\n                      'button-warning' : tag.key == 'Status' && tag.value == 'Warning',\n                      'button-error' : tag.key == 'Status' && tag.value == 'Error'\n                    }\" [popover]=\"tag.value\" [popoverTitle]=\"tag.key\" placement=\"top\" [outsideClick]=\"true\">\n                    {{tag.key}}\n                  </button>\n                </td>\n                <td>{{item.timestamp | date:'HH:mm:ss.SSS'}}</td>\n                <td>\n                  <button class=\"btn badge badge-tag button-ser\" (click)=\"showJsonData(item.id, item.name)\" [ngClass]=\"item.cssClass\">Json</button>\n                  <button class=\"btn badge badge-tag button-ser\" (click)=\"showXmlData(item.id, item.name)\" [ngClass]=\"item.cssClass\">Xml</button>\n                </td>\n              </tr>\n            </tbody>\n          </table>\n        </div>\n      </div>\n    </div>\n  </div>\n\n</div>\n\n\n\n<!-- Trace View -->\n<div bsModal #traceModal=\"bs-modal\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-primary modal-code\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h5 class=\"modal-title\">\n          <strong>Trace Object View: </strong> {{traceName}}</h5>\n        <button type=\"button\" class=\"close\" (click)=\"traceModal.hide()\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n        <ngx-codemirror></ngx-codemirror>\n      </div>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<ol class=\"breadcrumb breadcrumb-body\">\r\n  <table>\r\n    <tr>\r\n      <td class=\"breadcrumb-icon\">\r\n        <span class=\"back-link fa-pointer\" (click)=\"goBack()\">\r\n          <i class=\"fa fa-chevron-left \">&nbsp;&nbsp;</i>Back\r\n        </span>\r\n      </td>\r\n      <td class=\"breadcrumb-title\"><strong>Trace Group:</strong>&nbsp;&nbsp;{{group}}</td>\r\n    </tr>\r\n  </table>\r\n</ol>\r\n\r\n<div>\r\n\r\n  <!-- No Group Alert -->\r\n  <div class=\"card\" *ngIf=\"group == null\">\r\n    <div class=\"card-body\">\r\n      <alert type=\"info\" class=\"no-bottom-margin-alert\">\r\n        <strong>Ups!, something went wrong</strong>\r\n        <br/> You must select a trace group in order to view it's details.\r\n      </alert>\r\n    </div>\r\n  </div>\r\n\r\n  <div class=\"row\">\r\n    <div class=\"col-lg-12\">\r\n      <div class=\"card\">\r\n        <!-- <div class=\"card-header\">\r\n          <i class=\"fa fa-cubes\"></i>\r\n          <strong>Group:</strong> {{group}}\r\n        </div> -->\r\n        <div class=\"card-body\">\r\n          <i class=\"fa fa-pointer fa-refresh float-right\" (click)=\"updateData()\"></i>\r\n          <table class=\"table table-sm table-striped table-trace\">\r\n            <thead>\r\n              <tr>\r\n                <th style=\"width: 5px\"></th>\r\n                <th style=\"width: max-content;\">Name</th>\r\n                <th style=\"width: 380px\">Application</th>\r\n                <th style=\"width: 90px\">Machine</th>\r\n                <th style=\"width: 180px\">Tags</th>\r\n                <th style=\"width: 90px\">Timestamp</th>\r\n                <th style=\"width: 80px\"></th>\r\n              </tr>\r\n            </thead>\r\n            <tbody>\r\n              <tr *ngFor=\"let item of items\">\r\n                <td>\r\n                    <i class=\"fa fa-big\" [ngClass]=\"item.application.indexOf('Api') > -1 ? 'fa-cloud' :\r\n                        item.application.indexOf('Engine') > -1 ? 'fa-cog' :\r\n                        item.application.indexOf('Provider') > -1 ? 'fa-plane' :\r\n                        'fa-cube'\"></i>\r\n                </td>\r\n                <td class=\"breakWord\">{{item.name}}</td>\r\n                <td class=\"breakWord\">{{item.application}}</td>\r\n                <td>{{item.machine}}</td>\r\n                <td>\r\n                  <button *ngFor=\"let tag of item.tagsArray\" class=\"btn badge badge-tag\" [ngClass]=\"{\r\n                      'button-info' : tag.key != 'Status',\r\n                      'button-success' : tag.key == 'Status' && tag.value == 'Success',\r\n                      'button-warning' : tag.key == 'Status' && tag.value == 'Warning',\r\n                      'button-error' : tag.key == 'Status' && tag.value == 'Error'\r\n                    }\" [popover]=\"tag.value\" [popoverTitle]=\"tag.key\" placement=\"top\" [outsideClick]=\"true\">\r\n                    {{tag.key}}\r\n                  </button>\r\n                </td>\r\n                <td>{{item.timestamp | date:'HH:mm:ss.SSS'}}</td>\r\n                <td>\r\n                  <button class=\"btn badge badge-tag button-ser\" (click)=\"showJsonData(item.id, item.name)\" [ngClass]=\"item.cssClass\">Json</button>\r\n                  <button class=\"btn badge badge-tag button-ser\" (click)=\"showXmlData(item.id, item.name)\" [ngClass]=\"item.cssClass\">Xml</button>\r\n                </td>\r\n              </tr>\r\n            </tbody>\r\n          </table>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n\r\n</div>\r\n\r\n\r\n\r\n<!-- Trace View -->\r\n<div bsModal #traceModal=\"bs-modal\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">\r\n  <div class=\"modal-dialog modal-primary modal-code\" role=\"document\">\r\n    <div class=\"modal-content\">\r\n      <div class=\"modal-header\">\r\n        <h5 class=\"modal-title\">\r\n          <strong>Trace Object View: </strong> {{traceName}}</h5>\r\n        <button type=\"button\" class=\"close\" (click)=\"traceModal.hide()\" aria-label=\"Close\">\r\n          <span aria-hidden=\"true\">&times;</span>\r\n        </button>\r\n      </div>\r\n      <div class=\"modal-body\">\r\n        <ngx-codemirror></ngx-codemirror>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n"
 
 /***/ }),
 

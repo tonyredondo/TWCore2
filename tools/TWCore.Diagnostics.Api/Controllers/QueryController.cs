@@ -288,6 +288,17 @@ namespace TWCore.Diagnostics.Api.Controllers
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetCounterValues(counterId, fromDate, toDate, limit);
         }
-
+        /// <summary>
+        /// Get Last Counter Values
+        /// </summary>
+        /// <param name="counterId">Counter id</param>
+        /// <param name="valuesDivision">Counter values division</param>
+        /// <param name="samples">Samples quantity</param>
+        /// <returns>Values list</returns>
+        [HttpGet("{environment}/lastcountervalues/{counterId}/{valuesDivision}/{samples}")]
+        public Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250)
+        {
+            return DbHandlers.Instance.Query.GetLastCounterValues(counterId, valuesDivision, samples);
+        }
     }
 }

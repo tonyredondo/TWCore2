@@ -226,7 +226,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 {
                     return await GetFromDisk(traceItem, ".nbin.gz").ConfigureAwait(false);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                     return await GetFromDatabase().ConfigureAwait(false);
@@ -282,7 +282,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 {
                     return await GetFromDisk(traceItem, extension).ConfigureAwait(false);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                     return await GetFromDatabase().ConfigureAwait(false);
@@ -579,9 +579,124 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }).ConfigureAwait(false);
         }
 
-        public async Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision)
+        /// <summary>
+        /// Get Last Counter Values
+        /// </summary>
+        /// <param name="counterId">Counter id</param>
+        /// <param name="valuesDivision">Counter values division</param>
+        /// <param name="samples">Samples quantity</param>
+        /// <returns>Values list</returns>
+        public async Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250)
         {
-            return null;
+            var counterDataTask = GetCounter(counterId);
+            var toDate = Core.Now;
+            var fromDate = toDate;
+
+            #region Values Division
+            switch (valuesDivision)
+            {
+                case CounterValuesDivision.QuarterDay:
+                    fromDate = toDate.AddHours(-6);
+                    break;
+                case CounterValuesDivision.HalfDay:
+                    fromDate = toDate.AddHours(-12);
+                    break;
+                case CounterValuesDivision.Day:
+                    fromDate = toDate.AddDays(-1);
+                    break;
+                case CounterValuesDivision.Week:
+                    fromDate = toDate.AddDays(-7);
+                    break;
+                case CounterValuesDivision.Month:
+                    fromDate = toDate.AddMonths(-1);
+                    break;
+                case CounterValuesDivision.TwoMonths:
+                    fromDate = toDate.AddMonths(-2);
+                    break;
+                case CounterValuesDivision.QuarterYear:
+                    fromDate = toDate.AddMonths(-3);
+                    break;
+                case CounterValuesDivision.HalfYear:
+                    fromDate = toDate.AddMonths(-6);
+                    break;
+                case CounterValuesDivision.Year:
+                    fromDate = toDate.AddYears(-1);
+                    break;
+            }
+            #endregion
+
+            var timeInterval = toDate.Subtract(fromDate);
+            var minutes = (timeInterval.TotalMinutes / samples);
+            var lstValues = new List<NodeLastCountersValue>();
+
+            #region Get Values
+            var counterValuesTask = RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                var query = session.Query<NodeCountersValue, Counters_ValueSelection>()
+                    .Where(x => x.CountersId == counterId)
+                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
+                    .OrderByDescending(x => x.Timestamp)
+                    .Select(i => new NodeCountersQueryValue
+                    {
+                        Id = i.Id,
+                        Timestamp = i.Timestamp,
+                        Value = i.Value
+                    });
+                var lst = new List<NodeCountersQueryValue>();
+                var enumerator = await session.Advanced.StreamAsync(query).ConfigureAwait(false);
+                while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+                    lst.Add(enumerator.Current.Document);
+                return lst;
+            });
+            #endregion
+
+            #region List Values
+            for (var i = 0; i < samples; i++)
+            {
+                if (i == 0)
+                    lstValues.Add(new NodeLastCountersValue { Timestamp = fromDate });
+                else
+                    lstValues.Add(new NodeLastCountersValue { Timestamp = lstValues[i - 1].Timestamp.AddMinutes(minutes) });
+            }
+            #endregion
+
+            var counterData = await counterDataTask.ConfigureAwait(false);
+            var counterValues = await counterValuesTask.ConfigureAwait(false);
+
+            #region FillValues
+            for (var i = 0; i < lstValues.Count; i++)
+            {
+                IEnumerable<NodeCountersQueryValue> cValues;
+                var currentItem = lstValues[i];
+                if (i == lstValues.Count - 1)
+                {
+                    cValues = counterValues.Where(item => item.Timestamp >= currentItem.Timestamp);
+                }
+                else
+                {
+                    var tDate = lstValues[i + 1].Timestamp;
+                    cValues = counterValues.Where(item => item.Timestamp >= currentItem.Timestamp && item.Timestamp < tDate);
+                }
+                double res = 0;
+                switch(counterData.Type)
+                {
+                    case Counters.CounterType.Average:
+                        res = cValues.Any() ? cValues.Average(item => (double)Convert.ChangeType(item.Value, TypeCode.Double)) : 0;
+                        break;
+                    case Counters.CounterType.Cumulative:
+                        res = cValues.Sum(item => (double)Convert.ChangeType(item.Value, TypeCode.Double));
+                        if (i > 0)
+                            res += (double)lstValues[i - 1].Value;
+                        break;
+                    case Counters.CounterType.Current:
+                        res = cValues.Sum(item => (double)Convert.ChangeType(item.Value, TypeCode.Double));
+                        break;
+                }
+                lstValues[i].Value = res;
+            }
+            #endregion
+
+            return lstValues;
         }
 
         #region Nested Types

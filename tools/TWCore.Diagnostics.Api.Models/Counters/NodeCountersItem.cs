@@ -112,6 +112,11 @@ namespace TWCore.Diagnostics.Api.Models.Counters
         QuarterDay,
         HalfDay,
         Day,
-        Month
+        Week,
+        Month,
+        TwoMonths,
+        QuarterYear,
+        HalfYear,
+        Year
     }
 }

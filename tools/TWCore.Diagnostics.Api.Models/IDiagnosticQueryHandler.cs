@@ -161,5 +161,13 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="limit">Value limit</param>
         /// <returns>List of counter values</returns>
         Task<List<NodeCountersQueryValue>> GetCounterValues(Guid counterId, DateTime fromDate, DateTime toDate, int limit = 3600);
+        /// <summary>
+        /// Get Last Counter Values
+        /// </summary>
+        /// <param name="counterId">Counter id</param>
+        /// <param name="valuesDivision">Counter values division</param>
+        /// <param name="samples">Samples quantity</param>
+        /// <returns>Values list</returns>
+        Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250);
     }
 }

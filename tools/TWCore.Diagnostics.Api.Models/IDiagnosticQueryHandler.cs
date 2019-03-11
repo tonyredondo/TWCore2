@@ -168,6 +168,6 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="valuesDivision">Counter values division</param>
         /// <param name="samples">Samples quantity</param>
         /// <returns>Values list</returns>
-        Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250);
+        Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250, DateTime? lastDate = default);
     }
 }

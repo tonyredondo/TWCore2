@@ -586,7 +586,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         /// <param name="valuesDivision">Counter values division</param>
         /// <param name="samples">Samples quantity</param>
         /// <returns>Values list</returns>
-        public async Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250)
+        public async Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 0, DateTime? lastDate = default)
         {
             var counterDataTask = GetCounter(counterId);
             var toDate = Core.Now;
@@ -597,30 +597,39 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 case CounterValuesDivision.QuarterDay:
                     fromDate = toDate.AddHours(-6);
+                    if (samples == 0) samples = 36;
                     break;
                 case CounterValuesDivision.HalfDay:
                     fromDate = toDate.AddHours(-12);
+                    if (samples == 0) samples = 48;
                     break;
                 case CounterValuesDivision.Day:
                     fromDate = toDate.AddDays(-1);
+                    if (samples == 0) samples = 48;
                     break;
                 case CounterValuesDivision.Week:
                     fromDate = toDate.AddDays(-7);
+                    if (samples == 0) samples = 84;
                     break;
                 case CounterValuesDivision.Month:
                     fromDate = toDate.AddMonths(-1);
+                    if (samples == 0) samples = 60;
                     break;
                 case CounterValuesDivision.TwoMonths:
                     fromDate = toDate.AddMonths(-2);
+                    if (samples == 0) samples = 60;
                     break;
                 case CounterValuesDivision.QuarterYear:
                     fromDate = toDate.AddMonths(-3);
+                    if (samples == 0) samples = 90;
                     break;
                 case CounterValuesDivision.HalfYear:
                     fromDate = toDate.AddMonths(-6);
+                    if (samples == 0) samples = 90;
                     break;
                 case CounterValuesDivision.Year:
                     fromDate = toDate.AddYears(-1);
+                    if (samples == 0) samples = 73;
                     break;
             }
             #endregion
@@ -694,6 +703,15 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 }
                 currentItem.Timestamp = currentItem.Timestamp.TruncateTo(TimeSpan.FromMinutes(1));
                 currentItem.Value = res;
+            }
+            #endregion
+
+            #region Find LastDate
+            if (lastDate.HasValue)
+            {
+                var dateIndex = lstValues.FindLastIndex(item => item.Timestamp == lastDate.Value);
+                if (dateIndex > -1)
+                    return lstValues.Skip(dateIndex).ToList();
             }
             #endregion
 

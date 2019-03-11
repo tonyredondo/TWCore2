@@ -295,10 +295,10 @@ namespace TWCore.Diagnostics.Api.Controllers
         /// <param name="valuesDivision">Counter values division</param>
         /// <param name="samples">Samples quantity</param>
         /// <returns>Values list</returns>
-        [HttpGet("{environment}/lastcountervalues/{counterId}/{valuesDivision}/{samples}")]
-        public Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 250)
+        [HttpGet("{environment}/lastcountervalues/{counterId}/{valuesDivision}/{samples?}")]
+        public Task<List<NodeLastCountersValue>> GetLastCounterValues(Guid counterId, CounterValuesDivision valuesDivision, int samples = 0, DateTime? lastDate = default)
         {
-            return DbHandlers.Instance.Query.GetLastCounterValues(counterId, valuesDivision, samples);
+            return DbHandlers.Instance.Query.GetLastCounterValues(counterId, valuesDivision, samples, lastDate);
         }
     }
 }

@@ -703,11 +703,11 @@ if(false) {}
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! C:\Github\TWCore2.Diagnostics.Client\node_modules\@coreui\icons\css\coreui-icons.css */"./node_modules/@coreui/icons/css/coreui-icons.css");
-__webpack_require__(/*! C:\Github\TWCore2.Diagnostics.Client\node_modules\flag-icon-css\css\flag-icon.css */"./node_modules/flag-icon-css/css/flag-icon.css");
-__webpack_require__(/*! C:\Github\TWCore2.Diagnostics.Client\node_modules\font-awesome\css\font-awesome.css */"./node_modules/font-awesome/css/font-awesome.css");
-__webpack_require__(/*! C:\Github\TWCore2.Diagnostics.Client\node_modules\simple-line-icons\css\simple-line-icons.css */"./node_modules/simple-line-icons/css/simple-line-icons.css");
-module.exports = __webpack_require__(/*! C:\Github\TWCore2.Diagnostics.Client\src\scss\style.scss */"./src/scss/style.scss");
+__webpack_require__(/*! C:\GitHub\TWCore2.Diagnostics.Client\node_modules\@coreui\icons\css\coreui-icons.css */"./node_modules/@coreui/icons/css/coreui-icons.css");
+__webpack_require__(/*! C:\GitHub\TWCore2.Diagnostics.Client\node_modules\flag-icon-css\css\flag-icon.css */"./node_modules/flag-icon-css/css/flag-icon.css");
+__webpack_require__(/*! C:\GitHub\TWCore2.Diagnostics.Client\node_modules\font-awesome\css\font-awesome.css */"./node_modules/font-awesome/css/font-awesome.css");
+__webpack_require__(/*! C:\GitHub\TWCore2.Diagnostics.Client\node_modules\simple-line-icons\css\simple-line-icons.css */"./node_modules/simple-line-icons/css/simple-line-icons.css");
+module.exports = __webpack_require__(/*! C:\GitHub\TWCore2.Diagnostics.Client\src\scss\style.scss */"./src/scss/style.scss");
 
 
 /***/ })

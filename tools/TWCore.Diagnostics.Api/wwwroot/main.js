@@ -735,7 +735,7 @@ var AppRoutingModule = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<app-header [fixed]=\"true\" [navbarBrandFull]=\"{src: 'assets/img/brand/diagnostics.svg', width: 130, height: 25, alt: 'Diagnostics'}\"\r\n  [navbarBrandMinimized]=\"{src: 'assets/img/brand/diagnostics.svg', width: 30, height: 30, alt: 'Diagnostics'}\" [sidebarToggler]=\"'lg'\"\r\n  [asideMenuToggler]=\"false\" [mobileAsideMenuToggler]=\"false\">\r\n  <ul class=\"nav navbar-nav ml-auto env-nav\">\r\n    <!-- <li class=\"nav-item d-md-down-none\">\r\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-bell\"></i><span class=\"badge badge-pill badge-danger\">5</span></a>\r\n    </li>\r\n    <li class=\"nav-item d-md-down-none\">\r\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-list\"></i></a>\r\n    </li>\r\n    <li class=\"nav-item d-md-down-none\">\r\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-location-pin\"></i></a>\r\n    </li> -->\r\n    <li class=\"nav-item dropdown\" dropdown placement=\"bottom right\">\r\n      <a class=\"nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" dropdownToggle\r\n        (click)=\"false\">\r\n        <div>Environment:\r\n          <span class=\"bolder\">{{currentEnvironment}}</span>\r\n        </div>\r\n      </a>\r\n      <div class=\"dropdown-menu dropdown-menu-right\" *dropdownMenu aria-labelledby=\"simple-dropdown\">\r\n        <div class=\"dropdown-header text-center\">\r\n          <strong>Environments</strong>\r\n        </div>\r\n        <a *ngFor=\"let item of environments\" class=\"dropdown-item\" (click)=\"changeEnvironmentAndReload(item)\">\r\n          <i class=\"fa fa-tasks\"></i> {{item}}\r\n          <span class=\"badge badge-info\"></span>\r\n        </a>\r\n      </div>\r\n    </li>\r\n  </ul>\r\n</app-header>\r\n\r\n<div class=\"app-body\">\r\n  <app-sidebar [fixed]=\"true\" [display]=\"'lg'\">\r\n    <app-sidebar-nav [navItems]=\"navItems\" [perfectScrollbar] [disabled]=\"sidebarMinimized\"></app-sidebar-nav>\r\n    <app-sidebar-minimizer></app-sidebar-minimizer>\r\n  </app-sidebar>\r\n  <!-- Main content -->\r\n  <main class=\"main\">\r\n    <!-- Breadcrumb -->\r\n    <div class=\"row\">&nbsp;</div>\r\n    <!-- <ol class=\"breadcrumb\">\r\n      <app-breadcrumb></app-breadcrumb>\r\n    </ol> -->\r\n    <div class=\"container-fluid\">\r\n      <router-outlet></router-outlet>\r\n    </div>\r\n    <!-- /.container-fluid -->\r\n  </main>\r\n</div>\r\n\r\n\r\n<app-footer>\r\n  <span>\r\n    <a href=\"https://github.com/tonyredondo/TWCore2.Diagnostics.Client\">TWCore Diagnostics</a> &copy; 2018 Daniel Redondo.</span>\r\n  <span class=\"ml-auto\">Powered by\r\n    <a href=\"https://coreui.io/angular\">CoreUI for Angular</a>\r\n  </span>\r\n</app-footer>\r\n"
+module.exports = "<app-header [fixed]=\"true\" [navbarBrandFull]=\"{src: 'assets/img/brand/diagnostics.svg', width: 130, height: 25, alt: 'Diagnostics'}\"\n  [navbarBrandMinimized]=\"{src: 'assets/img/brand/diagnostics.svg', width: 30, height: 30, alt: 'Diagnostics'}\" [sidebarToggler]=\"'lg'\"\n  [asideMenuToggler]=\"false\" [mobileAsideMenuToggler]=\"false\">\n  <ul class=\"nav navbar-nav ml-auto env-nav\">\n    <!-- <li class=\"nav-item d-md-down-none\">\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-bell\"></i><span class=\"badge badge-pill badge-danger\">5</span></a>\n    </li>\n    <li class=\"nav-item d-md-down-none\">\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-list\"></i></a>\n    </li>\n    <li class=\"nav-item d-md-down-none\">\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-location-pin\"></i></a>\n    </li> -->\n    <li class=\"nav-item dropdown\" dropdown placement=\"bottom right\">\n      <a class=\"nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" dropdownToggle\n        (click)=\"false\">\n        <div>Environment:\n          <span class=\"bolder\">{{currentEnvironment}}</span>\n        </div>\n      </a>\n      <div class=\"dropdown-menu dropdown-menu-right\" *dropdownMenu aria-labelledby=\"simple-dropdown\">\n        <div class=\"dropdown-header text-center\">\n          <strong>Environments</strong>\n        </div>\n        <a *ngFor=\"let item of environments\" class=\"dropdown-item\" (click)=\"changeEnvironmentAndReload(item)\">\n          <i class=\"fa fa-tasks\"></i> {{item}}\n          <span class=\"badge badge-info\"></span>\n        </a>\n      </div>\n    </li>\n  </ul>\n</app-header>\n\n<div class=\"app-body\">\n  <app-sidebar [fixed]=\"true\" [display]=\"'lg'\">\n    <app-sidebar-nav [navItems]=\"navItems\" [perfectScrollbar] [disabled]=\"sidebarMinimized\"></app-sidebar-nav>\n    <app-sidebar-minimizer></app-sidebar-minimizer>\n  </app-sidebar>\n  <!-- Main content -->\n  <main class=\"main\">\n    <!-- Breadcrumb -->\n    <div class=\"row\">&nbsp;</div>\n    <!-- <ol class=\"breadcrumb\">\n      <app-breadcrumb></app-breadcrumb>\n    </ol> -->\n    <div class=\"container-fluid\">\n      <router-outlet></router-outlet>\n    </div>\n    <!-- /.container-fluid -->\n  </main>\n</div>\n\n\n<app-footer>\n  <span>\n    <a href=\"https://github.com/tonyredondo/TWCore2.Diagnostics.Client\">TWCore Diagnostics</a> &copy; 2018 Daniel Redondo.</span>\n  <span class=\"ml-auto\">Powered by\n    <a href=\"https://coreui.io/angular\">CoreUI for Angular</a>\n  </span>\n</app-footer>\n"
 
 /***/ }),
 
@@ -1055,7 +1055,7 @@ var QueryService = /** @class */ (function () {
             reportProgress: reportProgress
         });
     };
-    QueryService.prototype.getLastCounterValues = function (counterId, valuesDivision, samples, environment, observe, reportProgress) {
+    QueryService.prototype.getLastCounterValues = function (counterId, valuesDivision, environment, samples, lastDate, observe, reportProgress) {
         if (observe === void 0) { observe = 'body'; }
         if (reportProgress === void 0) { reportProgress = false; }
         if (counterId === null || counterId === undefined) {
@@ -1064,11 +1064,20 @@ var QueryService = /** @class */ (function () {
         if (valuesDivision === null || valuesDivision === undefined) {
             throw new Error('Required parameter valuesDivision was null or undefined when calling getLastCounterValues.');
         }
-        if (samples === null || samples === undefined) {
-            throw new Error('Required parameter samples was null or undefined when calling getLastCounterValues.');
-        }
         if (environment === null || environment === undefined) {
             throw new Error('Required parameter environment was null or undefined when calling getLastCounterValues.');
+        }
+        var queryParameters = new _angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpParams"]({ encoder: new _encoder__WEBPACK_IMPORTED_MODULE_2__["CustomHttpUrlEncodingCodec"]() });
+        if (samples !== undefined && samples !== null) {
+            queryParameters = queryParameters.set('samples', samples);
+        }
+        if (lastDate !== undefined && lastDate !== null) {
+            if (lastDate.toISOString) {
+                queryParameters = queryParameters.set('lastDate', lastDate.toISOString());
+            }
+            else {
+                queryParameters = queryParameters.set('lastDate', lastDate);
+            }
         }
         var headers = this.defaultHeaders;
         // to determine the Accept header
@@ -1088,6 +1097,7 @@ var QueryService = /** @class */ (function () {
         // to determine the Content-Type header
         var consumes = [];
         return this.httpClient.get(this.basePath + "/api/query/" + encodeURIComponent(String(environment)) + "/lastcountervalues/" + encodeURIComponent(String(counterId)) + "/" + encodeURIComponent(String(valuesDivision)) + "/" + encodeURIComponent(String(samples)), {
+            params: queryParameters,
             withCredentials: this.configuration.withCredentials,
             headers: headers,
             observe: observe,
@@ -2081,7 +2091,7 @@ Object(_angular_platform_browser_dynamic__WEBPACK_IMPORTED_MODULE_1__["platformB
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! C:\Github\TWCore2.Diagnostics.Client\src\main.ts */"./src/main.ts");
+module.exports = __webpack_require__(/*! C:\GitHub\TWCore2.Diagnostics.Client\src\main.ts */"./src/main.ts");
 
 
 /***/ })

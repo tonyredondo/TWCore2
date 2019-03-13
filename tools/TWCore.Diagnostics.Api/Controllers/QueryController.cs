@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using TWCore.Collections;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Counters;
@@ -132,10 +136,19 @@ namespace TWCore.Diagnostics.Api.Controllers
                 if (value is RequestMessage rqMessage)
                     return rqMessage.Body?.GetValue()?.SerializeToXml();
                 if (value is string strValue)
+                {
+                    try
+                    {
+                        var fValue = PrintXML(strValue);
+                        if (!string.IsNullOrEmpty(fValue))
+                            return fValue;
+                    }
+                    catch { }
                     return strValue;
+                }
                 return value.SerializeToXml();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new SerializableException(ex).SerializeToXml();
             }
@@ -169,7 +182,16 @@ namespace TWCore.Diagnostics.Api.Controllers
                     return rqBody != null ? JsonSerializer.SerializeToString(rqBody, rqBody.GetType()) : null;
                 }
                 if (value is string strValue)
+                {
+                    try
+                    {
+                        var indentedValue = JValue.Parse(strValue).ToString(Newtonsoft.Json.Formatting.Indented);
+                        return indentedValue;
+                    }
+                    catch { }
                     return strValue;
+
+                }
                 return JsonSerializer.SerializeToString(value, value.GetType());
             }
             catch (Exception ex)
@@ -188,6 +210,32 @@ namespace TWCore.Diagnostics.Api.Controllers
         {
             id = WebUtility.UrlDecode(id);
             var txtData = await DbHandlers.Instance.Query.GetTraceTxtAsync(id).ConfigureAwait(false);
+            if (txtData != null)
+            {
+                if ((txtData.StartsWith('{') || txtData.StartsWith('[')) && (txtData.EndsWith('}') || txtData.EndsWith(']')))
+                {
+                    try
+                    {
+                        var indentedValue = JValue.Parse(txtData).ToString(Newtonsoft.Json.Formatting.Indented);
+                        return indentedValue;
+                    }
+                    catch { }
+                    return txtData;
+                }
+                if (txtData.StartsWith("<?xml"))
+                {
+                    try
+                    {
+                        var indentedValue = PrintXML(txtData);
+                        if (!string.IsNullOrEmpty(indentedValue))
+                            return indentedValue;
+                    }
+                    catch { }
+                    return txtData;
+                }
+
+                //<?xml
+            }
             return txtData;
         }
         /// <summary>
@@ -300,5 +348,51 @@ namespace TWCore.Diagnostics.Api.Controllers
         {
             return DbHandlers.Instance.Query.GetLastCounterValues(counterId, valuesDivision, samples, lastDate);
         }
+
+
+        #region Private Methods
+        private static string PrintXML(string xml)
+        {
+            string result = null;
+
+            MemoryStream mStream = new MemoryStream();
+            XmlTextWriter writer = new XmlTextWriter(mStream, Encoding.Unicode);
+            XmlDocument document = new XmlDocument();
+
+            try
+            {
+                // Load the XmlDocument with the XML.
+                document.LoadXml(xml);
+
+                writer.Formatting = Formatting.Indented;
+
+                // Write the XML into a formatting XmlTextWriter
+                document.WriteContentTo(writer);
+                writer.Flush();
+                mStream.Flush();
+
+                // Have to rewind the MemoryStream in order to read
+                // its contents.
+                mStream.Position = 0;
+
+                // Read MemoryStream contents into a StreamReader.
+                StreamReader sReader = new StreamReader(mStream);
+
+                // Extract the text from the StreamReader.
+                string formattedXml = sReader.ReadToEnd();
+
+                result = formattedXml;
+            }
+            catch (XmlException)
+            {
+                // Handle the exception
+            }
+
+            mStream.Close();
+            writer.Close();
+
+            return result;
+        }
+        #endregion
     }
 }

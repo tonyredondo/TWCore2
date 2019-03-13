@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log;
-using TWCore.Diagnostics.Trace;
 using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Security;
 
@@ -16,11 +16,12 @@ namespace TWCore.Diagnostics.Api.Controllers
     public class DiagnosticsController : Controller
     {
         [HttpPost("log")]
-        public async Task<ActionResult<bool>> PostLogItem([FromBody]ExternalLogItem item)
+        public bool PostLogItem([FromBody]ExternalLogItem item)
         {
             if (item == null) return false;
             if (string.IsNullOrWhiteSpace(item.EnvironmentName)) return false;
             if (string.IsNullOrWhiteSpace(item.GroupName)) return false;
+            if (string.IsNullOrWhiteSpace(item.Message)) return false;
             var logItem = new LogItem
             {
                 MachineName = item.MachineName,
@@ -38,23 +39,29 @@ namespace TWCore.Diagnostics.Api.Controllers
                 Id = Guid.NewGuid(),
                 InstanceId = item.ApplicationName?.GetHashSHA1Guid() ?? Guid.Empty
             };
-            try
+            _ = Process(logItem);
+            return true;
+
+            async Task Process(LogItem lItem)
             {
-                await DbHandlers.Instance.Messages.ProcessLogItemsMessageAsync(new List<LogItem> { logItem }).ConfigureAwait(false);
-                return Ok(true);
-            }
-            catch(Exception ex)
-            {
-                Core.Log.Write(ex);
-                return false;
+                try
+                {
+                    await DbHandlers.Instance.Messages.ProcessLogItemsMessageAsync(new List<LogItem> { lItem }).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
         }
+
         [HttpPost("metadata")]
-        public async Task<ActionResult<bool>> PostGroupMetadata([FromBody]ExternalGroupMetadata item)
+        public bool PostGroupMetadata([FromBody]ExternalGroupMetadata item)
         {
             if (item == null) return false;
             if (string.IsNullOrWhiteSpace(item.EnvironmentName)) return false;
             if (string.IsNullOrWhiteSpace(item.GroupName)) return false;
+            if (item.Items?.Any() == true) return false;
             var groupMetadata = new GroupMetadata
             {
                 InstanceId = item.ApplicationName?.GetHashSHA1Guid() ?? Guid.Empty,
@@ -62,19 +69,24 @@ namespace TWCore.Diagnostics.Api.Controllers
                 Timestamp = item.Timestamp ?? Core.Now,
                 Items = item.Items
             };
-            try
+            _ = Process(groupMetadata);
+            return true;
+
+            async Task Process(GroupMetadata gMeta)
             {
-                await DbHandlers.Instance.Messages.ProcessGroupMetadataMessageAsync(new List<GroupMetadata> { groupMetadata }).ConfigureAwait(false);
-                return Ok(true);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-                return false;
+                try
+                {
+                    await DbHandlers.Instance.Messages.ProcessGroupMetadataMessageAsync(new List<GroupMetadata> { gMeta }).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
         }
+
         [HttpPost("trace")]
-        public async Task<ActionResult<bool>> PostTraceItem([FromBody]ExternalTraceItem item)
+        public bool PostTraceItem([FromBody]ExternalTraceItem item)
         {
             if (item == null) return false;
             if (string.IsNullOrWhiteSpace(item.EnvironmentName)) return false;
@@ -92,15 +104,20 @@ namespace TWCore.Diagnostics.Api.Controllers
                 Id = Guid.NewGuid(),
                 InstanceId = item.ApplicationName?.GetHashSHA1Guid() ?? Guid.Empty
             };
-            try
+            _ = Process(traceItem);
+            return true;
+
+
+            async Task Process(MessagingTraceItem mTItem)
             {
-                await DbHandlers.Instance.Messages.ProcessTraceItemsMessageAsync(new List<MessagingTraceItem> { traceItem }).ConfigureAwait(false);
-                return Ok(true);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-                return false;
+                try
+                {
+                    await DbHandlers.Instance.Messages.ProcessTraceItemsMessageAsync(new List<MessagingTraceItem> { mTItem }).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
         }
     }

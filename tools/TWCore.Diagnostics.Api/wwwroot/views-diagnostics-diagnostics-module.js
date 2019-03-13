@@ -14648,7 +14648,7 @@ var SearchComponent = /** @class */ (function () {
                 _this.traceObject = x;
                 _this._codeMirror.instance$.subscribe(function (editor) {
                     editor.setOption('mode', 'application/xml');
-                    if (x.startsWith('{')) {
+                    if (x.startsWith('{') || x.startsWith('[')) {
                         editor.setOption('mode', 'application/json');
                     }
                     editor.setOption('theme', 'material');
@@ -14678,7 +14678,7 @@ var SearchComponent = /** @class */ (function () {
                 _this.traceObject = x;
                 _this._codeMirror.instance$.subscribe(function (editor) {
                     editor.setOption('mode', 'application/json');
-                    if (x.startsWith('<?xml')) {
+                    if (x.startsWith('<')) {
                         editor.setOption('mode', 'application/xml');
                     }
                     editor.setOption('theme', 'material');
@@ -14708,8 +14708,11 @@ var SearchComponent = /** @class */ (function () {
                 _this.traceObject = x;
                 _this._codeMirror.instance$.subscribe(function (editor) {
                     editor.setOption('mode', 'text/plain');
-                    if (x.startsWith('<?xml')) {
+                    if (x.startsWith('<')) {
                         editor.setOption('mode', 'application/xml');
+                    }
+                    if (x.startsWith('{') || x.startsWith('[')) {
+                        editor.setOption('mode', 'application/json');
                     }
                     editor.setOption('theme', 'material');
                     editor.setOption('readOnly', true);

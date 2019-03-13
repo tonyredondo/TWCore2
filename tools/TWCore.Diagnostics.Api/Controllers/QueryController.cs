@@ -222,7 +222,7 @@ namespace TWCore.Diagnostics.Api.Controllers
                     catch { }
                     return txtData;
                 }
-                if (txtData.StartsWith("<?xml"))
+                if (txtData.StartsWith("<?xml") || txtData.StartsWith('<'))
                 {
                     try
                     {

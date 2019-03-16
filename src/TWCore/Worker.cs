@@ -49,7 +49,6 @@ namespace TWCore
         Disposed
     }
 
-
     /// <inheritdoc />
     /// <summary>
     /// Action to process a Queue of elements in a new thread.
@@ -68,10 +67,9 @@ namespace TWCore
         private ChannelWriter<T> _writer;
         private volatile WorkerStatus _status = WorkerStatus.Stopped;
         private Task _processTask;
-        private Thread _processThread;
-        private ManualResetEventSlim _processThreadResetEvent;
         private long _queueCount;
         private int _workerStartStatus;
+        private WorkerTaskScheduler _taskScheduler;
 
         #region Events
         /// <summary>
@@ -184,7 +182,7 @@ namespace TWCore
             Ensure.ArgumentNotNull(function, "The func can't be null.");
             _precondition = precondition;
             _action = null;
-            _func  = function;
+            _func = function;
             _startActive = startActive;
             _ignoreExceptions = ignoreExceptions;
             _useOwnThread = useOwnThread;
@@ -253,9 +251,8 @@ namespace TWCore
             if (_status != WorkerStatus.Stopped) return;
             if (_useOwnThread)
             {
-                _processThread = new Thread(ProcessThread);
-                _processThread.IsBackground = true;
-                _processThread.Start();
+                _taskScheduler = _taskScheduler ?? new WorkerTaskScheduler(1);
+                _processTask = _taskScheduler.Run(() => ProcessInThreadAsync());
             }
             else
             {
@@ -275,13 +272,7 @@ namespace TWCore
             _writer.TryComplete();
             if (forceInmediate)
                 _tokenSource.Cancel();
-            if (_useOwnThread)
-            {
-                await TaskHelper.SleepUntil(() => _processThreadResetEvent.IsSet, Core.GlobalSettings.WorkerWaitTimeout).ConfigureAwait(false);
-                _processThreadResetEvent.Reset();
-            }
-            else
-                await _processTask.ConfigureAwait(false);
+            await _processTask.ConfigureAwait(false);
             CreateChannels();
             Interlocked.Exchange(ref _queueCount, 0);
         }
@@ -298,13 +289,7 @@ namespace TWCore
             _writer.TryComplete();
             if (forceInmediate)
                 _tokenSource.Cancel();
-            if (_useOwnThread)
-            {
-                _processThreadResetEvent.Wait(Core.GlobalSettings.WorkerWaitTimeout);
-                _processThreadResetEvent.Reset();
-            }
-            else
-                _processTask.WaitAsync();
+            _processTask.WaitAsync();
             CreateChannels();
             Interlocked.Exchange(ref _queueCount, 0);
         }
@@ -358,33 +343,29 @@ namespace TWCore
         }
         [IgnoreStackFrameLog]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessThread()
+        private async Task ProcessInThreadAsync()
         {
-            Thread.CurrentThread.Name = typeof(T).Name + " Worker Thread";
             _status = WorkerStatus.Started;
-            _processThreadResetEvent = new ManualResetEventSlim();
             var isFunc = _func != null;
             var usePrecondition = _precondition != null;
             var token = _tokenSource.Token;
             var maxInCancellation = 50;
             try
             {
-                while (_reader.WaitToReadAsync(_tokenSource.Token).WaitAndResults())
+                while (await _reader.WaitToReadAsync(token))
                 {
                     if (usePrecondition)
                     {
-                        while (!token.IsCancellationRequested && !_precondition())
-                            Thread.Sleep(250);
+                        await TaskHelper.SleepUntil(_precondition, token);
                         if (token.IsCancellationRequested) return;
                     }
-
                     while (_reader.TryRead(out var item))
                     {
                         Interlocked.Decrement(ref _queueCount);
                         try
                         {
                             if (isFunc)
-                                _func(item).WaitAsync();
+                                await _func(item);
                             else
                                 _action(item);
                         }
@@ -404,7 +385,6 @@ namespace TWCore
             }
             catch (TaskCanceledException) { }
             _status = WorkerStatus.Stopped;
-            _processThreadResetEvent.Set();
         }
         #endregion
 
@@ -419,10 +399,7 @@ namespace TWCore
             _status = WorkerStatus.Stopping;
             _writer.TryComplete();
             _tokenSource.Cancel();
-            if (_useOwnThread)
-                _processThreadResetEvent.Wait(Core.GlobalSettings.WorkerWaitTimeout);
-            else
-                _processTask.WaitAsync();
+            _processTask.WaitAsync();
             _status = WorkerStatus.Disposed;
             Interlocked.Exchange(ref _queueCount, 0);
         }

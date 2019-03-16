@@ -99,6 +99,8 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("Proxy class test");
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
 
+            await client.NDate(Core.Now).ConfigureAwait(false);
+
             var enumResult = await client.TestEnum("Valor", Option.Option1).ConfigureAwait(false);
 
             using (var watch = Watch.Create("Proxy class Time - GetAllAsync"))
@@ -166,6 +168,7 @@ namespace TWCore.Tests
         bool AddSimplePersona(SimplePerson simplePersona);
         Task<bool> IsEnabled();
         Task<Option> TestEnum(string name, Option option);
+        Task<bool> NDate(DateTime? value);
     }
 
     public interface IHello
@@ -249,6 +252,10 @@ namespace TWCore.Tests
                 return Task.FromResult(Option.Option2);
             return Task.FromResult(Option.Option1);
         }
+        public Task<bool> NDate(DateTime? value)
+        {
+            return Task.FromResult(true);
+        }
     }
 #pragma warning disable 67
     public class MyServiceProxy : RPCProxy, IMyService
@@ -262,6 +269,7 @@ namespace TWCore.Tests
         public Task<List<SimplePerson>> GetAllAsync() => InvokeAsAsync<List<SimplePerson>>();
         public Task<bool> IsEnabled() => InvokeAsync<bool>();
         public Task<Option> TestEnum(string name, Option option) => InvokeAsync<string, Option, Option>(name, option);
+        public Task<bool> NDate(DateTime? value) => InvokeAsync<DateTime?, bool>(value);
     }
 
 #endregion

@@ -181,6 +181,8 @@ namespace TWCore.Reflection
             {
                 if (conversionType.BaseType == typeof(Enum))
                     return Enum.ToObject(conversionType, value);
+                if (conversionType.IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType)); ;
                 return Convert.ChangeType(value, conversionType);
             }
             if (value is null)

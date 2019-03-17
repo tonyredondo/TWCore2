@@ -30,12 +30,14 @@ namespace TWCore
     /// Worker Task Scheduler
     /// </summary>
     [IgnoreStackFrameLog]
-    public class WorkerTaskScheduler : TaskScheduler
+    public class WorkerTaskScheduler : TaskScheduler, IDisposable
     {
         private readonly BlockingCollection<Task> _tasks = new BlockingCollection<Task>();
         private readonly int _concurrency;
         private readonly Thread[] _threads;
         private readonly TaskFactory _factory;
+        private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private readonly ManualResetEventSlim _finalizerEvent = new ManualResetEventSlim();
 
         #region .ctor
         /// <summary>
@@ -88,6 +90,7 @@ namespace TWCore
         [IgnoreStackFrameLog]
         public Task Run(Func<Task> func)
         {
+            if (_tokenSource.IsCancellationRequested) return Task.FromCanceled(_tokenSource.Token);
             return _factory.StartNew(func).Unwrap();
         }
         /// <summary>
@@ -99,6 +102,7 @@ namespace TWCore
         [IgnoreStackFrameLog]
         public Task<T> Run<T>(Func<Task<T>> func)
         {
+            if (_tokenSource.IsCancellationRequested) return Task.FromCanceled<T>(_tokenSource.Token);
             return _factory.StartNew(func).Unwrap();
         }
         /// <summary>
@@ -110,6 +114,7 @@ namespace TWCore
         [IgnoreStackFrameLog]
         public Task Run(Action func)
         {
+            if (_tokenSource.IsCancellationRequested) return Task.FromCanceled(_tokenSource.Token);
             return _factory.StartNew(func);
         }
         /// <summary>
@@ -121,6 +126,7 @@ namespace TWCore
         [IgnoreStackFrameLog]
         public Task<T> Run<T>(Func<T> func)
         {
+            if (_tokenSource.IsCancellationRequested) return Task.FromCanceled<T>(_tokenSource.Token);
             return _factory.StartNew(func);
         }
         #endregion
@@ -144,21 +150,56 @@ namespace TWCore
         private static void ThreadExecutor(object state)
         {
             var scheduler = (WorkerTaskScheduler)state;
-            while (true)
+            var token = scheduler._tokenSource.Token;
+            while (!token.IsCancellationRequested)
             {
-                if (scheduler._tasks.TryTake(out var task, Timeout.Infinite))
+                try
                 {
-                    try
+                    if (scheduler._tasks.TryTake(out var task, Timeout.Infinite, token))
                     {
-                        scheduler.TryExecuteTask(task);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
+                        try
+                        {
+                            scheduler.TryExecuteTask(task);
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
                     }
                 }
+                catch(OperationCanceledException)
+                {
+                    //
+                }
+            }
+            scheduler._finalizerEvent.Set();
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // Para detectar llamadas redundantes
+
+        /// <inheritdoc />
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: eliminse el estado administrado (objetos administrados).
+                    _tokenSource.Cancel();
+                    _finalizerEvent.Wait();
+                }
+                disposedValue = true;
             }
         }
+
+        // Este código se agrega para implementar correctamente el patrón descartable.
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
         #endregion
     }
 }

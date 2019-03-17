@@ -1894,6 +1894,8 @@ namespace TWCore.Diagnostics.Log
                                 return DefaultMValue;
                             if (declarationType == typeof(Thread))
                                 return DefaultMValue;
+                            if (declarationType.Name.Contains("AsyncOperation`1") && declarationType.Namespace == "System.Threading.Channels")
+                                return DefaultMValue;
                             assemblyName = declarationType.Assembly.FullName;
                             typeName = declarationType.Name;
                             return (assemblyName, typeName);

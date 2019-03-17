@@ -36,8 +36,8 @@ namespace TWCore.Cache
     [StatusName("Cache Storage Manager")]
     public class StorageManager : IStorageWithExtensionExecution
     {
-	    private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();
-	    private IStorage[] _storages;
+        private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();
+        private IStorage[] _storages;
         private delegate TR RefFunc<TArg, out TR>(ref TArg arg1);
         private delegate TR RefFunc<TArg, TArg2, out TR>(ref TArg arg1, ref TArg2 arg2);
         private delegate TR RefFunc<TArg, TArg2, TArg3, out TR>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
@@ -45,7 +45,7 @@ namespace TWCore.Cache
         private delegate void RefAction<TArg, TArg2, TArg3>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4, TArg5>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4, ref TArg5 arg5);
-	    private LRU2QCollection<string, ConcurrentDictionary<string, object>> _indexes = new LRU2QCollection<string, ConcurrentDictionary<string, object>>(128);
+        private LRU2QCollection<string, ConcurrentDictionary<string, object>> _indexes = new LRU2QCollection<string, ConcurrentDictionary<string, object>>(128);
         private ConcurrentDictionary<string, IStorageExtension> _extensions = new ConcurrentDictionary<string, IStorageExtension>();
 
         #region Events
@@ -74,24 +74,24 @@ namespace TWCore.Cache
         /// </summary>
         /// <value>The type.</value>
         public StorageType Type => StorageType.Unknown;
-	    /// <summary>
-	    /// Gets or sets the time in minutes to check if some items has expired.
-	    /// </summary>
-	    public int ExpirationCheckTimeInMinutes { get; set; }
-	    /// <summary>
-	    /// Maximum duration per storage item
-	    /// </summary>
-	    public TimeSpan? MaximumItemDuration { get; set; }
-	    /// <summary>
-	    /// Overwrites the expiration date setted by each item in DateTime.
-	    /// </summary>
-	    public DateTime? ItemsExpirationAbsoluteDateOverwrite { get; set; }
-	    /// <summary>
-	    /// Overwrites the expiration date setted by each item in TimeSpan.
-	    /// </summary>
-	    public TimeSpan? ItemsExpirationDateOverwrite { get; set; }
-	    #endregion
-	    
+        /// <summary>
+        /// Gets or sets the time in minutes to check if some items has expired.
+        /// </summary>
+        public int ExpirationCheckTimeInMinutes { get; set; }
+        /// <summary>
+        /// Maximum duration per storage item
+        /// </summary>
+        public TimeSpan? MaximumItemDuration { get; set; }
+        /// <summary>
+        /// Overwrites the expiration date setted by each item in DateTime.
+        /// </summary>
+        public DateTime? ItemsExpirationAbsoluteDateOverwrite { get; set; }
+        /// <summary>
+        /// Overwrites the expiration date setted by each item in TimeSpan.
+        /// </summary>
+        public TimeSpan? ItemsExpirationDateOverwrite { get; set; }
+        #endregion
+
         #region .ctor
         /// <summary>
         /// Storage Manager
@@ -109,7 +109,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageManager(IEnumerable<IStorage> storages)
         {
-			_storageStack = new Stack<IStorage>(storages.RemoveNulls());
+            _storageStack = new Stack<IStorage>(storages.RemoveNulls());
             _storages = _storageStack.ToArray();
             BindStatusHandlers();
             LoadExtensions();
@@ -123,7 +123,7 @@ namespace TWCore.Cache
                 collection.AddOk("Stack", _storageStack.Select(s => s.ToString()).Join(", "));
                 collection.AddOk("Loaded extensions", _extensions.Count);
                 foreach (var s in _storageStack)
-	                Core.Status.AttachChild(s, this);
+                    Core.Status.AttachChild(s, this);
             });
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,85 +139,24 @@ namespace TWCore.Cache
                 _extensions.TryAdd(extName, ext);
             }
         }
-		#endregion
+        #endregion
 
-		#region Private Methods
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TR ReturnFromStack<TR, TA1>(ref TA1 arg1, RefFunc<IStorage, TA1, TR> functionValueToLook, RefAction<IStorage, TA1, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, TR defaultValue = default)
-		{
-		    if (_storages is null) throw new Exception("There are not storages on the stack");
-		    if (functionValueToLook is null) throw new ArgumentException("The function to compare value is null");
-			ReferencePool<Stack<IStorage>> refPool = null;
-			Stack<IStorage> noDataStack = null;
-			var actionToPrevious = actionOnPreviousStorages != null;
-			if (actionToPrevious) 
-			{
-				refPool = ReferencePool<Stack<IStorage>>.Shared;
-				noDataStack = refPool.New();
-			}
-            var response = defaultValue;
-			var found = false;
-            for (var i = 0; i < _storages.Length; i++)
-            {
-                var storage = _storages[i];
-			    if (storage is null)
-			    {
-			        Core.Log.Warning("A Storage in the stack is null.");
-			        continue;
-			    }
-			    if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				var functionResponse = functionValueToLook(ref storage, ref arg1);
-				var bCondition = breakCondition?.Invoke(ref functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
-				if (bCondition)
-				{
-					response = functionResponse;
-					found = true;
-					break;
-				}
-			    if (actionToPrevious)
-			    {
-			        if (noDataStack is null)
-			            throw new Exception("The data stack is null.");
-			        noDataStack.Push(storage);
-			    }
-			}
-			if (!actionToPrevious)
-			    return response;
-            if (found)
-			{
-				while (noDataStack.Count > 0) 
-				{
-					try 
-					{
-                        var nds = noDataStack.Pop();
-                        actionOnPreviousStorages(ref nds, ref arg1, ref response);
-					}
-					catch(Exception ex) 
-					{
-						Core.Log.Write(ex);
-					}
-				}
-			}
-			else
-				noDataStack.Clear();
-			refPool.Store(noDataStack);
-			return response;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TR ReturnFromStack<TR, TA1, TA2>(ref TA1 arg1, ref TA2 arg2, RefFunc<IStorage, TA1, TA2, TR> functionValueToLook, RefAction<IStorage, TA1, TA2, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, TR defaultValue = default)
-		{
-		    if (_storages is null) throw new Exception("There are not storages on the stack");
-		    if (functionValueToLook is null) throw new ArgumentException("The function to compare value is null");
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private TR ReturnFromStack<TR, TA1>(ref TA1 arg1, RefFunc<IStorage, TA1, TR> functionValueToLook, RefAction<IStorage, TA1, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, TR defaultValue = default)
+        {
+            if (_storages is null) throw new Exception("There are not storages on the stack");
+            if (functionValueToLook is null) throw new ArgumentException("The function to compare value is null");
             ReferencePool<Stack<IStorage>> refPool = null;
-			Stack<IStorage> noDataStack = null;
-			var actionToPrevious = actionOnPreviousStorages != null;
-			if (actionToPrevious)
-			{
-				refPool = ReferencePool<Stack<IStorage>>.Shared;
-				noDataStack = refPool.New();
-			}
-			var response = defaultValue;
-			var found = false;
+            Stack<IStorage> noDataStack = null;
+            var actionToPrevious = actionOnPreviousStorages != null;
+            if (actionToPrevious)
+            {
+                refPool = ReferencePool<Stack<IStorage>>.Shared;
+                noDataStack = refPool.New();
+            }
+            var response = defaultValue;
+            var found = false;
             for (var i = 0; i < _storages.Length; i++)
             {
                 var storage = _storages[i];
@@ -227,14 +166,14 @@ namespace TWCore.Cache
                     continue;
                 }
                 if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				var functionResponse = functionValueToLook(ref storage, ref arg1, ref arg2);
-				var bCondition = breakCondition?.Invoke(ref functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
-				if (bCondition)
-				{
-					response = functionResponse;
-					found = true;
-					break;
-				}
+                var functionResponse = functionValueToLook(ref storage, ref arg1);
+                var bCondition = breakCondition?.Invoke(ref functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
+                if (bCondition)
+                {
+                    response = functionResponse;
+                    found = true;
+                    break;
+                }
                 if (actionToPrevious)
                 {
                     if (noDataStack is null)
@@ -242,109 +181,170 @@ namespace TWCore.Cache
                     noDataStack.Push(storage);
                 }
             }
-			if (!actionToPrevious)
-			    return response;
+            if (!actionToPrevious)
+                return response;
             if (found)
-			{
-				while (noDataStack.Count > 0) 
-				{
-					try 
-					{
+            {
+                while (noDataStack.Count > 0)
+                {
+                    try
+                    {
+                        var nds = noDataStack.Pop();
+                        actionOnPreviousStorages(ref nds, ref arg1, ref response);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+            }
+            else
+                noDataStack.Clear();
+            refPool.Store(noDataStack);
+            return response;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private TR ReturnFromStack<TR, TA1, TA2>(ref TA1 arg1, ref TA2 arg2, RefFunc<IStorage, TA1, TA2, TR> functionValueToLook, RefAction<IStorage, TA1, TA2, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, TR defaultValue = default)
+        {
+            if (_storages is null) throw new Exception("There are not storages on the stack");
+            if (functionValueToLook is null) throw new ArgumentException("The function to compare value is null");
+            ReferencePool<Stack<IStorage>> refPool = null;
+            Stack<IStorage> noDataStack = null;
+            var actionToPrevious = actionOnPreviousStorages != null;
+            if (actionToPrevious)
+            {
+                refPool = ReferencePool<Stack<IStorage>>.Shared;
+                noDataStack = refPool.New();
+            }
+            var response = defaultValue;
+            var found = false;
+            for (var i = 0; i < _storages.Length; i++)
+            {
+                var storage = _storages[i];
+                if (storage is null)
+                {
+                    Core.Log.Warning("A Storage in the stack is null.");
+                    continue;
+                }
+                if (!storage.IsEnabled() || !storage.IsReady()) continue;
+                var functionResponse = functionValueToLook(ref storage, ref arg1, ref arg2);
+                var bCondition = breakCondition?.Invoke(ref functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
+                if (bCondition)
+                {
+                    response = functionResponse;
+                    found = true;
+                    break;
+                }
+                if (actionToPrevious)
+                {
+                    if (noDataStack is null)
+                        throw new Exception("The data stack is null.");
+                    noDataStack.Push(storage);
+                }
+            }
+            if (!actionToPrevious)
+                return response;
+            if (found)
+            {
+                while (noDataStack.Count > 0)
+                {
+                    try
+                    {
                         var nds = noDataStack.Pop();
                         actionOnPreviousStorages(ref nds, ref arg1, ref arg2, ref response);
-					}
-					catch(Exception ex) 
-					{
-						Core.Log.Write(ex);
-					}
-				}
-			}
-			else
-				noDataStack.Clear();
-			refPool.Store(noDataStack);
-			return response;
-		}
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+            }
+            else
+                noDataStack.Clear();
+            refPool.Store(noDataStack);
+            return response;
+        }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool ExecuteInAllStack<TA1>(ref TA1 arg1, RefAction<IStorage, TA1> actionPushData)
-		{
-			var ret = true;
-            for (var i = 0; i < _storages.Length; i++)
-			{
-                var storage = _storages[i];
-				if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				try
-				{
-					actionPushData(ref storage, ref arg1);
-				}
-				catch (Exception ex)
-				{
-					ret = false;
-					Core.Log.Write(ex);
-				}
-			}
-			return ret;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool ExecuteInAllStack<TA1, TA2>(ref TA1 arg1, ref TA2 arg2, RefAction<IStorage, TA1, TA2> actionPushData)
-		{
-			var ret = true;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool ExecuteInAllStack<TA1>(ref TA1 arg1, RefAction<IStorage, TA1> actionPushData)
+        {
+            var ret = true;
             for (var i = 0; i < _storages.Length; i++)
             {
                 var storage = _storages[i];
                 if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				try
-				{
-					actionPushData(ref storage, ref arg1, ref arg2);
-				}
-				catch (Exception ex)
-				{
-					ret = false;
-					Core.Log.Write(ex);
-				}
-			}
-			return ret;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool ExecuteInAllStack<TA1, TA2, TA3>(ref TA1 arg1, ref TA2 arg2, ref TA3 arg3, RefAction<IStorage, TA1, TA2, TA3> actionPushData)
-		{
-			var ret = true;
+                try
+                {
+                    actionPushData(ref storage, ref arg1);
+                }
+                catch (Exception ex)
+                {
+                    ret = false;
+                    Core.Log.Write(ex);
+                }
+            }
+            return ret;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool ExecuteInAllStack<TA1, TA2>(ref TA1 arg1, ref TA2 arg2, RefAction<IStorage, TA1, TA2> actionPushData)
+        {
+            var ret = true;
             for (var i = 0; i < _storages.Length; i++)
-			{
+            {
                 var storage = _storages[i];
                 if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				try
-				{
-					actionPushData(ref storage, ref arg1, ref arg2, ref arg3);
-				}
-				catch (Exception ex)
-				{
-					ret = false;
-					Core.Log.Write(ex);
-				}
-			}
-			return ret;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool ExecuteInAllStack<TA1, TA2, TA3, TA4>(ref TA1 arg1, ref TA2 arg2, ref TA3 arg3, ref TA4 arg4, RefAction<IStorage, TA1, TA2, TA3, TA4> actionPushData)
-		{
-			var ret = true;
+                try
+                {
+                    actionPushData(ref storage, ref arg1, ref arg2);
+                }
+                catch (Exception ex)
+                {
+                    ret = false;
+                    Core.Log.Write(ex);
+                }
+            }
+            return ret;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool ExecuteInAllStack<TA1, TA2, TA3>(ref TA1 arg1, ref TA2 arg2, ref TA3 arg3, RefAction<IStorage, TA1, TA2, TA3> actionPushData)
+        {
+            var ret = true;
             for (var i = 0; i < _storages.Length; i++)
-			{
+            {
                 var storage = _storages[i];
                 if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				try
-				{
-					actionPushData(ref storage, ref arg1, ref arg2, ref arg3, ref arg4);
-				}
-				catch (Exception ex)
-				{
-					ret = false;
-					Core.Log.Write(ex);
-				}
-			}
-			return ret;
-		}
+                try
+                {
+                    actionPushData(ref storage, ref arg1, ref arg2, ref arg3);
+                }
+                catch (Exception ex)
+                {
+                    ret = false;
+                    Core.Log.Write(ex);
+                }
+            }
+            return ret;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool ExecuteInAllStack<TA1, TA2, TA3, TA4>(ref TA1 arg1, ref TA2 arg2, ref TA3 arg3, ref TA4 arg4, RefAction<IStorage, TA1, TA2, TA3, TA4> actionPushData)
+        {
+            var ret = true;
+            for (var i = 0; i < _storages.Length; i++)
+            {
+                var storage = _storages[i];
+                if (!storage.IsEnabled() || !storage.IsReady()) continue;
+                try
+                {
+                    actionPushData(ref storage, ref arg1, ref arg2, ref arg3, ref arg4);
+                }
+                catch (Exception ex)
+                {
+                    ret = false;
+                    Core.Log.Write(ex);
+                }
+            }
+            return ret;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private List<TR> ExecuteInAllStackAndReturn<TR, TA1>(TA1 arg1, Func<IStorage, TA1, TR> functionPushData)
@@ -368,26 +368,26 @@ namespace TWCore.Cache
             return responses;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
-		{
-		    var responses = _storages
-		        .Where(sto => sto.IsEnabled() && sto.IsReady())
-		        .AsParallel()
-		        .Select(sto => 
-		        {
-		            try
-		            {
-		                return functionPushData(sto, arg1, arg2);
-		            }
-		            catch (Exception ex)
-		            {
-		                Core.Log.Write(ex);
-		                return default;
-		            }
+        private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
+        {
+            var responses = _storages
+                .Where(sto => sto.IsEnabled() && sto.IsReady())
+                .AsParallel()
+                .Select(sto =>
+                {
+                    try
+                    {
+                        return functionPushData(sto, arg1, arg2);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                        return default;
+                    }
                 })
-		        .ToList();
-			return responses;
-		}
+                .ToList();
+            return responses;
+        }
         #endregion
 
         #region Stack Methods
@@ -413,7 +413,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Push(IStorage item)
         {
-			if (item is null) return;
+            if (item is null) return;
             _storageStack.Push(item);
             _storages = _storageStack.ToArray();
             if (item is StorageBase sBase)
@@ -436,9 +436,9 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
-	        if (_storages == null) return;
-	        foreach (var s in _storages)
-		        s.Init();
+            if (_storages == null) return;
+            foreach (var s in _storages)
+                s.Init();
         }
 
         #region Exist Key / Get Keys
@@ -466,7 +466,7 @@ namespace TWCore.Cache
             if (keys is null) return null;
             var dictionary = new Dictionary<string, bool>();
             for (var i = 0; i < keys.Length; i++)
-                    dictionary[keys[i]] = ReturnFromStack(ref keys[i], ExistLook);
+                dictionary[keys[i]] = ReturnFromStack(ref keys[i], ExistLook);
             return dictionary;
         }
         /// <inheritdoc />
@@ -475,23 +475,25 @@ namespace TWCore.Cache
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public string[] GetKeys() 
-		{
-			var keys = new HashSet<string>(StringComparer.Ordinal);
-			foreach (var storage in _storages)
-			{
-				if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				try
-				{
-                    keys.UnionWith(storage.GetKeys());
-				}
-				catch (Exception ex)
-				{
-					Core.Log.Write(ex);
-				}
-			}
-			return keys.ToArray();
-		}
+        public string[] GetKeys()
+        {
+            var stoLength = _storages.Length;
+            string[] sKeys = null;
+            for (var i = 0; i < stoLength; i++)
+            {
+                try
+                {
+                    var cKeys = _storages[i].GetKeys();
+                    if (sKeys == null || sKeys.Length < cKeys.Length)
+                        sKeys = cKeys;
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+            }
+            return sKeys;
+        }
         #endregion
 
         #region Get Dates
@@ -554,7 +556,7 @@ namespace TWCore.Cache
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key, DateTime comparer)
-			=> ReturnFromStack(ref key, ref comparer, GetMetaLook);
+            => ReturnFromStack(ref key, ref comparer, GetMetaLook);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
@@ -696,7 +698,7 @@ namespace TWCore.Cache
             if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
-                    dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref lastTime, GetLook, GetSetAction);
+                dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref lastTime, GetLook, GetSetAction);
             return dictionary;
         }
         /// <inheritdoc />
@@ -720,38 +722,38 @@ namespace TWCore.Cache
         #region Set Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SetAction(ref IStorage sto, ref StorageItem item) => sto.Set(item);
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private static void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private StorageItemMeta CreateStorageItemMeta(string key, DateTime? expirationDate, string[] tags)
-	    {
-		    var dateNow = Core.Now;
-		    var expDate = expirationDate;
-		    if (ItemsExpirationAbsoluteDateOverwrite.HasValue)
-			    expDate = ItemsExpirationAbsoluteDateOverwrite.Value;
-		    else if (ItemsExpirationDateOverwrite.HasValue)
-			    expDate = dateNow.Add(ItemsExpirationDateOverwrite.Value);
-		    if (MaximumItemDuration.HasValue)
-		    {
-			    if (expDate.HasValue)
-			    {
-				    var expTime = expDate.Value - dateNow;
-				    expDate = dateNow.Add(TimeSpan.FromMilliseconds(Math.Min(expTime.TotalMilliseconds, MaximumItemDuration.Value.TotalMilliseconds)));
-			    }
-			    else
-				    expDate = dateNow.Add(MaximumItemDuration.Value);
-		    }
-		    var meta = GetMeta(key);
-		    if (meta != null)
-		    {
-			    meta.CreationDate = dateNow;
-			    meta.ExpirationDate = expDate;
-			    meta.Tags = tags?.Distinct().ToList();
-		    }
-		    else
-		    	meta = StorageItemMeta.Create(key, expDate, tags);
-		    return meta;
-	    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private StorageItemMeta CreateStorageItemMeta(string key, DateTime? expirationDate, string[] tags)
+        {
+            var dateNow = Core.Now;
+            var expDate = expirationDate;
+            if (ItemsExpirationAbsoluteDateOverwrite.HasValue)
+                expDate = ItemsExpirationAbsoluteDateOverwrite.Value;
+            else if (ItemsExpirationDateOverwrite.HasValue)
+                expDate = dateNow.Add(ItemsExpirationDateOverwrite.Value);
+            if (MaximumItemDuration.HasValue)
+            {
+                if (expDate.HasValue)
+                {
+                    var expTime = expDate.Value - dateNow;
+                    expDate = dateNow.Add(TimeSpan.FromMilliseconds(Math.Min(expTime.TotalMilliseconds, MaximumItemDuration.Value.TotalMilliseconds)));
+                }
+                else
+                    expDate = dateNow.Add(MaximumItemDuration.Value);
+            }
+            var meta = GetMeta(key);
+            if (meta != null)
+            {
+                meta.CreationDate = dateNow;
+                meta.ExpirationDate = expDate;
+                meta.Tags = tags?.Distinct().ToList();
+            }
+            else
+                meta = StorageItemMeta.Create(key, expDate, tags);
+            return meta;
+        }
 
         /// <inheritdoc />
         /// <summary>
@@ -796,9 +798,9 @@ namespace TWCore.Cache
         /// <param name="data">Item Data</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(string key, SerializedObject data)
-	    {
-		    var meta = CreateStorageItemMeta(key, null, null);
+        public bool Set(string key, SerializedObject data)
+        {
+            var meta = CreateStorageItemMeta(key, null, null);
             var res = ExecuteInAllStack(ref meta, ref data, SetAction);
             if (res)
             {
@@ -807,18 +809,18 @@ namespace TWCore.Cache
             }
             return res;
         }
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="key">Item Key</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
-	    {
-		    var meta = CreateStorageItemMeta(key, Core.Now.Add(expirationDate), null);
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
+        {
+            var meta = CreateStorageItemMeta(key, Core.Now.Add(expirationDate), null);
             var res = ExecuteInAllStack(ref meta, ref data, SetAction);
             if (res)
             {
@@ -827,19 +829,19 @@ namespace TWCore.Cache
             }
             return res;
         }
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="key">Item Key</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <param name="tags">Items meta tags</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
-	    {
-		    var meta = CreateStorageItemMeta(key, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+        {
+            var meta = CreateStorageItemMeta(key, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
             var res = ExecuteInAllStack(ref meta, ref data, SetAction);
             if (res)
             {
@@ -849,18 +851,18 @@ namespace TWCore.Cache
             return res;
         }
 
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="key">Item Key</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(string key, SerializedObject data, DateTime expirationDate)
-	    {
-		    var meta = CreateStorageItemMeta(key, expirationDate, null);
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(string key, SerializedObject data, DateTime expirationDate)
+        {
+            var meta = CreateStorageItemMeta(key, expirationDate, null);
             var res = ExecuteInAllStack(ref meta, ref data, SetAction);
             if (res)
             {
@@ -869,19 +871,19 @@ namespace TWCore.Cache
             }
             return res;
         }
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="key">Item Key</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <param name="tags">Items meta tags</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
-	    {
-		    var meta = CreateStorageItemMeta(key, expirationDate, tags);
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
+        {
+            var meta = CreateStorageItemMeta(key, expirationDate, tags);
             var res = ExecuteInAllStack(ref meta, ref data, SetAction);
             if (res)
             {
@@ -904,9 +906,9 @@ namespace TWCore.Cache
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(StorageItem[] items)
-        { 
+        {
             var res = ExecuteInAllStack(ref items, SetMultiAction);
-            if (res && items != null && items.Length > 0 )
+            if (res && items != null && items.Length > 0)
             {
                 foreach (var item in items)
                 {
@@ -926,85 +928,85 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data)
         {
-	        if (keys is null) return false;
-	        var res = true;
-	        foreach (var key in keys)
-		        res &= Set(key, data);
-	        return res;
+            if (keys is null) return false;
+            var res = true;
+            foreach (var key in keys)
+                res &= Set(key, data);
+            return res;
         }
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="keys">Items Keys</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
-	    {
-		    if (keys is null) return false;
-		    var res = true;
-		    foreach (var key in keys)
-			    res &= Set(key, data, expirationDate);
-		    return res;
-	    }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
+        {
+            if (keys is null) return false;
+            var res = true;
+            foreach (var key in keys)
+                res &= Set(key, data, expirationDate);
+            return res;
+        }
 
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="keys">Items Keys</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <param name="tags">Items meta tags</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
-	    {
-		    if (keys is null) return false;
-		    var res = true;
-		    foreach (var key in keys)
-			    res &= Set(key, data, expirationDate, tags);
-		    return res;
-	    }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+        {
+            if (keys is null) return false;
+            var res = true;
+            foreach (var key in keys)
+                res &= Set(key, data, expirationDate, tags);
+            return res;
+        }
 
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="keys">Items Keys</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
-	    {
-		    if (keys is null) return false;
-		    var res = true;
-		    foreach (var key in keys)
-			    res &= Set(key, data, expirationDate);
-		    return res;
-	    }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
+        {
+            if (keys is null) return false;
+            var res = true;
+            foreach (var key in keys)
+                res &= Set(key, data, expirationDate);
+            return res;
+        }
 
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="keys">Items Keys</param>
-	    /// <param name="data">Item Data</param>
-	    /// <param name="expirationDate">Item expiration date</param>
-	    /// <param name="tags">Items meta tags</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
-	    {
-		    if (keys is null) return false;
-		    var res = true;
-		    foreach (var key in keys)
-			    res &= Set(key, data, expirationDate, tags);
-		    return res;
-	    }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+        {
+            if (keys is null) return false;
+            var res = true;
+            foreach (var key in keys)
+                res &= Set(key, data, expirationDate, tags);
+            return res;
+        }
         #endregion
 
         #region Update/Remove Data/Copy
@@ -1067,17 +1069,17 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] RemoveByTag(string[] tags, bool containingAll)
         {
-			var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.RemoveByTag(arg1, arg2))
-				.SelectMany(a => a)
-				.Distinct()
-				.ToArray();
+            var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.RemoveByTag(arg1, arg2))
+                .SelectMany(a => a)
+                .Distinct()
+                .ToArray();
             if (res.Length > 0)
             {
                 IndexReportRemoveTags(tags);
                 foreach (var str in res)
                     OnRemove?.Invoke(this, str);
             }
-			return res;
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -1165,7 +1167,7 @@ namespace TWCore.Cache
             }
 
             var lstIndexes = new List<(string Tag, ConcurrentDictionary<string, object> Keys)>();
-            foreach(var tag in tags)
+            foreach (var tag in tags)
             {
                 if (!_indexes.TryGetValue(tag, out var keys)) return null;
                 lstIndexes.Add((tag, keys));
@@ -1191,13 +1193,13 @@ namespace TWCore.Cache
                 return dct.Where(d => d.Value.Count == tags.Length).Select(i => i.Key).ToArray();
             }
 
-	        var hset = new HashSet<string>();
-	        foreach (var (_, keys) in lstIndexes)
-	        {
-		        foreach (var key in keys.Keys)
-			        hset.Add(key);
-	        }
-	        return hset.ToArray();
+            var hset = new HashSet<string>();
+            foreach (var (_, keys) in lstIndexes)
+            {
+                foreach (var key in keys.Keys)
+                    hset.Add(key);
+            }
+            return hset.ToArray();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void IndexCreate(string[] tags)
@@ -1206,7 +1208,7 @@ namespace TWCore.Cache
             {
                 if (tags is null) return;
                 if (tags.Length == 0) return;
-                foreach(var tag in tags)
+                foreach (var tag in tags)
                 {
                     if (_processingTag.TryGetValue(tag, out _)) continue;
                     Core.Log.LibVerbose("Creating index for tag: '{0}'", tag);
@@ -1215,7 +1217,7 @@ namespace TWCore.Cache
                     if (res != null)
                     {
                         var cValue = new ConcurrentDictionary<string, object>();
-                        foreach(var item in res)
+                        foreach (var item in res)
                             cValue.TryAdd(item.Key, null);
                         _indexes.TryAdd(tag, cValue);
                     }
@@ -1229,7 +1231,7 @@ namespace TWCore.Cache
         {
             if (meta?.Tags != null && meta.Tags.Count > 0)
             {
-                foreach(var tag in meta.Tags)
+                foreach (var tag in meta.Tags)
                 {
                     if (!_indexes.TryGetValue(tag, out var keyList)) continue;
                     Core.Log.LibVerbose("Refreshing index for tag: '{0}'", tag);
@@ -1285,23 +1287,23 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void Dispose(bool disposing)
         {
-	        if (_disposedValue) return;
-	        if (disposing)
-	        {
-		        foreach (var s in _storageStack)
-		        {
-			        var sM = s as StorageBase;
-			        sM?.Dispose();
-		        }
+            if (_disposedValue) return;
+            if (disposing)
+            {
+                foreach (var s in _storageStack)
+                {
+                    var sM = s as StorageBase;
+                    sM?.Dispose();
+                }
                 lock (_extensions)
                 {
                     foreach (var ext in _extensions)
                         ext.Value.Dispose();
                     _extensions.Clear();
                 }
-		        _storageStack.Clear();
-	        }
-	        _disposedValue = true;
+                _storageStack.Clear();
+            }
+            _disposedValue = true;
         }
         /// <inheritdoc />
         /// <summary>

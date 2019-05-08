@@ -90,8 +90,8 @@ namespace TWCore.Diagnostics.Counters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T value)
         {
-            //Now with a truncate to a second
-            var now = Core.Now.TruncateTo(TimeSpan.FromSeconds(1));
+            //Now with a truncate to 5 seconds
+            var now = Core.Now.TruncateTo(TimeSpan.FromSeconds(5));
             var lastValue = _lastValue;
             if (lastValue?.Timestamp == now)
             {

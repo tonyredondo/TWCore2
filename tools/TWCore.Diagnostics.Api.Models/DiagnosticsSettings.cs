@@ -64,6 +64,10 @@ namespace TWCore.Diagnostics
         /// <summary>
         /// Parallel messaging process
         /// </summary>
-        public int ParallelMessagingProcess { get; set; } = 2;
+        public int ParallelMessagingProcess { get; set; } = 5;
+        /// <summary>
+        /// Process timer in seconds
+        /// </summary>
+        public int ProcessTimerInSeconds { get; set; } = 10;
     }
 }

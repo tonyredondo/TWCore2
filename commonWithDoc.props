@@ -1,8 +1,12 @@
 <Project>
   <Import Project="common.props" />
-  <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;netstandard2.0;net461</TargetFrameworks>
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;netstandard2.0;net461;net472</TargetFrameworks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)' == 'Unix'">
+    <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;netstandard2.0</TargetFrameworks>
+  </PropertyGroup>
+  
   <PropertyGroup>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
@@ -10,4 +14,6 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net461'  Or '$(TargetFramework)' == 'net462'">
     <DefineConstants>COMPATIBILITY</DefineConstants>
   </PropertyGroup>
+  
+  
 </Project>

@@ -15,7 +15,10 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Bot;
 using TWCore.Diagnostics.Counters;
 using TWCore.Diagnostics.Log;
@@ -32,7 +35,13 @@ namespace TWCore.Diagnostics.Api
     public class DiagnosticRawMessagingServiceAsync : RawMessagingServiceAsync
     {
         private static readonly DiagnosticsSettings Settings = Core.GetSettings<DiagnosticsSettings>();
-
+        private readonly BlockingCollection<LogItem> _logItems = new BlockingCollection<LogItem>();
+        private readonly BlockingCollection<GroupMetadata> _groupsMetadata = new BlockingCollection<GroupMetadata>();
+        private readonly BlockingCollection<MessagingTraceItem> _messagingTraceItems = new BlockingCollection<MessagingTraceItem>();
+        private readonly BlockingCollection<ICounterItem> _counterItems = new BlockingCollection<ICounterItem>();
+        private Timer _processTimer;
+        private int _inProcess = 0;
+        
         protected override void OnInit(string[] args)
         {
             Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes = 1;
@@ -41,8 +50,45 @@ namespace TWCore.Diagnostics.Api
             base.OnInit(args);
 
             DbHandlers.Instance.Messages.Init();
+
+            var processTimerTimeSpan = TimeSpan.FromSeconds(Settings.ProcessTimerInSeconds);
+            _processTimer = new Timer(ProcessItems, null, processTimerTimeSpan, processTimerTimeSpan);
         }
 
+        private void ProcessItems(object state)
+        {
+            if (Interlocked.CompareExchange(ref _inProcess, 1, 0) == 1) return;
+            try
+            {
+                var lstLogs = new List<LogItem>();
+                while (_logItems.TryTake(out var item, 100))
+                    lstLogs.Add(item);
+                var logTask = lstLogs.Count > 0 ? DbHandlers.Instance.Messages.ProcessLogItemsMessageAsync(lstLogs) : Task.CompletedTask;
+
+                var lstGroupsMeta = new List<GroupMetadata>();
+                while (_groupsMetadata.TryTake(out var item, 100))
+                    lstGroupsMeta.Add(item);
+                var groupTask = lstGroupsMeta.Count > 0 ? DbHandlers.Instance.Messages.ProcessGroupMetadataMessageAsync(lstGroupsMeta) : Task.CompletedTask;
+
+                var lstTraces = new List<MessagingTraceItem>();
+                while (_messagingTraceItems.TryTake(out var item, 100))
+                    lstTraces.Add(item);
+                var traceTask = lstTraces.Count > 0 ? DbHandlers.Instance.Messages.ProcessTraceItemsMessageAsync(lstTraces) : Task.CompletedTask;
+
+                var lstCounters = new List<ICounterItem>();
+                while (_counterItems.TryTake(out var item, 100))
+                    lstCounters.Add(item);
+                var counterTask = lstCounters.Count > 0 ? DbHandlers.Instance.Messages.ProcessCountersMessageAsync(lstCounters) : Task.CompletedTask;
+
+
+                Task.WaitAll(logTask, groupTask, traceTask, counterTask);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _inProcess, 0);
+            }
+        }
+        
         #region Overrides
         /// <inheritdoc />
         /// <summary>
@@ -58,28 +104,31 @@ namespace TWCore.Diagnostics.Api
                 var rcvMessage = server.ReceiverSerializer.Deserialize<object>(message.Request);
                 if (rcvMessage is List<LogItem> msgLogs)
                 {
-                    if (msgLogs is null || msgLogs.Count == 0) return;
-                    await DbHandlers.Instance.Messages.ProcessLogItemsMessageAsync(msgLogs).ConfigureAwait(false);
+                    if (msgLogs.Count == 0) return;
+                    foreach(var item in msgLogs)
+                        _logItems.Add(item);
                 }
                 else if (rcvMessage is List<GroupMetadata> msgGroups)
                 {
-                    if (msgGroups is null || msgGroups.Count == 0) return;
-                    await DbHandlers.Instance.Messages.ProcessGroupMetadataMessageAsync(msgGroups).ConfigureAwait(false);
+                    if (msgGroups.Count == 0) return;
+                    foreach (var item in msgGroups)
+                        _groupsMetadata.Add(item);
                 }
                 else if (rcvMessage is List<MessagingTraceItem> msgTraces)
                 {
-                    if (msgTraces is null || msgTraces.Count == 0) return;
-                    await DbHandlers.Instance.Messages.ProcessTraceItemsMessageAsync(msgTraces).ConfigureAwait(false);
+                    if (msgTraces.Count == 0) return;
+                    foreach (var item in msgTraces)
+                        _messagingTraceItems.Add(item);
                 }
                 else if (rcvMessage is StatusItemCollection msgStatus)
                 {
-                    if (msgStatus is null) return;
                     await DbHandlers.Instance.Messages.ProcessStatusMessageAsync(msgStatus).ConfigureAwait(false);
                 }
                 else if (rcvMessage is List<ICounterItem> msgCounters)
                 {
-                    if (msgCounters is null || msgCounters.Count == 0) return;
-                    await DbHandlers.Instance.Messages.ProcessCountersMessageAsync(msgCounters).ConfigureAwait(false);
+                    if (msgCounters.Count == 0) return;
+                    foreach (var item in msgCounters)
+                        _counterItems.Add(item);
                 }
             });
             return processor;

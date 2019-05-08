@@ -310,7 +310,7 @@ namespace TWCore.Diagnostics.Counters
             /// <summary>
             /// Gets or sets the flush timeout in seconds
             /// </summary>
-            public int FlushTimeoutInSeconds { get; set; } = 10;
+            public int FlushTimeoutInSeconds { get; set; } = 30;
             /// <summary>
             /// Gets or sets the maximum counter values batch per counter
             /// </summary>

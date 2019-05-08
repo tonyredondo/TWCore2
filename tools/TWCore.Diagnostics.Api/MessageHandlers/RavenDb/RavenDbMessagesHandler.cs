@@ -70,7 +70,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
         public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
         {
-            using (Watch.Create("Processing LogItems List Message", LogLevel.InfoBasic))
+            if (message is null) return;
+            using (Watch.Create($"Processing LogItems List Message [{message.Count} items]", LogLevel.InfoBasic))
             {
                 await RavenHelper.BulkInsertAsync(async bulkOp =>
                 {
@@ -107,7 +108,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
         public async Task ProcessGroupMetadataMessageAsync(List<GroupMetadata> message)
         {
-            using (Watch.Create("Processing GroupMetadata List Message", LogLevel.InfoBasic))
+            if (message is null) return;
+            using (Watch.Create($"Processing GroupMetadata List Message [{message.Count} items]", LogLevel.InfoBasic))
             {
                 await RavenHelper.BulkInsertAsync(async bulkOp =>
                 {
@@ -126,7 +128,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
         public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
         {
-            using (Watch.Create("Processing TraceItems List Message", LogLevel.InfoBasic))
+            if (message is null) return;
+            using (Watch.Create($"Processing TraceItems List Message [{message.Count} items]", LogLevel.InfoBasic))
             {
                 foreach (var traceItem in message)
                 {
@@ -343,6 +346,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
         public async Task ProcessStatusMessageAsync(StatusItemCollection message)
         {
+            if (message is null) return;
             using (Watch.Create("Processing StatusItemCollection Message", LogLevel.InfoBasic))
             {
                 await RavenHelper.ExecuteAsync(async session =>
@@ -367,8 +371,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
         public async Task ProcessCountersMessageAsync(List<ICounterItem> message)
         {
-            using (var watch = Watch.Create("Processing Counter item List Message", LogLevel.InfoBasic))
+            if (message is null) return;
+            using (var watch = Watch.Create($"Processing Counter item List Message [{message.Count} items]", LogLevel.InfoBasic))
             {
+                var lstCounters = new List<NodeCountersValue>();
+
                 foreach (var counter in message)
                 {
                     NodeCountersItem cEntity = null;
@@ -402,77 +409,60 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         }
                     }).ConfigureAwait(false);
 
-
                     if (counter is CounterItem<int> intCounter)
                     {
-                        await RavenHelper.BulkInsertAsync(async bulkOp =>
+                        foreach (var value in intCounter.Values)
                         {
-                            try
+                            var nValue = new NodeCountersValue
                             {
-                                foreach (var value in intCounter.Values)
-                                {
-                                    var nValue = new NodeCountersValue
-                                    {
-                                        CountersId = cEntity.CountersId,
-                                        Timestamp = value.Timestamp,
-                                        Value = value.Value
-                                    };
-                                    await bulkOp.StoreAsync(nValue).ConfigureAwait(false);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                            }
-                        }).ConfigureAwait(false);
+                                CountersId = cEntity.CountersId,
+                                Timestamp = value.Timestamp,
+                                Value = value.Value
+                            };
+                            lstCounters.Add(nValue);
+                        }
                     }
                     else if (counter is CounterItem<double> doubleCounter)
                     {
-                        await RavenHelper.BulkInsertAsync(async bulkOp =>
+                        foreach (var value in doubleCounter.Values)
                         {
-                            try
+                            var nValue = new NodeCountersValue
                             {
-                                foreach (var value in doubleCounter.Values)
-                                {
-                                    var nValue = new NodeCountersValue
-                                    {
-                                        CountersId = cEntity.CountersId,
-                                        Timestamp = value.Timestamp,
-                                        Value = value.Value
-                                    };
-                                    await bulkOp.StoreAsync(nValue).ConfigureAwait(false);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                            }
-                        }).ConfigureAwait(false);
+                                CountersId = cEntity.CountersId,
+                                Timestamp = value.Timestamp,
+                                Value = value.Value
+                            };
+                            lstCounters.Add(nValue);
+                        }
                     }
                     else if (counter is CounterItem<decimal> decimalCounter)
                     {
-                        await RavenHelper.BulkInsertAsync(async bulkOp =>
+                        foreach (var value in decimalCounter.Values)
                         {
-                            try
+                            var nValue = new NodeCountersValue
                             {
-                                foreach (var value in decimalCounter.Values)
-                                {
-                                    var nValue = new NodeCountersValue
-                                    {
-                                        CountersId = cEntity.CountersId,
-                                        Timestamp = value.Timestamp,
-                                        Value = value.Value
-                                    };
-                                    await bulkOp.StoreAsync(nValue).ConfigureAwait(false);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                            }
-                        }).ConfigureAwait(false);
+                                CountersId = cEntity.CountersId,
+                                Timestamp = value.Timestamp,
+                                Value = value.Value
+                            };
+                            lstCounters.Add(nValue);
+                        }
                     }
+                    
                 }
+                
+                await RavenHelper.BulkInsertAsync(async bulkOp =>
+                {
+                    try
+                    {
+                        foreach (var value in lstCounters)
+                            await bulkOp.StoreAsync(value).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }).ConfigureAwait(false);
             }
         }
 

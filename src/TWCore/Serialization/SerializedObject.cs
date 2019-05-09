@@ -38,13 +38,10 @@ namespace TWCore.Serialization
     {
         private static readonly ConcurrentDictionary<string, ISerializer> SerializerCache = new ConcurrentDictionary<string, ISerializer>();
         private static readonly InstanceLockerAsync<string> FileLockerAsync = new InstanceLockerAsync<string>(2048);
-        //private static readonly ConditionalWeakTable<object, ConcurrentDictionary<string, SerializedObject>> WeakCache 
-        //    = new ConditionalWeakTable<object, ConcurrentDictionary<string, SerializedObject>>();
         private bool _canCollect;
         private MultiArray<byte> _data;
         private string _dataType;
         private string _serializerMimeType;
-        //private WeakReference<object> _originalObject;
 
         /// <summary>
         /// Serialized Object File Extension
@@ -101,7 +98,6 @@ namespace TWCore.Serialization
             if (data is null) return;
             var type = data.GetType();
             _dataType = string.Intern(type.GetTypeName());
-            //_originalObject = new WeakReference<object>(data);
             if (data is byte[] bytes)
             {
                 _serializerMimeType = null;
@@ -166,7 +162,6 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ISerializer CreateSerializer(string serMimeType)
         {
-            
             var idx = serMimeType.IndexOf(':');
             var serMime = idx < 0 ? serMimeType : serMimeType.Substring(0, idx);
             var serComp = idx < 0 ? null : serMimeType.Substring(idx + 1);

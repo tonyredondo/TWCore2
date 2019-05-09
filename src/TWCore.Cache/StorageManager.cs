@@ -442,8 +442,7 @@ namespace TWCore.Cache
         }
 
         #region Exist Key / Get Keys
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool ExistLook(ref IStorage sto, ref string key) => sto.ExistKey(key);
+        private static readonly RefFunc<IStorage, string, bool> ExistLook = (ref IStorage sto, ref string key) => sto.ExistKey(key);
 
         /// <inheritdoc />
         /// <summary>
@@ -497,12 +496,11 @@ namespace TWCore.Cache
         #endregion
 
         #region Get Dates
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static DateTime? GetCreationDateLook(ref IStorage sto, ref string key) => sto.GetCreationDate(key);
+        private static readonly RefFunc<IStorage, string, DateTime?> GetCreationDateLook = (ref IStorage sto, ref string key) => sto.GetCreationDate(key);
 
         /// <inheritdoc />
         /// <summary>
-        /// Gets the creation date for astorage item with the key specified.
+        /// Gets the creation date for a storage item with the key specified.
         /// </summary>
         /// <param name="key">Key to look on the storage</param>
         /// <returns>DateTime with the creation date of the storage item, null if the key wasn't found in the storage</returns>
@@ -521,12 +519,9 @@ namespace TWCore.Cache
         #endregion
 
         #region Get MetaData
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static StorageItemMeta GetMetaLook(ref IStorage sto, ref string key) => sto.GetMeta(key);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static StorageItemMeta GetMetaLook(ref IStorage sto, ref string key, ref TimeSpan lastTime) => sto.GetMeta(key, lastTime);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static StorageItemMeta GetMetaLook(ref IStorage sto, ref string key, ref DateTime comparer) => sto.GetMeta(key, comparer);
+        private static readonly RefFunc<IStorage, string, StorageItemMeta> GetMetaLook1 = (ref IStorage sto, ref string key) => sto.GetMeta(key);
+        private static readonly RefFunc<IStorage, string, TimeSpan, StorageItemMeta> GetMetaLook2 = (ref IStorage sto, ref string key, ref TimeSpan lastTime) => sto.GetMeta(key, lastTime);
+        private static readonly RefFunc<IStorage, string, DateTime, StorageItemMeta> GetMetaLook3 = (ref IStorage sto, ref string key, ref DateTime comparer) => sto.GetMeta(key, comparer);
 
         /// <inheritdoc />
         /// <summary>
@@ -536,7 +531,7 @@ namespace TWCore.Cache
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key)
-            => ReturnFromStack(ref key, GetMetaLook);
+            => ReturnFromStack(ref key, GetMetaLook1);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
@@ -546,7 +541,7 @@ namespace TWCore.Cache
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key, TimeSpan lastTime)
-            => ReturnFromStack(ref key, ref lastTime, GetMetaLook);
+            => ReturnFromStack(ref key, ref lastTime, GetMetaLook2);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
@@ -556,7 +551,7 @@ namespace TWCore.Cache
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key, DateTime comparer)
-            => ReturnFromStack(ref key, ref comparer, GetMetaLook);
+            => ReturnFromStack(ref key, ref comparer, GetMetaLook3);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
@@ -578,34 +573,23 @@ namespace TWCore.Cache
         {
             var keys = IndexGetKeys(tags, containingAll);
             if (keys != null)
-            {
-                return keys.Select(i => GetMeta(i)).RemoveNulls().ToArray();
-            }
-            else
-            {
-                IndexCreate(tags);
-                var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetMetaByTag(arg1, arg2))
-                    .SelectMany(a => a)
-                    .DistinctBy(i => i.Key)
-                    .ToArray();
-                return res;
-            }
+                return keys.Select(i => GetMeta(i)).RemoveNulls().ToArray(); 
+            IndexCreate(tags); 
+            var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetMetaByTag(arg1, arg2))
+                .SelectMany(a => a)
+                .DistinctBy(i => i.Key)
+                .ToArray();
+            return res;
         }
         #endregion
 
         #region Get Data
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static StorageItem GetLook(ref IStorage sto, ref string key) => sto.Get(key);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static StorageItem GetLook(ref IStorage sto, ref string key, ref TimeSpan lastTime) => sto.Get(key, lastTime);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static StorageItem GetLook(ref IStorage sto, ref string key, ref DateTime comparer) => sto.Get(key, comparer);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void GetSetAction(ref IStorage sto, ref string key, ref StorageItem item) => sto.Set(item);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void GetSetAction(ref IStorage sto, ref string key, ref TimeSpan lastTime, ref StorageItem item) => sto.Set(item);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void GetSetAction(ref IStorage sto, ref string key, ref DateTime comparer, ref StorageItem item) => sto.Set(item);
+        private static readonly RefFunc<IStorage, string, StorageItem> GetLook1 = (ref IStorage sto, ref string key) => sto.Get(key);
+        private static readonly RefFunc<IStorage, string, TimeSpan, StorageItem> GetLook2 = (ref IStorage sto, ref string key, ref TimeSpan lastTime) => sto.Get(key, lastTime);
+        private static readonly RefFunc<IStorage, string, DateTime, StorageItem> GetLook3 = (ref IStorage sto, ref string key, ref DateTime comparer) => sto.Get(key, comparer);
+        private static readonly RefAction<IStorage, string, StorageItem> GetSetAction1 = (ref IStorage sto, ref string key, ref StorageItem item) => sto.Set(item);
+        private static readonly RefAction<IStorage, string, TimeSpan, StorageItem> GetSetAction2 = (ref IStorage sto, ref string key, ref TimeSpan lastTime, ref StorageItem item) => sto.Set(item);
+        private static readonly RefAction<IStorage, string, DateTime, StorageItem> GetSetAction3 = (ref IStorage sto, ref string key, ref DateTime comparer, ref StorageItem item) => sto.Set(item);
 
         /// <inheritdoc />
         /// <summary>
@@ -615,7 +599,7 @@ namespace TWCore.Cache
         /// <returns>Storage item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem Get(string key)
-            => ReturnFromStack(ref key, GetLook, GetSetAction);
+            => ReturnFromStack(ref key, GetLook1, GetSetAction1);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
@@ -625,7 +609,7 @@ namespace TWCore.Cache
         /// <returns>Storage item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem Get(string key, TimeSpan lastTime)
-            => ReturnFromStack(ref key, ref lastTime, GetLook, GetSetAction);
+            => ReturnFromStack(ref key, ref lastTime, GetLook2, GetSetAction2);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
@@ -635,7 +619,7 @@ namespace TWCore.Cache
         /// <returns>Storage item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem Get(string key, DateTime comparer)
-            => ReturnFromStack(ref key, ref comparer, GetLook, GetSetAction);
+            => ReturnFromStack(ref key, ref comparer, GetLook3, GetSetAction3);
         /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
@@ -657,18 +641,13 @@ namespace TWCore.Cache
         {
             var keys = IndexGetKeys(tags, containingAll);
             if (keys != null)
-            {
                 return keys.Select(i => Get(i)).RemoveNulls().ToArray();
-            }
-            else
-            {
-                IndexCreate(tags);
-                var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetByTag(arg1, arg2))
-                    .SelectMany(a => a)
-                    .DistinctBy(i => i.Meta.Key)
-                    .ToArray();
-                return res;
-            }
+            IndexCreate(tags);
+            var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetByTag(arg1, arg2))
+                .SelectMany(a => a)
+                .DistinctBy(i => i.Meta.Key)
+                .ToArray();
+            return res;
         }
         /// <inheritdoc />
         /// <summary>
@@ -682,7 +661,7 @@ namespace TWCore.Cache
             if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
-                dictionary[keys[i]] = ReturnFromStack(ref keys[i], GetLook, GetSetAction);
+                dictionary[keys[i]] = ReturnFromStack(ref keys[i], GetLook1, GetSetAction1);
             return dictionary;
         }
         /// <inheritdoc />
@@ -698,7 +677,7 @@ namespace TWCore.Cache
             if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
-                dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref lastTime, GetLook, GetSetAction);
+                dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref lastTime, GetLook2, GetSetAction2);
             return dictionary;
         }
         /// <inheritdoc />
@@ -714,17 +693,14 @@ namespace TWCore.Cache
             if (keys is null) return null;
             var dictionary = new Dictionary<string, StorageItem>();
             for (var i = 0; i < keys.Length; i++)
-                dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref comparer, GetLook, GetSetAction);
+                dictionary[keys[i]] = ReturnFromStack(ref keys[i], ref comparer, GetLook3, GetSetAction3);
             return dictionary;
         }
         #endregion
 
         #region Set Data
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref StorageItem item) => sto.Set(item);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static readonly RefAction<IStorage, StorageItem> SetAction1 = (ref IStorage sto, ref StorageItem item) => sto.Set(item);
+        private static readonly RefAction<IStorage, StorageItemMeta, SerializedObject> SetAction2 = (ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
         private StorageItemMeta CreateStorageItemMeta(string key, DateTime? expirationDate, string[] tags)
         {
             var dateNow = Core.Now;
@@ -764,7 +740,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(StorageItem item)
         {
-            var res = ExecuteInAllStack(ref item, SetAction);
+            var res = ExecuteInAllStack(ref item, SetAction1);
             if (res)
             {
                 IndexReportSet(item.Meta);
@@ -782,7 +758,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(StorageItemMeta meta, SerializedObject data)
         {
-            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction2);
             if (res)
             {
                 IndexReportSet(meta);
@@ -801,7 +777,7 @@ namespace TWCore.Cache
         public bool Set(string key, SerializedObject data)
         {
             var meta = CreateStorageItemMeta(key, null, null);
-            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction2);
             if (res)
             {
                 IndexReportSet(meta);
@@ -821,7 +797,7 @@ namespace TWCore.Cache
         public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
         {
             var meta = CreateStorageItemMeta(key, Core.Now.Add(expirationDate), null);
-            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction2);
             if (res)
             {
                 IndexReportSet(meta);
@@ -842,7 +818,7 @@ namespace TWCore.Cache
         public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
         {
             var meta = CreateStorageItemMeta(key, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
-            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction2);
             if (res)
             {
                 IndexReportSet(meta);
@@ -863,7 +839,7 @@ namespace TWCore.Cache
         public bool Set(string key, SerializedObject data, DateTime expirationDate)
         {
             var meta = CreateStorageItemMeta(key, expirationDate, null);
-            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction2);
             if (res)
             {
                 IndexReportSet(meta);
@@ -884,7 +860,7 @@ namespace TWCore.Cache
         public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
         {
             var meta = CreateStorageItemMeta(key, expirationDate, tags);
-            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction2);
             if (res)
             {
                 IndexReportSet(meta);
@@ -895,8 +871,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Set Multi-Key Data
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetMultiAction(ref IStorage sto, ref StorageItem[] items) => sto.SetMulti(items);
+        private static readonly RefAction<IStorage, StorageItem[]> SetMultiAction = (ref IStorage sto, ref StorageItem[] items) => sto.SetMulti(items);
 
         /// <inheritdoc />
         /// <summary>
@@ -1010,12 +985,9 @@ namespace TWCore.Cache
         #endregion
 
         #region Update/Remove Data/Copy
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void UpdateDataAction(ref IStorage sto, ref string key, ref SerializedObject data) => sto.UpdateData(key, data);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void RemoveAction(ref IStorage sto, ref string key) => sto.Remove(key);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void CopyAction(ref IStorage sto, ref string key, ref string newKey) => sto.Copy(key, newKey);
+        private static readonly RefAction<IStorage, string, SerializedObject> UpdateDataAction = (ref IStorage sto, ref string key, ref SerializedObject data) => sto.UpdateData(key, data);
+        private static readonly RefAction<IStorage, string> RemoveAction = (ref IStorage sto, ref string key) => sto.Remove(key);
+        private static readonly RefAction<IStorage, string, string> CopyAction = (ref IStorage sto, ref string key, ref string newKey) => sto.Copy(key, newKey);
 
         /// <inheritdoc />
         /// <summary>
@@ -1154,7 +1126,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Indexes methods
-        private ConcurrentDictionary<string, object> _processingTag = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<string, object> _processingTag = new ConcurrentDictionary<string, object>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string[] IndexGetKeys(string[] tags, bool containingAll)

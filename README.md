@@ -4,8 +4,6 @@
 
 A multipurpose framework library for dotnet core 2.2, dotnet standard 2.0 and net461 used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
 
-Available in Nuget: https://www.nuget.org/packages?q=Tags%3A"TWCore"
-
 ## Advantages
 
 - Easy development of microservices: With fewer code you can subscribe to a message broker and start to process messages as pub/sub or RPC architecture.

@@ -127,14 +127,15 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (xmlData != null)
                 return xmlData;
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
+            if (serObject is null) return null;
             try
             {
-                var value = serObject?.GetValue();
+                var value = serObject.GetValueOrGenericValue();
                 if (value is null) return null;
                 if (value is ResponseMessage rsMessage)
-                    return rsMessage.Body?.GetValue()?.SerializeToXml();
+                    return rsMessage.Body?.GetValueOrGenericValue()?.SerializeToXml();
                 if (value is RequestMessage rqMessage)
-                    return rqMessage.Body?.GetValue()?.SerializeToXml();
+                    return rqMessage.Body?.GetValueOrGenericValue()?.SerializeToXml();
                 if (value is string strValue)
                 {
                     try
@@ -167,18 +168,19 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (jsonData != null)
                 return jsonData;
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
+            if (serObject is null) return null;
             try
             {
-                var value = serObject?.GetValue();
+                var value = serObject.GetValueOrGenericValue();
                 if (value is null) return null;
                 if (value is ResponseMessage rsMessage)
                 {
-                    var rsBody = rsMessage.Body?.GetValue();
+                    var rsBody = rsMessage.Body?.GetValueOrGenericValue();
                     return rsBody != null ? JsonSerializer.SerializeToString(rsBody, rsBody.GetType()) : null;
                 }
                 if (value is RequestMessage rqMessage)
                 {
-                    var rqBody = rqMessage.Body?.GetValue();
+                    var rqBody = rqMessage.Body?.GetValueOrGenericValue();
                     return rqBody != null ? JsonSerializer.SerializeToString(rqBody, rqBody.GetType()) : null;
                 }
                 if (value is string strValue)

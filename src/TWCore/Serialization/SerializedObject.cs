@@ -198,6 +198,34 @@ namespace TWCore.Serialization
             return value;
         }
         /// <summary>
+        /// Get Deserialized Value or Generic Deserialized value
+        /// </summary>
+        /// <returns>Value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object GetValueOrGenericValue()
+        {
+            if (disposedValue) ThrowDisposedValue();
+            if (_data == MultiArray<byte>.Empty) return null;
+            var type = string.IsNullOrWhiteSpace(_dataType) ? typeof(object) : Core.GetType(_dataType, false);
+            if (string.IsNullOrWhiteSpace(_serializerMimeType))
+            {
+                if (type == typeof(byte[]))
+                    return _data.AsArray();
+                if (type == typeof(MultiArray<byte>))
+                    return _data;
+                return null;
+            }
+            var serializer = SerializerCache.GetOrAdd(_serializerMimeType, smt => CreateSerializer(smt));
+            try
+            {
+                return serializer.Deserialize(_data, type ?? typeof(object));
+            }
+            catch (DeserializerException desException)
+            {
+                return desException.Value;
+            }
+        }
+        /// <summary>
         /// Get Byte array representation of the SerializedObject instance
         /// </summary>
         /// <returns>Byte array instance</returns>

@@ -32,9 +32,12 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         DateTime Timestamp { get; }
         /// <summary>
+        /// Environment name
+        /// </summary>
+        string EnvironmentName { get; }
+        /// <summary>
         /// Message group name
         /// </summary>
         string GroupName { get; }
-
     }
 }

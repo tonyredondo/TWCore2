@@ -116,6 +116,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 {
                     InstanceId = Core.InstanceId,
                     Timestamp = item.Timestamp,
+                    EnvironmentName = item.EnvironmentName,
                     GroupName = item.GroupName,
                     Items = item.Items
                 });

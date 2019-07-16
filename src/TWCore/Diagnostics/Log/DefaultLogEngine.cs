@@ -1692,6 +1692,7 @@ namespace TWCore.Diagnostics.Log
             {
                 InstanceId = Core.InstanceId,
                 Timestamp = Core.Now,
+                EnvironmentName = Core.EnvironmentName,
                 GroupName = groupName,
                 Items = keyValues
             });
@@ -1713,6 +1714,7 @@ namespace TWCore.Diagnostics.Log
             {
                 InstanceId = Core.InstanceId,
                 Timestamp = Core.Now,
+                EnvironmentName = Core.EnvironmentName,
                 GroupName = groupName,
                 Items = nValues
             });

@@ -38,6 +38,12 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         [XmlAttribute, DataMember]
         public DateTime Timestamp { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Environment name
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public string EnvironmentName { get; set; }
         /// <summary>
         /// Gets the name of the group.
         /// </summary>

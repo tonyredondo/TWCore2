@@ -4,7 +4,7 @@
     <Title>TWCore.Data.MySql</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="0.53.0" />
+    <PackageReference Include="MySqlConnector" Version="0.56.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />

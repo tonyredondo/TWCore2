@@ -28,10 +28,6 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         Guid Id { get; }
         /// <summary>
-        /// Environment name
-        /// </summary>
-        string EnvironmentName { get; }
-        /// <summary>
         /// Machine name
         /// </summary>
         string MachineName { get; }

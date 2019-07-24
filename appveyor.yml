@@ -1,0 +1,20 @@
+version: 2.1.181.{build}
+pull_requests:
+  do_not_increment_build_number: true
+image: Visual Studio 2017
+configuration: Release
+before_build:
+- cmd: dotnet restore
+build:
+  project: TWCore Framework.sln
+  verbosity: minimal
+test: off
+artifacts:
+- path: '**\*.nupkg'
+  name: TWCore2
+deploy:
+- provider: NuGet
+  api_key:
+    secure: bw8Oi6XRk6j8oos7tpeZ8TTZjxdJMcNSEMh2G2dYVGlvw7PKHetXWf634u/99KU9
+  on:
+    APPVEYOR_REPO_TAG: true

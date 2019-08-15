@@ -1040,7 +1040,7 @@ namespace TWCore
                     if (defaultValue != null)
                         return defaultValue;
                 }
-                return value ?? string.Empty; //TODO: Workaround to bug on preview6 (https://github.com/dotnet/corefx/issues/39746)
+                return value;
             });
             return result;
         }

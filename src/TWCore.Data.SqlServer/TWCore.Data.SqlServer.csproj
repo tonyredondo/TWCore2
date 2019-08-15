@@ -4,7 +4,7 @@
     <Title>TWCore.Data.SqlServer</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.7.0-preview7.19362.9" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.7.0-preview8.19405.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />

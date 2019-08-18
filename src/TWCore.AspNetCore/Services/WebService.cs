@@ -30,7 +30,7 @@ using TWCore.Services;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable CheckNamespace
 
-namespace TWCore.AspNetCore.Services
+namespace TWCore.Services
 {
     /// <inheritdoc />
     /// <summary>

@@ -18,12 +18,12 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using TWCore.AspNetCore;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
-using TWCore.Web;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -64,7 +64,8 @@ namespace TWCore.Object.Api
             });
             services.Configure<MvcOptions>(options =>
             {
-                options.Filters.Add(new CorsAuthorizationFilterFactory("AllowAllOrigins"));
+                //options.EnableEndpointRouting = false;
+                //options.Filters.Add(new CorsAuthorizationFilterFactory("AllowAllOrigins"));
             });
 
             DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "OBJECT.API", "TWCore Object Api", new SerializedObject(Core.Settings["WebService.Urls"]));
@@ -85,22 +86,22 @@ namespace TWCore.Object.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseSession();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            //app.UseHttpsRedirection();
             app.UseResponseCompression();
             app.UseStaticFiles();
-            app.UseMvc(routes =>
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllers();
             });
+
         }
     }
 }

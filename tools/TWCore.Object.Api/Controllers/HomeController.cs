@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace TWCore.Object.Api.Controllers
 {
+    [ApiController]
+    [Route("")]
     public class HomeController : Controller
     {
         public IActionResult Index()

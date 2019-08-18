@@ -26,10 +26,12 @@ using TWCore.Object.Descriptor;
 
 namespace TWCore.Object.Api.Controllers
 {
+    [ApiController]
+    [Route("api/code")]
     public class CompilerController : Controller
     {
-        [HttpGet("api/code/get.{format}")]
-        [HttpGet("api/code/get")]
+        [HttpGet("get.{format}")]
+        [HttpGet("get")]
         [FormatFilter]
         public string GetSource()
         {
@@ -37,8 +39,8 @@ namespace TWCore.Object.Api.Controllers
             return sessionData.SourceCode;
         }
 
-        [HttpPost("api/code/set.{format}")]
-        [HttpPost("api/code/set")]
+        [HttpPost("set.{format}")]
+        [HttpPost("set")]
         [FormatFilter]
         public string SetSource([FromBody] string code)
         {
@@ -48,8 +50,8 @@ namespace TWCore.Object.Api.Controllers
             return code;
         }
 
-        [HttpGet("api/code/compile.{format}")]
-        [HttpGet("api/code/compile")]
+        [HttpGet("compile.{format}")]
+        [HttpGet("compile")]
         [FormatFilter]
         public ActionResult Compile()
         {
@@ -67,8 +69,8 @@ namespace TWCore.Object.Api.Controllers
             }
         }
 
-        [HttpGet("api/code/results.{format}")]
-        [HttpGet("api/code/results")]
+        [HttpGet("results.{format}")]
+        [HttpGet("results")]
         [FormatFilter]
         public TreeListCollection GetDescription()
         {

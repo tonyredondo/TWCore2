@@ -28,6 +28,8 @@ using TWCore.Serialization;
 
 namespace TWCore.Object.Api.Controllers
 {
+    [ApiController]
+    [Route("")]
     public class StatusController : Controller
     {
         private static readonly ReferencePool<WebClient> WebClients = new ReferencePool<WebClient>();

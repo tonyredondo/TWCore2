@@ -38,6 +38,8 @@ using TWCore.Settings;
 
 namespace TWCore.Object.Api.Controllers
 {
+    [ApiController]
+    [Route("api/files")]
     public class FileSystemController : Controller
     {
         private static readonly TimeoutDictionary<bool, Dictionary<string, PathEntry>> LocalServicesCache = new TimeoutDictionary<bool, Dictionary<string, PathEntry>>();
@@ -65,8 +67,8 @@ namespace TWCore.Object.Api.Controllers
             Extensions = extensions.ToArray();
         }
 
-        [HttpGet("api/files/list.{format}")]
-        [HttpGet("api/files/list")]
+        [HttpGet("list.{format}")]
+        [HttpGet("list")]
         [FormatFilter]
         public ActionResult Get()
         {
@@ -156,8 +158,8 @@ namespace TWCore.Object.Api.Controllers
             }
         }
 
-        [HttpGet("api/files/load.{format}")]
-        [HttpGet("api/files/load")]
+        [HttpGet("load.{format}")]
+        [HttpGet("load")]
         [FormatFilter]
         public async Task<ActionResult> LoadFile()
         {
@@ -287,8 +289,8 @@ namespace TWCore.Object.Api.Controllers
             }
         }
 
-        [HttpGet("api/files/unload.{format}")]
-        [HttpGet("api/files/unload")]
+        [HttpGet("unload.{format}")]
+        [HttpGet("unload")]
         [FormatFilter]
         public bool UnloadFile()
         {
@@ -302,8 +304,8 @@ namespace TWCore.Object.Api.Controllers
             return true;
         }
 
-        [HttpGet("api/files/status.{format}")]
-        [HttpGet("api/files/status")]
+        [HttpGet("status.{format}")]
+        [HttpGet("status")]
         [FormatFilter]
         public FileLoadedStatus LoadStatus()
         {
@@ -316,8 +318,8 @@ namespace TWCore.Object.Api.Controllers
             };
         }
 
-        [HttpPost("api/files/upload.{format}")]
-        [HttpPost("api/files/upload")]
+        [HttpPost("upload.{format}")]
+        [HttpPost("upload")]
         [FormatFilter]
         public async Task<ActionResult> UploadFile()
         {
@@ -434,7 +436,6 @@ namespace TWCore.Object.Api.Controllers
                 Error = entries.Length == 0 ? "There isn't any valid folder." : null
             };
         }
-
         private static Dictionary<string, PathEntry> GetLocalServices(bool withChildren)
         {
             return LocalServicesCache.GetOrAdd(withChildren, wChildren =>

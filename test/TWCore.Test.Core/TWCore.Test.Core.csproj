@@ -41,7 +41,11 @@
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
     <ProjectReference Include="..\TWCore.Tests\TWCore.Tests.csproj" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0-preview.2" />
+  </ItemGroup>
+  
   <ItemGroup>
     <None Update="Injector.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

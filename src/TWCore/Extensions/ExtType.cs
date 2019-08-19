@@ -169,7 +169,7 @@ namespace TWCore
             return TypesNameCache.GetOrAdd(type, mType =>
             {
                 var aqn = mType.AssemblyQualifiedName;
-                var asn = AssemblyVersionRegex.Replace(aqn, string.Empty);
+                var asn = AssemblyVersionRegex.Replace(aqn ?? string.Empty, string.Empty);
                 foreach (var iasm in IgnoredAssemblies)
                     asn = asn.Replace(iasm, string.Empty);
                 return asn;

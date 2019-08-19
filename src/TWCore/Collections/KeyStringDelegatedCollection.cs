@@ -151,8 +151,8 @@ namespace TWCore.Collections
                     foreach (var i in Items)
                     {
                         var iFullKey = GetKeyForItem(i);
-                        var partials = iFullKey?.Trim()?.Split(kSeparator, StringSplitOptions.RemoveEmptyEntries);
-                        if (Array.IndexOf(partials, pKey) > -1)
+                        var partials = iFullKey?.Trim().Split(kSeparator, StringSplitOptions.RemoveEmptyEntries);
+                        if (partials != null && Array.IndexOf(partials, pKey) > -1)
                             return iFullKey;
                     }
                     return null;

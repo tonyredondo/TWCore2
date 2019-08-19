@@ -126,7 +126,7 @@ namespace TWCore.Net
             string address;
             var request = WebRequest.Create("http://checkip.dyndns.org/");
             using (var response = await request.GetResponseAsync().ConfigureAwait(false))
-            using (var stream = new StreamReader(response.GetResponseStream()))
+            using (var stream = new StreamReader(response.GetResponseStream() ?? Stream.Null))
                 address = stream.ReadToEnd();
             //Search for the ip in the html
             var first = address.IndexOf("Address: ", StringComparison.Ordinal) + 9;

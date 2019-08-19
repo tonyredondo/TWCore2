@@ -116,7 +116,7 @@ namespace TWCore
                         lst.Add(nD);
                         Extract(elm, nD);
                     }
-                };
+                }
                 var keys = currentDictionary.Keys.ToList();
                 foreach (var key in keys)
                 {

@@ -86,7 +86,8 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GetAccessorDelegate BuildGetAccessor(PropertyInfo property)
         {
-            var method = property.GetMethod;
+            var method = property?.GetMethod;
+            if (method is null) return null;
             var obj = Expression.Parameter(typeof(object), "obj");
             MethodCallExpression call;
             if (method.IsStatic)
@@ -138,6 +139,7 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MethodAccessorDelegate BuildMethodAccessor(MethodInfo method)
         {
+            if (method is null) return null;
             var obj = Expression.Parameter(typeof(object), "o");
             Expression castedObject = null;
             if (!method.IsStatic)
@@ -182,7 +184,7 @@ namespace TWCore.Reflection
                 if (conversionType.BaseType == typeof(Enum))
                     return Enum.ToObject(conversionType, value);
                 if (conversionType.IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType)); ;
+                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType));
                 return Convert.ChangeType(value, conversionType);
             }
             if (value is null)

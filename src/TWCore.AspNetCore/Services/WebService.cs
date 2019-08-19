@@ -53,7 +53,7 @@ namespace TWCore.Services
         /// <summary>
         /// AspNet Web Service
         /// </summary>
-        /// <param name="webHostFactory">WebHost Builder factory delegate</param>
+        /// <param name="hostFactory">Host Builder factory delegate</param>
         public WebService(Func<string[], IHost> hostFactory)
         {
             _hostFactory = hostFactory;

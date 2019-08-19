@@ -104,8 +104,8 @@ namespace DasMulli.Win32.ServiceUtils
                     if (_serviceImplementation.CanPauseAndContinue)
                         _statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop | ServiceAcceptedControlCommandsFlags.PauseContinue, win32ExitCode, waitHint: 0);
                     else
-                        _statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode, waitHint: 0);
-                        break;
+                        _statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode, waitHint: 0); 
+                    break;
                 }
             }
         }

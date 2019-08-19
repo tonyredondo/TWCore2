@@ -150,7 +150,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 {
                     DeliveryFormat = SmtpDeliveryFormat.International,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
-                    Host = host?.Trim(),
+                    Host = host?.Trim() ?? string.Empty,
                     Port = port,
                     UseDefaultCredentials = useDefaultCredentials
                 };
@@ -258,10 +258,11 @@ namespace TWCore.Diagnostics.Log.Storages
             };
 
             var addFDisplay = AddressFromDisplay?.Trim();
+            var addressFrom = AddressFrom?.Trim() ?? string.Empty;
             message.From = string.IsNullOrEmpty(addFDisplay) ? 
-                new MailAddress(AddressFrom?.Trim()) : 
-                new MailAddress(AddressFrom?.Trim(), addFDisplay);
-
+                new MailAddress(addressFrom) : 
+                new MailAddress(addressFrom, addFDisplay);
+            
             AddressBcc = AddressBcc?.Replace(",", ";").Replace("|", ";");
             AddressCc = AddressCc?.Replace(",", ";").Replace("|", ";");
             AddressTo = AddressTo?.Replace(",", ";").Replace("|", ";");

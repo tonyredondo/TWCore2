@@ -214,7 +214,9 @@ namespace TWCore
                 }
                 foreach (var item in iSource)
                 {
-                    var nItem = Activator.CreateInstance(item?.GetType() ?? innerType);
+                    var sType = item?.GetType() ?? innerType;
+                    if (sType is null) continue;
+                    var nItem = Activator.CreateInstance(sType);
                     nItem.CopyValuesFrom(item);
                     iTarget.Add(nItem);
                 }

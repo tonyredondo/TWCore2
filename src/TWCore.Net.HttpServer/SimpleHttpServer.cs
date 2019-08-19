@@ -278,7 +278,7 @@ namespace TWCore.Net.HttpServer
                         });
                     }
                 }
-            };
+            }
             return this;
         }
         /// <summary>

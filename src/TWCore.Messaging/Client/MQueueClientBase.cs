@@ -269,15 +269,17 @@ namespace TWCore.Messaging.Client
             if (rsMsg.Body is null) return default;
 
             var res = default(T);
+            var valRead = false;
             try
             {
                 res = (T)rsMsg.Body.GetValue();
+                valRead = true;
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }
-            if (EnableCompleteMessageCache && res != default)
+            if (EnableCompleteMessageCache && valRead)
                 _receivedMessagesCache.TryAdd(res, rsMsg);
             else if (disposeResponse)
                 rsMsg.Body.Dispose();

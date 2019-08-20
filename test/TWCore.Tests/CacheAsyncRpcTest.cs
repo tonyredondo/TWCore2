@@ -83,6 +83,23 @@ namespace TWCore.Tests
 
                 Console.ReadLine();
 
+                using (var watch = Watch.Create("Parallel Get"))
+                {
+                    for (var i = 0; i < 5000; i++)
+                    {
+                        var key = "test-" + (i % 500);
+                        var t1  = cachePool.GetAsync(key);
+                        var t2  = cachePool.GetAsync(key);
+                        var t3  = cachePool.GetAsync(key);
+                        var t4  = cachePool.GetAsync(key);
+                        var t5  = cachePool.GetAsync(key);
+                        await Task.WhenAll(t1, t2, t3, t4, t5).ConfigureAwait(false);
+                    }
+                    Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000);
+                }
+
+                Console.ReadLine();
+
                 await cachePool.SetMultiAsync(new[] { "test-", "test-copy" }, new object[] { "bla bla bla bla bla bla ggsfdg fsd gfd sg fdsg fd sgf sdg fds", 543, 534, "fd", 4M, 2D }).ConfigureAwait(false);
                 using (var watch = Watch.Create("Multi Set"))
                 {

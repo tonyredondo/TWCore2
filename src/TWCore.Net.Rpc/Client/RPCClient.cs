@@ -199,10 +199,10 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args)
+        public Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args)
         {
-            var response = await ServerInvokeAsync(serviceName, method, args).ConfigureAwait(false);
-            return (T)response;
+            return ServerInvokeAsync(serviceName, method, args)
+                .ContinueWith(pTask => (T) pTask.Result, TaskContinuationOptions.ExecuteSynchronously);
         }
 
         /// <summary>
@@ -235,10 +235,10 @@ namespace TWCore.Net.RPC.Client
         /// <param name="cancellationToken">Cancellation Token instance</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
+        public Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
         {
-            var response = await ServerInvokeAsync(serviceName, method, args, cancellationToken).ConfigureAwait(false);
-            return (T)response;
+            return ServerInvokeAsync(serviceName, method, args, cancellationToken)
+                .ContinueWith(pTask => (T) pTask.Result, TaskContinuationOptions.ExecuteSynchronously);
         }
 
         /// <summary>
@@ -747,12 +747,12 @@ namespace TWCore.Net.RPC.Client
         public MethodDescriptor GetMethodDescriptor(string serviceName, string method, object[] args)
         {
             Type[] types = null;
-            if (args != null)
+            if (!(args is null))
             {
                 types = new Type[args.Length];
                 for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] != null)
+                    if (!(args[i] is null))
                         types[i] = args[i].GetType();
                 }
             }
@@ -805,12 +805,12 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args, Type[] types, bool useCancellationToken)
         {
-            if (types is null && args != null)
+            if (types is null && !(args is null))
             {
                 types = new Type[args.Length];
                 for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] != null)
+                    if (!(args[i] is null))
                         types[i] = args[i].GetType();
                 }
             }
@@ -838,34 +838,32 @@ namespace TWCore.Net.RPC.Client
             var mCount = lstMethods.Count;
             if (mCount == 0)
                 return null;
-            else if (mCount == 1)
+            if (mCount == 1)
                 return lstMethods[0];
-            else
+            
+            foreach (var method in lstMethods)
             {
-                foreach (var method in lstMethods)
+                var found = true;
+                for (var i = 0; i < method.Parameters.Length; i++)
                 {
-                    var found = true;
-                    for (var i = 0; i < method.Parameters.Length; i++)
+                    var p1 = method.Parameters[i].Parameter;
+                    var t2 = types[i];
+                    if (t2 != null && !p1.ParameterType.IsAssignableFrom(t2))
                     {
-                        var p1 = method.Parameters[i].Parameter;
-                        var t2 = types[i];
-                        if (t2 != null && !p1.ParameterType.IsAssignableFrom(t2))
-                        {
-                            found = false;
-                            break;
-                        }
-                        if (t2 != null || !p1.ParameterType.IsValueType) continue;
-                        if (!p1.ParameterType.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
-                        {
-                            found = false;
-                            break;
-                        }
+                        found = false;
+                        break;
                     }
-                    if (found)
-                        return method;
+                    if (t2 != null || !p1.ParameterType.IsValueType) continue;
+                    if (!p1.ParameterType.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                    {
+                        found = false;
+                        break;
+                    }
                 }
-                return null;
+                if (found)
+                    return method;
             }
+            return null;
         }
         #endregion
 

@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <TargetFrameworks>netcoreapp3.0</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

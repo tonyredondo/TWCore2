@@ -100,7 +100,7 @@ namespace TWCore.Tests
                         var t10  = cachePool.GetAsync(key);
                         await Task.WhenAll(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10).ConfigureAwait(false);
                     }
-                    Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000);
+                    Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000 * 10);
                 }
 
                 Console.ReadLine();

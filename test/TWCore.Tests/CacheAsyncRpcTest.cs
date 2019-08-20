@@ -93,7 +93,12 @@ namespace TWCore.Tests
                         var t3  = cachePool.GetAsync(key);
                         var t4  = cachePool.GetAsync(key);
                         var t5  = cachePool.GetAsync(key);
-                        await Task.WhenAll(t1, t2, t3, t4, t5).ConfigureAwait(false);
+                        var t6  = cachePool.GetAsync(key);
+                        var t7  = cachePool.GetAsync(key);
+                        var t8  = cachePool.GetAsync(key);
+                        var t9  = cachePool.GetAsync(key);
+                        var t10  = cachePool.GetAsync(key);
+                        await Task.WhenAll(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10).ConfigureAwait(false);
                     }
                     Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000);
                 }

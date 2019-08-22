@@ -41,7 +41,6 @@ namespace TWCore.Messaging.Redis
         private Task _monitorTask;
         private int _exceptionSleep;
         private readonly Action<RedisChannel, RedisValue> _messageHandlerDelegate;
-        private readonly Func<RedisValue, Task> _processDelegate;
         private readonly Func<Task> _monitorDelegate;
         #endregion
 

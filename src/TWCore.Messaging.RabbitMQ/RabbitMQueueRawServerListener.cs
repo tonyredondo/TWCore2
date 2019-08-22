@@ -40,7 +40,6 @@ namespace TWCore.Messaging.RabbitMQ
         private CancellationToken _token;
         private Task _monitorTask;
         private int _exceptionSleep;
-        private readonly Func<RabbitMessage, Task> _processingTaskAsyncDelegate;
         #endregion
 
         #region Nested Type

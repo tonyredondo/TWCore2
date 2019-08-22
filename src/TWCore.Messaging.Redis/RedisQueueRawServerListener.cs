@@ -58,7 +58,6 @@ namespace TWCore.Messaging.Redis
         {
             _name = server.Name;
             _messageHandlerDelegate = new Action<RedisChannel, RedisValue>(MessageHandler);
-            _processDelegate = new Func<RedisValue, Task>(ProcessingTaskAsync);
             _monitorDelegate = new Func<Task>(MonitorProcess);
         }
         #endregion
@@ -104,17 +103,10 @@ namespace TWCore.Messaging.Redis
         /// <summary>
         /// Message Handler
         /// </summary>
-        private async void MessageHandler(RedisChannel channel, RedisValue value)
+        private void MessageHandler(RedisChannel channel, RedisValue value)
         {
             Core.Log.LibVerbose("Message received");
-            try
-            {
-                await EnqueueMessageToProcessAsync(_processDelegate, value).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-            }
+            _ = EnqueueMessageToProcessAsync(value);
         }
         /// <summary>
         /// Monitors the maximum concurrent message allowed for the listener
@@ -163,10 +155,11 @@ namespace TWCore.Messaging.Redis
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="data">Message data</param>
+        /// <param name="message">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(RedisValue data)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
+            if (!(message is RedisValue data)) return;
             try
             {
                 (var body, var correlationId, var name) = RedisQueueRawClient.GetFromRawMessageBody(data);

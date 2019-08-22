@@ -110,17 +110,10 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Message Handler
         /// </summary>
-        private async void MessageHandler(object sender, MsgHandlerEventArgs e)
+        private void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
             Core.Log.LibVerbose("Message received");
-            try
-            {
-                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-            }
+            _ = EnqueueMessageToProcessAsync(e.Message.Data);
         }
         /// <summary>
         /// Monitors the maximum concurrent message allowed for the listener
@@ -173,10 +166,11 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="data">Message data</param>
+        /// <param name="message">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(byte[] data)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
+            if (!(message is byte[] data)) return;
             var oldContext = Core.ContextGroupName;
             try
             {

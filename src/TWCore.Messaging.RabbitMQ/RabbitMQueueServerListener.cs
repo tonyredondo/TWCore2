@@ -89,7 +89,6 @@ namespace TWCore.Messaging.RabbitMQ
         {
             _messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
             _name = server.Name;
-            _processingTaskAsyncDelegate = ProcessingTaskAsync;
             Core.Status.Attach(collection =>
             {
                 collection.Add("Message Type", _messageType);
@@ -143,11 +142,11 @@ namespace TWCore.Messaging.RabbitMQ
         {
             var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
 #if COMPATIBILITY
-                Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
+                Task.Run(() => EnqueueMessageToProcessAsync(msg));
 #else
             ThreadPool.QueueUserWorkItem(item =>
             {
-                _ = EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, item);
+                _ = EnqueueMessageToProcessAsync(item);
             }, msg, true);
 #endif
             _receiver.Channel.BasicAck(ea.DeliveryTag, false);
@@ -214,19 +213,20 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(RabbitMessage message)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
-            if (message.Body is null)
+            if (!(message is RabbitMessage rabbitMessage)) return;
+            if (rabbitMessage.Body is null)
             {
-                RabbitMessage.Return(message);
+                RabbitMessage.Return(rabbitMessage);
                 return;
             }
             var oldContext = Core.ContextGroupName;
             try
             {
-                Counters.IncrementTotalReceivingBytes(message.Body.Length);
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
-                var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
+                Counters.IncrementTotalReceivingBytes(rabbitMessage.Body.Length);
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", rabbitMessage.Body.Length, _receiver.Route, _receiver.Name);
+                var messageBody = ReceiverSerializer.Deserialize(rabbitMessage.Body, _messageType);
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
@@ -236,9 +236,9 @@ namespace TWCore.Messaging.RabbitMQ
                         Counters.IncrementReceivingTime(request.Header.TotalTime);
                         if (request.Header.ClientName != Config.Name)
                             Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length, SenderSerializer, Config.RequestOptions.ServerReceiverOptions.CancellationBeforeClientResponseTimeoutInSec);
-                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
+                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request, rabbitMessage.Body.Length, SenderSerializer, Config.RequestOptions.ServerReceiverOptions.CancellationBeforeClientResponseTimeoutInSec);
+                        evArgs.Metadata["ReplyTo"] = rabbitMessage.Properties.ReplyTo;
+                        evArgs.Metadata["MessageId"] = rabbitMessage.Properties.MessageId;
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
@@ -248,9 +248,9 @@ namespace TWCore.Messaging.RabbitMQ
                             Core.ContextGroupName = response.Header.Request.Header.ContextGroupName;
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                        var evArgs2 = new ResponseReceivedEventArgs(_name, response, message.Body.Length);
-                        evArgs2.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs2.Metadata["MessageId"] = message.Properties.MessageId;
+                        var evArgs2 = new ResponseReceivedEventArgs(_name, response, rabbitMessage.Body.Length);
+                        evArgs2.Metadata["ReplyTo"] = rabbitMessage.Properties.ReplyTo;
+                        evArgs2.Metadata["MessageId"] = rabbitMessage.Properties.MessageId;
                         await OnResponseReceivedAsync(evArgs2).ConfigureAwait(false);
                         break;
                 }
@@ -265,7 +265,7 @@ namespace TWCore.Messaging.RabbitMQ
             finally
             {
                 Core.ContextGroupName = oldContext;
-                RabbitMessage.Return(message);
+                RabbitMessage.Return(rabbitMessage);
             }
         }
         #endregion

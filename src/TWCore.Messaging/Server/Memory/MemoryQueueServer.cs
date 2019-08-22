@@ -125,7 +125,7 @@ namespace TWCore.Messaging
 				{
 					var rcvValue = await _receiver.DequeueAsync(_token).ConfigureAwait(false);
                     if (_token.IsCancellationRequested) break;
-                    _ = Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvValue));
+                    _ = Task.Run(() => EnqueueMessageToProcessAsync(rcvValue));
 				}
             }
 
@@ -139,12 +139,14 @@ namespace TWCore.Messaging
 			}
 
 
-			private async Task ProcessingTaskAsync(MemoryQueue.Message message)
+			protected override async Task OnProcessMessageAsync<T>(T message)
 			{
-                if (message is null) return;
+                if (!(message is MemoryQueue.Message memoryMessage)) return;
+
+                if (memoryMessage is null) return;
 				try
 				{
-					var messageBody = message.Value;
+					var messageBody = memoryMessage.Value;
 					switch (messageBody)
 					{
 						case RequestMessage request when request.Header != null:

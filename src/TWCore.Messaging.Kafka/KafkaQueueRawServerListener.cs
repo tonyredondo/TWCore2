@@ -81,11 +81,11 @@ namespace TWCore.Messaging.Kafka
                     {
                         if (_token.IsCancellationRequested) break;
 #if COMPATIBILITY
-                        Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, cRes));
+                        Task.Run(() => EnqueueMessageToProcessAsync(cRes));
 #else
-                ThreadPool.QueueUserWorkItem(async item =>
+                ThreadPool.QueueUserWorkItem(item =>
                 {
-                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
+                    EnqueueMessageToProcessAsync(item);
                 }, cRes, false);
 #endif
                     }
@@ -112,12 +112,13 @@ namespace TWCore.Messaging.Kafka
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(Message message)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
+            if (!(message is Message kafkaMessage)) return;
             try
             {
-                var (correlationId, name) = KafkaQueueRawClient.GetFromRawMessageHeader(message.Key);
-                var body = message.Value;
+                var (correlationId, name) = KafkaQueueRawClient.GetFromRawMessageHeader(kafkaMessage.Key);
+                var body = kafkaMessage.Value;
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", body.Length, Connection.Route, Connection.Name);
                 Counters.IncrementTotalReceivingBytes(body.Length);

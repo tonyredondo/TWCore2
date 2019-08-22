@@ -87,7 +87,6 @@ namespace TWCore.Messaging.RabbitMQ
         public RabbitMQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
         {
             _name = server.Name;
-            _processingTaskAsyncDelegate = ProcessingTaskAsync;
         }
         #endregion
 
@@ -137,11 +136,11 @@ namespace TWCore.Messaging.RabbitMQ
         {
             var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
 #if COMPATIBILITY
-                Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
+                Task.Run(() => EnqueueMessageToProcessAsync(msg));
 #else
             ThreadPool.QueueUserWorkItem(item =>
             {
-                _ = EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, item);
+                _ = EnqueueMessageToProcessAsync(item);
             }, msg, true);
 #endif
             _receiver.Channel.BasicAck(ea.DeliveryTag, false);
@@ -208,35 +207,36 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(RabbitMessage message)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
-            if (message.Body is null)
+            if (!(message is RabbitMessage rabbitMessage)) return;
+            if (rabbitMessage.Body is null)
             {
-                RabbitMessage.Return(message);
+                RabbitMessage.Return(rabbitMessage);
                 return;
             }
             try
             {
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
-                Counters.IncrementTotalReceivingBytes(message.Body.Length);
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", rabbitMessage.Body.Length, _receiver.Route, _receiver.Name);
+                Counters.IncrementTotalReceivingBytes(rabbitMessage.Body.Length);
                 if (ResponseServer)
                 {
                     var evArgs =
-                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Length)
+                        new RawResponseReceivedEventArgs(_name, rabbitMessage.Body, rabbitMessage.CorrelationId, rabbitMessage.Body.Length)
                         {
                             Metadata =
                             {
-                                ["AppId"] = message.Properties.AppId,
-                                ["ContentEncoding"] = message.Properties.ContentEncoding,
-                                ["ContentType"] = message.Properties.ContentType,
-                                ["DeliveryMode"] = message.Properties.DeliveryMode.ToString(),
-                                ["Expiration"] = message.Properties.Expiration,
-                                ["Priority"] = message.Properties.Priority.ToString(),
-                                ["Timestamp"] = message.Properties.Timestamp.ToString(),
-                                ["Type"] = message.Properties.Type,
-                                ["UserId"] = message.Properties.UserId,
-                                ["ReplyTo"] = message.Properties.ReplyTo,
-                                ["MessageId"] = message.Properties.MessageId
+                                ["AppId"] = rabbitMessage.Properties.AppId,
+                                ["ContentEncoding"] = rabbitMessage.Properties.ContentEncoding,
+                                ["ContentType"] = rabbitMessage.Properties.ContentType,
+                                ["DeliveryMode"] = rabbitMessage.Properties.DeliveryMode.ToString(),
+                                ["Expiration"] = rabbitMessage.Properties.Expiration,
+                                ["Priority"] = rabbitMessage.Properties.Priority.ToString(),
+                                ["Timestamp"] = rabbitMessage.Properties.Timestamp.ToString(),
+                                ["Type"] = rabbitMessage.Properties.Type,
+                                ["UserId"] = rabbitMessage.Properties.UserId,
+                                ["ReplyTo"] = rabbitMessage.Properties.ReplyTo,
+                                ["MessageId"] = rabbitMessage.Properties.MessageId
                             }
                         };
                     await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
@@ -244,21 +244,21 @@ namespace TWCore.Messaging.RabbitMQ
                 else
                 {
                     var evArgs =
-                        new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId, message.Body.Length)
+                        new RawRequestReceivedEventArgs(_name, _receiver, rabbitMessage.Body, rabbitMessage.CorrelationId, rabbitMessage.Body.Length)
                         {
                             Metadata =
                             {
-                                ["AppId"] = message.Properties.AppId,
-                                ["ContentEncoding"] = message.Properties.ContentEncoding,
-                                ["ContentType"] = message.Properties.ContentType,
-                                ["DeliveryMode"] = message.Properties.DeliveryMode.ToString(),
-                                ["Expiration"] = message.Properties.Expiration,
-                                ["Priority"] = message.Properties.Priority.ToString(),
-                                ["Timestamp"] = message.Properties.Timestamp.ToString(),
-                                ["Type"] = message.Properties.Type,
-                                ["UserId"] = message.Properties.UserId,
-                                ["ReplyTo"] = message.Properties.ReplyTo,
-                                ["MessageId"] = message.Properties.MessageId
+                                ["AppId"] = rabbitMessage.Properties.AppId,
+                                ["ContentEncoding"] = rabbitMessage.Properties.ContentEncoding,
+                                ["ContentType"] = rabbitMessage.Properties.ContentType,
+                                ["DeliveryMode"] = rabbitMessage.Properties.DeliveryMode.ToString(),
+                                ["Expiration"] = rabbitMessage.Properties.Expiration,
+                                ["Priority"] = rabbitMessage.Properties.Priority.ToString(),
+                                ["Timestamp"] = rabbitMessage.Properties.Timestamp.ToString(),
+                                ["Type"] = rabbitMessage.Properties.Type,
+                                ["UserId"] = rabbitMessage.Properties.UserId,
+                                ["ReplyTo"] = rabbitMessage.Properties.ReplyTo,
+                                ["MessageId"] = rabbitMessage.Properties.MessageId
                             }
                         };
                     await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
@@ -273,7 +273,7 @@ namespace TWCore.Messaging.RabbitMQ
             }
             finally
             {
-                RabbitMessage.Return(message);
+                RabbitMessage.Return(rabbitMessage);
             }
         }
         #endregion

@@ -60,7 +60,6 @@ namespace TWCore.Messaging.Redis
             _messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
             _name = server.Name;
             _messageHandlerDelegate = new Action<RedisChannel, RedisValue>(MessageHandler);
-            _processDelegate = new Func<RedisValue, Task>(ProcessingTaskAsync);
             _monitorDelegate = new Func<Task>(MonitorProcess);
             Core.Status.Attach(collection =>
             {
@@ -110,17 +109,10 @@ namespace TWCore.Messaging.Redis
         /// <summary>
         /// Message Handler
         /// </summary>
-        private async void MessageHandler(RedisChannel channel, RedisValue value)
+        private void MessageHandler(RedisChannel channel, RedisValue value)
         {
             Core.Log.LibVerbose("Message received");
-            try
-            {
-                await EnqueueMessageToProcessAsync(_processDelegate, value).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-            }
+            _ = EnqueueMessageToProcessAsync(value);
         }
         /// <summary>
         /// Monitors the maximum concurrent message allowed for the listener
@@ -169,10 +161,11 @@ namespace TWCore.Messaging.Redis
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="value">Message data</param>
+        /// <param name="message">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(RedisValue value)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
+            if (!(message is RedisValue value)) return;
             var oldContext = Core.ContextGroupName;
             try
             {

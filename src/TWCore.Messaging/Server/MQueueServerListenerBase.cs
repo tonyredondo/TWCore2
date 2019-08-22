@@ -149,6 +149,13 @@ namespace TWCore.Messaging.Server
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract void OnDispose();
+        /// <summary>
+        /// On Process Message
+        /// </summary>
+        /// <typeparam name="T">Type of message</typeparam>
+        /// <param name="message">Message instance</param>
+        /// <returns>Process task</returns>
+        protected abstract Task OnProcessMessageAsync<T>(T message);
         #endregion
 
         #region Protected Methods
@@ -169,16 +176,15 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Enqueue Message To Process
         /// </summary>
-        /// <param name="processingFunc">Processing Func</param>
         /// <param name="message">Message</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
+        protected async Task EnqueueMessageToProcessAsync<T>(T message)
         {
             Interlocked.Increment(ref _activeWorkers);
             Counters.IncrementMessages();
             try
             {
-                await processingFunc(message).ConfigureAwait(false);
+                await OnProcessMessageAsync(message).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

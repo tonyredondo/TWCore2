@@ -57,11 +57,11 @@ namespace TWCore.Messaging.NSQ
                 try
                 {
 #if COMPATIBILITY
-                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, message.Body));
+                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(message.Body));
 #else
-                    ThreadPool.QueueUserWorkItem(async item =>
+                    ThreadPool.QueueUserWorkItem(item =>
                     {
-                        await _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, item);
+                        _listener.EnqueueMessageToProcessAsync(item);
                     }, message.Body, false);
 #endif
                     message.Finish();
@@ -191,10 +191,11 @@ namespace TWCore.Messaging.NSQ
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="data">Message data</param>
+        /// <param name="message">Message data</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task ProcessingTaskAsync(byte[] data)
+        protected override async Task OnProcessMessageAsync<T>(T message)
         {
+            if (!(message is byte[] data)) return;
             if (data == null) return;
             var oldContext = Core.ContextGroupName;
             try

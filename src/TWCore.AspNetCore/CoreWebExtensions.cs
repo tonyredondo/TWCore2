@@ -72,10 +72,13 @@ namespace TWCore.AspNetCore
         /// <summary>
         /// Sets the default TWCoreValues
         /// </summary>
-        public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_3_0, CoreWebSettings settings = null)
+        /// <param name="services">Services</param>
+        /// <param name="useNewtonsoft">Use newtonsoft json serializer or the default System.Text.Json</param>
+        /// <param name="settings">Core web settings</param>
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, bool useNewtonsoft = false, CoreWebSettings settings = null)
         {
             settings = settings ?? new CoreWebSettings();
-            services.AddMvc(options =>
+            var mvcBuilder = services.AddMvc(options =>
             {
                 try
                 {
@@ -118,12 +121,24 @@ namespace TWCore.AspNetCore
                 {
                     Core.Log.Write(ex);
                 }
-            }).SetCompatibilityVersion(compatibilityVersion)
-            .AddJsonOptions(options =>
-            {
-                if (settings.EnableJsonStringEnum)
-                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
+
+            if (useNewtonsoft)
+            {
+                mvcBuilder = mvcBuilder.AddNewtonsoftJson(options =>
+                {
+                    if (settings.EnableJsonStringEnum)
+                        options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
+            }
+            else
+            {
+                mvcBuilder = mvcBuilder.AddJsonOptions(options =>
+                {
+                    if (settings.EnableJsonStringEnum)
+                        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                });
+            }
             services.AddLogging(cfg =>
             {
                 if (settings.EnableTWCoreLogger)

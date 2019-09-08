@@ -12,4 +12,8 @@
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0-preview9.19424.4" />
+  </ItemGroup>
+
 </Project>

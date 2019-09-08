@@ -72,18 +72,18 @@ namespace TWCore.Services
         {
             try
             {
-                await OnActionAsync(_token).ConfigureAwait(false);
+                await OnActionAsync(token).ConfigureAwait(false);
                 if (EndAfterTaskFinish)
                     ServiceContainer.ServiceExit();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
                 ServiceContainer.ServiceExit();
             }
         }
         #endregion
-        
+
         #region IService Methods
         /// <inheritdoc />
         /// <summary>
@@ -120,9 +120,9 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Stopping service");
+                _tokenSource.Cancel();
                 if (!_task.IsCompleted || _task.Status == TaskStatus.RanToCompletion || _task.Status == TaskStatus.Running)
-                    _tokenSource.Cancel();
-                _task.Wait(10000);
+                    _task.Wait(10000);
                 Core.Log.InfoBasic("Service stopped");
             }
             catch (Exception ex)

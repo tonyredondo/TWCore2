@@ -24,7 +24,7 @@ A multipurpose framework library for .net core</Description>
     <Features>strict</Features>
   </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)'=='Release' AND '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All"/>
   </ItemGroup>
   <Target Name="DisplayMessages" BeforeTargets="Build">
   	<Message Importance="High" Text="Compiling in: $(OS) - Mode: $(Configuration) - TargetFramework: $(TargetFramework) - Version: $(VersionPrefix)-$(VersionSuffix)" />

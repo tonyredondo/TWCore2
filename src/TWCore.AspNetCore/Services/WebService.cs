@@ -139,7 +139,7 @@ namespace TWCore.Services
         {
             var host = _hostFactory(StartArguments);
             await host.StartAsync(token).ConfigureAwait(false);
-
+            token.Register(() => host?.Dispose());
             _hostingEnvironment = (IWebHostEnvironment)host.Services.GetService(typeof(IWebHostEnvironment));
             Core.Log.InfoBasic($"Hosting environment: {_hostingEnvironment.EnvironmentName}");
             Core.Log.InfoBasic($"Content root path: {_hostingEnvironment.ContentRootPath}");

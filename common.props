@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Product>TWCore</Product>
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
-    <Authors>Daniel Redondo</Authors>
+    <Authors>Tony Redondo</Authors>
     <Company />
     <Description>TWCore Framework.
 A multipurpose framework library for .net core</Description>
@@ -13,18 +13,18 @@ A multipurpose framework library for .net core</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
+    <PackageTags>TWCore, Tony, Wanhjör, Tony Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
     <Copyright>Daniel Redondo</Copyright>
     <PackageLicense>https://www.apache.org/licenses/LICENSE-2.0</PackageLicense>
     <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/tonyredondo/TWCore2/master/icon.png</PackageIconUrl>
     <IncludeSymbols>True</IncludeSymbols>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Features>strict</Features>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(Configuration)'=='Release' AND '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All"/>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
   </ItemGroup>
   <Target Name="DisplayMessages" BeforeTargets="Build">
   	<Message Importance="High" Text="Compiling in: $(OS) - Mode: $(Configuration) - TargetFramework: $(TargetFramework) - Version: $(VersionPrefix)-$(VersionSuffix)" />

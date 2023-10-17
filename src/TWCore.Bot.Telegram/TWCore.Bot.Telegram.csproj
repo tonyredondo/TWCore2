@@ -4,7 +4,7 @@
     <Title>TWCore.Bot.Telegram</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Telegram.Bot" Version="14.12.0" />
+    <PackageReference Include="Telegram.Bot" Version="16.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TWCore.Bot\TWCore.Bot.csproj" />

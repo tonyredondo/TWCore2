@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using MySqlConnector;
 using TWCore.Data.Schema.Generator;
 using TWCore.Diagnostics.Status;
 

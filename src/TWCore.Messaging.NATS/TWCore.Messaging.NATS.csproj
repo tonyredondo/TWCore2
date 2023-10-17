@@ -8,6 +8,6 @@
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NATS.Client" Version="0.9.0" />
+    <PackageReference Include="NATS.Client" Version="1.1.0" />
   </ItemGroup>
 </Project>

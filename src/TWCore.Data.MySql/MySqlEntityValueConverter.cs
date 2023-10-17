@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using MySql.Data.Types;
 using System;
 using System.Runtime.CompilerServices;
+using MySqlConnector;
+
 // ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Data.MySql

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;net472</TargetFrameworks>
+        <TargetFrameworks>net7.0;net6.0;net5.0;netcoreapp3.1;netcoreapp2.2;netcoreapp2.1;net472</TargetFrameworks>
         <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
         <TieredCompilation>true</TieredCompilation>
     </PropertyGroup>
@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
+      <PackageReference Include="BenchmarkDotNet" Version="0.13.9" />
     </ItemGroup>
 
 </Project>

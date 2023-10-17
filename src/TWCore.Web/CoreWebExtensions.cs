@@ -75,7 +75,11 @@ namespace TWCore.Web
         /// <summary>
         /// Sets the default TWCoreValues
         /// </summary>
+#if NETCOREAPP2_1
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_1, CoreWebSettings settings = null)
+#else
         public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_2, CoreWebSettings settings = null)
+#endif
         {
             settings = settings ?? new CoreWebSettings();
             services.AddMvc(options =>
@@ -124,8 +128,13 @@ namespace TWCore.Web
             }).SetCompatibilityVersion(compatibilityVersion)
             .AddJsonOptions(options =>
             {
+#if NETCOREAPP3_1_OR_GREATER
+                if (settings.EnableJsonStringEnum)
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+#else
                 if (settings.EnableJsonStringEnum)
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+#endif
             });
             services.AddLogging(cfg =>
             {

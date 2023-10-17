@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using TWCore.IO;
 using TWCore.Serialization;
 using TWCore.Serialization.NSerializer;
@@ -11,7 +12,7 @@ using TWCore.Serialization.MsgPack;
 
 namespace TWCore.Tests.Benchmark
 {
-    [CoreJob(baseline: true)]
+    [SimpleJob(RuntimeMoniker.Net70)]
     [RPlotExporter, RankColumn, MinColumn, MaxColumn, MemoryDiagnoser]
     public class SerializersBench
     {

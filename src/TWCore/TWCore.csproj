@@ -2,7 +2,6 @@
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
     <Title>TWCore</Title>
-    <TargetFrameworks>net7.0;net6.0;net5.0;netcoreapp3.1;netcoreapp2.2;netcoreapp2.1;netstandard2.0;net472</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

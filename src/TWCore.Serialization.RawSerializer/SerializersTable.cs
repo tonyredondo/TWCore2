@@ -1371,7 +1371,7 @@ namespace TWCore.Serialization.RawSerializer
         protected void WriteSByte(sbyte value)
         {
             Span<byte> buffer = stackalloc byte[1];
-            BitConverter.TryWriteBytes(buffer, value);
+            BitConverter.TryWriteBytes(buffer, (short)value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

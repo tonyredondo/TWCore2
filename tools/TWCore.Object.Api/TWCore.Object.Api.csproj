@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <TieredCompilation>true</TieredCompilation>
-	<Title>TWCore.Object.Api</Title>    
+	<Title>TWCore.Object.Api</Title>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Status.htm" />

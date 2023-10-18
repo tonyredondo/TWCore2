@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0
 		LICENSE = LICENSE
 		README.md = README.md
 		version.props = version.props
+		icon.png = icon.png
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}"

@@ -172,6 +172,9 @@ namespace TWCore
         /// <param name="tempo">Base tempo</param>
         /// <param name="octave">Base octave</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if NET5_0_OR_GREATER
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
         public static void Play(string terms, int tempo = 120, int octave = 4)
         {
             var lstNotes = GetFreqTempoPairs(terms, tempo, octave);

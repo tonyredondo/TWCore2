@@ -1,31 +1,40 @@
 <Project>
-  <Import Project="version.props" />
-  <PropertyGroup>
-    <Product>TWCore</Product>
-    <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
-    <Authors>Tony Redondo</Authors>
-    <Company />
-    <Description>TWCore Framework.
-A multipurpose framework library for .net core</Description>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <PackageTags>TWCore, Tony, Wanhjör, Tony Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
-    <Copyright>Daniel Redondo</Copyright>
-    <PackageLicense>https://www.apache.org/licenses/LICENSE-2.0</PackageLicense>
-    <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/tonyredondo/TWCore2/master/icon.png</PackageIconUrl>
-    <IncludeSymbols>True</IncludeSymbols>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-    <Features>strict</Features>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-  </PropertyGroup>
-  <ItemGroup>
-      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
-      <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
-  </ItemGroup>
+    <Import Project="version.props"/>
+    <PropertyGroup>
+        <Product>TWCore</Product>
+        <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
+        <Authors>Tony Redondo</Authors>
+        <Company/>
+        <Description>TWCore Framework.
+            A multipurpose framework library for .net core
+        </Description>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <PackageTags>TWCore, Tony, Wanhjör, Tony Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
+        <Copyright>Daniel Redondo</Copyright>
+        <PackageLicense>https://www.apache.org/licenses/LICENSE-2.0</PackageLicense>
+        <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <IncludeSymbols>True</IncludeSymbols>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <LangVersion>latest</LangVersion>
+        <Features>strict</Features>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3"/>
+        <PackageReference Include="DotNet.ReproducibleBuilds" Version="1.1.1" PrivateAssets="All"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 </Project>

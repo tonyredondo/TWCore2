@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml;
@@ -100,6 +101,7 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="info">A System.Runtime.Serialization.SerializationInfo object containing the information required to serialize the SerializableDictionary.</param>
         /// <param name="context">A System.Runtime.Serialization.StreamingContext structure containing the source and destination of the serialized stream associated with the SerializableDictionary.</param>
+        [Obsolete]
         protected SerializableDictionary(SerializationInfo info, StreamingContext context) : base(info, context) { }
         #endregion
 

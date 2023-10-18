@@ -18,6 +18,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,16 +45,20 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly string _originalUrl;
         private readonly Uri _url;
         private readonly string _indexFormat;
-        private int _count;
         private readonly BlockingCollection<object> _sourceItems;
-        private bool _enabled = true;
-        private StringBuilder _builderBuffer = new StringBuilder();
-        private JsonTextSerializer serializer = new JsonTextSerializer
+        private readonly StringBuilder _builderBuffer = new();
+        private readonly JsonTextSerializer serializer = new()
         {
             EnumsAsStrings = true
         };
-        private WebClient _client;
-        private int _inProcess = 0;
+#if NET5_0_OR_GREATER
+        private readonly HttpClient _client;
+#else
+        private readonly WebClient _client;
+#endif
+        private int _count;
+        private bool _enabled = true;
+        private int _inProcess;
 
         #region .ctor
         /// <summary>
@@ -66,7 +72,12 @@ namespace TWCore.Diagnostics.Log.Storages
             _originalUrl = url;
             _url = new UriBuilder(url) { Path = "_bulk" }.Uri;
             _indexFormat = indexFormat;
+#if NET5_0_OR_GREATER
+            _client = new HttpClient();
+            _client.DefaultRequestHeaders.Accept.TryParseAdd("application/json");
+#else
             _client = new WebClient();
+#endif
             _sourceItems = new BlockingCollection<object>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
@@ -181,9 +192,16 @@ namespace TWCore.Diagnostics.Log.Storages
                 var data = _builderBuffer.ToString();
                 _builderBuffer.Clear();
                 Core.Log.LibDebug("Sending {0} log items to elastic search.", count);
+#if NET5_0_OR_GREATER
+                _client.Send(new HttpRequestMessage(HttpMethod.Post, _url)
+                {
+                    Content = new StringContent(data, Encoding.UTF8, "application/json")
+                });
+#else
                 _client.Headers[HttpRequestHeader.Accept] = "application/json";
                 _client.Headers[HttpRequestHeader.ContentType] = "application/json";
-                var result = _client.UploadString(_url, "POST", data);
+                _client.UploadString(_url, "POST", data);
+#endif
             }
             catch (UriFormatException fException)
             {

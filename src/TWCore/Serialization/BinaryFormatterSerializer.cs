@@ -100,6 +100,7 @@ namespace TWCore.Serialization
     /// <summary>
     /// BinaryFormatter serializer extensions
     /// </summary>
+    [Obsolete]
     public static class BinaryFormatterSerializerExtensions
     {
         /// <summary>

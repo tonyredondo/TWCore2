@@ -2,11 +2,10 @@
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
     <Title>TWCore.Web</Title>
-    <TargetFrameworks>net7.0;net6.0;net5.0;netcoreapp3.1;netcoreapp2.2;netcoreapp2.1;netstandard2.0;net472</TargetFrameworks>
   </PropertyGroup>
 
   <Choose>
-    <When Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+    <When Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'netcoreapp3.1'">
       <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
       </ItemGroup>
@@ -28,7 +27,12 @@
         </When>
         <When Condition="'$(TargetFramework)' == 'net7.0'">
           <ItemGroup>
-            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.11" />
+            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.12" />
+          </ItemGroup>
+        </When>
+        <When Condition="'$(TargetFramework)' == 'net8.0'">
+          <ItemGroup>
+            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.12" />
           </ItemGroup>
         </When>
       </Choose>

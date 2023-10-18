@@ -15,7 +15,7 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
         <PackageTags>TWCore, Tony, Wanhjör, Tony Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
-        <Copyright>Daniel Redondo</Copyright>
+        <Copyright>Tony Redondo</Copyright>
         <PackageLicense>https://www.apache.org/licenses/LICENSE-2.0</PackageLicense>
         <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -41,8 +41,5 @@
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0'">
         <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3"/>
     </ItemGroup>
 </Project>

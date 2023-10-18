@@ -10,6 +10,28 @@
       <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
       </ItemGroup>
+      <Choose>
+        <When Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+          <ItemGroup>
+            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.32" />
+          </ItemGroup>
+        </When>
+        <When Condition="'$(TargetFramework)' == 'net5.0'">
+          <ItemGroup>
+            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.17" />
+          </ItemGroup>
+        </When>
+        <When Condition="'$(TargetFramework)' == 'net6.0'">
+          <ItemGroup>
+            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.23" />
+          </ItemGroup>
+        </When>
+        <When Condition="'$(TargetFramework)' == 'net7.0'">
+          <ItemGroup>
+            <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.11" />
+          </ItemGroup>
+        </When>
+      </Choose>
     </When>
     <When Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
       <ItemGroup>

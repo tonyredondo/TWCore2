@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/icon.png" alt="Potato" width="45px" height="45px" /> TWCore 2.1
+# <img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/icon.png" alt="Potato" width="45px" height="45px" /> TWCore 2.2
 [![Build status](https://ci.appveyor.com/api/projects/status/6jvbgouxmvd0wh3j/branch/master?svg=true)](https://ci.appveyor.com/project/tonyredondo/twcore2/branch/master)
 [![Nuget](https://img.shields.io/nuget/vpre/TWCore.svg)](https://www.nuget.org/packages?q=Tags%3A"TWCore")
 

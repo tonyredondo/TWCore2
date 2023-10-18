@@ -81,21 +81,21 @@ namespace TWCore.Messaging.Redis
                         if (string.IsNullOrEmpty(queue.Name))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, replyTo, e.CorrelationId);
-                            await subscriber.PublishAsync(replyTo, body).ConfigureAwait(false);
+                            await subscriber.PublishAsync(RedisChannel.Literal(replyTo), body).ConfigureAwait(false);
 
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
                             var nName = queue.Name + "_" + replyTo;
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, nName, e.CorrelationId);
-                            await subscriber.PublishAsync(nName, body).ConfigureAwait(false);
+                            await subscriber.PublishAsync(RedisChannel.Literal(nName), body).ConfigureAwait(false);
 
                         }
                     }
                     else
                     {
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, e.CorrelationId);
-                        await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
+                        await subscriber.PublishAsync(RedisChannel.Literal(queue.Name), body).ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex)

@@ -191,7 +191,7 @@ namespace TWCore.Messaging.Redis
             {
                 var subscriber = await queue.GetSubscriberAsync().ConfigureAwait(false);
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}/{2}' with CorrelationId={3}", body.Length, queue.Route, queue.Name, correlationId);
-                await subscriber.PublishAsync(queue.Name, body).ConfigureAwait(false);
+                await subscriber.PublishAsync(RedisChannel.Literal(queue.Name), body).ConfigureAwait(false);
             }
 
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);

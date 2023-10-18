@@ -22,8 +22,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting.Server;
 using TWCore.Diagnostics.Status;
+
+#if NETCOREAPP3_1_OR_GREATER
+using Microsoft.Extensions.Hosting;
+#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable CheckNamespace
@@ -42,8 +46,13 @@ namespace TWCore.Services
         /// </summary>
         public static WebServiceSettings Settings { get; } = Core.GetSettings<WebServiceSettings>();
 
-        private readonly Func<string[], IWebHost> _webHostFactory;
+#if NETCOREAPP3_1_OR_GREATER
+        private readonly Func<string[], IHost> _hostFactory;
+        private IWebHostEnvironment _hostingEnvironment;
+#else
+        private readonly Func<string[], IWebHost> _hostFactory;
         private IHostingEnvironment _hostingEnvironment;
+#endif
         private ICollection<string> _serverAddresses;
 
         #region .ctor
@@ -51,10 +60,14 @@ namespace TWCore.Services
         /// <summary>
         /// AspNet Web Service
         /// </summary>
-        /// <param name="webHostFactory">WebHost Builder factory delegate</param>
-        public WebService(Func<string[], IWebHost> webHostFactory)
+        /// <param name="hostFactory">Host Builder factory delegate</param>
+#if NETCOREAPP3_1_OR_GREATER
+        public WebService(Func<string[], IHost> hostFactory)
+#else
+        public WebService(Func<string[], IWebHost> hostFactory)
+#endif
         {
-            _webHostFactory = webHostFactory;
+            _hostFactory = hostFactory;
             Core.Status.Attach(collections =>
             {
                 if (_hostingEnvironment != null)
@@ -78,14 +91,68 @@ namespace TWCore.Services
         public static WebService Create<TStartUp>() where TStartUp : class
         {
             if (Settings?.Urls?.Any() == true)
+            {
+#if NETCOREAPP3_1_OR_GREATER
+                return new WebService(args => Host.CreateDefaultBuilder(args)
+                    .ConfigureWebHostDefaults(builder =>
+                    {
+                        builder.UseStartup<TStartUp>()
+                            .UseUrls(Settings.Urls);
+                    }).Build());
+#else
                 return new WebService(args => WebHost.CreateDefaultBuilder(args)
                     .UseStartup<TStartUp>()
                     .UseUrls(Settings.Urls)
                     .Build());
+#endif
+            }
+
+#if NETCOREAPP3_1_OR_GREATER
+            return new WebService(args =>
+            {
+                return Host.CreateDefaultBuilder(args)
+                    .ConfigureWebHostDefaults(builder => builder.UseStartup<TStartUp>())
+                    .Build();
+            });
+#else
             return new WebService(args => WebHost.CreateDefaultBuilder(args)
                 .UseStartup<TStartUp>()
                 .Build());
+#endif
         }
+#if NETCOREAPP3_1_OR_GREATER
+        /// <summary>
+        /// Create WebService with default WebHost
+        /// </summary>
+        /// <typeparam name="TStartUp">StartuUp class</typeparam>
+        /// <param name="builder">Builder extensions</param>
+        /// <returns>WebService default instance</returns>
+        public static WebService Create<TStartUp>(Func<IHostBuilder, IHostBuilder> builder) where TStartUp : class
+        {
+            if (builder is null)
+                return Create<TStartUp>();
+            if (Settings?.Urls?.Any() == true)
+                return new WebService(args =>
+                {
+                    var hostBuilder = Host.CreateDefaultBuilder(args)
+                        .ConfigureWebHostDefaults(webBuilder =>
+                        {
+                            webBuilder.UseStartup<TStartUp>()
+                                .UseUrls(Settings.Urls);
+                        });
+                    hostBuilder = builder(hostBuilder);
+                    return hostBuilder.Build();
+                });
+
+            return new WebService(args =>
+            {
+                var hostBuilder = Host.CreateDefaultBuilder(args)
+                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<TStartUp>());
+                hostBuilder = builder(hostBuilder);
+                return hostBuilder.Build();
+            });
+        }
+#else
         /// <summary>
         /// Create WebService with default WebHost
         /// </summary>
@@ -113,6 +180,7 @@ namespace TWCore.Services
                 return wbuilder.Build();
             });
         }
+#endif
         #endregion
 
         /// <summary>
@@ -122,7 +190,22 @@ namespace TWCore.Services
         /// <returns>Action task</returns>
         protected override async Task OnActionAsync(CancellationToken token)
         {
-            var webHost = _webHostFactory(StartArguments);
+#if NETCOREAPP3_1_OR_GREATER
+            var host = _hostFactory(StartArguments);
+            await host.StartAsync(token).ConfigureAwait(false);
+            token.Register(() => host?.Dispose());
+            _hostingEnvironment = (IWebHostEnvironment)host.Services.GetService(typeof(IWebHostEnvironment));
+            Core.Log.InfoBasic($"Hosting environment: {_hostingEnvironment.EnvironmentName}");
+            Core.Log.InfoBasic($"Content root path: {_hostingEnvironment.ContentRootPath}");
+            Core.Log.InfoBasic($"Web root path: {_hostingEnvironment.WebRootPath}");
+
+            var server = (IServer)host.Services.GetService(typeof(IServer));
+            _serverAddresses = server.Features.Get<IServerAddressesFeature>()?.Addresses;
+            if (_serverAddresses != null)
+                foreach (var address in _serverAddresses)
+                    Core.Log.InfoBasic($"WebService is Listening on: {address}");
+#else
+            var webHost = _hostFactory(StartArguments);
             await webHost.StartAsync(token).ConfigureAwait(false);
             _hostingEnvironment = (IHostingEnvironment)webHost.Services.GetService(typeof(IHostingEnvironment));
             //var applicationLifetime = (IApplicationLifetime)webHost.Services.GetService(typeof(IApplicationLifetime));
@@ -133,6 +216,7 @@ namespace TWCore.Services
             if (_serverAddresses != null)
                 foreach (var address in _serverAddresses)
                     Core.Log.InfoBasic($"WebService is Listening on: {address}");
+#endif
         }
     }
 }

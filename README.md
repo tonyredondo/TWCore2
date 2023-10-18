@@ -1,8 +1,19 @@
-# <img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/icon.png" alt="Potato" width="45px" height="45px" /> TWCore 2.2
+# <img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/icon.png" alt="Potato" width="45px" height="45px" /> TWCore 3.1
 [![Build status](https://ci.appveyor.com/api/projects/status/6jvbgouxmvd0wh3j/branch/master?svg=true)](https://ci.appveyor.com/project/tonyredondo/twcore2/branch/master)
 [![Nuget](https://img.shields.io/nuget/vpre/TWCore.svg)](https://www.nuget.org/packages?q=Tags%3A"TWCore")
 
-A multipurpose framework library for dotnet core 2.2, dotnet standard 2.0 and net461 used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx). 
+A multipurpose framework library used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
+
+### Compatible with
+- .NET Framework 4.7.2
+- netstandard2.0
+- netcoreapp2.1
+- netcoreapp2.2
+- netcoreapp3.1
+- net5.0
+- net6.0
+- net7.0
+- net8.0
 
 ## Advantages
 

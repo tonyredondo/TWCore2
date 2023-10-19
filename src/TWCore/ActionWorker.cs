@@ -50,25 +50,22 @@ namespace TWCore
         /// </summary>
         /// <param name="item">WorkerItem instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static async Task DoActionAsync(WorkerItem item)
+        private static Task DoActionAsync(WorkerItem item)
         {
             try
             {
-                if (item.Type == 0)
+                switch (item.Type)
                 {
-                    await item.Function(item.State).ConfigureAwait(false);
-                }
-                else if (item.Type == 1)
-                {
-                    await item.FunctionAlt().ConfigureAwait(false);
-                }
-                else if (item.Type == 2)
-                {
-                    item.Action(item.State);
-                }
-                else if (item.Type == 3)
-                {
-                    item.ActionAlt();
+                    case 0:
+                        return DoActionInternal0Async(item);
+                    case 1:
+                        return DoActionInternal1Async(item);
+                    case 2:
+                        item.Action(item.State);
+                        break;
+                    case 3:
+                        item.ActionAlt();
+                        break;
                 }
             }
             catch(Exception ex)
@@ -78,6 +75,40 @@ namespace TWCore
                 else
                     Core.Log.Write(ex);
                 throw;
+            }
+
+            return Task.CompletedTask;
+
+            static async Task DoActionInternal0Async(WorkerItem item)
+            {
+                try
+                {
+                    await item.Function(item.State).ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    if (item.OnExceptionCallback != null)
+                        item.OnExceptionCallback(ex);
+                    else
+                        Core.Log.Write(ex);
+                    throw;
+                }
+            }
+
+            static async Task DoActionInternal1Async(WorkerItem item)
+            {
+                try
+                {
+                    await item.FunctionAlt().ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    if (item.OnExceptionCallback != null)
+                        item.OnExceptionCallback(ex);
+                    else
+                        Core.Log.Write(ex);
+                    throw;
+                }
             }
         }
         #endregion
@@ -232,34 +263,65 @@ namespace TWCore
         /// </summary>
         /// <param name="item">WorkerItem instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static async Task DoActionAsync(WorkerItem item)
+        private static Task DoActionAsync(WorkerItem item)
         {
             try
             {
-                if (item.Type == 0)
+                switch (item.Type)
                 {
-                    await item.Function(item.State).ConfigureAwait(false);
-                }
-                else if (item.Type == 1)
-                {
-                    await item.FunctionAlt().ConfigureAwait(false);
-                }
-                else if (item.Type == 2)
-                {
-                    item.Action(item.State);
-                }
-                else if (item.Type == 3)
-                {
-                    item.ActionAlt();
+                    case 0:
+                        return DoActionInternal0Async(item);
+                    case 1:
+                        return DoActionInternal1Async(item);
+                    case 2:
+                        item.Action(item.State);
+                        break;
+                    case 3:
+                        item.ActionAlt();
+                        break;
                 }
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 if (item.OnExceptionCallback != null)
                     item.OnExceptionCallback(ex);
                 else
                     Core.Log.Write(ex);
                 throw;
+            }
+
+            return Task.CompletedTask;
+
+            static async Task DoActionInternal0Async(WorkerItem item)
+            {
+                try
+                {
+                    await item.Function(item.State).ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    if (item.OnExceptionCallback != null)
+                        item.OnExceptionCallback(ex);
+                    else
+                        Core.Log.Write(ex);
+                    throw;
+                }
+            }
+
+            static async Task DoActionInternal1Async(WorkerItem item)
+            {
+                try
+                {
+                    await item.FunctionAlt().ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    if (item.OnExceptionCallback != null)
+                        item.OnExceptionCallback(ex);
+                    else
+                        Core.Log.Write(ex);
+                    throw;
+                }
             }
         }
         #endregion

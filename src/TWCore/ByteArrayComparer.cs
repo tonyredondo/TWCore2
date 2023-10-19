@@ -56,7 +56,6 @@ namespace TWCore
             var xs = x.AsSpan();
             var ys = y.AsSpan();
 
-#if COMPATIBILITY
             var remain = length % 8;
             if (remain > 0)
             {
@@ -77,11 +76,6 @@ namespace TWCore
                     return false;
             }
             return true;
-#else
-            var xVector = new Vector<byte>(xs);
-            var yVector = new Vector<byte>(ys);
-            return Vector.EqualsAll(xVector, yVector);
-#endif
         }
         /// <inheritdoc />
         /// <summary>

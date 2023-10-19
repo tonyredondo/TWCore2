@@ -4,10 +4,19 @@
     <Title>TWCore.Data.PostgreSQL</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="4.1.12" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp2.2'">
+      <ItemGroup>
+        <PackageReference Include="Npgsql" Version="5.0.17" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Npgsql" Version="7.0.6" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

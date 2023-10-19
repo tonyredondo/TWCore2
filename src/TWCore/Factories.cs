@@ -109,10 +109,7 @@ namespace TWCore
                     _platformType = PlatformType.Windows;
                 return _platformType;
             }
-            protected set
-            {
-                _platformType = value;
-            }
+            protected set => _platformType = value;
         }
         /// <summary>
         /// Gets if the process is running inside a container

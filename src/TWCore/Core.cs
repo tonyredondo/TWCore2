@@ -56,19 +56,18 @@ namespace TWCore
     public static class Core
     {
         private const string SettingsTemplateFormat = "{{Settings:{0}}}";
-        private static readonly SymmetricKeyProvider SymmetricProvider = new SymmetricKeyProvider();
-        private static readonly Regex EnvironmentTemplateFormatRegex = new Regex(@"{Env:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex EncriptionTemplateFormatRegex = new Regex(@"{Encripted:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
-        private static readonly ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
-        private static readonly AsyncLocal<string> _contextGroupName = new AsyncLocal<string>();
+        private static readonly SymmetricKeyProvider SymmetricProvider = new();
+        private static readonly Regex EnvironmentTemplateFormatRegex = new(@"{Env:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex EncriptionTemplateFormatRegex = new(@"{Encripted:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly ConcurrentDictionary<string, Type> TypesCache = new();
+        private static readonly AsyncLocal<string> _contextGroupName = new();
         private static CoreSettings _globalSettings;
         private static Dictionary<string, object> _data;
         private static Dictionary<object, object> _objectData;
         private static AsyncLocal<Dictionary<string, object>> _taskData;
         private static AsyncLocal<Dictionary<object, object>> _taskObjectData;
         private static int _initialized;
-        private static readonly Queue<Action> OninitActions = new Queue<Action>();
+        private static readonly Queue<Action> OninitActions = new();
         private static Timer _updateLocalUtcTimer;
         private static TimeSpan _localUtcOffset;
         internal static Dictionary<string, string> DefaultEnvironmentVariables = null;
@@ -110,19 +109,19 @@ namespace TWCore
         /// <summary>
         /// App global data dictionary
         /// </summary>
-        public static Dictionary<string, object> Data => _data ?? (_data = new Dictionary<string, object>());
+        public static Dictionary<string, object> Data => _data ??= new Dictionary<string, object>();
         /// <summary>
         /// App global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ObjectData => _objectData ?? (_objectData = new Dictionary<object, object>());
+        public static Dictionary<object, object> ObjectData => _objectData ??= new Dictionary<object, object>();
         /// <summary>
         /// App Settings
         /// </summary>
-        public static KeyValueCollection Settings { get; private set; } = new KeyValueCollection(false);
+        public static KeyValueCollection Settings { get; private set; } = new(false);
         /// <summary>
         /// Default Injector instance
         /// </summary>
-        public static InjectorEngine Injector { get; private set; } = new InjectorEngine();
+        public static InjectorEngine Injector { get; private set; } = new();
         /// <summary>
         /// Task global data dictionary
         /// </summary>
@@ -130,11 +129,10 @@ namespace TWCore
         {
             get
             {
-                if (_taskData == null)
+                _taskData ??= new AsyncLocal<Dictionary<string, object>>
                 {
-                    _taskData = new AsyncLocal<Dictionary<string, object>>();
-                    _taskData.Value = new Dictionary<string, object>();
-                }
+                    Value = new Dictionary<string, object>()
+                };
                 return _taskData.Value;
             }
         }
@@ -145,11 +143,11 @@ namespace TWCore
         {
             get
             {
-                if (_taskObjectData == null)
+                _taskObjectData ??= new AsyncLocal<Dictionary<object, object>>
                 {
-                    _taskObjectData = new AsyncLocal<Dictionary<object, object>>();
-                    _taskObjectData.Value = new Dictionary<object, object>();
-                }
+                    Value = new Dictionary<object, object>()
+                };
+
                 return _taskObjectData.Value;
             }
         }
@@ -181,7 +179,7 @@ namespace TWCore
         /// <summary>
         /// Core services
         /// </summary>
-        public static CoreServices Services { get; } = new CoreServices();
+        public static CoreServices Services { get; } = new();
         /// <summary>
         /// Faster DateTime.Now
         /// </summary>
@@ -297,7 +295,7 @@ namespace TWCore
                 Log.AddConsoleStorage();
 
             #region Log, Trace and Status Injector Load
-            if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
+            if (Injector?.Settings?.Interfaces?.Count > 0)
             {
                 //Init Log
                 Log.LibDebug("Loading log engine configuration");
@@ -308,18 +306,20 @@ namespace TWCore
                     {
                         if (!Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading log storage: {0}", name);
-                        var lSto = Injector.New<ILogStorage>(name);
-                        if (lSto is null)
+                        if (Injector.New<ILogStorage>(name) is { } lStorage)
                         {
-                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
-                            continue;
+                            if (lStorage is ConsoleLogStorage)
+                            {
+                                Log.LibDebug("Console log storage already added, ignoring.");
+                                continue;
+                            }
+                         
+                            Log.Storages.Add(lStorage, Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
                         }
-                        if (lSto is ConsoleLogStorage)
+                        else
                         {
-                            Log.LibDebug("Console log storage already added, ignoring.");
-                            continue;
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", nameof(ILogStorage), name);
                         }
-                        Log.Storages.Add(lSto, Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
                     }
                 }
                 var logStorage = Log.Storages.Get(typeof(ConsoleLogStorage));
@@ -332,19 +332,20 @@ namespace TWCore
                 //Init Trace
                 Log.LibDebug("Loading trace engine configuration");
                 var traceStorages = Injector.GetNames<ITraceStorage>();
-                if (traceStorages?.Any() == true)
+                if (traceStorages?.Length > 0)
                 {
                     foreach (var name in traceStorages)
                     {
                         if (!Settings[$"Core.Trace.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading trace storage: {0}", name);
-                        var lTrace = Injector.New<ITraceStorage>(name);
-                        if (lTrace is null)
+                        if (Injector.New<ITraceStorage>(name) is { } traceStorage)
                         {
-                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ITraceStorage).Name, name);
-                            continue;
+                            Trace.Storages.Add(traceStorage);
                         }
-                        Trace.Storages.Add(lTrace);
+                        else
+                        {
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", nameof(ITraceStorage), name);
+                        }
                     }
                 }
                 Trace.Enabled = GlobalSettings.TraceEnabled;
@@ -352,19 +353,20 @@ namespace TWCore
                 //Init Status
                 Log.LibDebug("Loading status engine configuration");
                 var statusTransports = Injector.GetNames<IStatusTransport>();
-                if (statusTransports?.Any() == true)
+                if (statusTransports?.Length > 0)
                 {
                     foreach (var name in statusTransports)
                     {
                         if (!Settings[$"Core.Status.Transport.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading status transport: {0}", name);
-                        var sTransport = Injector.New<IStatusTransport>(name);
-                        if (sTransport is null)
+                        if (Injector.New<IStatusTransport>(name) is { } statusTransport)
                         {
-                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(IStatusTransport).Name, name);
-                            continue;
+                            Status.Transports.Add(statusTransport);
                         }
-                        Status.Transports.Add(sTransport);
+                        else
+                        {
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", nameof(IStatusTransport), name);
+                        }
                     }
                 }
                 Status.Enabled = GlobalSettings.StatusEnabled;
@@ -372,19 +374,20 @@ namespace TWCore
                 //Init Counters
                 Log.LibDebug("Loading counters engine configuration");
                 var countersStorages = Injector.GetNames<ICountersStorage>();
-                if (countersStorages?.Any() == true)
+                if (countersStorages?.Length > 0)
                 {
                     foreach(var name in countersStorages)
                     {
                         if (!Settings[$"Core.Counters.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.LibDebug("Loading counter storage: {0}", name);
-                        var lCounter = Injector.New<ICountersStorage>(name);
-                        if (lCounter is null)
+                        if (Injector.New<ICountersStorage>(name) is { } countersStorage)
                         {
-                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ICountersStorage).Name, name);
-                            continue;
+                            Counters.Storages.Add(countersStorage);
                         }
-                        Counters.Storages.Add(lCounter);
+                        else
+                        {
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", nameof(ICountersStorage), name);
+                        }
                     }
                 }
             }
@@ -430,6 +433,21 @@ namespace TWCore
             var lstExceptions = new List<Exception>();
             lock (OninitActions)
             {
+#if NETCOREAPP3_1_OR_GREATER
+                while (OninitActions.TryDequeue(out var action))
+                {
+                    try
+                    {
+                        action?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Write(ex);
+                        lstExceptions.Add(ex);
+                        onError = true;
+                    }
+                }
+#else
                 while (OninitActions.Count > 0)
                 {
                     try
@@ -443,6 +461,7 @@ namespace TWCore
                         onError = true;
                     }
                 }
+#endif
             }
             #endregion
 
@@ -670,11 +689,17 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunOnInit(Action action)
         {
-            if (_initialized == 1)
+            if (Interlocked.CompareExchange(ref _initialized, 1, 1) == 1)
+            {
                 action();
+            }
             else
+            {
                 lock (OninitActions)
+                {
                     OninitActions.Enqueue(action);
+                }
+            }
         }
         /// <summary>
         /// Enqueue actions on Init
@@ -683,11 +708,44 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunOnInit(Func<Task> taskFunc)
         {
-            if (_initialized == 1)
-                taskFunc().WaitAsync();
+            if (Interlocked.CompareExchange(ref _initialized, 1, 1) == 1)
+            {
+                SynchronizationContext context = null;
+                try
+                {
+                    context = SynchronizationContext.Current;
+                    taskFunc?.Invoke().GetAwaiter().GetResult();
+                }
+                finally
+                {
+                    if (context is not null)
+                    {
+                        SynchronizationContext.SetSynchronizationContext(context);
+                    }
+                }
+            }
             else
+            {
                 lock (OninitActions)
-                    OninitActions.Enqueue(() => taskFunc().WaitAsync());
+                {
+                    OninitActions.Enqueue(() =>
+                    {
+                        SynchronizationContext context = null;
+                        try
+                        {
+                            context = SynchronizationContext.Current;
+                            taskFunc?.Invoke().GetAwaiter().GetResult();
+                        }
+                        finally
+                        {
+                            if (context is not null)
+                            {
+                                SynchronizationContext.SetSynchronizationContext(context);
+                            }
+                        }
+                    });
+                }
+            }
         }
         #endregion  
 
@@ -713,32 +771,32 @@ namespace TWCore
         /// <summary>
         /// Sets a new Trace Engine
         /// </summary>
-        /// <param name="engine">Trace engine intance, if is null then is ignored</param>
+        /// <param name="engine">Trace engine instance, if is null then is ignored</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetTraceEngine(ITraceEngine engine)
         {
-            if (engine != null)
-                Trace = engine;
+            if (engine is null) return;
+            Trace = engine;
         }
         /// <summary>
         /// Sets a new Status Engine
         /// </summary>
-        /// <param name="engine">Status engine intance, if is null then is ignored</param>
+        /// <param name="engine">Status engine instance, if is null then is ignored</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetStatusEngine(IStatusEngine engine)
         {
-            if (engine != null)
-                Status = engine;
+            if (engine is null) return;
+            Status = engine;
         }
         /// <summary>
         /// Sets a new Counters Engine
         /// </summary>
-        /// <param name="engine">Counters engine intance, if is null then is ignored</param>
+        /// <param name="engine">Counters engine instance, if is null then is ignored</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetCountersEngine(ICountersEngine engine)
         {
-            if (engine != null)
-                Counters = engine;
+            if (engine is null) return;
+            Counters = engine;
         }
         #endregion
 
@@ -766,13 +824,13 @@ namespace TWCore
             if (settingsFilePath is null)
                 throw new NullReferenceException("The settings file path is null.");
 
-            environmentName = environmentName ?? EnvironmentName;
-            machineName = machineName ?? MachineName;
-            applicationName = applicationName ?? ApplicationName;
+            environmentName ??= EnvironmentName;
+            machineName ??= MachineName;
+            applicationName ??= ApplicationName;
 
-            settingsFilePath = settingsFilePath?.Replace("{EnvironmentName}", environmentName);
-            settingsFilePath = settingsFilePath?.Replace("{MachineName}", machineName);
-            settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", applicationName);
+            settingsFilePath = settingsFilePath.Replace("{EnvironmentName}", environmentName);
+            settingsFilePath = settingsFilePath.Replace("{MachineName}", machineName);
+            settingsFilePath = settingsFilePath.Replace("{ApplicationName}", applicationName);
             Ensure.ExistFile(settingsFilePath);
             var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(settingsFilePath));
             Ensure.ReferenceNotNull(serializer, $"A serializer for file '{settingsFilePath}' was not found");
@@ -804,7 +862,7 @@ namespace TWCore
                 throw new Exception("Error loading the settings definitions.", ex);
             }
             //Checks if a reload time is set.
-            if (GlobalSettings != null && GlobalSettings.SettingsReloadTimeInMinutes > 0)
+            if (GlobalSettings?.SettingsReloadTimeInMinutes > 0)
             {
                 Task.Delay(GlobalSettings.SettingsReloadTimeInMinutes * 60 * 1000).ContinueWith(t =>
                 {
@@ -819,10 +877,9 @@ namespace TWCore
         public static void RebindSettings()
         {
             GlobalSettings?.ReloadSettings();
-            if (SettingsCache?.Values != null)
+            foreach (var setting in InternalSettingsCache.Values)
             {
-                foreach (var v in SettingsCache.Values)
-                    v.ReloadSettings();
+                setting.ReloadSettings();
             }
         }
         #endregion
@@ -850,13 +907,13 @@ namespace TWCore
             if (injectorFilePath is null)
                 throw new NullReferenceException("The injector file path is null.");
 
-            environmentName = environmentName ?? EnvironmentName;
-            machineName = machineName ?? MachineName;
-            applicationName = applicationName ?? ApplicationName;
+            environmentName ??= EnvironmentName;
+            machineName ??= MachineName;
+            applicationName ??= ApplicationName;
 
-            injectorFilePath = injectorFilePath?.Replace("{EnvironmentName}", environmentName);
-            injectorFilePath = injectorFilePath?.Replace("{MachineName}", machineName);
-            injectorFilePath = injectorFilePath?.Replace("{ApplicationName}", applicationName);
+            injectorFilePath = injectorFilePath.Replace("{EnvironmentName}", environmentName);
+            injectorFilePath = injectorFilePath.Replace("{MachineName}", machineName);
+            injectorFilePath = injectorFilePath.Replace("{ApplicationName}", applicationName);
             Ensure.ExistFile(injectorFilePath);
             var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(injectorFilePath));
             Ensure.ReferenceNotNull(serializer, $"A serializer for file '{injectorFilePath}' was not found");
@@ -890,6 +947,7 @@ namespace TWCore
         #endregion
 
         #region Settings
+
         /// <summary>
         /// Get and handles caches for Settings instances
         /// </summary>
@@ -897,7 +955,7 @@ namespace TWCore
         /// <returns>Settings object type instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetSettings<T>() where T : SettingsBase
-            => (T)SettingsCache.GetOrAdd(typeof(T), t => (SettingsBase)Activator.CreateInstance(t));
+            => InternalSettingsCache<T>.Instance;
         /// <summary>
         /// Apply Settings on object
         /// </summary>
@@ -905,6 +963,24 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ApplySettings(object instance)
             => SettingsEngine.ApplySettings(instance);
+        
+        private static class InternalSettingsCache
+        {
+            public static ConcurrentBag<SettingsBase> Values { get; } = new();
+        }
+
+        private static class InternalSettingsCache<T>
+            where T: SettingsBase
+        {
+            public static T Instance { get; }
+
+            static InternalSettingsCache()
+            {
+                Instance = (T)Activator.CreateInstance(typeof(T));
+                InternalSettingsCache.Values.Add(Instance);
+            }
+        }
+
         #endregion
 
         #region Misc Methods

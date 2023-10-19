@@ -2,6 +2,7 @@
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
     <Title>TWCore.Bot.Telegram</Title>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Telegram.Bot" Version="16.0.2" />

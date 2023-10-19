@@ -45,3 +45,6 @@ steps:
       includePreviewVersions: true
   - script: dotnet build --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
+
+  - publish: $(System.DefaultWorkingDirectory)/artifacts
+    artifact: artifacts

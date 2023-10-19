@@ -22,3 +22,8 @@ jobs:
           8.0.x
     - name: Build with dotnet
       run: dotnet build -c Release
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: artifacts/

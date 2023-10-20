@@ -141,7 +141,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void MessageReceivedHandler(object sender, BasicDeliverEventArgs ea)
         {
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
             var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body.ToArray());
 #else
             var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);

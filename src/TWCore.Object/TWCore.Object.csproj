@@ -7,7 +7,7 @@
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
   <Choose>
-    <When Condition="'$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp2.2'">
+    <When Condition="'$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp2.2' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0'">
       <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
       </ItemGroup>

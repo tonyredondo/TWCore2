@@ -123,7 +123,9 @@ namespace TWCore.Messaging.RabbitMQ
                         var factory = new ConnectionFactory
                         {
                             Uri = new Uri(Route),
+#if !NETCOREAPP3_1_OR_GREATER
                             UseBackgroundThreadsForIO = true,
+#endif
                             AutomaticRecoveryEnabled = true
                         };
                         connection = factory.CreateConnection();

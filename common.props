@@ -8,12 +8,7 @@
         <Description>TWCore Framework.
             A multipurpose framework library for .net core
         </Description>
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
         <PackageTags>TWCore, Tony, Wanhjör, Tony Redondo, Framework, netstandard, netcoreapp, dotnet core, framework</PackageTags>
         <Copyright>Tony Redondo</Copyright>
         <PackageLicense>https://www.apache.org/licenses/LICENSE-2.0</PackageLicense>
@@ -22,14 +17,15 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageIcon>icon.png</PackageIcon>
         <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <Features>strict</Features>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <NoWarn>NU1902;NU1903;CS0809</NoWarn>
         <CheckEolTargetFramework>false</CheckEolTargetFramework>
         <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+        <PublishRelease>true</PublishRelease>
+        <DebugType>portable</DebugType>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>

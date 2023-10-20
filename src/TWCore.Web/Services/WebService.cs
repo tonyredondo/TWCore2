@@ -48,26 +48,44 @@ namespace TWCore.Services
 
 #if NETCOREAPP3_1_OR_GREATER
         private readonly Func<string[], IHost> _hostFactory;
-        private IWebHostEnvironment _hostingEnvironment;
-#else
-        private readonly Func<string[], IWebHost> _hostFactory;
-        private IHostingEnvironment _hostingEnvironment;
+        private IWebHostEnvironment _webHostEnvironment;
 #endif
+        private readonly Func<string[], IWebHost> _webHostFactory;
+        private Microsoft.AspNetCore.Hosting.IHostingEnvironment _hostingEnvironment;
         private ICollection<string> _serverAddresses;
 
         #region .ctor
+#if NETCOREAPP3_1_OR_GREATER
         /// <inheritdoc />
         /// <summary>
         /// AspNet Web Service
         /// </summary>
         /// <param name="hostFactory">Host Builder factory delegate</param>
-#if NETCOREAPP3_1_OR_GREATER
         public WebService(Func<string[], IHost> hostFactory)
-#else
-        public WebService(Func<string[], IWebHost> hostFactory)
-#endif
         {
             _hostFactory = hostFactory;
+            Core.Status.Attach(collections =>
+            {
+                if (_hostingEnvironment != null)
+                {
+                    collections.Add("Environment Name", _hostingEnvironment.EnvironmentName);
+                    collections.Add("Content Root Path", _hostingEnvironment.ContentRootPath);
+                    collections.Add("Web Root Path", _hostingEnvironment.WebRootPath);
+                }
+                if (_serverAddresses != null)
+                    collections.Add("Addresses", _serverAddresses.Join(", "));
+            }, this);
+        }
+#endif
+
+        /// <inheritdoc />
+        /// <summary>
+        /// AspNet Web Service
+        /// </summary>
+        /// <param name="webHostFactory">Host Builder factory delegate</param>
+        public WebService(Func<string[], IWebHost> webHostFactory)
+        {
+            _webHostFactory = webHostFactory;
             Core.Status.Attach(collections =>
             {
                 if (_hostingEnvironment != null)
@@ -83,43 +101,56 @@ namespace TWCore.Services
         #endregion
 
         #region Statics
+#if NETCOREAPP3_1_OR_GREATER
         /// <summary>
-        /// Create WebService with default WebHost
+        /// Create WebService with default Host
         /// </summary>
         /// <typeparam name="TStartUp">StartuUp class</typeparam>
         /// <returns>WebService default instance</returns>
-        public static WebService Create<TStartUp>() where TStartUp : class
+        public static WebService CreateHost<TStartUp>() where TStartUp : class
         {
             if (Settings?.Urls?.Any() == true)
             {
-#if NETCOREAPP3_1_OR_GREATER
                 return new WebService(args => Host.CreateDefaultBuilder(args)
                     .ConfigureWebHostDefaults(builder =>
                     {
                         builder.UseStartup<TStartUp>()
                             .UseUrls(Settings.Urls);
                     }).Build());
-#else
-                return new WebService(args => WebHost.CreateDefaultBuilder(args)
-                    .UseStartup<TStartUp>()
-                    .UseUrls(Settings.Urls)
-                    .Build());
-#endif
             }
 
-#if NETCOREAPP3_1_OR_GREATER
             return new WebService(args =>
             {
                 return Host.CreateDefaultBuilder(args)
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<TStartUp>())
                     .Build();
             });
-#else
+        }
+#endif
+        
+        /// <summary>
+        /// Create WebService with default WebHost
+        /// </summary>
+        /// <typeparam name="TStartUp">StartuUp class</typeparam>
+        /// <returns>WebService default instance</returns>
+#if NETCOREAPP3_1_OR_GREATER
+        [Obsolete("This method uses the obsolete WebHost. The recommended alternative is to use CreateHost")]
+#endif
+        public static WebService Create<TStartUp>() where TStartUp : class
+        {
+            if (Settings?.Urls?.Any() == true)
+            {
+                return new WebService(args => WebHost.CreateDefaultBuilder(args)
+                    .UseStartup<TStartUp>()
+                    .UseUrls(Settings.Urls)
+                    .Build());
+            }
+
             return new WebService(args => WebHost.CreateDefaultBuilder(args)
                 .UseStartup<TStartUp>()
                 .Build());
-#endif
         }
+
 #if NETCOREAPP3_1_OR_GREATER
         /// <summary>
         /// Create WebService with default WebHost
@@ -191,32 +222,37 @@ namespace TWCore.Services
         protected override async Task OnActionAsync(CancellationToken token)
         {
 #if NETCOREAPP3_1_OR_GREATER
-            var host = _hostFactory(StartArguments);
-            await host.StartAsync(token).ConfigureAwait(false);
-            token.Register(() => host?.Dispose());
-            _hostingEnvironment = (IWebHostEnvironment)host.Services.GetService(typeof(IWebHostEnvironment));
-            Core.Log.InfoBasic($"Hosting environment: {_hostingEnvironment.EnvironmentName}");
-            Core.Log.InfoBasic($"Content root path: {_hostingEnvironment.ContentRootPath}");
-            Core.Log.InfoBasic($"Web root path: {_hostingEnvironment.WebRootPath}");
+            if (_hostFactory is not null)
+            {
+                var host = _hostFactory(StartArguments);
+                await host.StartAsync(token).ConfigureAwait(false);
+                token.Register(() => host?.Dispose());
+                _webHostEnvironment = (IWebHostEnvironment)host.Services.GetService(typeof(IWebHostEnvironment));
+                Core.Log.InfoBasic($"Hosting environment: {_webHostEnvironment.EnvironmentName}");
+                Core.Log.InfoBasic($"Content root path: {_webHostEnvironment.ContentRootPath}");
+                Core.Log.InfoBasic($"Web root path: {_webHostEnvironment.WebRootPath}");
 
-            var server = (IServer)host.Services.GetService(typeof(IServer));
-            _serverAddresses = server.Features.Get<IServerAddressesFeature>()?.Addresses;
-            if (_serverAddresses != null)
-                foreach (var address in _serverAddresses)
-                    Core.Log.InfoBasic($"WebService is Listening on: {address}");
-#else
-            var webHost = _hostFactory(StartArguments);
-            await webHost.StartAsync(token).ConfigureAwait(false);
-            _hostingEnvironment = (IHostingEnvironment)webHost.Services.GetService(typeof(IHostingEnvironment));
-            //var applicationLifetime = (IApplicationLifetime)webHost.Services.GetService(typeof(IApplicationLifetime));
-            Core.Log.InfoBasic($"WebService Hosting environment: {_hostingEnvironment.EnvironmentName}");
-            Core.Log.InfoBasic($"WebService Content root path: {_hostingEnvironment.ContentRootPath}");
-            Core.Log.InfoBasic($"WebService Web root path: {_hostingEnvironment.WebRootPath}");
-            _serverAddresses = webHost.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;
-            if (_serverAddresses != null)
-                foreach (var address in _serverAddresses)
-                    Core.Log.InfoBasic($"WebService is Listening on: {address}");
+                var server = (IServer)host.Services.GetService(typeof(IServer));
+                _serverAddresses = server.Features.Get<IServerAddressesFeature>()?.Addresses;
+                if (_serverAddresses != null)
+                    foreach (var address in _serverAddresses)
+                        Core.Log.InfoBasic($"WebService is Listening on: {address}");
+            }
 #endif
+
+            if (_webHostFactory is not null)
+            {
+                var webHost = _webHostFactory(StartArguments);
+                await webHost.StartAsync(token).ConfigureAwait(false);
+                _hostingEnvironment = (Microsoft.AspNetCore.Hosting.IHostingEnvironment)webHost.Services.GetService(typeof(Microsoft.AspNetCore.Hosting.IHostingEnvironment));
+                Core.Log.InfoBasic($"WebService Hosting environment: {_hostingEnvironment.EnvironmentName}");
+                Core.Log.InfoBasic($"WebService Content root path: {_hostingEnvironment.ContentRootPath}");
+                Core.Log.InfoBasic($"WebService Web root path: {_hostingEnvironment.WebRootPath}");
+                _serverAddresses = webHost.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;
+                if (_serverAddresses != null)
+                    foreach (var address in _serverAddresses)
+                        Core.Log.InfoBasic($"WebService is Listening on: {address}");
+            }
         }
     }
 }

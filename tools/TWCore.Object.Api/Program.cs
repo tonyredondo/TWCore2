@@ -25,7 +25,7 @@ namespace TWCore.Object.Api
         public static void Main(string[] args)
         {
             Core.InitDefaults(false);
-            Core.RunService(() => WebService.Create<Startup>(), args);
+            Core.RunService(WebService.CreateHost<Startup>, args);
         }
     }
 }

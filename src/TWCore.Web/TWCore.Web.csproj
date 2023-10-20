@@ -2,6 +2,7 @@
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
     <Title>TWCore.Web</Title>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
 
   <Choose>

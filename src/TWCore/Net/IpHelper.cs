@@ -48,15 +48,20 @@ namespace TWCore.Net
             if (hostNameOrAddress.Equals("::", StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            try
+            return InternalIsLocalhost(hostNameOrAddress).GetAwaiter().GetResult();
+
+            static async Task<bool> InternalIsLocalhost(string hostNameOrAddress)
             {
-                var hostIPs = Dns.GetHostAddressesAsync(hostNameOrAddress).WaitAsync();
-                var localIPs = Dns.GetHostAddressesAsync(Dns.GetHostName()).WaitAsync();
-                return hostIPs.Any((hostIp, lIps) => IPAddress.IsLoopback(hostIp) || lIps.Contains(hostIp), localIPs);
-            }
-            catch
-            {
-                return false;
+                try
+                {
+                    var hostIPs = await Dns.GetHostAddressesAsync(hostNameOrAddress).ConfigureAwait(false);
+                    var localIPs = await Dns.GetHostAddressesAsync(Dns.GetHostName()).ConfigureAwait(false);
+                    return hostIPs.Any((hostIp, lIps) => IPAddress.IsLoopback(hostIp) || lIps.Contains(hostIp), localIPs);
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
 

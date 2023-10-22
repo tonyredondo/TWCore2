@@ -44,16 +44,22 @@ namespace TWCore.Messaging.NATS
         #endregion
 
         #region Nested Type
-        private async void MessageHandler(object sender, MsgHandlerEventArgs e)
+        private void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
             Core.Log.LibVerbose("Message received");
-            try
+            _ = InternalMessageHandler();
+            return;
+
+            async Task InternalMessageHandler()
             {
-                await EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
+                try
+                {
+                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, e.Message.Data).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
         }
         #endregion

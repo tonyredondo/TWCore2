@@ -48,7 +48,7 @@ namespace TWCore.Messaging.RabbitMQ
         #region Nested Type
         private class RabbitMessage
         {
-            private readonly static ObjectPool<RabbitMessage> ObjectPool = new ObjectPool<RabbitMessage>(_ => new RabbitMessage());
+            private static readonly ObjectPool<RabbitMessage> ObjectPool = new ObjectPool<RabbitMessage>(_ => new RabbitMessage());
             public Guid CorrelationId;
             public IBasicProperties Properties;
             public byte[] Body;
@@ -147,7 +147,7 @@ namespace TWCore.Messaging.RabbitMQ
             var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
 #endif
 #if COMPATIBILITY
-                Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
+            Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
 #else
             ThreadPool.QueueUserWorkItem(item =>
             {

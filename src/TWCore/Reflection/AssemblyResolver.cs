@@ -114,7 +114,7 @@ namespace TWCore.Reflection
                         Core.Log.Write(LogLevel.Warning, ex);
                     }
                 });
-            };
+            }
             Assemblies.AddRange(cBag);
             Parallel.ForEach(Assemblies, asm => asm.Preload());
             _assembliesInfoLoaded = true;

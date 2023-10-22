@@ -1068,7 +1068,7 @@ namespace TWCore
                         var rItem = finalItemFunc(item, oItem);
                         lst.Add(rItem);
                     }
-                };
+                }
             }
             return lst;
         }

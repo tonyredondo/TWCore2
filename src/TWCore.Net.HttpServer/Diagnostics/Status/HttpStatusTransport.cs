@@ -105,13 +105,13 @@ namespace TWCore.Diagnostics.Status.Transports
                         await ctx.Response.WriteLineAsync("<li style='list-style-type: none;'>").ConfigureAwait(false);
                         foreach (var ssAddress in ss.Addresses)
                         {
-                            await ctx.Response.WriteLineAsync($"<a href='http://{ssAddress.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ssAddress.ToString()}</a> /").ConfigureAwait(false);;
+                            await ctx.Response.WriteLineAsync($"<a href='http://{ssAddress.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ssAddress.ToString()}</a> /").ConfigureAwait(false);
                         }
-                        await ctx.Response.WriteLineAsync($" {ss.ApplicationName}</li>").ConfigureAwait(false);;
+                        await ctx.Response.WriteLineAsync($" {ss.ApplicationName}</li>").ConfigureAwait(false);
                     }
-                    await ctx.Response.WriteLineAsync("</ul>").ConfigureAwait(false);;
+                    await ctx.Response.WriteLineAsync("</ul>").ConfigureAwait(false);
                 }
-                await ctx.Response.WriteLineAsync("</body></html>").ConfigureAwait(false);;
+                await ctx.Response.WriteLineAsync("</body></html>").ConfigureAwait(false);
             });
             StartListening(port).WaitAsync();
             Core.Status.DeAttachObject(_httpServer);

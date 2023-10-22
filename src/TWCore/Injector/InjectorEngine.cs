@@ -433,6 +433,7 @@ namespace TWCore.Injector
                 Definition = definition;
                 #endregion
 
+                if (definition is null) return;
                 Singleton = definition.Singleton;
                 var defType = Core.GetType(definition.Type, true);
                 if (defType is null) return;

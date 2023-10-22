@@ -26,6 +26,9 @@ namespace TWCore.IO
     /// <summary>
     /// Shared Memory circular stream
     /// </summary>
+#if NET5_0_OR_GREATER
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
     public sealed class SharedMemoryStream : Stream
     {
         #region Fields

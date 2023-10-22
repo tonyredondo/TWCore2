@@ -76,14 +76,15 @@ namespace TWCore.Messaging.Redis
         /// <returns>Subscribe task</returns>
         public async Task SubscribeAsync(Action<RedisChannel, RedisValue> handler)
         {
-            if (!(_subscriber is null))
+            var redisChannel = RedisChannel.Literal(Name);
+            if (_subscriber is not null)
             {
-                await _subscriber.UnsubscribeAsync(Name, _currentHandler).ConfigureAwait(false);
+                await _subscriber.UnsubscribeAsync(redisChannel, _currentHandler).ConfigureAwait(false);
                 _subscriber = null;
             }
             _subscriber = await GetSubscriberAsync().ConfigureAwait(false);
             _currentHandler = handler;
-            await _subscriber.SubscribeAsync(Name, _currentHandler).ConfigureAwait(false);
+            await _subscriber.SubscribeAsync(redisChannel, _currentHandler).ConfigureAwait(false);
         }
         /// <summary>
         /// Unsubscribe all handlers
@@ -91,9 +92,10 @@ namespace TWCore.Messaging.Redis
         /// <returns>Unsubscribe task</returns>
         public async Task UnsubscribeAsync()
         {
-            if (!(_subscriber is null))
+            if (_subscriber is not null)
             {
-                await _subscriber.UnsubscribeAsync(Name, _currentHandler).ConfigureAwait(false);
+                var redisChannel = RedisChannel.Literal(Name);
+                await _subscriber.UnsubscribeAsync(redisChannel, _currentHandler).ConfigureAwait(false);
                 _subscriber = null;
             }
         }

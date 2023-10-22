@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using TWCore.IO;
 using TWCore.Serialization;
 using TWCore.Serialization.NSerializer;
@@ -11,7 +12,7 @@ using TWCore.Serialization.MsgPack;
 
 namespace TWCore.Tests.Benchmark
 {
-    [CoreJob(baseline: true)]
+    [SimpleJob(RuntimeMoniker.Net70)]
     [RPlotExporter, RankColumn, MinColumn, MaxColumn, MemoryDiagnoser]
     public class SerializersBench
     {
@@ -20,7 +21,6 @@ namespace TWCore.Tests.Benchmark
         //
         private JsonTextSerializer _jsonSerializer;
         private XmlTextSerializer _xmlSerializer;
-        private BinaryFormatterSerializer _binSerializer;
         private Utf8JsonTextSerializer _utf8jsonSerializer;
         private MsgPackSerializer _msgPackSerializer;
         private NBinarySerializer _nBinary;
@@ -28,7 +28,6 @@ namespace TWCore.Tests.Benchmark
         //
         private MemoryStream _jsonSerializerStream;
         private MemoryStream _xmlSerializerStream;
-        private MemoryStream _binSerializerStream;
         private MemoryStream _utf8jsonSerializerStream;
         private MemoryStream _msgPackSerializerStream;
         private MemoryStream _nBinaryStream;
@@ -84,11 +83,6 @@ namespace TWCore.Tests.Benchmark
             _binData = _xmlSerializer.Serialize(_data);
             _xmlSerializerStream = new MemoryStream();
             _xmlSerializer.Serialize(_data, _xmlSerializerStream);
-
-            _binSerializer = new BinaryFormatterSerializer();
-            _binData = _binSerializer.Serialize(_data);
-            _binSerializerStream = new MemoryStream();
-            _binSerializer.Serialize(_data, _binSerializerStream);
 
             _utf8jsonSerializer = new Utf8JsonTextSerializer();
             _binData = _utf8jsonSerializer.Serialize(_data);
@@ -151,28 +145,6 @@ namespace TWCore.Tests.Benchmark
             {
                 _xmlSerializerStream.Position = 0;
                 data = _xmlSerializer.Deserialize<List<STest>>(_xmlSerializerStream);
-            }
-            return data;
-        }
-
-        //
-        [Benchmark]
-        public void BinaryFormatterSerializerToStream()
-        {
-            for (var i = 0; i < N; i++)
-            {
-                _binSerializer.Serialize(_data, _binSerializerStream);
-                _binSerializerStream.Position = 0;
-            }
-        }
-        [Benchmark]
-        public List<STest> BinaryFormatterDeserializerFromStream()
-        {
-            List<STest> data = null;
-            for (var i = 0; i < N; i++)
-            {
-                _binSerializerStream.Position = 0;
-                data = _binSerializer.Deserialize<List<STest>>(_binSerializerStream);
             }
             return data;
         }

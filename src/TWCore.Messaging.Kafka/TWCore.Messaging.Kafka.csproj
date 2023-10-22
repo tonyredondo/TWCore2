@@ -2,6 +2,7 @@
   <Import Project="..\..\commonWithDoc.props" />
   <PropertyGroup>
     <Title>TWCore.Messaging.Kafka</Title>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="kafka-net" Version="0.9.0.65" />

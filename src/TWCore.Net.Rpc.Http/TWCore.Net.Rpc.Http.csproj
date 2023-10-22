@@ -8,8 +8,8 @@
     <ProjectReference Include="..\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj" />
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'" />
-    <Reference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'">
+    <Reference Include="System.Web" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 </Project>

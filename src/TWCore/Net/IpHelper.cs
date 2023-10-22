@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 // ReSharper disable InconsistentNaming
@@ -47,15 +48,20 @@ namespace TWCore.Net
             if (hostNameOrAddress.Equals("::", StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            try
+            return InternalIsLocalhost(hostNameOrAddress).GetAwaiter().GetResult();
+
+            static async Task<bool> InternalIsLocalhost(string hostNameOrAddress)
             {
-                var hostIPs = Dns.GetHostAddressesAsync(hostNameOrAddress).WaitAsync();
-                var localIPs = Dns.GetHostAddressesAsync(Dns.GetHostName()).WaitAsync();
-                return hostIPs.Any((hostIp, lIps) => IPAddress.IsLoopback(hostIp) || lIps.Contains(hostIp), localIPs);
-            }
-            catch
-            {
-                return false;
+                try
+                {
+                    var hostIPs = await Dns.GetHostAddressesAsync(hostNameOrAddress).ConfigureAwait(false);
+                    var localIPs = await Dns.GetHostAddressesAsync(Dns.GetHostName()).ConfigureAwait(false);
+                    return hostIPs.Any((hostIp, lIps) => IPAddress.IsLoopback(hostIp) || lIps.Contains(hostIp), localIPs);
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
 
@@ -122,12 +128,21 @@ namespace TWCore.Net
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<string> GetPublicIPAsync()
         {
+            const string checkIpAddress = "http://checkip.dyndns.org/";
             Core.Log.LibVerbose("Getting the public ip address...");
-            string address;
-            var request = WebRequest.Create("http://checkip.dyndns.org/");
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
-            using (var stream = new StreamReader(response.GetResponseStream()))
-                address = stream.ReadToEnd();
+#if NETCOREAPP2_1_OR_GREATER
+            var client = new HttpClient();
+            var address = await client.GetStringAsync(checkIpAddress).ConfigureAwait(false);
+#else
+            var address = string.Empty;
+            var request = WebRequest.Create(checkIpAddress);
+            using var response = await request.GetResponseAsync().ConfigureAwait(false);
+            if (response.GetResponseStream() is { } responseStream)
+            {
+                using var stream = new StreamReader(responseStream);
+                address = await stream.ReadToEndAsync().ConfigureAwait(false);
+            }
+#endif
             //Search for the ip in the html
             var first = address.IndexOf("Address: ", StringComparison.Ordinal) + 9;
             var last = address.LastIndexOf("</body>", StringComparison.Ordinal);

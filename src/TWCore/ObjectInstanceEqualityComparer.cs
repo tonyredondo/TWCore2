@@ -120,8 +120,13 @@ namespace TWCore
             }).ToArray();
             var runtimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
             {
+#if NET7_0_OR_GREATER
+                if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
+                    field.IsPrivate || field.IsInitOnly || field.IsPinvokeImpl) return false;
+#else
                 if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
                     field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
+#endif
                 if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
                 return true;
             }).ToArray();
@@ -305,8 +310,13 @@ namespace TWCore
             }).ToArray();
             var runtimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
             {
+#if NET7_0_OR_GREATER
+                if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
+                    field.IsPrivate || field.IsInitOnly || field.IsPinvokeImpl) return false;
+#else
                 if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
                     field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
+#endif
                 if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
                 return true;
             }).ToArray();

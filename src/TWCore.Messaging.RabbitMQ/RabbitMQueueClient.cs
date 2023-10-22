@@ -334,7 +334,11 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
                 return;
             }
+#if NETCOREAPP3_1_OR_GREATER
+            message.Body = ea.Body.ToArray();
+#else
             message.Body = ea.Body;
+#endif
             message.Properties = ea.BasicProperties;
             message.WaitHandler.Set();
             _receiver.Channel.BasicAck(ea.DeliveryTag, false);

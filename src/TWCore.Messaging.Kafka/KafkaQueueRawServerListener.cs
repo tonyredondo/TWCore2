@@ -81,12 +81,12 @@ namespace TWCore.Messaging.Kafka
                     {
                         if (_token.IsCancellationRequested) break;
 #if COMPATIBILITY
-                        Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, cRes));
+                        Task.Run(() => EnqueueMessageToProcessAsync(message => ProcessingTaskAsync(message), cRes));
 #else
-                ThreadPool.QueueUserWorkItem(async item =>
-                {
-                    await EnqueueMessageToProcessAsync(ProcessingTaskAsync, item);
-                }, cRes, false);
+                        ThreadPool.QueueUserWorkItem( item =>
+                        {
+                            EnqueueMessageToProcessAsync(message => ProcessingTaskAsync(message), item);
+                        }, cRes, false);
 #endif
                     }
                 }

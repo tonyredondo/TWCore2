@@ -90,7 +90,7 @@ namespace TWCore.Messaging.Redis
             if (_connection is null) return;
             try
             {
-                _connection.UnsubscribeAsync().WaitAsync();
+                _connection.UnsubscribeAsync().GetAwaiter().GetResult();
             }
             catch
             {
@@ -104,16 +104,22 @@ namespace TWCore.Messaging.Redis
         /// <summary>
         /// Message Handler
         /// </summary>
-        private async void MessageHandler(RedisChannel channel, RedisValue value)
+        private void MessageHandler(RedisChannel channel, RedisValue value)
         {
             Core.Log.LibVerbose("Message received");
-            try
+            _ = InternalMessageHandler();
+            return;
+
+            async Task InternalMessageHandler()
             {
-                await EnqueueMessageToProcessAsync(_processDelegate, value).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
+                try
+                {
+                    await EnqueueMessageToProcessAsync(_processDelegate, value).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
         }
         /// <summary>

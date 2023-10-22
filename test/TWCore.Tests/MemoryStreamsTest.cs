@@ -28,6 +28,9 @@ using TWCore.Services;
 namespace TWCore.Tests
 {
     /// <inheritdoc />
+#if NET5_0_OR_GREATER
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
     public class MemoryStreamsTest : ContainerParameterService
     {
         public MemoryStreamsTest() : base("memtest", "Memory Streams test") { }

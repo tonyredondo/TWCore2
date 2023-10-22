@@ -156,7 +156,6 @@ namespace TWCore.Tests
             var memStream = new RecycleMemoryStream();
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
             var xmlSerializer = new XmlTextSerializer { Compressor = compressor };
-            var binarySerializer = new BinaryFormatterSerializer { Compressor = compressor };
             var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
             var msgPackSerializer = new MsgPackSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
@@ -169,7 +168,6 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
             Core.Log.InfoBasic("\tXml Bytes Count: {0}", SerializerSizeProcess(value, vType, xmlSerializer));
-            Core.Log.InfoBasic("\tBinaryFormatter Bytes Count: {0}", SerializerSizeProcess(value, vType, binarySerializer));
             Core.Log.InfoBasic("\tUtf8Json Bytes Count: {0}", SerializerSizeProcess(value, vType, ut8JsonSerializer));
             Core.Log.InfoBasic("\tMessagePack Bytes Count: {0}", SerializerSizeProcess(value, vType, msgPackSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));

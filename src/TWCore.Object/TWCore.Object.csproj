@@ -4,9 +4,18 @@
     <Title>TWCore.Object</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.1.0" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp2.2' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0'">
+      <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

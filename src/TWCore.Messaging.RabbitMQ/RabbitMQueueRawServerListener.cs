@@ -46,7 +46,7 @@ namespace TWCore.Messaging.RabbitMQ
         #region Nested Type
         private class RabbitMessage
         {
-            private readonly static ObjectPool<RabbitMessage> ObjectPool = new ObjectPool<RabbitMessage>(_ => new RabbitMessage());
+            private static readonly ObjectPool<RabbitMessage> ObjectPool = new ObjectPool<RabbitMessage>(_ => new RabbitMessage());
             public Guid CorrelationId;
             public IBasicProperties Properties;
             public byte[] Body;
@@ -135,9 +135,13 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void MessageReceivedHandler(object sender, BasicDeliverEventArgs ea)
         {
+#if NET6_0_OR_GREATER
+            var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body.ToArray());
+#else
             var msg = RabbitMessage.Rent(Guid.Parse(ea.BasicProperties.CorrelationId), ea.BasicProperties, ea.Body);
+#endif
 #if COMPATIBILITY
-                Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
+            Task.Run(() => EnqueueMessageToProcessAsync(_processingTaskAsyncDelegate, msg));
 #else
             ThreadPool.QueueUserWorkItem(item =>
             {

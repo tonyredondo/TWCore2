@@ -31,7 +31,7 @@ namespace TWCore.Reflection
     {
         private static MethodInfo _cTypeMInfo;
         private static MethodInfo ChangeTypeMethodInfo
-            => _cTypeMInfo ?? (_cTypeMInfo = typeof(CompleteAccessorsFactory).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType"));
+            => _cTypeMInfo ??= typeof(CompleteAccessorsFactory).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType");
 
 
         /// <inheritdoc />
@@ -86,7 +86,8 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GetAccessorDelegate BuildGetAccessor(PropertyInfo property)
         {
-            var method = property.GetMethod;
+            var method = property?.GetMethod;
+            if (method is null) return null;
             var obj = Expression.Parameter(typeof(object), "obj");
             MethodCallExpression call;
             if (method.IsStatic)
@@ -111,7 +112,8 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SetAccessorDelegate BuildSetAccessor(PropertyInfo property)
         {
-            var method = property.SetMethod;
+            var method = property?.SetMethod;
+            if (method is null) return null;
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "value");
             MethodCallExpression call;
@@ -182,7 +184,7 @@ namespace TWCore.Reflection
                 if (conversionType.BaseType == typeof(Enum))
                     return Enum.ToObject(conversionType, value);
                 if (conversionType.IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType)); ;
+                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType));
                 return Convert.ChangeType(value, conversionType);
             }
             if (value is null)

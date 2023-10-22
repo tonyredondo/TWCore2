@@ -59,9 +59,9 @@ namespace TWCore.Messaging.NSQ
 #if COMPATIBILITY
                     Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, message.Body));
 #else
-                    ThreadPool.QueueUserWorkItem(async item =>
+                    ThreadPool.QueueUserWorkItem(item =>
                     {
-                        await _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, item);
+                        _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, item);
                     }, message.Body, false);
 #endif
                     message.Finish();

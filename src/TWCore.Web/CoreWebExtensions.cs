@@ -72,13 +72,35 @@ namespace TWCore.Web
             options.InputFormatters.Add(new Formatters.InputSerializerFormatter(serializer));
             return options;
         }
+        
+#if NETCOREAPP3_1_OR_GREATER
         /// <summary>
         /// Sets the default TWCoreValues
         /// </summary>
+        /// <param name="services">Services</param>
+        /// <param name="useNewtonsoft">Use newtonsoft json serializer or the default System.Text.Json</param>
+        /// <param name="settings">Core web settings</param>
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, bool useNewtonsoft = false, CoreWebSettings settings = null)
+#elif NETCOREAPP2_2
+        /// <summary>
+        /// Sets the default TWCoreValues
+        /// </summary>
+        /// <param name="services">Services</param>
+        /// <param name="compatibilityVersion">Compatibility version</param>
+        /// <param name="settings">Core web settings</param>
         public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_2, CoreWebSettings settings = null)
+#else
+        /// <summary>
+        /// Sets the default TWCoreValues
+        /// </summary>
+        /// <param name="services">Services</param>
+        /// <param name="compatibilityVersion">Compatibility version</param>
+        /// <param name="settings">Core web settings</param>
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, CompatibilityVersion compatibilityVersion = CompatibilityVersion.Version_2_1, CoreWebSettings settings = null)
+#endif
         {
-            settings = settings ?? new CoreWebSettings();
-            services.AddMvc(options =>
+            settings ??= new CoreWebSettings();
+            var mvcBuilder = services.AddMvc(options =>
             {
                 try
                 {
@@ -121,17 +143,40 @@ namespace TWCore.Web
                 {
                     Core.Log.Write(ex);
                 }
-            }).SetCompatibilityVersion(compatibilityVersion)
-            .AddJsonOptions(options =>
+            });
+            
+#if NETCOREAPP3_1_OR_GREATER
+            if (useNewtonsoft)
+            {
+                mvcBuilder = mvcBuilder.AddNewtonsoftJson(options =>
+                {
+                    if (settings.EnableJsonStringEnum)
+                        options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
+            }
+            else
+            {
+                mvcBuilder = mvcBuilder.AddJsonOptions(options =>
+                {
+                    if (settings.EnableJsonStringEnum)
+                        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                });
+            }
+#else
+            mvcBuilder.SetCompatibilityVersion(compatibilityVersion);
+            mvcBuilder.AddJsonOptions(options =>
             {
                 if (settings.EnableJsonStringEnum)
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
+#endif
+
             services.AddLogging(cfg =>
             {
                 if (settings.EnableTWCoreLogger)
                     cfg.AddTWCoreLogger();
             });
+
             if (settings.EnableGZipCompressor)
             {
                 services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Fastest);

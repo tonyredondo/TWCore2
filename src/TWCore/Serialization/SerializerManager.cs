@@ -107,7 +107,11 @@ namespace TWCore.Serialization
         {
             Register(new JsonTextSerializer());
             Register(new XmlTextSerializer());
+#pragma warning disable CS0612 // Type or member is obsolete
+            // BinaryFormatter is obsolete but we have to keep it to avoid any compatibility issue.
             Register(new BinaryFormatterSerializer());
+#pragma warning restore CS0612 // Type or member is obsolete
+
             //Core.RunOnInit(() =>
             //{
             //    if (Factory.GetAllAssemblies != null)

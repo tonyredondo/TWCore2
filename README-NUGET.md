@@ -1,5 +1,5 @@
-# <img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/icon.png" alt="Potato" width="45px" height="45px" /> TWCore 3.1
-[![Build](https://github.com/tonyredondo/TWCore2/actions/workflows/build.yml/badge.svg)](https://github.com/tonyredondo/TWCore2/actions/workflows/build.yml)
+# TWCore 3.1
+[![Build status](https://ci.appveyor.com/api/projects/status/6jvbgouxmvd0wh3j/branch/master?svg=true)](https://ci.appveyor.com/project/tonyredondo/twcore2/branch/master)
 [![Nuget](https://img.shields.io/nuget/vpre/TWCore.svg)](https://www.nuget.org/packages?q=Tags%3A"TWCore")
 
 A multipurpose framework library used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
@@ -102,6 +102,4 @@ Job=Core  Runtime=Core
 **Created by Tony Redondo**
 
 ## Powered By
-<img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/rider.jpg" alt="Rider" width="50px" height="50px" /><img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/dotTrace.png" alt="dotTrace" width="50px" height="50px" /><img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/dotMemory.png" alt="dotMemory" width="50px" height="50px" />
-
 Thanks to @jetbrains for helping on this development with the licenses for Rider, dotTrace and dotMemory

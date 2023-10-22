@@ -4,19 +4,30 @@
     <Title>TWCore</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'">
-    <PackageReference Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="System.Buffers" Version="4.5.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'" />
-    <Reference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'" />
-  </ItemGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'net472'">
+      <ItemGroup>
+        <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
+        <PackageReference Include="System.Memory" Version="4.5.5" />
+      </ItemGroup>
+      <ItemGroup>
+        <Reference Include="System.Web" />
+        <Reference Include="System.Net.Http" />
+      </ItemGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <ItemGroup>
+        <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
+        <PackageReference Include="System.Memory" Version="4.5.5" />
+      </ItemGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp2.2' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+      <ItemGroup>
+        <PackageReference Include="System.Threading.Channels" Version="4.7.1" />
+      </ItemGroup>
+    </When>
+  </Choose>
 </Project>

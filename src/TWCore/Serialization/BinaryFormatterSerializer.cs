@@ -27,6 +27,7 @@ namespace TWCore.Serialization
     /// <summary>
     /// Binary Formatter serializer
     /// </summary>
+    [Obsolete]
     public class BinaryFormatterSerializer : BinarySerializer
     {
         /// <inheritdoc />
@@ -52,6 +53,7 @@ namespace TWCore.Serialization
         /// <param name="itemType">Object type</param>
         /// <returns>Object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
             var bformatter = new BinaryFormatter();
@@ -68,6 +70,7 @@ namespace TWCore.Serialization
         /// <param name="itemType">Object type</param>
         /// <returns>Deserialized byte array value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
             var bformatter = new BinaryFormatter();
@@ -97,6 +100,7 @@ namespace TWCore.Serialization
     /// <summary>
     /// BinaryFormatter serializer extensions
     /// </summary>
+    [Obsolete]
     public static class BinaryFormatterSerializerExtensions
     {
         /// <summary>

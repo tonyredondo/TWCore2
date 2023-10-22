@@ -4,10 +4,19 @@
     <Title>TWCore.Data.MySql</Title>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="0.56.0" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp2.2'">
+      <ItemGroup>
+        <PackageReference Include="MySqlConnector" Version="2.1.13" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="MySqlConnector" Version="2.2.7" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

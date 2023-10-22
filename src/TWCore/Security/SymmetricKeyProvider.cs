@@ -145,18 +145,21 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] Encrypt(byte[] data, byte[] password)
         {
+#if NET6_0_OR_GREATER
+            var pdb = new Rfc2898DeriveBytes(password, Salt, 1000, HashAlgorithmName.SHA1);
+#else
             var pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
-            using (var ms = new MemoryStream())
+#endif
+
+            using var ms = new MemoryStream();
+            lock (_alg)
             {
-                lock (_alg)
-                {
-                    _alg.Key = pdb.GetBytes(32);
-                    _alg.IV = pdb.GetBytes(16);
-                    using (var cs = new CryptoStream(ms, _alg.CreateEncryptor(), CryptoStreamMode.Write))
-                        cs.Write(data, 0, data.Length);
-                }
-                return ms.ToArray();
+                _alg.Key = pdb.GetBytes(32);
+                _alg.IV = pdb.GetBytes(16);
+                using var cs = new CryptoStream(ms, _alg.CreateEncryptor(), CryptoStreamMode.Write);
+                cs.Write(data, 0, data.Length);
             }
+            return ms.ToArray();
         }
 
         /// <summary>
@@ -192,18 +195,20 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] Decrypt(byte[] data, byte[] password)
         {
+#if NET6_0_OR_GREATER
+            var pdb = new Rfc2898DeriveBytes(password, Salt, 1000, HashAlgorithmName.SHA1);
+#else
             var pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
-            using (var ms = new MemoryStream())
+#endif
+            using var ms = new MemoryStream();
+            lock (_alg)
             {
-                lock (_alg)
-                {
-                    _alg.Key = pdb.GetBytes(32);
-                    _alg.IV = pdb.GetBytes(16);
-                    using (var cs = new CryptoStream(ms, _alg.CreateDecryptor(), CryptoStreamMode.Write))
-                        cs.Write(data, 0, data.Length);
-                }
-                return ms.ToArray();
+                _alg.Key = pdb.GetBytes(32);
+                _alg.IV = pdb.GetBytes(16);
+                using var cs = new CryptoStream(ms, _alg.CreateDecryptor(), CryptoStreamMode.Write);
+                cs.Write(data, 0, data.Length);
             }
+            return ms.ToArray();
         }
         #endregion
 

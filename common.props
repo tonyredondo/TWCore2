@@ -13,7 +13,7 @@
         <Copyright>Tony Redondo</Copyright>
         <PackageLicense>https://www.apache.org/licenses/LICENSE-2.0</PackageLicense>
         <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReadmeFile>README-NUGET.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageIcon>icon.png</PackageIcon>
         <IncludeSymbols>true</IncludeSymbols>
@@ -32,7 +32,7 @@
         <PackageReference Include="DotNet.ReproducibleBuilds" Version="1.1.1" PrivateAssets="All"/>
     </ItemGroup>
     <ItemGroup>
-        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\README-NUGET.md" Pack="true" PackagePath="\"/>
         <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
         <None Include="..\..\icon.png" Pack="true" PackagePath="\"/>
     </ItemGroup>

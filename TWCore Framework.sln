@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0
 		icon.png = icon.png
 		.github\workflows\build.yml = .github\workflows\build.yml
 		azure-pipelines.yml = azure-pipelines.yml
+		README-NUGET.md = README-NUGET.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}"

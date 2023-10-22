@@ -97,7 +97,7 @@ Job=Core  Runtime=Core
 |                 RawSerializerToStream | 1 |  6.574 us | 0.1298 us | 0.1275 us |  6.375 us |  6.781 us |           - |           - |           - |                   - |
 |             RawDeserializerFromStream | 1 |  7.837 us | 0.0655 us | 0.0613 us |  7.748 us |  7.937 us |      0.5569 |      0.0763 |           - |              3520 B |
 
-<img src="https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/serializer-deserializer1.png" alt="Serializer Graph" />
+![Serializer Graph](https://raw.githubusercontent.com/tonyredondo/TWCore2/master/doc/serializer-deserializer1.png)
 
 **Created by Daniel Redondo**
 
